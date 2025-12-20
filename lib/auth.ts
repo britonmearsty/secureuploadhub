@@ -2,6 +2,7 @@ import NextAuth from "next-auth"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import prisma from "@/lib/prisma"
 import { authConfig } from "@/auth"
+import { getPostHogClient } from "@/lib/posthog-server"
 
 // Full auth config with Prisma adapter for server-side use
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -24,6 +25,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async signIn({ user, account }) {
       // Allow linking accounts with same email
+      let isNewUser = false;
+
       if (account?.provider && user.email) {
         const existingUser = await prisma.user.findUnique({
           where: { email: user.email },
@@ -53,8 +56,37 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               },
             })
           }
+        } else {
+          isNewUser = true;
         }
       }
+
+      // Track sign-in event with PostHog on server side
+      if (user.id || user.email) {
+        const posthog = getPostHogClient();
+        const distinctId = user.id || user.email!;
+
+        // Identify user on server side
+        posthog.identify({
+          distinctId,
+          properties: {
+            email: user.email,
+            name: user.name,
+          }
+        });
+
+        // Capture server-side login event
+        posthog.capture({
+          distinctId,
+          event: 'server_login',
+          properties: {
+            provider: account?.provider,
+            is_new_user: isNewUser,
+            source: 'oauth',
+          }
+        });
+      }
+
       return true
     },
   },

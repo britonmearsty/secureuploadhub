@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import posthog from "posthog-js"
 import { Plus, ExternalLink, Settings, Trash2, Copy, Check, ToggleLeft, ToggleRight } from "lucide-react"
 
 interface Portal {
@@ -25,6 +26,8 @@ export default function PortalList() {
 
   useEffect(() => {
     fetchPortals()
+    const interval = setInterval(fetchPortals, 5000)
+    return () => clearInterval(interval)
   }, [])
 
   async function fetchPortals() {
@@ -42,6 +45,7 @@ export default function PortalList() {
   }
 
   async function togglePortalStatus(id: string, isActive: boolean) {
+    const portal = portals.find(p => p.id === id);
     try {
       const res = await fetch(`/api/portals/${id}`, {
         method: "PATCH",
@@ -50,9 +54,19 @@ export default function PortalList() {
       })
       if (res.ok) {
         setPortals(portals.map(p => p.id === id ? { ...p, isActive: !isActive } : p))
+
+        // Track portal status toggle
+        posthog.capture('portal_status_toggled', {
+          portal_id: id,
+          portal_name: portal?.name,
+          portal_slug: portal?.slug,
+          previous_status: isActive ? 'active' : 'inactive',
+          new_status: !isActive ? 'active' : 'inactive',
+        });
       }
     } catch (error) {
       console.error("Error toggling portal:", error)
+      posthog.captureException(error as Error);
     }
   }
 
@@ -60,15 +74,26 @@ export default function PortalList() {
     if (!confirm("Are you sure you want to delete this portal? All upload history will be lost.")) {
       return
     }
-    
+
+    const portal = portals.find(p => p.id === id);
+
     setDeletingId(id)
     try {
       const res = await fetch(`/api/portals/${id}`, { method: "DELETE" })
       if (res.ok) {
         setPortals(portals.filter(p => p.id !== id))
+
+        // Track portal deletion - potential churn indicator
+        posthog.capture('portal_deleted', {
+          portal_id: id,
+          portal_name: portal?.name,
+          portal_slug: portal?.slug,
+          total_uploads: portal?._count?.uploads || 0,
+        });
       }
     } catch (error) {
       console.error("Error deleting portal:", error)
+      posthog.captureException(error as Error);
     } finally {
       setDeletingId(null)
     }
@@ -79,6 +104,16 @@ export default function PortalList() {
     navigator.clipboard.writeText(url)
     setCopiedSlug(slug)
     setTimeout(() => setCopiedSlug(null), 2000)
+
+    const portal = portals.find(p => p.slug === slug);
+
+    // Track portal link copy - indicates intent to share
+    posthog.capture('portal_link_copied', {
+      portal_id: portal?.id,
+      portal_name: portal?.name,
+      portal_slug: slug,
+      portal_url: url,
+    });
   }
 
   if (loading) {

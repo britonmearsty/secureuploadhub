@@ -26,6 +26,8 @@ export default function RecentUploads() {
 
   useEffect(() => {
     fetchUploads()
+    const interval = setInterval(fetchUploads, 5000)
+    return () => clearInterval(interval)
   }, [])
 
   async function fetchUploads() {
@@ -134,12 +136,14 @@ export default function RecentUploads() {
                   </p>
                 </div>
 
-                <button
+                <a
+                  href={`/api/uploads/${upload.id}/download`}
                   className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
                   title="Download"
+                  download
                 >
                   <Download className="w-4 h-4" />
-                </button>
+                </a>
               </div>
             </div>
           ))}

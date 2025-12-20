@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import prisma from "@/lib/prisma"
+import { hashPassword } from "@/lib/password"
 
 // GET /api/portals - List all portals for the current user
 export async function GET() {
   try {
     const session = await auth()
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -32,25 +33,47 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const session = await auth()
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const body = await request.json()
-    const { name, slug, description, primaryColor, requireClientName, requireClientEmail } = body
+    const {
+      name,
+      slug,
+      description,
+      primaryColor,
+      requireClientName,
+      requireClientEmail,
+      storageProvider,
+      storageFolderId,
+      storageFolderPath,
+      password,
+    } = await request.json()
 
-    // Validate required fields
     if (!name || !slug) {
       return NextResponse.json({ error: "Name and slug are required" }, { status: 400 })
     }
 
-    // Validate slug format (lowercase letters, numbers, hyphens only)
-    const slugRegex = /^[a-z0-9-]+$/
-    if (!slugRegex.test(slug)) {
-      return NextResponse.json({ 
-        error: "Slug can only contain lowercase letters, numbers, and hyphens" 
-      }, { status: 400 })
+    // Validate storage provider
+    const validProviders = ["local", "google_drive", "dropbox"]
+    const provider = validProviders.includes(storageProvider) ? storageProvider : "local"
+
+    // If using cloud storage, verify user has connected account
+    if (provider !== "local") {
+      const oauthProvider = provider === "google_drive" ? "google" : "dropbox"
+      const account = await prisma.account.findFirst({
+        where: {
+          userId: session.user.id,
+          provider: oauthProvider,
+        },
+      })
+
+      if (!account) {
+        return NextResponse.json({
+          error: `Please connect your ${provider === "google_drive" ? "Google" : "Dropbox"} account first`
+        }, { status: 400 })
+      }
     }
 
     // Check if slug is already taken
@@ -62,7 +85,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "This URL slug is already taken" }, { status: 400 })
     }
 
-    // Create the portal
+    // Hash password if provided
+    const passwordHash = password ? hashPassword(password) : null
+
     const portal = await prisma.uploadPortal.create({
       data: {
         userId: session.user.id,
@@ -72,13 +97,18 @@ export async function POST(request: NextRequest) {
         primaryColor: primaryColor || "#4F46E5",
         requireClientName: requireClientName ?? true,
         requireClientEmail: requireClientEmail ?? false,
+        storageProvider: provider,
+        storageFolderId: storageFolderId || null,
+        storageFolderPath: storageFolderPath || null,
+        passwordHash,
+        isActive: true,
+        maxFileSize: 500 * 1024 * 1024, // 500MB default
       }
     })
 
-    return NextResponse.json(portal, { status: 201 })
+    return NextResponse.json(portal)
   } catch (error) {
     console.error("Error creating portal:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
-
