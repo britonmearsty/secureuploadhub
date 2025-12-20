@@ -1,0 +1,17 @@
+DATABASE_URL="postgresql://neondb_owner:npg_vWeq2TPYg3Xh@ep-aged-mud-a4hic3kj-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
+# NextAuth.js Configuration
+AUTH_SECRET="V21hv5sFP43sH4ZVJDH+A6wLm0n4kv3swoH18ZKHNkPYruspIt49vn6AucU="
+
+# Google OAuth
+# Create at: https://console.cloud.google.com/apis/credentials
+GOOGLE_CLIENT_ID="216549749168-u1l38938vjqq148uj32p52b50uo5amrq.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="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"
+
+# Dropbox OAuth
+# Create at: https://www.dropbox.com/developers/apps
+DROPBOX_CLIENT_ID="7ilplcbpgxo3qlc"
+DROPBOX_CLIENT_SECRET="7ycap9v4735lut5"
+
+# App URL (for OAuth callbacks)
+NEXTAUTH_URL="http://localhost:3000"

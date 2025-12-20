@@ -16,7 +16,9 @@ model User {
   sessions      Session[]
   // Optional for WebAuthn support
   Authenticator Authenticator[]
- 
+  // Upload portals owned by this user
+  uploadPortals UploadPortal[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -70,8 +72,79 @@ model Authenticator {
   credentialDeviceType String
   credentialBackedUp   Boolean
   transports           String?
- 
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
- 
+
   @@id([userId, credentialID])
+}
+
+// Upload Portal - the branded upload page for clients
+model UploadPortal {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String   // Display name, e.g., "Tax Documents"
+  slug        String   @unique // URL slug, e.g., "cpa-solutions"
+  description String?  // Optional description shown on portal
+
+  // Branding
+  logoUrl     String?  // Custom logo URL
+  primaryColor String  @default("#4F46E5") // Brand color
+
+  // Settings
+  isActive    Boolean  @default(true)
+  maxFileSize Int      @default(104857600) // 100MB default in bytes
+  allowedFileTypes String[] @default([]) // Empty = allow all
+  requireClientName Boolean @default(true)
+  requireClientEmail Boolean @default(false)
+  passwordHash String? // Optional password protection
+
+  // Cloud storage destination
+  storageProvider String @default("local") // "google_drive", "dropbox", "local"
+  storageFolderId String? // Folder ID in cloud storage
+  storageFolderPath String? // Human-readable folder path
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  uploads     FileUpload[]
+
+  @@index([userId])
+}
+
+// File Upload - tracks each file uploaded through a portal
+model FileUpload {
+  id            String   @id @default(cuid())
+  portalId      String
+
+  // File info
+  fileName      String
+  fileSize      Int      // Size in bytes
+  mimeType      String
+
+  // Client info (optional based on portal settings)
+  clientName    String?
+  clientEmail   String?
+  clientMessage String?  // Optional message from client
+
+  // Storage info
+  storageProvider String // Where the file was stored
+  storageFileId   String? // File ID in cloud storage
+  storagePath     String? // Path in cloud storage
+
+  // Status
+  status        String   @default("pending") // "pending", "uploaded", "failed"
+  errorMessage  String?  // Error message if upload failed
+
+  // Metadata
+  ipAddress     String?  // Client IP for audit
+  userAgent     String?  // Client browser info
+
+  createdAt     DateTime @default(now())
+  uploadedAt    DateTime? // When file was successfully stored
+
+  portal        UploadPortal @relation(fields: [portalId], references: [id], onDelete: Cascade)
+
+  @@index([portalId])
+  @@index([createdAt])
 }
