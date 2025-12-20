@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 
-// GET /api/public/portals/[slug] - Get portal info for public upload page
+// GET /api/public/portals/[slug] - Get a portal by slug (public endpoint)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
@@ -21,7 +21,7 @@ export async function GET(
         requireClientName: true,
         requireClientEmail: true,
         maxFileSize: true,
-        allowedFileTypes: true,
+        passwordHash: true,
       }
     })
 
@@ -29,10 +29,15 @@ export async function GET(
       return NextResponse.json({ error: "Portal not found" }, { status: 404 })
     }
 
-    return NextResponse.json(portal)
+    // Don't expose the actual password hash, just whether it's protected
+    const { passwordHash, ...portalData } = portal
+
+    return NextResponse.json({
+      ...portalData,
+      isPasswordProtected: !!passwordHash,
+    })
   } catch (error) {
     console.error("Error fetching portal:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
-

@@ -5,6 +5,8 @@ import type { NextAuthConfig } from "next-auth"
 
 // Shared auth configuration (Edge-compatible, no Prisma)
 export const authConfig: NextAuthConfig = {
+  trustHost: true,
+  useSecureCookies: process.env.NODE_ENV === "production",
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -21,10 +23,20 @@ export const authConfig: NextAuthConfig = {
     Dropbox({
       clientId: process.env.DROPBOX_CLIENT_ID!,
       clientSecret: process.env.DROPBOX_CLIENT_SECRET!,
+      allowDangerousEmailAccountLinking: true,
       authorization: {
         params: {
           token_access_type: "offline",
+          scope: "files.metadata.read files.content.write",
         },
+      },
+      profile: async (profile) => {
+        return {
+          id: profile.account_id,
+          name: profile.name?.display_name || profile.email || "User",
+          email: profile.email,
+          image: profile.profile_photo_url,
+        }
       },
     }),
   ],

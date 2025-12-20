@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useParams } from "next/navigation"
-import { Upload, CheckCircle, AlertCircle, Loader2, X, FileIcon } from "lucide-react"
+import posthog from "posthog-js"
+import { Upload, CheckCircle, AlertCircle, Loader2, X, FileIcon, Lock } from "lucide-react"
 
 interface Portal {
   id: string
@@ -14,6 +15,7 @@ interface Portal {
   requireClientName: boolean
   requireClientEmail: boolean
   maxFileSize: number
+  isPasswordProtected?: boolean
 }
 
 interface UploadFile {
@@ -40,6 +42,13 @@ export default function PublicUploadPage() {
   const [isUploading, setIsUploading] = useState(false)
   const [uploadComplete, setUploadComplete] = useState(false)
 
+  // Password protection state
+  const [isUnlocked, setIsUnlocked] = useState(false)
+  const [password, setPassword] = useState("")
+  const [passwordError, setPasswordError] = useState("")
+  const [verifyingPassword, setVerifyingPassword] = useState(false)
+  const [accessToken, setAccessToken] = useState("")
+
   useEffect(() => {
     fetchPortal()
   }, [slug])
@@ -50,6 +59,10 @@ export default function PublicUploadPage() {
       if (res.ok) {
         const data = await res.json()
         setPortal(data)
+        // If not password protected, mark as unlocked
+        if (!data.isPasswordProtected) {
+          setIsUnlocked(true)
+        }
       } else if (res.status === 404) {
         setError("Portal not found")
       } else {
@@ -59,6 +72,40 @@ export default function PublicUploadPage() {
       setError("Failed to load portal")
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function verifyPasswordAndUnlock(e: React.FormEvent) {
+    e.preventDefault()
+    setPasswordError("")
+    setVerifyingPassword(true)
+
+    try {
+      const res = await fetch(`/api/public/portals/${slug}/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setAccessToken(data.token || "")
+        setIsUnlocked(true)
+        posthog.capture('portal_password_verified', {
+          portal_id: portal?.id,
+          portal_slug: slug,
+        })
+      } else {
+        setPasswordError("Incorrect password")
+        posthog.capture('portal_password_failed', {
+          portal_id: portal?.id,
+          portal_slug: slug,
+        })
+      }
+    } catch {
+      setPasswordError("Failed to verify password")
+    } finally {
+      setVerifyingPassword(false)
     }
   }
 
@@ -103,7 +150,7 @@ export default function PublicUploadPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    
+
     if (!portal) return
     if (files.length === 0) {
       alert("Please select at least one file to upload")
@@ -112,40 +159,109 @@ export default function PublicUploadPage() {
 
     setIsUploading(true)
 
+    // Track upload started event
+    const totalFileSize = files.reduce((acc, f) => acc + f.file.size, 0);
+    posthog.capture('file_upload_started', {
+      portal_id: portal.id,
+      portal_name: portal.name,
+      portal_slug: slug,
+      file_count: files.length,
+      total_file_size: totalFileSize,
+      has_client_name: !!clientName,
+      has_client_email: !!clientEmail,
+      has_client_message: !!clientMessage,
+    });
+
+    let successCount = 0;
+    let failCount = 0;
+
     for (const uploadFile of files) {
       if (uploadFile.status === "complete") continue
 
-      setFiles(prev => prev.map(f => 
+      setFiles(prev => prev.map(f =>
         f.id === uploadFile.id ? { ...f, status: "uploading" as const } : f
       ))
 
       try {
-        const formData = new FormData()
-        formData.append("file", uploadFile.file)
-        formData.append("portalId", portal.id)
-        formData.append("clientName", clientName)
-        formData.append("clientEmail", clientEmail)
-        formData.append("clientMessage", clientMessage)
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest()
+          
+          xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+              const percentComplete = Math.round((event.loaded / event.total) * 100)
+              setFiles(prev => prev.map(f => 
+                f.id === uploadFile.id ? { ...f, progress: percentComplete } : f
+              ))
+            }
+          }
 
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve()
+            } else {
+              let errorMessage = "Upload failed"
+              try {
+                const response = JSON.parse(xhr.responseText)
+                errorMessage = response.error || errorMessage
+              } catch (e) {
+                // ignore json parse error
+              }
+              reject(new Error(errorMessage))
+            }
+          }
+
+          xhr.onerror = () => {
+            reject(new Error("Network error"))
+          }
+
+          const formData = new FormData()
+          formData.append("file", uploadFile.file)
+          formData.append("portalId", portal.id)
+          formData.append("clientName", clientName)
+          formData.append("clientEmail", clientEmail)
+          formData.append("clientMessage", clientMessage)
+          if (accessToken) {
+            formData.append("token", accessToken)
+          }
+
+          xhr.open("POST", "/api/upload")
+          if (accessToken) {
+            xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`)
+          }
+          xhr.send(formData)
         })
 
-        if (res.ok) {
-          setFiles(prev => prev.map(f => 
-            f.id === uploadFile.id ? { ...f, status: "complete" as const, progress: 100 } : f
-          ))
-        } else {
-          const data = await res.json()
-          setFiles(prev => prev.map(f => 
-            f.id === uploadFile.id ? { ...f, status: "error" as const, error: data.error } : f
-          ))
-        }
-      } catch {
-        setFiles(prev => prev.map(f => 
-          f.id === uploadFile.id ? { ...f, status: "error" as const, error: "Upload failed" } : f
+        setFiles(prev => prev.map(f =>
+          f.id === uploadFile.id ? { ...f, status: "complete" as const, progress: 100 } : f
         ))
+        successCount++;
+
+        // Track individual file upload completion
+        posthog.capture('file_upload_completed', {
+          portal_id: portal.id,
+          portal_name: portal.name,
+          portal_slug: slug,
+          file_name: uploadFile.file.name,
+          file_size: uploadFile.file.size,
+          file_type: uploadFile.file.type,
+        });
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "Upload failed"
+        setFiles(prev => prev.map(f =>
+          f.id === uploadFile.id ? { ...f, status: "error" as const, error: errorMessage } : f
+        ))
+        failCount++;
+
+        // Track upload exception
+        posthog.capture('file_upload_failed', {
+          portal_id: portal.id,
+          portal_name: portal.name,
+          portal_slug: slug,
+          file_name: uploadFile.file.name,
+          file_size: uploadFile.file.size,
+          file_type: uploadFile.file.type,
+          error: errorMessage,
+        });
       }
     }
 
@@ -190,6 +306,69 @@ export default function PublicUploadPage() {
     )
   }
 
+  // Password protection screen
+  if (portal.isPasswordProtected && !isUnlocked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+        <div className="max-w-md w-full">
+          <div className="text-center mb-8">
+            <div
+              className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+              style={{ backgroundColor: portal.primaryColor }}
+            >
+              <Lock className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">{portal.name}</h1>
+            <p className="text-gray-600">This portal is password protected</p>
+          </div>
+
+          <form onSubmit={verifyPasswordAndUnlock} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Enter Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Enter the portal password"
+                required
+                autoFocus
+              />
+              {passwordError && (
+                <p className="mt-2 text-sm text-red-600">{passwordError}</p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={verifyingPassword || !password}
+              className="w-full py-3 text-white rounded-lg font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+              style={{ backgroundColor: portal.primaryColor }}
+            >
+              {verifyingPassword ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                <>
+                  <Lock className="w-5 h-5" />
+                  Unlock Portal
+                </>
+              )}
+            </button>
+          </form>
+
+          <p className="text-center text-sm text-gray-400 mt-6">
+            Powered by SecureUploadHub
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   if (uploadComplete) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -209,6 +388,13 @@ export default function PublicUploadPage() {
               setUploadComplete(false)
               setFiles([])
               setClientMessage("")
+
+              // Track engagement - user wants to upload more files
+              posthog.capture('upload_more_clicked', {
+                portal_id: portal.id,
+                portal_name: portal.name,
+                portal_slug: portal.slug,
+              });
             }}
             className="px-6 py-2 text-white rounded-lg font-medium"
             style={{ backgroundColor: portal.primaryColor }}
