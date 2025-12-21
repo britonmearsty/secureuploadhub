@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import { updateSettings } from "../actions"
-import { Loader2, Monitor, Moon, Sun } from "lucide-react"
+import { Loader2, Monitor, Moon, Sun, CheckCircle2 } from "lucide-react"
+import { motion } from "framer-motion"
 
 interface ThemeSettingsProps {
   theme: string
@@ -11,83 +12,103 @@ interface ThemeSettingsProps {
 export default function ThemeSettings({ theme: initialTheme }: ThemeSettingsProps) {
   const [theme, setTheme] = useState(initialTheme)
   const [isLoading, setIsLoading] = useState(false)
-  const [message, setMessage] = useState("")
+  const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null)
 
   async function handleSave(newTheme: string) {
+    if (newTheme === theme) return
+
     setTheme(newTheme)
     setIsLoading(true)
-    setMessage("")
+    setMessage(null)
 
     try {
       await updateSettings({ theme: newTheme })
-      setMessage("Theme updated successfully")
+      setMessage({ text: "Appearance updated successfully", type: 'success' })
     } catch (_) {
-      setMessage("Failed to update theme")
+      setMessage({ text: "Failed to update appearance", type: 'error' })
     } finally {
       setIsLoading(false)
     }
   }
 
+  const themes = [
+    { id: "light", name: "Light", icon: Sun, description: "Classic light appearance" },
+    { id: "dark", name: "Dark", icon: Moon, description: "Easier on the eyes at night" },
+    { id: "system", name: "System", icon: Monitor, description: "Follows your device settings" },
+  ]
+
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-      <div className="p-6 border-b border-gray-200">
-        <h3 className="font-semibold text-gray-900 text-lg flex items-center gap-2">
-          <Monitor className="w-5 h-5" />
-          Appearance
-        </h3>
-        <p className="text-gray-600 text-sm mt-1">
-          Customize how SecureUploadHub looks
-        </p>
+    <div className="max-w-3xl space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {themes.map((t) => {
+          const Icon = t.icon
+          const isActive = theme === t.id
+
+          return (
+            <button
+              key={t.id}
+              onClick={() => handleSave(t.id)}
+              disabled={isLoading}
+              className={`relative group flex flex-col p-4 rounded-2xl border-2 transition-all duration-200 text-left ${isActive
+                  ? "border-slate-900 bg-slate-50 ring-4 ring-slate-900/5"
+                  : "border-slate-200 hover:border-slate-300 bg-white"
+                } ${isLoading && theme !== t.id ? "opacity-50" : ""}`}
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div className={`p-2 rounded-xl border ${isActive ? "bg-white border-slate-200" : "bg-slate-50 border-slate-100"
+                  }`}>
+                  <Icon className={`w-6 h-6 ${isActive ? "text-slate-900" : "text-slate-400"}`} />
+                </div>
+                {isActive && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="text-slate-900"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="w-5 h-5 fill-slate-900 text-white" />
+                    )}
+                  </motion.div>
+                )}
+              </div>
+              <div className="mt-auto">
+                <p className={`font-semibold text-sm ${isActive ? "text-slate-900" : "text-slate-600"}`}>
+                  {t.name}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {t.description}
+                </p>
+              </div>
+            </button>
+          )
+        })}
       </div>
-      
-      <div className="p-6">
-        <div className="grid grid-cols-3 gap-4">
-          <button
-            onClick={() => handleSave("light")}
-            disabled={isLoading}
-            className={`p-4 rounded-lg border-2 flex flex-col items-center gap-2 transition-all ${
-              theme === "light"
-                ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-                : "border-gray-200 hover:border-gray-300 text-gray-600"
-            } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-          >
-            {isLoading && theme === "light" ? <Loader2 className="w-6 h-6 animate-spin" /> : <Sun className="w-6 h-6" />}
-            <span className="font-medium text-sm">Light</span>
-          </button>
 
-          <button
-            onClick={() => handleSave("dark")}
-            disabled={isLoading}
-            className={`p-4 rounded-lg border-2 flex flex-col items-center gap-2 transition-all ${
-              theme === "dark"
-                ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-                : "border-gray-200 hover:border-gray-300 text-gray-600"
-            } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-          >
-            {isLoading && theme === "dark" ? <Loader2 className="w-6 h-6 animate-spin" /> : <Moon className="w-6 h-6" />}
-            <span className="font-medium text-sm">Dark</span>
-          </button>
-
-          <button
-            onClick={() => handleSave("system")}
-            disabled={isLoading}
-            className={`p-4 rounded-lg border-2 flex flex-col items-center gap-2 transition-all ${
-              theme === "system"
-                ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-                : "border-gray-200 hover:border-gray-300 text-gray-600"
-            } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-          >
-            {isLoading && theme === "system" ? <Loader2 className="w-6 h-6 animate-spin" /> : <Monitor className="w-6 h-6" />}
-            <span className="font-medium text-sm">System</span>
-          </button>
+      <div className="pt-4">
+        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Monitor className="w-5 h-5 text-slate-400" />
+            <div>
+              <p className="text-sm font-medium text-slate-900">Reduced Motion</p>
+              <p className="text-xs text-slate-500">Minimize animations and transitions across the app.</p>
+            </div>
+          </div>
+          <p className="text-[10px] font-bold uppercase tracking-wider bg-slate-200 text-slate-600 px-2 py-1 rounded">Coming Soon</p>
         </div>
-        
-        {message && (
-          <p className={`text-sm mt-4 ${message.includes("Failed") ? "text-red-600" : "text-green-600"}`}>
-            {message}
-          </p>
-        )}
       </div>
+
+      {message && (
+        <motion.p
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className={`text-sm font-medium ${message.type === 'error' ? "text-red-600" : "text-emerald-600"}`}
+        >
+          {message.text}
+        </motion.p>
+      )}
     </div>
   )
 }
+

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import { hashPassword } from "@/lib/password"
+import { invalidateCache, getUserDashboardKey } from "@/lib/cache"
 
 // GET /api/portals - List all portals for the current user
 export async function GET() {
@@ -105,6 +106,9 @@ export async function POST(request: NextRequest) {
         maxFileSize: 500 * 1024 * 1024, // 500MB default
       }
     })
+
+    // Invalidate dashboard cache since new portal was created
+    await invalidateCache(getUserDashboardKey(session.user.id))
 
     return NextResponse.json(portal)
   } catch (error) {

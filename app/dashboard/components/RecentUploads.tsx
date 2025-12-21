@@ -1,7 +1,17 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { FileIcon, Download, Clock, User, Mail } from "lucide-react"
+import { motion } from "framer-motion"
+import {
+  FileIcon,
+  Download,
+  Clock,
+  User,
+  Mail,
+  History,
+  ExternalLink,
+  ChevronRight,
+  Inbox
+} from "lucide-react"
 
 interface Upload {
   id: string
@@ -20,43 +30,24 @@ interface Upload {
   }
 }
 
-export default function RecentUploads() {
-  const [uploads, setUploads] = useState<Upload[]>([])
-  const [loading, setLoading] = useState(true)
+interface RecentUploadsProps {
+  uploads: Upload[]
+}
 
-  useEffect(() => {
-    fetchUploads()
-    const interval = setInterval(fetchUploads, 5000)
-    return () => clearInterval(interval)
-  }, [])
-
-  async function fetchUploads() {
-    try {
-      const res = await fetch("/api/uploads?limit=10")
-      if (res.ok) {
-        const data = await res.json()
-        setUploads(data)
-      }
-    } catch (error) {
-      console.error("Error fetching uploads:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  function formatFileSize(bytes: number): string {
-    if (bytes === 0) return "0 Bytes"
+export default function RecentUploads({ uploads }: RecentUploadsProps) {
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes'
     const k = 1024
-    const sizes = ["Bytes", "KB", "MB", "GB"]
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
     const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
-  function formatTimeAgo(dateString: string): string {
+  const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString)
     const now = new Date()
     const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-    
+
     if (seconds < 60) return "Just now"
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
     if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
@@ -64,92 +55,84 @@ export default function RecentUploads() {
     return date.toLocaleDateString()
   }
 
-  if (loading) {
-    return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-16 bg-gray-100 rounded"></div>
-          <div className="h-16 bg-gray-100 rounded"></div>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-      <div className="p-6 border-b border-gray-200">
-        <h3 className="font-semibold text-gray-900 text-lg">Recent Uploads</h3>
+    <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="p-6 border-b border-slate-100 flex items-center bg-slate-50/30">
+        <div className="flex items-center gap-2">
+          <History className="w-5 h-5 text-slate-400" />
+          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900">Recent Activity</h3>
+        </div>
       </div>
 
-      {uploads.length === 0 ? (
-        <div className="p-8 text-center">
-          <FileIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <h4 className="font-medium text-gray-900 mb-2">No uploads yet</h4>
-          <p className="text-gray-600 text-sm">
-            Files uploaded by your clients will appear here
-          </p>
-        </div>
-      ) : (
-        <div className="divide-y divide-gray-200">
-          {uploads.map((upload) => (
-            <div key={upload.id} className="p-4 hover:bg-gray-50 transition-colors">
-              <div className="flex items-start gap-4">
-                <div 
-                  className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: upload.portal.primaryColor + "20" }}
-                >
-                  <FileIcon className="w-5 h-5" style={{ color: upload.portal.primaryColor }} />
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="font-medium text-gray-900 truncate">{upload.fileName}</p>
-                    <span className="text-xs text-gray-500 flex-shrink-0">
-                      {formatFileSize(upload.fileSize)}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 text-sm text-gray-500">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {formatTimeAgo(upload.createdAt)}
-                    </span>
-                    
-                    {upload.clientName && (
-                      <span className="flex items-center gap-1">
-                        <User className="w-3 h-3" />
-                        {upload.clientName}
-                      </span>
-                    )}
-                    
-                    {upload.clientEmail && (
-                      <span className="flex items-center gap-1">
-                        <Mail className="w-3 h-3" />
-                        {upload.clientEmail}
-                      </span>
-                    )}
-                  </div>
-                  
-                  <p className="text-xs text-gray-400 mt-1">
-                    via {upload.portal.name}
-                  </p>
-                </div>
+      <div className="divide-y divide-slate-100">
+        {uploads.length > 0 ? (
+          uploads.map((upload, index) => (
+            <motion.div
+              key={upload.id}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className="p-5 flex items-center gap-4 hover:bg-slate-50/50 transition-all group"
+            >
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border border-transparent group-hover:bg-white group-hover:border-slate-100 transition-all"
+                style={{ backgroundColor: upload.portal.primaryColor + "10" }}
+              >
+                <FileIcon className="w-5 h-5" style={{ color: upload.portal.primaryColor }} />
+              </div>
 
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <h4 className="text-sm font-bold text-slate-900 truncate" title={upload.fileName}>
+                    {upload.fileName}
+                  </h4>
+                  <span className="text-[10px] font-black text-slate-300 uppercase shrink-0">
+                    {formatFileSize(upload.fileSize)}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-medium text-slate-500">
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-3 h-3 text-slate-300" />
+                    {formatTimeAgo(upload.createdAt)}
+                  </div>
+                  {(upload.clientName || upload.clientEmail) && (
+                    <div className="flex items-center gap-1.5">
+                      <User className="w-3 h-3 text-slate-300" />
+                      {upload.clientName || upload.clientEmail}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1 h-1 rounded-full bg-slate-300" />
+                    <span className="bg-slate-100 px-1.5 py-0.5 rounded text-[10px] uppercase font-bold text-slate-500">
+                      {upload.portal.name}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1">
                 <a
                   href={`/api/uploads/${upload.id}/download`}
-                  className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="p-2.5 text-slate-300 hover:text-slate-900 hover:bg-white rounded-xl border border-transparent hover:border-slate-200 transition-all shadow-none hover:shadow-sm"
                   title="Download"
-                  download
                 >
                   <Download className="w-4 h-4" />
                 </a>
+                <button className="p-2.5 text-slate-300 hover:text-slate-900 hover:bg-white rounded-xl border border-transparent hover:border-slate-200 transition-all shadow-none hover:shadow-sm">
+                  <ChevronRight className="w-4 h-4" />
+                </button>
               </div>
+            </motion.div>
+          ))
+        ) : (
+          <div className="py-20 text-center">
+            <div className="p-4 bg-slate-50 rounded-full w-fit mx-auto mb-4">
+              <Inbox className="w-8 h-8 text-slate-200" />
             </div>
-          ))}
-        </div>
-      )}
+            <p className="text-slate-500 text-sm font-medium">No recent activity detected.</p>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
-

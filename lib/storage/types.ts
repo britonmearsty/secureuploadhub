@@ -38,6 +38,18 @@ export interface CloudStorageService {
   provider: StorageProvider
   
   /**
+   * Initiate a resumable upload session
+   * Returns an upload URL that the client can PUT to directly
+   */
+  createResumableUpload?(
+    accessToken: string,
+    fileName: string,
+    mimeType: string,
+    folderId?: string,
+    folderPath?: string
+  ): Promise<{ uploadUrl: string; fileId?: string }>
+
+  /**
    * Upload a file to the cloud storage
    */
   uploadFile(

@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import posthog from 'posthog-js';
+import Lottie from 'lottie-react';
+import featureAnimation from '@/public/lottie/feature.json';
 import {
   ShieldCheck,
   UploadCloud,
@@ -23,20 +25,75 @@ import {
   ChevronDown,
   ChevronUp,
   Mail,
-  Twitter,
-  Linkedin,
-  Github,
   MessageSquare,
-  HelpCircle
+  HelpCircle,
+  Palette,
+  Sparkles,
+  Bell
 } from 'lucide-react';
+
+function Counter({ end, duration = 2000, suffix = '', prefix = '', decimals = 0 }: { end: number, duration?: number, suffix?: string, prefix?: string, decimals?: number }) {
+  const [count, setCount] = useState(0);
+  const countRef = React.useRef<HTMLSpanElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (countRef.current) {
+      observer.observe(countRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  React.useEffect(() => {
+    if (!isVisible) return;
+
+    let startTime: number | null = null;
+    let animationFrame: number;
+
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = timestamp - startTime;
+      const percentage = Math.min(progress / duration, 1);
+      
+      // Ease out quart
+      const ease = 1 - Math.pow(1 - percentage, 4);
+      
+      setCount(end * ease);
+
+      if (progress < duration) {
+        animationFrame = requestAnimationFrame(animate);
+      }
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, [end, duration, isVisible]);
+
+  return (
+    <span ref={countRef}>
+      {prefix}{count.toFixed(decimals)}{suffix}
+    </span>
+  );
+}
 
 export default function LandingPage() {
   const [isAnnual, setIsAnnual] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [newsletterEmail, setNewsletterEmail] = useState('');
-  const [newsletterLoading, setNewsletterLoading] = useState(false);
-  const [newsletterMessage, setNewsletterMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [expandedStep, setExpandedStep] = useState<number | null>(null);
 
   const handlePricingToggle = () => {
     const newIsAnnual = !isAnnual;
@@ -58,6 +115,7 @@ export default function LandingPage() {
     posthog.capture('demo_video_clicked', {
       cta_location: 'hero',
     });
+    setIsVideoModalOpen(true);
   };
 
   const handleFreePlanClick = () => {
@@ -67,57 +125,32 @@ export default function LandingPage() {
     });
   };
 
-  const handleProPlanTrialClick = () => {
-    posthog.capture('pro_plan_trial_clicked', {
-      plan: 'professional',
-      billing_period: isAnnual ? 'annual' : 'monthly',
-      price: isAnnual ? 12 : 15,
-    });
-  };
-
-  const handleNewsletterSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setNewsletterLoading(true);
-    setNewsletterMessage(null);
-
-    try {
-      const response = await fetch('/api/newsletter/subscribe', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: newsletterEmail }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setNewsletterMessage({
-          type: 'success',
-          text: 'Thank you for subscribing! Check your email for a welcome message.',
-        });
-        setNewsletterEmail('');
-        posthog.capture('newsletter_subscribed', {
-          email: newsletterEmail,
-        });
-      } else {
-        setNewsletterMessage({
-          type: 'error',
-          text: data.error || 'Failed to subscribe. Please try again.',
-        });
-      }
-    } catch (error) {
-      setNewsletterMessage({
-        type: 'error',
-        text: 'An error occurred. Please try again later.',
-      });
-    } finally {
-      setNewsletterLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-indigo-100 selection:text-indigo-700 font-sans">
+      {/* Video Modal */}
+      {isVideoModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setIsVideoModalOpen(false)}>
+          <div className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setIsVideoModalOpen(false)}
+              className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 rounded-full p-2 transition-colors"
+              aria-label="Close modal"
+            >
+              <X className="w-6 h-6 text-slate-700" />
+            </button>
+            <div className="p-4 sm:p-8">
+              <div className="relative w-full" style={{ paddingBottom: '56.25%', height: 0 }}>
+                <video
+                  className="absolute top-0 left-0 w-full h-full rounded-lg"
+                  controls
+                  src="/hero.mp4"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 backdrop-blur-md bg-white/70 border-b border-slate-200/60">
@@ -195,14 +228,14 @@ export default function LandingPage() {
             <Link
               href="/auth/signin"
               onClick={handleCtaClick}
-              className="w-full sm:w-auto bg-indigo-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 flex items-center justify-center gap-2 group"
+              className="w-auto bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 flex items-center justify-center gap-2 group"
             >
               Create Your Portal Link
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
             <button
               onClick={handleDemoVideoClick}
-              className="w-full sm:w-auto bg-white border border-slate-200 text-slate-700 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-slate-50 transition-all"
+              className="w-auto bg-white border border-slate-200 text-slate-700 px-6 py-3 rounded-2xl font-bold text-lg hover:bg-slate-50 transition-all"
             >
               Watch 1-min Demo
             </button>
@@ -230,7 +263,7 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Large Card */}
-            <div className="md:col-span-2 bg-slate-50 border border-slate-100 p-8 rounded-3xl hover:shadow-md transition-shadow">
+            <div className="md:col-span-2 bg-slate-50 border border-slate-100 p-8 rounded-3xl">
               <div className="bg-red-100 w-12 h-12 rounded-2xl flex items-center justify-center mb-6">
                 <MailWarning className="text-red-600" />
               </div>
@@ -270,13 +303,9 @@ export default function LandingPage() {
                 <h3 className="text-2xl font-bold mb-4">Zero-Friction for Clients</h3>
                 <p className="text-slate-600">Your clients don't need to create an account, download an app, or remember a password. They just drag, drop, and done.</p>
               </div>
-              <div className="w-full md:w-1/3 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                <div className="h-2 w-3/4 bg-slate-100 rounded mb-2"></div>
-                <div className="h-8 w-full bg-indigo-50 rounded mb-2 flex items-center px-2">
-                  <div className="h-2 w-1/2 bg-indigo-200 rounded"></div>
-                </div>
-                <div className="h-8 w-full bg-indigo-600 rounded flex items-center justify-center">
-                  <span className="text-[10px] text-white font-bold">UPLOAD COMPLETE</span>
+              <div className="w-full md:w-2/5 flex justify-center">
+                <div className="w-72 h-72">
+                  <Lottie animationData={featureAnimation} loop={true} />
                 </div>
               </div>
             </div>
@@ -295,41 +324,104 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
             {/* Step 1 */}
             <div className="relative text-center">
-              <div className="bg-indigo-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <div 
+                className="bg-indigo-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 cursor-pointer hover:bg-indigo-200 transition-all hover:scale-110 relative"
+                onClick={() => setExpandedStep(expandedStep === 0 ? null : 0)}
+              >
                 <LinkIcon className="w-8 h-8 text-indigo-600" />
+                {expandedStep === 0 && (
+                  <>
+                    <div className="absolute left-1/2 -top-16 transform -translate-x-1/2 animate-ping z-10">
+                      <div className="bg-indigo-100 w-10 h-10 rounded-xl flex items-center justify-center opacity-75">
+                        <Palette className="w-5 h-5 text-indigo-600" />
+                      </div>
+                    </div>
+                    <div className="absolute -right-6 -top-6 animate-bounce z-10" style={{ animation: 'bounce 2s infinite 0.1s' }}>
+                      <div className="bg-indigo-100 w-10 h-10 rounded-xl flex items-center justify-center">
+                        <Palette className="w-5 h-5 text-indigo-600" />
+                      </div>
+                    </div>
+                    <div className="absolute -left-6 -top-6 animate-bounce z-10" style={{ animation: 'bounce 2s infinite 0.2s' }}>
+                      <div className="bg-indigo-100 w-10 h-10 rounded-xl flex items-center justify-center">
+                        <Sparkles className="w-5 h-5 text-indigo-600" />
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
               <div className="absolute top-8 left-[60%] w-[80%] h-0.5 bg-indigo-200 hidden md:block" />
               <span className="inline-block bg-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-full mb-4">Step 1</span>
               <h3 className="text-xl font-bold mb-3">Create Your Portal</h3>
               <p className="text-slate-600 text-sm leading-relaxed">
-                {/* PLACEHOLDER: Replace with actual description */}
                 Sign up and create a branded upload portal in seconds. Customize colors, add your logo, and set file requirements.
               </p>
             </div>
 
             {/* Step 2 */}
             <div className="relative text-center">
-              <div className="bg-blue-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <div 
+                className="bg-blue-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 cursor-pointer hover:bg-blue-200 transition-all hover:scale-110 relative"
+                onClick={() => setExpandedStep(expandedStep === 1 ? null : 1)}
+              >
                 <Send className="w-8 h-8 text-blue-600" />
+                {expandedStep === 1 && (
+                  <>
+                    <div className="absolute left-1/2 -top-16 transform -translate-x-1/2 animate-ping z-10">
+                      <div className="bg-blue-100 w-10 h-10 rounded-xl flex items-center justify-center opacity-75">
+                        <Mail className="w-5 h-5 text-blue-600" />
+                      </div>
+                    </div>
+                    <div className="absolute -right-6 -top-6 animate-bounce z-10" style={{ animation: 'bounce 2s infinite 0.1s' }}>
+                      <div className="bg-blue-100 w-10 h-10 rounded-xl flex items-center justify-center">
+                        <Mail className="w-5 h-5 text-blue-600" />
+                      </div>
+                    </div>
+                    <div className="absolute -left-6 -top-6 animate-bounce z-10" style={{ animation: 'bounce 2s infinite 0.2s' }}>
+                      <div className="bg-blue-100 w-10 h-10 rounded-xl flex items-center justify-center">
+                        <Globe className="w-5 h-5 text-blue-600" />
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
               <div className="absolute top-8 left-[60%] w-[80%] h-0.5 bg-indigo-200 hidden md:block" />
               <span className="inline-block bg-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-full mb-4">Step 2</span>
               <h3 className="text-xl font-bold mb-3">Share the Link</h3>
               <p className="text-slate-600 text-sm leading-relaxed">
-                {/* PLACEHOLDER: Replace with actual description */}
                 Send your unique portal link to clients via email, text, or embed it on your website. No account needed for them.
               </p>
             </div>
 
             {/* Step 3 */}
             <div className="relative text-center">
-              <div className="bg-emerald-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <div 
+                className="bg-emerald-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 cursor-pointer hover:bg-emerald-200 transition-all hover:scale-110 relative"
+                onClick={() => setExpandedStep(expandedStep === 2 ? null : 2)}
+              >
                 <FolderSync className="w-8 h-8 text-emerald-600" />
+                {expandedStep === 2 && (
+                  <>
+                    <div className="absolute left-1/2 -top-16 transform -translate-x-1/2 animate-ping z-10">
+                      <div className="bg-emerald-100 w-10 h-10 rounded-xl flex items-center justify-center opacity-75">
+                        <Bell className="w-5 h-5 text-emerald-600" />
+                      </div>
+                    </div>
+                    <div className="absolute -right-6 -top-6 animate-bounce z-10" style={{ animation: 'bounce 2s infinite 0.1s' }}>
+                      <div className="bg-emerald-100 w-10 h-10 rounded-xl flex items-center justify-center">
+                        <Bell className="w-5 h-5 text-emerald-600" />
+                      </div>
+                    </div>
+                    <div className="absolute -left-6 -top-6 animate-bounce z-10" style={{ animation: 'bounce 2s infinite 0.2s' }}>
+                      <div className="bg-emerald-100 w-10 h-10 rounded-xl flex items-center justify-center">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
               <span className="inline-block bg-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-full mb-4">Step 3</span>
               <h3 className="text-xl font-bold mb-3">Files Sync Automatically</h3>
               <p className="text-slate-600 text-sm leading-relaxed">
-                {/* PLACEHOLDER: Replace with actual description */}
                 Uploaded files appear instantly in your Google Drive or Dropbox. Get email notifications for every upload.
               </p>
             </div>
@@ -515,7 +607,7 @@ export default function LandingPage() {
                   <CheckCircle2 className="w-5 h-5 text-indigo-500" /> Password Protected Portals
                 </li>
               </ul>
-              <Link href="/auth/signin" onClick={handleProPlanTrialClick} className="block w-full py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 text-center">Start 14-Day Free Trial</Link>
+              <Link href="/auth/signin" className="block w-full py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 text-center">Start 14-Day Free Trial</Link>
             </div>
           </div>
         </div>
@@ -570,18 +662,23 @@ export default function LandingPage() {
                   className="w-full flex items-center justify-between p-6 text-left hover:bg-slate-50 transition-colors"
                 >
                   <span className="font-semibold text-slate-900 pr-4">{faq.question}</span>
-                  {openFaq === index ? (
-                    <ChevronUp className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                  )}
+                  <ChevronDown 
+                    className={`w-5 h-5 text-slate-400 flex-shrink-0 transition-transform duration-300 ${
+                      openFaq === index ? 'rotate-180' : ''
+                    }`} 
+                  />
                 </button>
-                {openFaq === index && (
-                  <div className="px-6 pb-6 text-slate-600 leading-relaxed">
-                    {/* PLACEHOLDER: Replace answers with actual content */}
-                    {faq.answer}
+                <div 
+                  className={`grid transition-all duration-300 ease-in-out ${
+                    openFaq === index ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+                  }`}
+                >
+                  <div className="overflow-hidden">
+                    <div className="px-6 pb-6 text-slate-600 leading-relaxed">
+                      {faq.answer}
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
             ))}
           </div>
@@ -600,144 +697,75 @@ export default function LandingPage() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="py-24 bg-gradient-to-br from-indigo-600 to-blue-600 relative overflow-hidden">
-        {/* Background decoration */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl" />
-        </div>
+      <section className="py-12 sm:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-gradient-to-br from-indigo-600 to-blue-600 rounded-3xl relative overflow-hidden py-16 sm:py-24 px-4 sm:px-8 text-center">
+            {/* Background decoration */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl" />
+            </div>
 
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6">
-            Ready to stop chasing files?
-          </h2>
-          <p className="text-xl text-indigo-100 mb-10 max-w-2xl mx-auto">
-            Join thousands of professionals who have simplified their file collection. Set up your first portal in under 2 minutes.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/auth/signin"
-              className="w-full sm:w-auto bg-white text-indigo-600 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-indigo-50 transition-all shadow-xl flex items-center justify-center gap-2 group"
-            >
-              Start Free Today
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <a
-              href="#pricing"
-              className="w-full sm:w-auto border-2 border-white/30 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white/10 transition-all text-center"
-            >
-              View Pricing
-            </a>
+            <div className="max-w-4xl mx-auto relative z-10">
+              <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6">
+                Ready to stop chasing files?
+              </h2>
+              <p className="text-xl text-indigo-100 mb-10 max-w-2xl mx-auto">
+                Join thousands of professionals who have simplified their file collection. Set up your first portal in under 2 minutes.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link
+                  href="/auth/signin"
+                  className="w-auto bg-white text-indigo-600 px-6 py-3 rounded-2xl font-bold text-lg hover:bg-indigo-50 transition-all shadow-xl flex items-center justify-center gap-2 group"
+                >
+                  Start Free Today
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <a
+                  href="#pricing"
+                  className="w-auto border-2 border-white/30 text-white px-6 py-3 rounded-2xl font-bold text-lg hover:bg-white/10 transition-all text-center"
+                >
+                  View Pricing
+                </a>
+              </div>
+              <p className="text-indigo-200 text-sm mt-8">
+                ✓ Free forever plan available &nbsp;&nbsp; ✓ No credit card required &nbsp;&nbsp; ✓ Cancel anytime
+              </p>
+            </div>
           </div>
-          <p className="text-indigo-200 text-sm mt-8">
-            ✓ Free forever plan available &nbsp;&nbsp; ✓ No credit card required &nbsp;&nbsp; ✓ Cancel anytime
-          </p>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="bg-slate-900 text-slate-400">
-        {/* Newsletter Section */}
-        <div className="border-b border-slate-800">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-              <div>
-                <h3 className="text-xl font-bold text-white mb-2">Stay up to date</h3>
-                <p className="text-sm">Get product updates, tips, and best practices delivered to your inbox.</p>
-              </div>
-              <form onSubmit={handleNewsletterSubmit} className="flex flex-col gap-3 w-full md:w-auto">
-                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                  <input
-                    type="email"
-                    placeholder="Enter your email"
-                    value={newsletterEmail}
-                    onChange={(e) => setNewsletterEmail(e.target.value)}
-                    required
-                    className="px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-full sm:w-72"
-                  />
-                  <button
-                    type="submit"
-                    disabled={newsletterLoading}
-                    className="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {newsletterLoading ? 'Subscribing...' : 'Subscribe'}
-                  </button>
-                </div>
-                {newsletterMessage && (
-                  <p className={`text-sm ${newsletterMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
-                    {newsletterMessage.text}
-                  </p>
-                )}
-              </form>
-            </div>
-          </div>
-        </div>
-
         {/* Main Footer Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-8 lg:gap-12 mb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             {/* Brand Column */}
-            <div className="col-span-2">
-              <div className="flex items-center gap-2 text-white mb-6">
-                <ShieldCheck className="w-6 h-6 text-indigo-400" />
+            <div className="col-span-1 md:col-span-2">
+              <div className="flex items-center gap-2 text-white mb-4">
+                <ShieldCheck className="w-8 h-8 text-indigo-500" />
                 <span className="text-xl font-bold tracking-tight">SecureUploadHub</span>
               </div>
-              <p className="max-w-sm mb-6 text-sm leading-relaxed">
-                Building the bridge between professional services and their clients. Secure, fast, and remarkably simple file collection.
+              <p className="text-sm leading-relaxed max-w-xs text-slate-400">
+                Secure file sharing for professionals. Fast, simple, and remarkably reliable.
               </p>
-              {/* Social Links */}
-              <div className="flex gap-4">
-                <a href="#" className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center hover:bg-slate-700 transition-colors" aria-label="Twitter">
-                  <Twitter className="w-5 h-5" />
-                </a>
-                <a href="#" className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center hover:bg-slate-700 transition-colors" aria-label="LinkedIn">
-                  <Linkedin className="w-5 h-5" />
-                </a>
-                <a href="#" className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center hover:bg-slate-700 transition-colors" aria-label="GitHub">
-                  <Github className="w-5 h-5" />
-                </a>
-              </div>
             </div>
 
-            {/* Product Column */}
+            {/* Links Column */}
             <div>
-              <h4 className="text-white font-bold mb-4">Product</h4>
-              <ul className="space-y-3 text-sm">
+              <h4 className="text-white font-bold mb-4 text-sm">Product</h4>
+              <ul className="space-y-2 text-sm">
                 <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
-                <li><a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a></li>
                 <li><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Integrations</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">API</a></li>
-              </ul>
-            </div>
-
-            {/* Resources Column */}
-            <div>
-              <h4 className="text-white font-bold mb-4">Resources</h4>
-              <ul className="space-y-3 text-sm">
                 <li><a href="#faq" className="hover:text-white transition-colors">FAQ</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Changelog</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Status</a></li>
               </ul>
             </div>
 
-            {/* Company Column */}
+            {/* Legal Links */}
             <div>
-              <h4 className="text-white font-bold mb-4">Company</h4>
-              <ul className="space-y-3 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Press Kit</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
-              </ul>
-            </div>
-
-            {/* Legal Column */}
-            <div>
-              <h4 className="text-white font-bold mb-4">Legal</h4>
-              <ul className="space-y-3 text-sm">
+              <h4 className="text-white font-bold mb-4 text-sm">Legal</h4>
+              <ul className="space-y-2 text-sm">
                 <li><a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a></li>
                 <li><a href="/terms" className="hover:text-white transition-colors">Terms of Service</a></li>
                 <li><a href="/cookie-policy" className="hover:text-white transition-colors">Cookie Policy</a></li>
@@ -747,32 +775,9 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Contact Info */}
-          <div className="border-t border-slate-800 pt-8 mb-8">
-            <div className="flex flex-col sm:flex-row gap-6 text-sm">
-              <a href="mailto:support@secureuploadhub.com" className="flex items-center gap-2 hover:text-white transition-colors">
-                <Mail className="w-4 h-4" />
-                {/* PLACEHOLDER: Replace with actual email */}
-                support@secureuploadhub.com
-              </a>
-              <a href="#" className="flex items-center gap-2 hover:text-white transition-colors">
-                <HelpCircle className="w-4 h-4" />
-                Help Center
-              </a>
-            </div>
-          </div>
-
           {/* Bottom Bar */}
-          <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs">
+          <div className="border-t border-slate-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs">
             <p>© {new Date().getFullYear()} SecureUploadHub Inc. All rights reserved.</p>
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2">
-                <Globe className="w-4 h-4" />
-                <span>English (US)</span>
-              </div>
-              <span className="text-slate-600">|</span>
-              <span>Made with ❤️ for professionals</span>
-            </div>
           </div>
         </div>
       </footer>
