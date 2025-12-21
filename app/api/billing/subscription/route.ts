@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth"
 import { NextRequest, NextResponse } from "next/server"
-import prisma from "@/lib/prisma"
-import { paystack, PAYSTACK_CONFIG } from "@/lib/billing"
+import { getPaystack } from "@/lib/billing"
+import { PAYSTACK_CONFIG } from "@/lib/paystack-config"
 
 export async function GET() {
   try {
@@ -9,6 +9,8 @@ export async function GET() {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+
+    const prisma = (await import("@/lib/prisma")).default
 
     const subscription = await prisma.subscription.findFirst({
       where: {
@@ -40,6 +42,8 @@ export async function POST(request: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+
+    const prisma = (await import("@/lib/prisma")).default
 
     const { planId } = await request.json()
 
@@ -92,7 +96,7 @@ export async function POST(request: NextRequest) {
         planName: plan.name
       }
     }
-
+    const paystack = await getPaystack()
     const response = await paystack.transaction.initialize(paymentData)
 
     if (response.status) {
@@ -146,6 +150,8 @@ export async function DELETE() {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+
+    const prisma = (await import("@/lib/prisma")).default
 
     const subscription = await prisma.subscription.findFirst({
       where: {
