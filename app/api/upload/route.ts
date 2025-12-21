@@ -5,6 +5,7 @@ import path from "path"
 import { uploadToCloudStorage, StorageProvider } from "@/lib/storage"
 import { sendUploadNotification } from "@/lib/email"
 import { jwtVerify } from "jose"
+import { invalidateCache, getUserDashboardKey } from "@/lib/cache"
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.PORTAL_PASSWORD_SECRET || process.env.NEXTAUTH_SECRET || "default-secret-change-me"
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
     // Validate file type if restrictions are configured
     const mimeType = file.type || "application/octet-stream"
     if (portal.allowedFileTypes && portal.allowedFileTypes.length > 0) {
-      const isAllowed = portal.allowedFileTypes.some(allowedType => {
+      const isAllowed = portal.allowedFileTypes.some((allowedType: string) => {
         if (allowedType.endsWith("/*")) {
           const mainType = allowedType.split("/")[0]
           return mimeType.startsWith(mainType + "/")
@@ -197,6 +198,9 @@ export async function POST(request: NextRequest) {
         uploadedAt,
       }
     })
+
+    // Invalidate dashboard cache since new upload was created
+    await invalidateCache(getUserDashboardKey(portal.userId))
 
     // Send email notification to portal owner (async, don't block response)
     if (portal.user.email) {

@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       select: { id: true }
     })
 
-    const portalIds = userPortals.map(p => p.id)
+    const portalIds = userPortals.map((p: { id: string }) => p.id)
 
     if (portalIds.length === 0) {
       return NextResponse.json([])

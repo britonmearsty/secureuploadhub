@@ -9,6 +9,63 @@ const GOOGLE_UPLOAD_API = "https://www.googleapis.com/upload/drive/v3"
 export class GoogleDriveService implements CloudStorageService {
   provider = "google_drive" as const
 
+  async createResumableUpload(
+    accessToken: string,
+    fileName: string,
+    mimeType: string,
+    folderId?: string,
+    folderPath?: string
+  ): Promise<{ uploadUrl: string; fileId?: string }> {
+    try {
+      // If folderPath is provided but no folderId, create/find the folder
+      let targetFolderId = folderId
+      if (folderPath && !folderId) {
+        targetFolderId = await this.ensureFolderPath(accessToken, folderPath)
+      }
+
+      const metadata: Record<string, unknown> = {
+        name: fileName,
+        mimeType: mimeType,
+      }
+
+      if (targetFolderId) {
+        metadata.parents = [targetFolderId]
+      }
+
+      const response = await fetch(
+        `${GOOGLE_UPLOAD_API}/files?uploadType=resumable`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+            "X-Upload-Content-Type": mimeType,
+            // "X-Upload-Content-Length": fileSize.toString(), // Optional but good practice if known
+          },
+          body: JSON.stringify(metadata),
+        }
+      )
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(
+          errorData.error?.message || 
+          `Failed to initiate resumable upload: ${response.status} ${response.statusText}`
+        )
+      }
+
+      const uploadUrl = response.headers.get("Location")
+      if (!uploadUrl) {
+        throw new Error("No upload URL returned from Google Drive")
+      }
+
+      return { uploadUrl }
+    } catch (error) {
+      console.error("Google Drive resumable upload init error:", error)
+      throw error
+    }
+  }
+
   async uploadFile(
     accessToken: string,
     file: Buffer,

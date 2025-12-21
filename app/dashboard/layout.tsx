@@ -19,13 +19,13 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-slate-50 flex">
       <Sidebar
         userName={session.user.name}
         userImage={session.user.image}
         signOutAction={handleSignOut}
       />
-      <main className="flex-1 min-w-0">
+      <main className="flex-1 min-w-0 overflow-y-auto">
         {children}
       </main>
     </div>

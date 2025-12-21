@@ -71,7 +71,14 @@ export async function GET(
             headers["Content-Length"] = (end - start + 1).toString()
 
             const stream = createReadStream(upload.storagePath, { start, end })
-            return new NextResponse(stream as ReadableStream<Uint8Array>, {
+            const webStream = new ReadableStream({
+              start(controller) {
+                stream.on('data', (chunk) => controller.enqueue(chunk as Uint8Array));
+                stream.on('end', () => controller.close());
+                stream.on('error', (err) => controller.error(err));
+              }
+            });
+            return new NextResponse(webStream, {
               status: statusCode,
               headers,
             })
@@ -81,7 +88,14 @@ export async function GET(
 
       headers["Content-Length"] = fileSize.toString()
       const stream = createReadStream(upload.storagePath)
-      return new NextResponse(stream as ReadableStream<Uint8Array>, {
+      const webStream = new ReadableStream({
+        start(controller) {
+          stream.on('data', (chunk) => controller.enqueue(chunk as Uint8Array));
+          stream.on('end', () => controller.close());
+          stream.on('error', (err) => controller.error(err));
+        }
+      });
+      return new NextResponse(webStream, {
         status: statusCode,
         headers,
       })

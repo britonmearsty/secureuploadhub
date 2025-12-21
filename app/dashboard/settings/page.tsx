@@ -1,9 +1,7 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import prisma from "@/lib/prisma"
-import ProfileSettings from "./components/ProfileSettings"
-import NotificationSettings from "./components/NotificationSettings"
-import ThemeSettings from "./components/ThemeSettings"
+import SettingsClient from "./SettingsClient"
 
 export default async function SettingsPage() {
   const session = await auth()
@@ -20,30 +18,15 @@ export default async function SettingsPage() {
     redirect("/auth/signin")
   }
 
-  return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto">
-      {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Settings</h1>
-        <p className="text-gray-600">
-          Manage your account preferences
-        </p>
-      </div>
+  const userData = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    image: user.image,
+    notificationEmail: user.notificationEmail,
+    marketingEmail: user.marketingEmail,
+    theme: user.theme || "system",
+  }
 
-      <div className="space-y-8">
-        {/* Profile Settings */}
-        <ProfileSettings user={user} />
-
-        {/* Notification Settings */}
-        <NotificationSettings 
-          notificationEmail={user.notificationEmail}
-          marketingEmail={user.marketingEmail}
-        />
-
-        {/* Theme Settings */}
-        <ThemeSettings theme={user.theme} />
-      </div>
-    </div>
-  )
+  return <SettingsClient user={userData} />
 }
-

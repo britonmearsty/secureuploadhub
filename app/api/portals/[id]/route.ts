@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import { hashPassword } from "@/lib/password"
+import { invalidateCache, getUserDashboardKey } from "@/lib/cache"
 
 // GET /api/portals/[id] - Get a specific portal
 export async function GET(
@@ -116,6 +117,9 @@ export async function PATCH(
       data: safeUpdates
     })
 
+    // Invalidate dashboard cache since portal data changed
+    await invalidateCache(getUserDashboardKey(session.user.id))
+
     return NextResponse.json(portal)
   } catch (error) {
     console.error("Error updating portal:", error)
@@ -152,6 +156,9 @@ export async function DELETE(
     await prisma.uploadPortal.delete({
       where: { id }
     })
+
+    // Invalidate dashboard cache since portal was deleted
+    await invalidateCache(getUserDashboardKey(session.user.id))
 
     return NextResponse.json({ success: true })
   } catch (error) {
