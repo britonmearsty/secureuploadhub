@@ -66,9 +66,36 @@ export const getUserBillingContext = async (userId: string) => {
       userId,
       status: { in: ["active", "past_due", "incomplete"] }
     },
-    include: { plan: true },
+    include: { 
+      plan: true,
+      payments: {
+        orderBy: { createdAt: "desc" },
+        take: 5
+      }
+    },
     orderBy: { updatedAt: "desc" }
   })
+
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/dedfc9f2-1f60-4578-9e5d-d5e6a43692a1',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      sessionId:'debug-session',
+      runId:'pre-fix',
+      hypothesisId:'D',
+      location:'lib/billing.ts:getUserBillingContext',
+      message:'Subscription fetched',
+      data:{
+        hasSubscription: !!subscription,
+        hasPayments: !!(subscription as any)?.payments,
+        paymentsCount: (subscription as any)?.payments?.length ?? 0,
+        planId: subscription?.planId
+      },
+      timestamp:Date.now()
+    })
+  }).catch(()=>{})
+  // #endregion
 
   const plan = subscription?.plan ? toPlanWithLimits(subscription.plan as any) : toPlanWithLimits(FREE_PLAN)
 
