@@ -22,6 +22,7 @@ export async function GET(
         requireClientEmail: true,
         maxFileSize: true,
         passwordHash: true,
+        allowedFileTypes: true,
       }
     })
 
@@ -35,6 +36,7 @@ export async function GET(
     return NextResponse.json({
       ...portalData,
       isPasswordProtected: !!passwordHash,
+      allowedFileTypes: portal.allowedFileTypes || [],
     })
   } catch (error) {
     console.error("Error fetching portal:", error)

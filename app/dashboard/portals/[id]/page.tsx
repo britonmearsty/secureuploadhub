@@ -566,6 +566,49 @@ export default function EditPortalPage() {
                   ))}
                 </div>
               </div>
+
+              <div className="space-y-3">
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">Allowed File Types</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {FILE_TYPE_OPTIONS.map((opt) => {
+                    const isSelected = formData.allowedFileTypes.includes(opt.value)
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            allowedFileTypes: isSelected
+                              ? prev.allowedFileTypes.filter((v) => v !== opt.value)
+                              : [...prev.allowedFileTypes, opt.value],
+                          }))
+                        }
+                        className={`flex items-center justify-between gap-3 p-4 rounded-2xl border-2 text-left transition-all ${
+                          isSelected
+                            ? "border-slate-900 bg-slate-900 text-white"
+                            : "border-slate-50 bg-slate-50 text-slate-500 hover:border-slate-200 hover:bg-white"
+                        }`}
+                      >
+                        <span className="text-sm font-semibold">{opt.label}</span>
+                        <CheckCircle2 className={`w-5 h-5 ${isSelected ? "text-white" : "text-slate-300"}`} />
+                      </button>
+                    )
+                  })}
+                </div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  {formData.allowedFileTypes.length === 0
+                    ? "All file types permitted"
+                    : `${formData.allowedFileTypes.length} categories enabled`}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormData((prev) => ({ ...prev, allowedFileTypes: [] }))}
+                  className="text-[11px] font-bold text-slate-400 hover:text-slate-900 transition-colors underline"
+                >
+                  Allow any file type
+                </button>
+              </div>
             </section>
 
             {/* Actions */}

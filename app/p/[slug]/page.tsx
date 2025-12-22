@@ -34,6 +34,7 @@ interface Portal {
   requireClientEmail: boolean
   maxFileSize: number
   isPasswordProtected?: boolean
+  allowedFileTypes?: string[]
 }
 
 interface UploadFile {
@@ -51,6 +52,7 @@ export default function PublicUploadPage() {
   const [portal, setPortal] = useState<Portal | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [uploadError, setUploadError] = useState("")
 
   const [clientName, setClientName] = useState("")
   const [clientEmail, setClientEmail] = useState("")
@@ -144,13 +146,43 @@ export default function PublicUploadPage() {
   }, [])
 
   function addFiles(newFiles: File[]) {
-    const uploadFiles: UploadFile[] = newFiles.map(file => ({
-      file,
-      id: Math.random().toString(36).substring(7),
-      progress: 0,
-      status: "pending"
-    }))
-    setFiles(prev => [...prev, ...uploadFiles])
+    if (!portal) return
+    const maxBytes = portal.maxFileSize
+    const allowedTypes = portal.allowedFileTypes || []
+
+    const accepted: UploadFile[] = []
+    for (const file of newFiles) {
+      if (file.size > maxBytes) {
+        setUploadError(`"${file.name}" exceeds the ${formatFileSize(maxBytes)} limit.`)
+        continue
+      }
+
+      if (allowedTypes.length > 0) {
+        const isAllowed = allowedTypes.some((allowed) => {
+          if (allowed.endsWith("/*")) {
+            return file.type.startsWith(allowed.split("/")[0] + "/")
+          }
+          return file.type === allowed
+        })
+
+        if (!isAllowed) {
+          setUploadError(`"${file.name}" is not an allowed file type for this portal.`)
+          continue
+        }
+      }
+
+      accepted.push({
+        file,
+        id: Math.random().toString(36).substring(7),
+        progress: 0,
+        status: "pending"
+      })
+    }
+
+    if (accepted.length) {
+      setUploadError("")
+      setFiles(prev => [...prev, ...accepted])
+    }
   }
 
   function removeFile(id: string) {
@@ -171,6 +203,7 @@ export default function PublicUploadPage() {
     if (!portal) return
     if (files.length === 0) return
 
+    setUploadError("")
     setIsUploading(true)
 
     const totalFileSize = files.reduce((acc, f) => acc + f.file.size, 0);
@@ -587,6 +620,24 @@ export default function PublicUploadPage() {
                   onChange={(e) => e.target.files && addFiles(Array.from(e.target.files))}
                 />
               </div>
+              <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                <span>Accepted:</span>
+                {portal.allowedFileTypes && portal.allowedFileTypes.length > 0 ? (
+                  portal.allowedFileTypes.map((type) => (
+                    <span key={type} className="px-2 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[10px]">
+                      {type}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-slate-500">Any file type</span>
+                )}
+              </div>
+              {uploadError && (
+                <div className="flex items-center gap-2 text-xs font-bold text-red-500 bg-red-50 border border-red-100 rounded-2xl px-4 py-3">
+                  <AlertCircle className="w-4 h-4" />
+                  {uploadError}
+                </div>
+              )}
 
               {/* Enhanced File List */}
               <AnimatePresence>

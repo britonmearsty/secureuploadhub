@@ -51,6 +51,8 @@ export async function POST(request: NextRequest) {
       storageFolderId,
       storageFolderPath,
       password,
+      maxFileSize,
+      allowedFileTypes,
     } = await request.json()
 
     if (!name || !slug) {
@@ -60,6 +62,19 @@ export async function POST(request: NextRequest) {
     // Validate storage provider
     const validProviders = ["local", "google_drive", "dropbox"]
     const provider = validProviders.includes(storageProvider) ? storageProvider : "local"
+
+    // Normalize max file size (incoming in bytes) and cap to 5GB to avoid runaway values
+    const DEFAULT_MAX_BYTES = 500 * 1024 * 1024
+    const MAX_ALLOWED_BYTES = 5 * 1024 * 1024 * 1024
+    const safeMaxFileSize =
+      typeof maxFileSize === "number" && maxFileSize > 0
+        ? Math.min(maxFileSize, MAX_ALLOWED_BYTES)
+        : DEFAULT_MAX_BYTES
+
+    // Sanitize allowed file types to strings
+    const safeAllowedFileTypes = Array.isArray(allowedFileTypes)
+      ? allowedFileTypes.filter((t) => typeof t === "string" && t.length > 0)
+      : []
 
     // If using cloud storage, verify user has connected account
     if (provider !== "local") {
@@ -111,7 +126,8 @@ export async function POST(request: NextRequest) {
         storageFolderPath: storageFolderPath || null,
         passwordHash,
         isActive: true,
-        maxFileSize: 500 * 1024 * 1024, // 500MB default
+        maxFileSize: safeMaxFileSize,
+        allowedFileTypes: safeAllowedFileTypes,
       }
     })
 

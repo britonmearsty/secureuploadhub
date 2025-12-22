@@ -65,10 +65,13 @@ export default function DashboardClient({ user, stats, portals, uploads }: Dashb
                         <Plus className="w-4 h-4" />
                         New Portal
                     </Link>
-                    <button className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 active:scale-95 font-bold text-sm">
+                    <Link
+                        href="/dashboard/billing"
+                        className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 active:scale-95 font-bold text-sm"
+                    >
                         <Sparkles className="w-4 h-4 text-amber-400" />
                         Upgrade Plan
-                    </button>
+                    </Link>
                 </div>
             </header>
 
