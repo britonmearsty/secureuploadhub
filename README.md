@@ -60,3 +60,8 @@ You act as a "dumb pipe" or a UI layer on top of existing storage APIs.
 ### Next Step
 
 Would you like me to create a **feature list for the MVP** to keep the scope small, or would you like **5 specific email subject lines** to pitch this to Video Editors?
+
+## Billing & Paystack Setup
+- Set `PAYSTACK_PUBLIC_KEY`, `PAYSTACK_SECRET_KEY`, and `PAYSTACK_WEBHOOK_SECRET` in your environment.
+- Ensure `NEXTAUTH_URL` matches the deployed base URL for correct callback redirects.
+- Webhooks: Configure Paystack to post to `/api/billing/webhook` and keep the secret in sync with `PAYSTACK_WEBHOOK_SECRET`.

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { sendUploadNotification } from "@/lib/email"
 import { jwtVerify } from "jose"
+import { assertUploadAllowed } from "@/lib/billing"
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.PORTAL_PASSWORD_SECRET || process.env.NEXTAUTH_SECRET || "default-secret-change-me"
@@ -61,6 +62,13 @@ export async function POST(request: NextRequest) {
                       request.headers.get("x-real-ip") ||
                       "unknown"
     const userAgent = request.headers.get("user-agent") || "unknown"
+
+    // Enforce billing upload limits
+    try {
+      await assertUploadAllowed(portal.userId, fileSize)
+    } catch (err: any) {
+      return NextResponse.json({ error: err.message || "Upload limit reached" }, { status: 403 })
+    }
 
     // Create file upload record
     const uploadedAt = new Date()

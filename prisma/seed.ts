@@ -12,6 +12,21 @@ async function main() {
   // Create billing plans
   const plans = [
     {
+      name: 'Free',
+      description: 'Get started with 1 portal and basic limits',
+      price: 0,
+      currency: 'USD',
+      features: [
+        '1 upload portal',
+        '1GB storage',
+        '100 uploads per month',
+        'Email notifications'
+      ],
+      maxPortals: 1,
+      maxStorageGB: 1,
+      maxUploadsMonth: 100
+    },
+    {
       name: 'Starter',
       description: 'Perfect for small businesses and freelancers',
       price: 9.99,

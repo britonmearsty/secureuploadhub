@@ -15,7 +15,7 @@ export async function GET() {
     const subscription = await prisma.subscription.findFirst({
       where: {
         userId: session.user.id,
-        status: { in: ["active", "past_due"] }
+        status: { in: ["active", "past_due", "incomplete"] }
       },
       include: {
         plan: true,
@@ -85,19 +85,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Paystack transaction
-    const paymentData = {
-      amount: plan.price * 100, // Paystack expects amount in kobo (multiply by 100)
+    const reference = `sub_${session.user.id}_${Date.now()}`
+    const paystack = await getPaystack()
+    const response = await paystack.transaction.initialize({
+      amount: Math.round(plan.price * 100), // amount in kobo
       email: user.email,
-      reference: `sub_${session.user.id}_${Date.now()}`,
-      callback_url: `${PAYSTACK_CONFIG.baseUrl}/dashboard/billing?success=true`,
+      reference,
+      callback_url: `${PAYSTACK_CONFIG.baseUrl}/dashboard/billing?status=processing&reference=${reference}`,
       metadata: {
         planId: plan.id,
         userId: session.user.id,
         planName: plan.name
       }
-    }
-    const paystack = await getPaystack()
-    const response = await paystack.transaction.initialize(paymentData)
+    })
 
     if (response.status) {
       // Create pending subscription
@@ -120,14 +120,15 @@ export async function POST(request: NextRequest) {
           amount: plan.price,
           currency: plan.currency,
           status: "pending",
-          providerPaymentRef: paymentData.reference,
+          providerPaymentRef: reference,
           description: `Payment for ${plan.name} plan`
         }
       })
 
       return NextResponse.json({
         subscription,
-        paymentLink: response.data.authorization_url
+        paymentLink: response.data.authorization_url,
+        reference
       })
     } else {
       return NextResponse.json(

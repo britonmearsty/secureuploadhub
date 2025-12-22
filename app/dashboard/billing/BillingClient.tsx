@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
     CreditCard,
@@ -46,6 +46,7 @@ interface Subscription {
 interface BillingClientProps {
     plans: BillingPlan[]
     subscription: Subscription | null
+    fallbackPlan: BillingPlan
     initialUsage: {
         uploads: number
         storageMB: number
@@ -53,10 +54,36 @@ interface BillingClientProps {
     }
 }
 
-export default function BillingClient({ plans, subscription, initialUsage }: BillingClientProps) {
+export default function BillingClient({ plans, subscription, fallbackPlan, initialUsage }: BillingClientProps) {
     const [activeTab, setActiveTab] = useState("overview")
     const [subscribing, setSubscribing] = useState<string | null>(null)
     const [canceling, setCanceling] = useState(false)
+    const [banner, setBanner] = useState<{ type: "success" | "error" | "info", message: string } | null>(null)
+
+    const currentPlan = subscription?.plan || fallbackPlan
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search)
+        const status = params.get("status") || params.get("status_code")
+        const reference = params.get("reference")
+
+        if (status === "success") {
+            setBanner({ type: "success", message: "Payment successful. Your subscription is active." })
+        } else if (status === "failed") {
+            setBanner({ type: "error", message: "Payment failed. Please try again." })
+        } else if (status === "processing") {
+            setBanner({ type: "info", message: "Payment is processing. Refresh after a moment to see updates." })
+        }
+
+        if (status || reference) {
+            params.delete("status")
+            params.delete("status_code")
+            params.delete("reference")
+            const next = params.toString()
+            const url = next ? `${window.location.pathname}?${next}` : window.location.pathname
+            window.history.replaceState({}, "", url)
+        }
+    }, [])
 
     const tabs = [
         { id: "overview", name: "Overview", icon: CreditCard, description: "Your current plan and status" },
@@ -115,6 +142,17 @@ export default function BillingClient({ plans, subscription, initialUsage }: Bil
                 <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Billing</h1>
                 <p className="text-slate-500 mt-1 text-lg">Manage your subscription, invoices, and usage.</p>
             </div>
+
+            {banner && (
+                <div className={`mb-6 rounded-xl border px-4 py-3 text-sm ${banner.type === "success"
+                    ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                    : banner.type === "error"
+                        ? "bg-red-50 border-red-200 text-red-800"
+                        : "bg-slate-50 border-slate-200 text-slate-700"
+                    }`}>
+                    {banner.message}
+                </div>
+            )}
 
             <div className="flex flex-col lg:flex-row gap-8">
                 {/* Sidebar Nav */}
@@ -176,12 +214,10 @@ export default function BillingClient({ plans, subscription, initialUsage }: Bil
                                                         <div>
                                                             <p className="text-slate-400 text-sm font-medium uppercase tracking-wider mb-2">Current Plan</p>
                                                             <h3 className="text-3xl font-bold mb-2">
-                                                                {subscription ? subscription.plan.name : "Free Plan"}
+                                                        {currentPlan.name}
                                                             </h3>
                                                             <p className="text-slate-300 text-lg">
-                                                                {subscription
-                                                                    ? `${subscription.plan.currency} ${subscription.plan.price}/month`
-                                                                    : "$0.00/month"}
+                                                        {`${currentPlan.currency} ${currentPlan.price}/month`}
                                                             </p>
                                                         </div>
 
@@ -200,7 +236,7 @@ export default function BillingClient({ plans, subscription, initialUsage }: Bil
                                                         )}
                                                     </div>
 
-                                                    {subscription && !subscription.cancelAtPeriodEnd && (
+                                                        {subscription && !subscription.cancelAtPeriodEnd && (
                                                         <div className="mt-8 flex gap-4">
                                                             <button
                                                                 onClick={handleCancelSubscription}
@@ -212,7 +248,7 @@ export default function BillingClient({ plans, subscription, initialUsage }: Bil
                                                         </div>
                                                     )}
 
-                                                    {subscription?.cancelAtPeriodEnd && (
+                                                        {subscription?.cancelAtPeriodEnd && (
                                                         <div className="mt-6 p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center gap-3">
                                                             <AlertCircle className="w-5 h-5 text-orange-400" />
                                                             <p className="text-sm text-orange-200">
@@ -233,9 +269,9 @@ export default function BillingClient({ plans, subscription, initialUsage }: Bil
                                                 </div>
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                                     {[
-                                                        { label: "Portals", used: initialUsage.portals, max: subscription?.plan.maxPortals || 3, unit: "" },
-                                                        { label: "Storage", used: initialUsage.storageMB, max: (subscription?.plan.maxStorageGB || 1) * 1024, unit: "MB" },
-                                                        { label: "Uploads", used: initialUsage.uploads, max: subscription?.plan.maxUploadsMonth || 100, unit: "" },
+                                                        { label: "Portals", used: initialUsage.portals, max: currentPlan.maxPortals, unit: "" },
+                                                        { label: "Storage", used: initialUsage.storageMB, max: currentPlan.maxStorageGB * 1024, unit: "MB" },
+                                                        { label: "Uploads", used: initialUsage.uploads, max: currentPlan.maxUploadsMonth, unit: "" },
                                                     ].map((stat) => {
                                                         const percent = Math.min((stat.used / stat.max) * 100, 100)
                                                         return (

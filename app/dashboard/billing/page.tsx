@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import prisma from "@/lib/prisma"
 import BillingClient from "./BillingClient"
+import { FREE_PLAN, getUserBillingContext, getUserUsage } from "@/lib/billing"
 
 export default async function BillingPage() {
   const session = await auth()
@@ -12,59 +13,39 @@ export default async function BillingPage() {
 
   const userId = session.user.id
 
-  // Fetch plans, subscription, and usage data in parallel
-  const [plans, subscription, portals, uploads] = await Promise.all([
+  const [plans, billingCtx] = await Promise.all([
     prisma.billingPlan.findMany({
       where: { isActive: true },
       orderBy: { price: "asc" }
     }),
-    prisma.subscription.findFirst({
-      where: {
-        userId,
-        status: { in: ["active", "past_due"] }
-      },
-      include: {
-        plan: true,
-        payments: {
-          orderBy: { createdAt: "desc" },
-          take: 10
-        }
-      }
-    }),
-    prisma.uploadPortal.findMany({
-      where: { userId },
-      select: { id: true }
-    }),
-    prisma.fileUpload.findMany({
-      where: {
-        portal: { userId }
-      },
-      select: { fileSize: true }
-    })
+    getUserBillingContext(userId)
   ])
 
-  // Process data for the client component
+  const usage = await getUserUsage(userId, billingCtx.periodStart, billingCtx.periodEnd)
+
   const initialUsage = {
-    portals: portals.length,
-    uploads: uploads.length,
-    storageMB: Math.round(uploads.reduce((acc: number, curr: { fileSize: number }) => acc + curr.fileSize, 0) / (1024 * 1024))
+    portals: usage.portalCount,
+    uploads: usage.uploadsThisPeriod,
+    storageMB: Math.round(usage.storageBytes / (1024 * 1024))
   }
 
-  // Map to common interface
-  const serializedSubscription = subscription ? {
-    ...subscription,
-    currentPeriodStart: subscription.currentPeriodStart,
-    currentPeriodEnd: subscription.currentPeriodEnd,
-    payments: subscription.payments.map((p: any) => ({
+  const serializedSubscription = billingCtx.subscription ? {
+    ...billingCtx.subscription,
+    currentPeriodStart: billingCtx.subscription.currentPeriodStart,
+    currentPeriodEnd: billingCtx.subscription.currentPeriodEnd,
+    payments: billingCtx.subscription.payments.map((p: any) => ({
       ...p,
       createdAt: p.createdAt
     }))
   } : null
 
+  const effectivePlan = billingCtx.subscription?.plan ?? FREE_PLAN
+
   return (
     <BillingClient
       plans={plans}
       subscription={serializedSubscription as any}
+      fallbackPlan={effectivePlan as any}
       initialUsage={initialUsage}
     />
   )

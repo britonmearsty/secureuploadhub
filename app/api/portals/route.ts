@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import { hashPassword } from "@/lib/password"
 import { invalidateCache, getUserDashboardKey } from "@/lib/cache"
+import { assertPortalLimit } from "@/lib/billing"
 
 // GET /api/portals - List all portals for the current user
 export async function GET() {
@@ -84,6 +85,13 @@ export async function POST(request: NextRequest) {
 
     if (existingPortal) {
       return NextResponse.json({ error: "This URL slug is already taken" }, { status: 400 })
+    }
+
+    // Enforce plan portal limits
+    try {
+      await assertPortalLimit(session.user.id)
+    } catch (err: any) {
+      return NextResponse.json({ error: err.message || "Portal limit reached" }, { status: 403 })
     }
 
     // Hash password if provided

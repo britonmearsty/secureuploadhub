@@ -1,20 +1,34 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { PAYSTACK_CONFIG } from "@/lib/paystack-config"
+import crypto from "crypto"
+
+const addMonths = (date: Date, months: number) => {
+  const copy = new Date(date)
+  copy.setMonth(copy.getMonth() + months)
+  return copy
+}
+
+const verifySignature = (rawBody: string, signature: string | null) => {
+  if (!signature) return false
+  const hash = crypto
+    .createHmac("sha512", PAYSTACK_CONFIG.webhookSecret)
+    .update(rawBody)
+    .digest("hex")
+  return hash === signature
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const rawBody = await request.text()
     const signature = request.headers.get("x-paystack-signature")
 
-    // Verify webhook signature
-    const secretHash = PAYSTACK_CONFIG.webhookSecret
-    if (!secretHash) {
-      return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 })
+    if (!verifySignature(rawBody, signature)) {
+      console.error("Invalid Paystack webhook signature")
+      return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
     }
 
-    // Paystack webhook verification (simplified - in production you'd verify the signature)
-    const { event, data } = body
+    const { event, data } = JSON.parse(rawBody)
 
     if (event === "charge.success") {
       const { reference, id: paymentId, amount, currency, status } = data
@@ -34,28 +48,53 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ status: "ignored" })
       }
 
+      if (existingPayment.status === "succeeded") {
+        return NextResponse.json({ status: "duplicate" })
+      }
+
       const subscription = existingPayment.subscription
+      const now = new Date()
+      const periodEnd = addMonths(now, 1)
 
-      // Update subscription status
-      await prisma.subscription.update({
-        where: { id: subscription.id },
-        data: {
-          status: "active",
-          providerSubscriptionId: paymentId.toString(),
-          providerCustomerId: data.customer.id?.toString()
-        }
-      })
-
-      // Update payment record
-      await prisma.payment.update({
-        where: { id: existingPayment.id },
-        data: {
-          status: "succeeded",
-          providerPaymentId: paymentId.toString()
-        }
-      })
+      await prisma.$transaction([
+        prisma.subscription.update({
+          where: { id: subscription.id },
+          data: {
+            status: "active",
+            providerSubscriptionId: data.subscription?.subscription_code ?? subscription.providerSubscriptionId,
+            providerCustomerId: data.customer?.id?.toString() || subscription.providerCustomerId,
+            currentPeriodStart: now,
+            currentPeriodEnd: periodEnd,
+            cancelAtPeriodEnd: false,
+          }
+        }),
+        prisma.payment.update({
+          where: { id: existingPayment.id },
+          data: {
+            status: "succeeded",
+            providerPaymentId: paymentId.toString(),
+            amount: (amount || 0) / 100,
+            currency: currency || existingPayment.currency,
+            description: existingPayment.description ?? `Payment for ${subscription.plan?.name ?? "plan"}`
+          }
+        })
+      ])
 
       console.log("Subscription activated:", subscription.id)
+    }
+
+    if (event === "charge.failed") {
+      const { reference } = data
+      const payment = await prisma.payment.findFirst({
+        where: { providerPaymentRef: reference }
+      })
+
+      if (payment) {
+        await prisma.payment.update({
+          where: { id: payment.id },
+          data: { status: "failed" }
+        })
+      }
     }
 
     return NextResponse.json({ status: "success" })

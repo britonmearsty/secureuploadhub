@@ -100,3 +100,9 @@ This document tracks the current status of the SecureUploadHub project, highligh
 2.  **Implement Custom Logo Upload**: High value for branding.
 3.  **Implement Subscription System**: Critical for monetization.
 4.  **Build Account Settings**: Basic user management.
+
+## 🔌 Environment (Paystack)
+- `PAYSTACK_PUBLIC_KEY` – Publishable key for checkout.
+- `PAYSTACK_SECRET_KEY` – Server secret for API calls.
+- `PAYSTACK_WEBHOOK_SECRET` – Secret used to verify webhooks.
+- `NEXTAUTH_URL` – Base URL used for Paystack callback redirects.

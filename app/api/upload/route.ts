@@ -6,6 +6,7 @@ import { uploadToCloudStorage, StorageProvider } from "@/lib/storage"
 import { sendUploadNotification } from "@/lib/email"
 import { jwtVerify } from "jose"
 import { invalidateCache, getUserDashboardKey } from "@/lib/cache"
+import { assertUploadAllowed } from "@/lib/billing"
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.PORTAL_PASSWORD_SECRET || process.env.NEXTAUTH_SECRET || "default-secret-change-me"
@@ -72,6 +73,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         error: `File too large. Maximum size is ${(portal.maxFileSize / 1024 / 1024).toFixed(0)}MB`
       }, { status: 400 })
+    }
+
+    // Enforce billing upload limits
+    try {
+      await assertUploadAllowed(portal.userId, file.size)
+    } catch (err: any) {
+      return NextResponse.json({ error: err.message || "Upload limit reached" }, { status: 403 })
     }
 
     // Validate file type if restrictions are configured
