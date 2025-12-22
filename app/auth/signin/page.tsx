@@ -1,5 +1,11 @@
 import { signIn } from "@/lib/auth"
 import { Cloud, Mail } from "lucide-react"
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Sign In | SecureUploadHub",
+  description: "Sign in to manage your secure upload portals.",
+};
 
 export default function SignInPage() {
   return (

@@ -2,8 +2,8 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 export const metadata = {
-  title: "Terms of Service - DropPortal",
-  description: "Terms of Service for DropPortal",
+  title: "Terms of Service - SecureUploadHub",
+  description: "Terms of Service for SecureUploadHub",
 };
 
 export default function TermsOfService() {
@@ -25,19 +25,19 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">1. Agreement to Terms</h2>
             <p>
-              By accessing and using DropPortal, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
+              By accessing and using SecureUploadHub, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
             </p>
           </section>
 
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">2. Use License</h2>
             <p className="mb-4">
-              Permission is granted to temporarily download one copy of the materials (information or software) on DropPortal for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:
+              Permission is granted to temporarily download one copy of the materials (information or software) on SecureUploadHub for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:
             </p>
             <ul className="space-y-3 list-disc list-inside">
               <li>Modifying or copying the materials</li>
               <li>Using the materials for any commercial purpose or for any public display</li>
-              <li>Attempting to decompile or reverse engineer any software contained on DropPortal</li>
+              <li>Attempting to decompile or reverse engineer any software contained on SecureUploadHub</li>
               <li>Removing any copyright or other proprietary notations from the materials</li>
               <li>Transferring the materials to another person or "mirroring" the materials on any other server</li>
               <li>Uploading files containing malware, viruses, or harmful code</li>
@@ -48,35 +48,35 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">3. Disclaimer</h2>
             <p className="mb-4">
-              The materials on DropPortal are provided on an "as is" basis. DropPortal makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
+              The materials on SecureUploadHub are provided on an "as is" basis. SecureUploadHub makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
             </p>
           </section>
 
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">4. Limitations</h2>
             <p>
-              In no event shall DropPortal or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on DropPortal.
+              In no event shall SecureUploadHub or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on SecureUploadHub.
             </p>
           </section>
 
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">5. Accuracy of Materials</h2>
             <p>
-              The materials appearing on DropPortal could include technical, typographical, or photographic errors. DropPortal does not warrant that any of the materials on its website are accurate, complete, or current. DropPortal may make changes to the materials contained on its website at any time without notice.
+              The materials appearing on SecureUploadHub could include technical, typographical, or photographic errors. SecureUploadHub does not warrant that any of the materials on its website are accurate, complete, or current. SecureUploadHub may make changes to the materials contained on its website at any time without notice.
             </p>
           </section>
 
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">6. Links</h2>
             <p>
-              DropPortal has not reviewed all of the sites linked to its website and is not responsible for the contents of any such linked site. The inclusion of any link does not imply endorsement by DropPortal of the site. Use of any such linked website is at the user's own risk.
+              SecureUploadHub has not reviewed all of the sites linked to its website and is not responsible for the contents of any such linked site. The inclusion of any link does not imply endorsement by SecureUploadHub of the site. Use of any such linked website is at the user's own risk.
             </p>
           </section>
 
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">7. Modifications</h2>
             <p>
-              DropPortal may revise these terms of service for its website at any time without notice. By using this website, you are agreeing to be bound by the then current version of these terms of service.
+              SecureUploadHub may revise these terms of service for its website at any time without notice. By using this website, you are agreeing to be bound by the then current version of these terms of service.
             </p>
           </section>
 
@@ -91,7 +91,7 @@ export default function TermsOfService() {
             <h2 className="text-2xl font-bold text-white mb-4">9. User Accounts</h2>
             <div className="space-y-4">
               <p>
-                If you create an account on DropPortal, you are responsible for maintaining the confidentiality of your password and account information. You agree to accept responsibility for all activities that occur under your account.
+                If you create an account on SecureUploadHub, you are responsible for maintaining the confidentiality of your password and account information. You agree to accept responsibility for all activities that occur under your account.
               </p>
               <p>
                 You must not:
@@ -108,7 +108,7 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">10. File Storage and Limits</h2>
             <p className="mb-4">
-              DropPortal provides file storage services subject to:
+              SecureUploadHub provides file storage services subject to:
             </p>
             <ul className="space-y-3 list-disc list-inside">
               <li>Storage limits as specified in your plan</li>
@@ -121,14 +121,14 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">11. Prohibited Content</h2>
             <p>
-              You agree not to upload, store, or transmit any content that is illegal, defamatory, abusive, obscene, or violates any third-party intellectual property rights. DropPortal reserves the right to remove any content that violates these terms without notice.
+              You agree not to upload, store, or transmit any content that is illegal, defamatory, abusive, obscene, or violates any third-party intellectual property rights. SecureUploadHub reserves the right to remove any content that violates these terms without notice.
             </p>
           </section>
 
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">12. Termination</h2>
             <p>
-              DropPortal may terminate your account and access to our services at any time for violation of these terms, payment issues, or at its sole discretion. Upon termination, your right to use the service will immediately cease.
+              SecureUploadHub may terminate your account and access to our services at any time for violation of these terms, payment issues, or at its sole discretion. Upon termination, your right to use the service will immediately cease.
             </p>
           </section>
 
@@ -138,7 +138,7 @@ export default function TermsOfService() {
               If you have questions about these Terms of Service, please contact us at:
             </p>
             <div className="bg-slate-800 rounded-lg p-6">
-              <p className="font-semibold text-white mb-2">DropPortal Legal Team</p>
+              <p className="font-semibold text-white mb-2">SecureUploadHub Legal Team</p>
               <p>Email: legal@secureuploadhub.com</p>
               <p>Address: [Your Company Address]</p>
             </div>

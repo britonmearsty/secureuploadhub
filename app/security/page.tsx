@@ -2,8 +2,8 @@ import Link from "next/link";
 import { ArrowLeft, Shield, Lock, Eye, AlertCircle } from "lucide-react";
 
 export const metadata = {
-  title: "Security - DropPortal",
-  description: "Security Information for DropPortal",
+  title: "Security - SecureUploadHub",
+  description: "Security Information for SecureUploadHub",
 };
 
 export default function Security() {
@@ -28,7 +28,7 @@ export default function Security() {
               <div>
                 <h2 className="text-2xl font-bold text-white mb-4">Security is Our Top Priority</h2>
                 <p>
-                  At DropPortal, we understand that your data is sensitive and valuable. Security is embedded in every aspect of our platform, from infrastructure to application design. We are committed to protecting your files and personal information with enterprise-grade security measures.
+                  At SecureUploadHub, we understand that your data is sensitive and valuable. Security is embedded in every aspect of our platform, from infrastructure to application design. We are committed to protecting your files and personal information with enterprise-grade security measures.
                 </p>
               </div>
             </div>
@@ -43,7 +43,7 @@ export default function Security() {
                   Encryption in Transit
                 </h3>
                 <ul className="space-y-2 list-disc list-inside">
-                  <li>All data transmitted to/from DropPortal is encrypted using TLS 1.3</li>
+                  <li>All data transmitted to/from SecureUploadHub is encrypted using TLS 1.3</li>
                   <li>HTTP requests are automatically redirected to HTTPS</li>
                   <li>Certificate pinning prevents man-in-the-middle attacks</li>
                   <li>Perfect forward secrecy ensures past communications remain secure even if keys are compromised</li>

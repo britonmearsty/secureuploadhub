@@ -2,8 +2,8 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 export const metadata = {
-  title: "GDPR Compliance - DropPortal",
-  description: "GDPR Compliance Information for DropPortal",
+  title: "GDPR Compliance - SecureUploadHub",
+  description: "GDPR Compliance Information for SecureUploadHub",
 };
 
 export default function GDPRCompliance() {
@@ -25,7 +25,7 @@ export default function GDPRCompliance() {
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">1. GDPR Overview</h2>
             <p className="mb-4">
-              The General Data Protection Regulation (GDPR) is a comprehensive data protection law that applies to organizations operating in the European Union (EU) and those processing the personal data of EU residents. DropPortal is fully committed to complying with GDPR requirements.
+              The General Data Protection Regulation (GDPR) is a comprehensive data protection law that applies to organizations operating in the European Union (EU) and those processing the personal data of EU residents. SecureUploadHub is fully committed to complying with GDPR requirements.
             </p>
             <p>
               This page explains how we meet GDPR obligations and what rights you have under the regulation.
@@ -41,7 +41,7 @@ export default function GDPRCompliance() {
               <div>
                 <h3 className="text-xl font-semibold text-white mb-2">2.1 Contract Performance</h3>
                 <p>
-                  Processing necessary to provide DropPortal services, such as account creation, file storage, and service delivery.
+                  Processing necessary to provide SecureUploadHub services, such as account creation, file storage, and service delivery.
                 </p>
               </div>
               <div>
@@ -150,7 +150,7 @@ export default function GDPRCompliance() {
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">6. Data Transfers</h2>
             <p className="mb-4">
-              DropPortal operates primarily within the EU. If we transfer personal data outside the EU, we ensure appropriate safeguards are in place:
+              SecureUploadHub operates primarily within the EU. If we transfer personal data outside the EU, we ensure appropriate safeguards are in place:
             </p>
             <ul className="space-y-3 list-disc list-inside">
               <li>Standard Contractual Clauses (SCCs) for transfers to countries with adequacy decisions</li>
@@ -169,7 +169,7 @@ export default function GDPRCompliance() {
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">8. Automated Decision-Making and Profiling</h2>
             <p className="mb-4">
-              DropPortal does not engage in automated decision-making or profiling that produces legal or similarly significant effects affecting you. Any automated processes are used only for:
+              SecureUploadHub does not engage in automated decision-making or profiling that produces legal or similarly significant effects affecting you. Any automated processes are used only for:
             </p>
             <ul className="space-y-3 list-disc list-inside">
               <li>Fraud detection and prevention</li>

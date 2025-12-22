@@ -165,7 +165,10 @@ export default function LandingPage() {
 
             <div className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Features</a>
+              <a href="#use-cases" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Use Cases</a>
               <a href="#how-it-works" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">How It Works</a>
+              <a href="#security" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Security</a>
+              <a href="#integrations" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Integrations</a>
               <a href="#pricing" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Pricing</a>
               <a href="#faq" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">FAQ</a>
               <Link href="/auth/signin" className="bg-slate-900 text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-slate-800 transition-all shadow-md hover:shadow-lg active:scale-95">
@@ -184,8 +187,11 @@ export default function LandingPage() {
           {isMenuOpen && (
             <div className="md:hidden border-t border-slate-200 py-4">
               <div className="flex flex-col gap-4">
+                <a href="#use-cases" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors px-4 py-2">Use Cases</a>
                 <a href="#features" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors px-4 py-2">Features</a>
                 <a href="#how-it-works" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors px-4 py-2">How It Works</a>
+                <a href="#security" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors px-4 py-2">Security</a>
+                <a href="#integrations" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors px-4 py-2">Integrations</a>
                 <a href="#pricing" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors px-4 py-2">Pricing</a>
                 <a href="#faq" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors px-4 py-2">FAQ</a>
                 <div className="px-4 pt-2">
@@ -308,6 +314,72 @@ export default function LandingPage() {
                   <Lottie animationData={featureAnimation} loop={true} />
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Use Cases Section */}
+      <section id="use-cases" className="py-24 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">Built for modern client workflows</h2>
+            <p className="text-slate-600 max-w-2xl mx-auto">
+              SecureUploadHub is designed for teams that handle sensitive, high-volume client files every day.
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="bg-white border border-slate-100 rounded-3xl p-6 flex flex-col gap-3">
+              <div className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600">
+                <FileText className="w-5 h-5" />
+              </div>
+              <h3 className="font-semibold text-slate-900">Accounting & Tax</h3>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Collect W‑2s, 1099s, receipts, and full tax packages without chasing attachments or dealing with broken portals.
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                Popular with solo CPAs and multi-partner firms.
+              </p>
+            </div>
+
+            <div className="bg-white border border-slate-100 rounded-3xl p-6 flex flex-col gap-3">
+              <div className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-blue-50 text-blue-600">
+                <UploadCloud className="w-5 h-5" />
+              </div>
+              <h3 className="font-semibold text-slate-900">Agencies & Creatives</h3>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Receive 4K footage, design files, and large exports without drive permission issues or hard drive swaps.
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                Ideal for video, photo, and brand studios.
+              </p>
+            </div>
+
+            <div className="bg-white border border-slate-100 rounded-3xl p-6 flex flex-col gap-3">
+              <div className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <h3 className="font-semibold text-slate-900">Legal & Compliance</h3>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Share and receive contracts, KYC documents, and evidence securely with full audit trails and access control.
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                Perfect for law firms and specialists handling PII.
+              </p>
+            </div>
+
+            <div className="bg-white border border-slate-100 rounded-3xl p-6 flex flex-col gap-3">
+              <div className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-slate-900/5 text-slate-900">
+                <Zap className="w-5 h-5" />
+              </div>
+              <h3 className="font-semibold text-slate-900">Operations & CS</h3>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Give customers a single, self-serve place to submit documents so your team can focus on work—not reminders.
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                Great for onboarding, claims, and account updates.
+              </p>
             </div>
           </div>
         </div>
@@ -439,6 +511,113 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Security Section */}
+      <section id="security" className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">Security you can show your auditor</h2>
+            <p className="text-slate-600 max-w-2xl mx-auto">
+              SecureUploadHub is built from the ground up for privacy‑sensitive industries where compliance actually matters.
+            </p>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+            <div className="bg-slate-50 border border-slate-100 rounded-3xl p-6 h-full">
+              <div className="inline-flex w-10 h-10 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 mb-4">
+                <Lock className="w-5 h-5" />
+              </div>
+              <h3 className="font-semibold text-slate-900 mb-2">End‑to‑end encryption</h3>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Files are encrypted in transit with TLS 1.3 and at rest with AES‑256. We never inspect or monetize your data.
+              </p>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-100 rounded-3xl p-6 h-full">
+              <div className="inline-flex w-10 h-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 mb-4">
+                <FileText className="w-5 h-5" />
+              </div>
+              <h3 className="font-semibold text-slate-900 mb-2">SOC 2–ready controls</h3>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Access logging, least‑privilege permissions, and audit trails designed to plug into your SOC 2 / ISO 27001 program.
+              </p>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-100 rounded-3xl p-6 h-full">
+              <div className="inline-flex w-10 h-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 mb-4">
+                <Globe className="w-5 h-5" />
+              </div>
+              <h3 className="font-semibold text-slate-900 mb-2">Regional data residency</h3>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Choose EU or US data residency (where available) to align with your GDPR and local compliance requirements.
+              </p>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-100 rounded-3xl p-6 h-full">
+              <div className="inline-flex w-10 h-10 items-center justify-center rounded-2xl bg-slate-900/5 text-slate-900 mb-4">
+                <Clock className="w-5 h-5" />
+              </div>
+              <h3 className="font-semibold text-slate-900 mb-2">Business continuity</h3>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Redundant infrastructure, continuous backups, and a 99.9% uptime target keep your client uploads always available.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Integrations Section */}
+      <section id="integrations" className="py-24 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">Fits into your existing storage</h2>
+            <p className="text-slate-600 max-w-2xl mx-auto">
+              Keep using the tools your team already knows. SecureUploadHub simply becomes the front door for uploads.
+            </p>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-3 items-stretch">
+            <div className="bg-white border border-slate-100 rounded-3xl p-6 flex flex-col items-start justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">Available today</p>
+                <h3 className="font-semibold text-slate-900 mb-2">Google Drive</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Route uploads directly into structured Drive folders by client, project, or date—no extra steps required.
+                </p>
+              </div>
+              <p className="mt-4 text-xs text-slate-500">Supports shared drives and granular folder permissions.</p>
+            </div>
+
+            <div className="bg-white border border-slate-100 rounded-3xl p-6 flex flex-col items-start justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">Available today</p>
+                <h3 className="font-semibold text-slate-900 mb-2">Dropbox</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Automatically organize incoming assets into your existing Dropbox structure for instant team access.
+                </p>
+              </div>
+              <p className="mt-4 text-xs text-slate-500">Great for agencies and studios with large media libraries.</p>
+            </div>
+
+            <div className="bg-slate-900 text-slate-50 rounded-3xl p-6 flex flex-col items-start justify-between relative overflow-hidden">
+              <div className="absolute inset-0 opacity-20 pointer-events-none">
+                <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-indigo-500 blur-3xl" />
+                <div className="absolute -left-16 -bottom-10 w-52 h-52 rounded-full bg-blue-500 blur-3xl" />
+              </div>
+              <div className="relative z-10">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-200 mb-3">Coming soon</p>
+                <h3 className="font-semibold text-white mb-2">More destinations</h3>
+                <p className="text-sm text-slate-100 leading-relaxed">
+                  OneDrive, S3 buckets, and direct webhooks are on our roadmap so you can plug uploads into any workflow.
+                </p>
+              </div>
+              <p className="mt-4 text-xs text-indigo-100 relative z-10">
+                Need something specific? Reach out and help shape the roadmap.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Testimonials Section */}
       <section id="testimonials" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -521,19 +700,27 @@ export default function LandingPage() {
           {/* Stats Row */}
           <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
-              <p className="text-4xl font-bold text-indigo-600">{/* PLACEHOLDER */}10K+</p>
+              <p className="text-4xl font-bold text-indigo-600">
+                <Counter end={10} suffix="K+" />
+              </p>
               <p className="text-slate-600 text-sm mt-1">Active Users</p>
             </div>
             <div>
-              <p className="text-4xl font-bold text-indigo-600">{/* PLACEHOLDER */}2M+</p>
+              <p className="text-4xl font-bold text-indigo-600">
+                <Counter end={2} suffix="M+" />
+              </p>
               <p className="text-slate-600 text-sm mt-1">Files Transferred</p>
             </div>
             <div>
-              <p className="text-4xl font-bold text-indigo-600">{/* PLACEHOLDER */}99.9%</p>
+              <p className="text-4xl font-bold text-indigo-600">
+                <Counter end={99.9} suffix="%" decimals={1} />
+              </p>
               <p className="text-slate-600 text-sm mt-1">Uptime SLA</p>
             </div>
             <div>
-              <p className="text-4xl font-bold text-indigo-600">{/* PLACEHOLDER */}4.9/5</p>
+              <p className="text-4xl font-bold text-indigo-600">
+                <Counter end={4.9} suffix="/5" decimals={1} />
+              </p>
               <p className="text-slate-600 text-sm mt-1">Customer Rating</p>
             </div>
           </div>

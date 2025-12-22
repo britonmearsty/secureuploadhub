@@ -2,8 +2,8 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 export const metadata = {
-  title: "Privacy Policy - DropPortal",
-  description: "Privacy Policy for DropPortal",
+  title: "Privacy Policy - SecureUploadHub",
+  description: "Privacy Policy for SecureUploadHub",
 };
 
 export default function PrivacyPolicy() {
@@ -25,7 +25,7 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-2xl font-bold text-white mb-4">1. Introduction</h2>
             <p className="mb-4">
-              DropPortal ("we," "us," "our," or "Company") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our file upload and management services.
+              SecureUploadHub ("we," "us," "our," or "Company") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our file upload and management services.
             </p>
             <p>
               Please read this Privacy Policy carefully. If you do not agree with our policies and practices, please do not use our services.
@@ -44,7 +44,7 @@ export default function PrivacyPolicy() {
               <div>
                 <h3 className="text-xl font-semibold text-white mb-2">2.2 Files and Content</h3>
                 <p>
-                  When you upload files to DropPortal, we store the files and associated metadata (file name, size, upload date, file type).
+                  When you upload files to SecureUploadHub, we store the files and associated metadata (file name, size, upload date, file type).
                 </p>
               </div>
               <div>
@@ -138,7 +138,7 @@ export default function PrivacyPolicy() {
               If you have questions about this Privacy Policy or our privacy practices, please contact us at:
             </p>
             <div className="bg-slate-800 rounded-lg p-6">
-              <p className="font-semibold text-white mb-2">DropPortal Privacy Team</p>
+              <p className="font-semibold text-white mb-2">SecureUploadHub Privacy Team</p>
               <p>Email: privacy@secureuploadhub.com</p>
               <p>Address: [Your Company Address]</p>
             </div>

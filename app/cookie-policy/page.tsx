@@ -2,8 +2,8 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 export const metadata = {
-  title: "Cookie Policy - DropPortal",
-  description: "Cookie Policy for DropPortal",
+  title: "Cookie Policy - SecureUploadHub",
+  description: "Cookie Policy for SecureUploadHub",
 };
 
 export default function CookiePolicy() {
@@ -198,7 +198,7 @@ export default function CookiePolicy() {
               If you have questions about our use of cookies, please contact us at:
             </p>
             <div className="bg-slate-800 rounded-lg p-6">
-              <p className="font-semibold text-white mb-2">DropPortal Privacy Team</p>
+              <p className="font-semibold text-white mb-2">SecureUploadHub Privacy Team</p>
               <p>Email: privacy@secureuploadhub.com</p>
               <p>Address: [Your Company Address]</p>
             </div>
