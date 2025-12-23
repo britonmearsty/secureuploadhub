@@ -46,7 +46,8 @@ export interface CloudStorageService {
     fileName: string,
     mimeType: string,
     folderId?: string,
-    folderPath?: string
+    folderPath?: string,
+    origin?: string
   ): Promise<{ uploadUrl: string; fileId?: string }>
 
   /**

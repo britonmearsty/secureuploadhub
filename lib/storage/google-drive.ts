@@ -14,7 +14,8 @@ export class GoogleDriveService implements CloudStorageService {
     fileName: string,
     mimeType: string,
     folderId?: string,
-    folderPath?: string
+    folderPath?: string,
+    origin?: string
   ): Promise<{ uploadUrl: string; fileId?: string }> {
     try {
       // If folderPath is provided but no folderId, create/find the folder
@@ -40,6 +41,7 @@ export class GoogleDriveService implements CloudStorageService {
             Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
             "X-Upload-Content-Type": mimeType,
+            ...(origin ? { "Origin": origin } : {}),
             // "X-Upload-Content-Length": fileSize.toString(), // Optional but good practice if known
           },
           body: JSON.stringify(metadata),
@@ -49,7 +51,7 @@ export class GoogleDriveService implements CloudStorageService {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
         throw new Error(
-          errorData.error?.message || 
+          errorData.error?.message ||
           `Failed to initiate resumable upload: ${response.status} ${response.statusText}`
         )
       }
@@ -86,16 +88,16 @@ export class GoogleDriveService implements CloudStorageService {
         name: fileName,
         mimeType: mimeType,
       }
-      
+
       if (targetFolderId) {
         metadata.parents = [targetFolderId]
       }
 
       // Use multipart upload for files
       const boundary = "----WebKitFormBoundary" + Math.random().toString(36).substring(2)
-      
+
       const metadataString = JSON.stringify(metadata)
-      
+
       // Build multipart body
       const bodyParts = [
         `--${boundary}\r\n`,
@@ -104,7 +106,7 @@ export class GoogleDriveService implements CloudStorageService {
         `\r\n--${boundary}\r\n`,
         `Content-Type: ${mimeType}\r\n\r\n`,
       ]
-      
+
       const bodyStart = Buffer.from(bodyParts.join(''))
       const bodyEnd = Buffer.from(`\r\n--${boundary}--`)
       const body = Buffer.concat([bodyStart, file, bodyEnd])
@@ -175,7 +177,7 @@ export class GoogleDriveService implements CloudStorageService {
           error: errorData,
         })
         throw new Error(
-          errorData.error?.message || 
+          errorData.error?.message ||
           `Google Drive API error: ${response.status} ${response.statusText}`
         )
       }

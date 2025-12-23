@@ -288,8 +288,8 @@ export default function PublicUploadPage() {
               }
             }
             xhr.onerror = () => {
-              console.error("XHR network error occurred");
-              reject(new Error("Network layer instability"));
+              console.error(`XHR network error for ${uploadFile.file.name}. This is often a CORS issue or network interruption. URL: ${session.uploadUrl}`);
+              reject(new Error("Network layer instability or CORS policy violation"));
             }
             xhr.open("PUT", session.uploadUrl)
             xhr.setRequestHeader("Content-Type", uploadFile.file.type || "application/octet-stream")

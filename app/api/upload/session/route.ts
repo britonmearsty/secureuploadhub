@@ -134,12 +134,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Initiate resumable upload
+    const origin = request.headers.get("origin")
     const { uploadUrl, fileId } = await service.createResumableUpload(
       tokenResult.accessToken,
       uniqueFileName,
       mimeType,
       portal.storageFolderId || undefined,
-      targetFolderPath || undefined
+      targetFolderPath || undefined,
+      origin || undefined
     )
 
     return NextResponse.json({
