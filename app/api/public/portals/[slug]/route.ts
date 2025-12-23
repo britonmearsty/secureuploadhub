@@ -23,6 +23,14 @@ export async function GET(
         maxFileSize: true,
         passwordHash: true,
         allowedFileTypes: true,
+        logoUrl: true,
+        backgroundImageUrl: true,
+        backgroundColor: true,
+        cardBackgroundColor: true,
+        textColor: true,
+        welcomeMessage: true,
+        submitButtonText: true,
+        successMessage: true,
       }
     })
 

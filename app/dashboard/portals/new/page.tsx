@@ -65,6 +65,14 @@ export default function CreatePortalPage() {
     slug: "",
     description: "",
     primaryColor: "#0f172a", // Default to slate-900
+    logoUrl: "",
+    backgroundImageUrl: "",
+    backgroundColor: "",
+    cardBackgroundColor: "#ffffff",
+    textColor: "#0f172a",
+    welcomeMessage: "",
+    submitButtonText: "Initialize Transfer",
+    successMessage: "Transmission Verified",
     requireClientName: true,
     requireClientEmail: false,
     maxFileSize: 500,
@@ -291,28 +299,129 @@ export default function CreatePortalPage() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">
-                    Theme Accent
-                  </label>
-                  <div className="flex items-center gap-4">
-                    <div className="relative group">
-                      <input
-                        type="color"
-                        value={formData.primaryColor}
-                        onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-                        className="w-16 h-16 rounded-2xl cursor-pointer border-4 border-white shadow-lg overflow-hidden shrink-0"
-                      />
-                      <div className="absolute inset-0 rounded-2xl pointer-events-none border border-slate-200" />
+                <div className="space-y-4 pt-4 border-t border-slate-100">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Visual DNA</h4>
+
+                  {/* Logo URL */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">
+                      Logo URL
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.logoUrl}
+                      onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                      placeholder="https://..."
+                      className="w-full px-5 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300 text-sm"
+                    />
+                  </div>
+
+                  {/* Background Image URL */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">
+                      Background Image URL
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.backgroundImageUrl}
+                      onChange={(e) => setFormData({ ...formData, backgroundImageUrl: e.target.value })}
+                      placeholder="https://..."
+                      className="w-full px-5 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300 text-sm"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Primary Color */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">
+                        Brand Text
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <div className="relative group w-12 h-12">
+                          <input
+                            type="color"
+                            value={formData.primaryColor}
+                            onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+                            className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          value={formData.primaryColor}
+                          onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+                          className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-mono text-xs uppercase"
+                        />
+                      </div>
                     </div>
-                    <div className="flex-1 relative">
-                      <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                      <input
-                        type="text"
-                        value={formData.primaryColor}
-                        onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-                        className="w-full pl-10 pr-5 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-mono text-sm uppercase"
-                      />
+
+                    {/* Text Color */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">
+                        Content Text
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <div className="relative group w-12 h-12">
+                          <input
+                            type="color"
+                            value={formData.textColor}
+                            onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
+                            className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          value={formData.textColor}
+                          onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
+                          className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-mono text-xs uppercase"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Background Color */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">
+                        Page BG
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <div className="relative group w-12 h-12">
+                          <input
+                            type="color"
+                            value={formData.backgroundColor || "#ffffff"}
+                            onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
+                            className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          value={formData.backgroundColor || ""}
+                          onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
+                          placeholder="#HEX"
+                          className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-mono text-xs uppercase"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Card Color */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">
+                        Card BG
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <div className="relative group w-12 h-12">
+                          <input
+                            type="color"
+                            value={formData.cardBackgroundColor}
+                            onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
+                            className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          value={formData.cardBackgroundColor}
+                          onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
+                          className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-mono text-xs uppercase"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -340,8 +449,8 @@ export default function CreatePortalPage() {
                       disabled={provider.disabled}
                       onClick={() => selectStorageProvider(provider.id as any)}
                       className={`relative p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 overflow-hidden ${isActive
-                          ? "border-slate-900 bg-slate-50/50"
-                          : "border-slate-100 bg-white hover:border-slate-200"
+                        ? "border-slate-900 bg-slate-50/50"
+                        : "border-slate-100 bg-white hover:border-slate-200"
                         } ${provider.disabled ? "opacity-40 grayscale cursor-not-allowed" : ""}`}
                     >
                       <div className={`p-3 rounded-2xl ${isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-400 transition-colors group-hover:bg-slate-200"}`}>
@@ -451,8 +560,8 @@ export default function CreatePortalPage() {
                       type="button"
                       onClick={() => setFormData(prev => ({ ...prev, [req.key]: !prev[req.key as keyof typeof prev] }))}
                       className={`flex-1 p-4 rounded-2xl border-2 font-bold text-xs uppercase tracking-widest transition-all ${formData[req.key as keyof typeof formData]
-                          ? "border-slate-900 bg-slate-900 text-white"
-                          : "border-slate-100 bg-white text-slate-400 hover:border-slate-200"
+                        ? "border-slate-900 bg-slate-900 text-white"
+                        : "border-slate-100 bg-white text-slate-400 hover:border-slate-200"
                         }`}
                     >
                       {req.label}
@@ -478,11 +587,10 @@ export default function CreatePortalPage() {
                               : [...prev.allowedFileTypes, opt.value],
                           }))
                         }
-                        className={`flex items-center justify-between gap-3 p-4 rounded-2xl border-2 text-left transition-all ${
-                          isSelected
-                            ? "border-slate-900 bg-slate-900 text-white"
-                            : "border-slate-100 bg-white text-slate-500 hover:border-slate-200"
-                        }`}
+                        className={`flex items-center justify-between gap-3 p-4 rounded-2xl border-2 text-left transition-all ${isSelected
+                          ? "border-slate-900 bg-slate-900 text-white"
+                          : "border-slate-100 bg-white text-slate-500 hover:border-slate-200"
+                          }`}
                       >
                         <span className="text-sm font-semibold">{opt.label}</span>
                         <CheckCircle2 className={`w-5 h-5 ${isSelected ? "text-white" : "text-slate-300"}`} />
@@ -502,6 +610,55 @@ export default function CreatePortalPage() {
                 >
                   Allow any file type
                 </button>
+              </div>
+            </section>
+
+            {/* Messaging & Experience */}
+            <section className="space-y-6">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                <Settings2 className="w-4 h-4" /> Message & Tone
+              </h3>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">
+                    Welcome Message
+                  </label>
+                  <textarea
+                    value={formData.welcomeMessage}
+                    onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
+                    placeholder="Welcome to our secure upload portal. Please submit your files below."
+                    rows={2}
+                    className="w-full px-5 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300 resize-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">
+                      Submit Button Label
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.submitButtonText}
+                      onChange={(e) => setFormData({ ...formData, submitButtonText: e.target.value })}
+                      placeholder="Initialize Transfer"
+                      className="w-full px-5 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">
+                      Success Message
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.successMessage}
+                      onChange={(e) => setFormData({ ...formData, successMessage: e.target.value })}
+                      placeholder="Transmission Verified"
+                      className="w-full px-5 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
+                    />
+                  </div>
+                </div>
               </div>
             </section>
 
@@ -552,7 +709,7 @@ export default function CreatePortalPage() {
 
             <div className="bg-white rounded-[40px] shadow-2xl border border-slate-200/50 overflow-hidden min-h-[700px] flex flex-col">
               {/* Browser Frame */}
-              <div className="bg-slate-50 h-10 border-b border-slate-100 flex items-center px-6 gap-1.5">
+              <div className="bg-slate-50 h-10 border-b border-slate-100 flex items-center px-6 gap-1.5 shrink-0 z-20 relative">
                 <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
                 <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
                 <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
@@ -564,22 +721,51 @@ export default function CreatePortalPage() {
               </div>
 
               {/* Portal Content Scrollable */}
-              <div className="flex-1 overflow-y-auto p-12 bg-white flex flex-col items-center">
-                <div className="w-full max-w-sm flex flex-col">
+              <div
+                className="flex-1 overflow-y-auto p-12 flex flex-col items-center relative"
+                style={{
+                  backgroundColor: formData.backgroundColor || '#ffffff',
+                  color: formData.textColor || '#0f172a'
+                }}
+              >
+                {/* Background Image Layer */}
+                {formData.backgroundImageUrl && (
+                  <div
+                    className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-100"
+                    style={{ backgroundImage: `url(${formData.backgroundImageUrl})` }}
+                  />
+                )}
+
+                {/* Content Layer */}
+                <div className="w-full max-w-sm flex flex-col relative z-10">
                   {/* Header Preview */}
                   <div className="text-center mb-10">
-                    <motion.div
-                      animate={{ backgroundColor: formData.primaryColor }}
-                      className="w-20 h-20 rounded-3xl mx-auto mb-6 flex items-center justify-center text-white text-3xl font-black shadow-lg"
-                    >
-                      {formData.name ? formData.name.charAt(0).toUpperCase() : <Palette className="w-8 h-8" />}
-                    </motion.div>
-                    <h2 className="text-2xl font-black text-slate-900 tracking-tight leading-tight">
+                    {formData.logoUrl ? (
+                      <div className="w-auto h-20 mx-auto mb-6 flex items-center justify-center">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={formData.logoUrl} alt="Logo" className="max-h-full max-w-full object-contain" />
+                      </div>
+                    ) : (
+                      <motion.div
+                        animate={{ backgroundColor: formData.primaryColor }}
+                        className="w-20 h-20 rounded-3xl mx-auto mb-6 flex items-center justify-center text-white text-3xl font-black shadow-lg"
+                      >
+                        {formData.name ? formData.name.charAt(0).toUpperCase() : <Palette className="w-8 h-8" />}
+                      </motion.div>
+                    )}
+
+                    {formData.welcomeMessage && (
+                      <p className="mb-2 text-lg font-medium opacity-80" style={{ color: formData.textColor }}>{formData.welcomeMessage}</p>
+                    )}
+
+                    <h2 className="text-2xl font-black tracking-tight leading-tight" style={{ color: formData.textColor }}>
                       {formData.name || "Untitled Portal"}
                     </h2>
-                    <p className="text-slate-400 text-sm mt-3 font-medium">
-                      {formData.description || "Enter portal description above to preview here."}
-                    </p>
+                    {!formData.welcomeMessage && (
+                      <p className="text-sm mt-3 font-medium opacity-60" style={{ color: formData.textColor }}>
+                        {formData.description || "Enter portal description above to preview here."}
+                      </p>
+                    )}
                   </div>
 
                   {/* Password Warning if set */}
@@ -626,7 +812,7 @@ export default function CreatePortalPage() {
                     animate={{ backgroundColor: formData.primaryColor }}
                     className="h-14 rounded-2xl mt-8 flex items-center justify-center text-sm font-black text-white uppercase tracking-widest shadow-lg"
                   >
-                    Prepare Upload
+                    {formData.submitButtonText || "Initialize Transfer"}
                   </motion.div>
                 </div>
               </div>

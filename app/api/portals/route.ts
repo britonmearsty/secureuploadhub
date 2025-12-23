@@ -53,6 +53,13 @@ export async function POST(request: NextRequest) {
       password,
       maxFileSize,
       allowedFileTypes,
+      backgroundImageUrl,
+      backgroundColor,
+      cardBackgroundColor,
+      textColor,
+      welcomeMessage,
+      submitButtonText,
+      successMessage,
     } = await request.json()
 
     if (!name || !slug) {
@@ -128,6 +135,13 @@ export async function POST(request: NextRequest) {
         isActive: true,
         maxFileSize: safeMaxFileSize,
         allowedFileTypes: safeAllowedFileTypes,
+        backgroundImageUrl: backgroundImageUrl || null,
+        backgroundColor: backgroundColor || null,
+        cardBackgroundColor: cardBackgroundColor || "#ffffff",
+        textColor: textColor || "#0f172a",
+        welcomeMessage: welcomeMessage || null,
+        submitButtonText: submitButtonText || "Initialize Transfer",
+        successMessage: successMessage || "Transmission Verified",
       }
     })
 

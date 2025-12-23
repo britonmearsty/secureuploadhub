@@ -35,6 +35,14 @@ interface Portal {
   maxFileSize: number
   isPasswordProtected?: boolean
   allowedFileTypes?: string[]
+  logoUrl?: string | null
+  backgroundImageUrl?: string | null
+  backgroundColor?: string | null
+  cardBackgroundColor?: string | null
+  textColor?: string | null
+  welcomeMessage?: string | null
+  submitButtonText?: string | null
+  successMessage?: string | null
 }
 
 interface UploadFile {
@@ -476,9 +484,11 @@ export default function PublicUploadPage() {
             </motion.div>
           </div>
 
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-4">Transmission Verified</h1>
-          <p className="text-slate-500 font-medium leading-relaxed mb-10">
-            Assets have been successfully offloaded to <span className="text-slate-900 font-bold">"{portal.name}"</span>.
+          <h1 className="text-4xl font-black tracking-tight mb-4" style={{ color: portal.textColor || '#0f172a' }}>
+            {portal.successMessage || "Transmission Verified"}
+          </h1>
+          <p className="font-medium leading-relaxed mb-10" style={{ color: portal.textColor ? `${portal.textColor}99` : '#64748b' }}>
+            Assets have been successfully offloaded to <span className="font-bold">"{portal.name}"</span>.
             Digital handshake complete.
           </p>
 
@@ -505,26 +515,47 @@ export default function PublicUploadPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white py-12 px-6">
-      <div className="max-w-xl mx-auto">
+    <div
+      className="min-h-screen py-12 px-6 flex flex-col items-center"
+      style={{
+        backgroundColor: portal.backgroundColor || '#ffffff',
+        color: portal.textColor || '#0f172a',
+        backgroundImage: portal.backgroundImageUrl ? `url(${portal.backgroundImageUrl})` : undefined,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
+      }}
+    >
+      <div className="max-w-xl w-full mx-auto relative z-10">
         {/* Modern Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <motion.div
-            animate={{ backgroundColor: portal.primaryColor }}
-            className="w-24 h-24 rounded-[36px] flex items-center justify-center mx-auto mb-8 text-white text-4xl font-black shadow-2xl shadow-current/20 border-4 border-white"
-          >
-            {portal.name.charAt(0).toUpperCase()}
-          </motion.div>
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-tight mb-3 px-4">{portal.name}</h1>
-          {portal.description && (
-            <p className="text-slate-500 font-medium leading-relaxed max-w-sm mx-auto">{portal.description}</p>
+          {portal.logoUrl ? (
+            <div className="w-auto h-24 mx-auto mb-8 flex items-center justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={portal.logoUrl} alt={portal.name} className="max-h-full max-w-full object-contain drop-shadow-lg" />
+            </div>
+          ) : (
+            <motion.div
+              animate={{ backgroundColor: portal.primaryColor }}
+              className="w-24 h-24 rounded-[36px] flex items-center justify-center mx-auto mb-8 text-white text-4xl font-black shadow-2xl shadow-current/20 border-4 border-white"
+            >
+              {portal.name.charAt(0).toUpperCase()}
+            </motion.div>
           )}
-          {!portal.description && (
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Secure Transmission Gateway</p>
+
+          <h1 className="text-4xl font-black tracking-tight leading-tight mb-4 px-4 drop-shadow-sm">{portal.name}</h1>
+
+          {portal.welcomeMessage ? (
+            <p className="font-medium leading-relaxed max-w-sm mx-auto text-lg opacity-90">{portal.welcomeMessage}</p>
+          ) : portal.description ? (
+            <p className="font-medium leading-relaxed max-w-sm mx-auto opacity-75">{portal.description}</p>
+          ) : (
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60">Secure Transmission Gateway</p>
           )}
         </motion.div>
 
@@ -532,7 +563,14 @@ export default function PublicUploadPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-[48px] shadow-2xl border border-slate-50 p-6 sm:p-10 relative overflow-hidden"
+          className="rounded-[48px] shadow-2xl border p-6 sm:p-10 relative overflow-hidden backdrop-blur-sm"
+          style={{
+            backgroundColor: portal.cardBackgroundColor || '#ffffff',
+            borderColor: portal.cardBackgroundColor ? 'transparent' : 'rgba(248,250,252,1)',
+            color: portal.textColor || '#0f172a' // Ensure card text inherits or overrides if needed. 
+            // Ideally text color is global, but if card is dark and page is light, user should set text color accordingly.
+            // For now, we inherit the global textColor set on the container.
+          }}
         >
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-10 relative z-10">
@@ -713,7 +751,7 @@ export default function PublicUploadPage() {
                     </>
                   ) : (
                     <>
-                      Initialize Transfer
+                      {portal.submitButtonText || "Initialize Transfer"}
                       <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </>
                   )}
