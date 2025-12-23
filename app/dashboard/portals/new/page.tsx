@@ -242,7 +242,7 @@ export default function CreatePortalPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-10"
+          className="space-y-10 lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto lg:pr-4 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent"
         >
           <div>
             <div className="flex items-center gap-2 mb-3">

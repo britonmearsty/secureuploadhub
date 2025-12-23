@@ -83,6 +83,14 @@ export default function EditPortalPage() {
     slug: "",
     description: "",
     primaryColor: "#0f172a",
+    logoUrl: "",
+    backgroundImageUrl: "",
+    backgroundColor: "",
+    cardBackgroundColor: "#ffffff",
+    textColor: "#0f172a",
+    welcomeMessage: "",
+    submitButtonText: "Initialize Transfer",
+    successMessage: "Transmission Verified",
     requireClientName: true,
     requireClientEmail: false,
     maxFileSize: 500,
@@ -119,6 +127,14 @@ export default function EditPortalPage() {
           slug: data.slug,
           description: data.description || "",
           primaryColor: data.primaryColor || "#0f172a",
+          logoUrl: data.logoUrl || "",
+          backgroundImageUrl: data.backgroundImageUrl || "",
+          backgroundColor: data.backgroundColor || "",
+          cardBackgroundColor: data.cardBackgroundColor || "#ffffff",
+          textColor: data.textColor || "#0f172a",
+          welcomeMessage: data.welcomeMessage || "",
+          submitButtonText: data.submitButtonText || "Initialize Transfer",
+          successMessage: data.successMessage || "Transmission Verified",
           requireClientName: data.requireClientName,
           requireClientEmail: data.requireClientEmail,
           maxFileSize: Math.round(data.maxFileSize / (1024 * 1024)),
@@ -348,7 +364,7 @@ export default function EditPortalPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-10 bg-white p-8 md:p-10 rounded-[40px] border border-slate-100 shadow-xl shadow-slate-200/40"
+          className="space-y-10 bg-white p-8 md:p-10 rounded-[40px] border border-slate-100 shadow-xl shadow-slate-200/40 lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto lg:pr-4 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent"
         >
           {success && (
             <motion.div
@@ -428,6 +444,150 @@ export default function EditPortalPage() {
               </div>
             </section>
 
+            {/* Field Set: Visual Customization */}
+            <section className="space-y-8">
+              <div className="flex items-center gap-2 pb-4 border-b border-slate-50">
+                <Palette className="w-4 h-4 text-slate-400" />
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Visual DNA</h3>
+              </div>
+
+              <div className="space-y-6">
+                {/* Logo URL */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Logo URL</label>
+                  <input
+                    type="url"
+                    value={formData.logoUrl}
+                    onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                    placeholder="https://..."
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300 text-sm"
+                  />
+                </div>
+
+                {/* Background Image URL */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Background Image URL</label>
+                  <input
+                    type="url"
+                    value={formData.backgroundImageUrl}
+                    onChange={(e) => setFormData({ ...formData, backgroundImageUrl: e.target.value })}
+                    placeholder="https://..."
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300 text-sm"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Text Color */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Content Text</label>
+                    <div className="flex items-center gap-3">
+                      <div className="relative group w-12 h-12">
+                        <input
+                          type="color"
+                          value={formData.textColor}
+                          onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
+                          className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        value={formData.textColor}
+                        onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
+                        className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-mono text-xs uppercase"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Background Color */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Page BG</label>
+                    <div className="flex items-center gap-3">
+                      <div className="relative group w-12 h-12">
+                        <input
+                          type="color"
+                          value={formData.backgroundColor || "#ffffff"}
+                          onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
+                          className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        value={formData.backgroundColor || ""}
+                        onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
+                        placeholder="#HEX"
+                        className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-mono text-xs uppercase"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Card Color */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Card BG</label>
+                    <div className="flex items-center gap-3">
+                      <div className="relative group w-12 h-12">
+                        <input
+                          type="color"
+                          value={formData.cardBackgroundColor}
+                          onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
+                          className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        value={formData.cardBackgroundColor}
+                        onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
+                        className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-mono text-xs uppercase"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Field Set: Messaging & Experience */}
+            <section className="space-y-8">
+              <div className="flex items-center gap-2 pb-4 border-b border-slate-50">
+                <Type className="w-4 h-4 text-slate-400" />
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Message & Tone</h3>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Welcome Message</label>
+                  <textarea
+                    value={formData.welcomeMessage}
+                    onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
+                    placeholder="Welcome to our secure upload portal. Please submit your files below."
+                    rows={2}
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300 resize-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Submit Button Label</label>
+                    <input
+                      type="text"
+                      value={formData.submitButtonText}
+                      onChange={(e) => setFormData({ ...formData, submitButtonText: e.target.value })}
+                      placeholder="Initialize Transfer"
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Success Message</label>
+                    <input
+                      type="text"
+                      value={formData.successMessage}
+                      onChange={(e) => setFormData({ ...formData, successMessage: e.target.value })}
+                      placeholder="Transmission Verified"
+                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
+
             {/* Field Set: Storage */}
             <section className="space-y-8">
               <div className="flex items-center gap-2 pb-4 border-b border-slate-50">
@@ -450,8 +610,8 @@ export default function EditPortalPage() {
                       disabled={provider.disabled}
                       onClick={() => selectStorageProvider(provider.id as any)}
                       className={`group relative p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 ${isActive
-                          ? "border-slate-900 bg-slate-50"
-                          : "border-slate-50 bg-white hover:border-slate-200"
+                        ? "border-slate-900 bg-slate-50"
+                        : "border-slate-50 bg-white hover:border-slate-200"
                         } ${provider.disabled ? "opacity-30 grayscale cursor-not-allowed" : ""}`}
                     >
                       <div className={`p-3 rounded-2xl transition-colors ${isActive ? "bg-slate-900 text-white shadow-lg shadow-slate-200" : "bg-slate-50 text-slate-300 group-hover:bg-slate-100"}`}>
@@ -557,8 +717,8 @@ export default function EditPortalPage() {
                       type="button"
                       onClick={() => setFormData(prev => ({ ...prev, [req.key]: !prev[req.key as keyof typeof prev] }))}
                       className={`flex-1 p-4 rounded-2xl border-2 font-black text-[10px] uppercase tracking-widest transition-all ${formData[req.key as keyof typeof formData]
-                          ? "border-slate-900 bg-slate-900 text-white shadow-xl shadow-slate-200"
-                          : "border-slate-50 bg-slate-50 text-slate-400 hover:border-slate-200 hover:bg-white"
+                        ? "border-slate-900 bg-slate-900 text-white shadow-xl shadow-slate-200"
+                        : "border-slate-50 bg-slate-50 text-slate-400 hover:border-slate-200 hover:bg-white"
                         }`}
                     >
                       {req.label}
@@ -584,11 +744,10 @@ export default function EditPortalPage() {
                               : [...prev.allowedFileTypes, opt.value],
                           }))
                         }
-                        className={`flex items-center justify-between gap-3 p-4 rounded-2xl border-2 text-left transition-all ${
-                          isSelected
-                            ? "border-slate-900 bg-slate-900 text-white"
-                            : "border-slate-50 bg-slate-50 text-slate-500 hover:border-slate-200 hover:bg-white"
-                        }`}
+                        className={`flex items-center justify-between gap-3 p-4 rounded-2xl border-2 text-left transition-all ${isSelected
+                          ? "border-slate-900 bg-slate-900 text-white"
+                          : "border-slate-50 bg-slate-50 text-slate-500 hover:border-slate-200 hover:bg-white"
+                          }`}
                       >
                         <span className="text-sm font-semibold">{opt.label}</span>
                         <CheckCircle2 className={`w-5 h-5 ${isSelected ? "text-white" : "text-slate-300"}`} />

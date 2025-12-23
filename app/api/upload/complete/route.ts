@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { sendUploadNotification } from "@/lib/email"
 import { jwtVerify } from "jose"
-import { assertUploadAllowed } from "@/lib/billing"
 import { revalidatePath } from "next/cache"
 
 const JWT_SECRET = new TextEncoder().encode(
@@ -13,19 +12,19 @@ const JWT_SECRET = new TextEncoder().encode(
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { 
-      portalId, 
-      fileName, 
+    const {
+      portalId,
+      fileName,
       uniqueFileName,
-      fileSize, 
-      mimeType, 
-      clientName, 
-      clientEmail, 
+      fileSize,
+      mimeType,
+      clientName,
+      clientEmail,
       clientMessage,
       storageProvider,
       token,
       // Optional: fileId if available from client (e.g. Dropbox)
-      fileId 
+      fileId
     } = body
 
     // Validate required fields
@@ -60,16 +59,13 @@ export async function POST(request: NextRequest) {
 
     // Get client info from request
     const ipAddress = request.headers.get("x-forwarded-for") ||
-                      request.headers.get("x-real-ip") ||
-                      "unknown"
+      request.headers.get("x-real-ip") ||
+      "unknown"
     const userAgent = request.headers.get("user-agent") || "unknown"
 
-    // Enforce billing upload limits
-    try {
-      await assertUploadAllowed(portal.userId, fileSize)
-    } catch (err: any) {
-      return NextResponse.json({ error: err.message || "Upload limit reached" }, { status: 403 })
-    }
+    // Note: Billing limits were already checked in /api/upload/session
+    // The file has already been uploaded to cloud storage at this point,
+    // so we just need to record it in the database
 
     // Create file upload record
     const uploadedAt = new Date()
@@ -109,7 +105,7 @@ export async function POST(request: NextRequest) {
         console.error("Failed to send upload notification:", err)
       })
     }
-    
+
     revalidatePath("/dashboard")
 
     return NextResponse.json({
@@ -119,6 +115,10 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error("Error completing upload:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Error details:", error instanceof Error ? error.message : String(error))
+    return NextResponse.json({
+      error: "Internal server error",
+      details: error instanceof Error ? error.message : undefined
+    }, { status: 500 })
   }
 }

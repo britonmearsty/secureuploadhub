@@ -155,7 +155,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-indigo-100 selection:text-indigo-700 font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-slate-200 selection:text-slate-900 font-sans">
       {/* Video Modal */}
       {isVideoModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setIsVideoModalOpen(false)}>
@@ -263,17 +263,16 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-40 overflow-hidden">
         {/* Premium Background */}
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/40 via-white to-white"></div>
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-100/40 via-white to-white"></div>
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 overflow-hidden">
-          <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px] animate-pulse" style={{ animationDuration: '4s' }} />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-300/10 blur-[100px]" />
+          <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px]" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-slate-300/10 blur-[100px]" />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <FadeIn>
             <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-border px-4 py-1.5 rounded-full text-foreground text-xs font-semibold tracking-wide uppercase mb-8 shadow-sm animate-fade-in hover:scale-105 transition-transform cursor-default">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
               <span>Now supporting 100GB+ Transfers</span>
@@ -283,7 +282,7 @@ export default function LandingPage() {
           <FadeIn delay={0.1}>
             <h1 className="text-5xl lg:text-7xl font-bold tracking-tight text-foreground mb-8 max-w-5xl mx-auto leading-[1.1]">
               Client file collection, <br className="hidden lg:block" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600 relative">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-slate-600 relative">
                 perfected for professionals.
                 {/* Underline decoration */}
                 <svg className="absolute w-full h-3 -bottom-2 left-0 text-primary opacity-30" viewBox="0 0 100 10" preserveAspectRatio="none">
@@ -369,7 +368,7 @@ export default function LandingPage() {
             <div className="bg-foreground text-background rounded-[2rem] p-8 flex flex-col items-start justify-between relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
               <div className="absolute inset-0 opacity-20 pointer-events-none">
                 <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-primary blur-3xl group-hover:bg-primary/80 transition-colors" />
-                <div className="absolute -left-16 -bottom-10 w-52 h-52 rounded-full bg-indigo-500 blur-3xl group-hover:bg-indigo-400 transition-colors" />
+                <div className="absolute -left-16 -bottom-10 w-52 h-52 rounded-full bg-slate-500 blur-3xl group-hover:bg-slate-400 transition-colors" />
               </div>
               <ScaleIn delay={0.2} className="relative z-10 w-full h-full flex flex-col">
                 <div className="bg-white/10 w-12 h-12 rounded-xl flex items-center justify-center mb-auto backdrop-blur-md">
@@ -377,7 +376,7 @@ export default function LandingPage() {
                 </div>
                 <div className="mt-8">
                   <h3 className="text-xl font-bold mb-3 text-white">Permission Control</h3>
-                  <p className="text-indigo-100/80 text-sm leading-relaxed">No "Request Access" loops. Clients upload, you own the file instantly.</p>
+                  <p className="text-slate-100/80 text-sm leading-relaxed">No "Request Access" loops. Clients upload, you own the file instantly.</p>
                 </div>
               </ScaleIn>
             </div>
@@ -405,7 +404,7 @@ export default function LandingPage() {
                 <p className="text-lg text-muted-foreground leading-relaxed">Your clients don't need to create an account, download an app, or remember a password. They just drag, drop, and done.</p>
               </FadeIn>
               <div className="w-full md:w-2/5 flex justify-center">
-                <ScaleIn delay={0.5} className="w-60 h-60 bg-white rounded-full shadow-2xl shadow-indigo-100 flex items-center justify-center p-4">
+                <ScaleIn delay={0.5} className="w-60 h-60 bg-white rounded-full shadow-2xl shadow-slate-100 flex items-center justify-center p-4">
                   {/* Kept Lottie but constrained size properly */}
                   <Lottie animationData={featureAnimation} loop={true} />
                 </ScaleIn>
@@ -429,7 +428,7 @@ export default function LandingPage() {
             {[
               {
                 icon: FileText,
-                color: "text-indigo-600 bg-indigo-50",
+                color: "text-slate-900 bg-slate-50",
                 title: "Accounting & Tax",
                 desc: "Collect W‑2s, 1099s, receipts, and full tax packages without chasing attachments or dealing with broken portals.",
                 note: "Popular with solo CPAs and multi-partner firms."
@@ -499,7 +498,7 @@ export default function LandingPage() {
                     <LinkIcon className="w-8 h-8 text-primary" />
                   </div>
                   {expandedStep === 0 && (
-                    <div className="absolute inset-0 animate-ping rounded-3xl bg-primary/20 -z-10" />
+                    <div className="absolute inset-0 rounded-3xl bg-primary/20 -z-10" />
                   )}
                 </div>
                 <span className="inline-block bg-primary/10 text-primary text-xs font-bold px-3 py-1 rounded-full mb-6 tracking-wide uppercase">Step 1</span>
@@ -521,7 +520,7 @@ export default function LandingPage() {
                     <Send className="w-8 h-8 text-foreground" />
                   </div>
                   {expandedStep === 1 && (
-                    <div className="absolute inset-0 animate-ping rounded-3xl bg-foreground/20 -z-10" />
+                    <div className="absolute inset-0 rounded-3xl bg-foreground/20 -z-10" />
                   )}
                 </div>
                 <span className="inline-block bg-muted text-muted-foreground text-xs font-bold px-3 py-1 rounded-full mb-6 tracking-wide uppercase">Step 2</span>
@@ -543,7 +542,7 @@ export default function LandingPage() {
                     <FolderSync className="w-8 h-8 text-emerald-600" />
                   </div>
                   {expandedStep === 2 && (
-                    <div className="absolute inset-0 animate-ping rounded-3xl bg-emerald-500/20 -z-10" />
+                    <div className="absolute inset-0 rounded-3xl bg-emerald-500/20 -z-10" />
                   )}
                 </div>
                 <span className="inline-block bg-emerald-500/10 text-emerald-600 text-xs font-bold px-3 py-1 rounded-full mb-6 tracking-wide uppercase">Step 3</span>
@@ -678,17 +677,17 @@ export default function LandingPage() {
             <div className="bg-foreground text-background rounded-[2rem] p-8 flex flex-col items-start justify-between relative overflow-hidden group">
               <div className="absolute inset-0 opacity-20 pointer-events-none">
                 <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-primary blur-3xl" />
-                <div className="absolute -left-16 -bottom-10 w-52 h-52 rounded-full bg-indigo-500 blur-3xl" />
+                <div className="absolute -left-16 -bottom-10 w-52 h-52 rounded-full bg-slate-500 blur-3xl" />
               </div>
               <div className="relative z-10">
-                <p className="text-xs font-bold uppercase tracking-[0.15em] text-indigo-300 mb-4">Coming soon</p>
+                <p className="text-xs font-bold uppercase tracking-[0.15em] text-slate-300 mb-4">Coming soon</p>
                 <h3 className="text-2xl font-bold text-white mb-3">More destinations</h3>
                 <p className="text-slate-300 leading-relaxed">
                   OneDrive, S3 buckets, and direct webhooks are on our roadmap so you can plug uploads into any workflow.
                 </p>
               </div>
               <div className="mt-8 pt-8 border-t border-white/10 w-full relative z-10">
-                <p className="text-xs text-indigo-200">
+                <p className="text-xs text-slate-200">
                   Need something specific? <a href="#" className="underline hover:text-white">Reach out</a>.
                 </p>
               </div>
@@ -700,7 +699,7 @@ export default function LandingPage() {
       {/* Testimonials Section */}
       <section id="testimonials" className="py-32 bg-background relative overflow-hidden">
         {/* Background blobs */}
-        <div className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[100px] -z-10" />
+        <div className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-slate-500/5 rounded-full blur-[100px] -z-10" />
         <div className="absolute bottom-0 right-0 translate-y-1/3 translate-x-1/3 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-[100px] -z-10" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -721,7 +720,7 @@ export default function LandingPage() {
                 "SecureUploadHub has transformed how we collect documents from clients. What used to take days of back-and-forth emails now happens in minutes."
               </p>
               <div className="flex items-center gap-4 pt-6 border-t border-border/50">
-                <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-lg">
+                <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-900 font-bold text-lg">
                   SM
                 </div>
                 <div>
@@ -885,7 +884,7 @@ export default function LandingPage() {
                     <div className="bg-white/10 p-1 rounded-full"><CheckCircle2 className="w-4 h-4 text-emerald-400" /></div> Password Protection
                   </li>
                 </ul>
-                <Link href="/auth/signin" className="relative z-10 block w-full py-4 rounded-xl bg-white text-foreground font-bold hover:bg-indigo-50 transition-all shadow-lg hover:shadow-xl text-center hover:scale-[1.02] active:scale-[0.98]">
+                <Link href="/auth/signin" className="relative z-10 block w-full py-4 rounded-xl bg-white text-foreground font-bold hover:bg-slate-50 transition-all shadow-lg hover:shadow-xl text-center hover:scale-[1.02] active:scale-[0.98]">
                   Start 14-Day Free Trial
                 </Link>
               </div>
@@ -980,7 +979,7 @@ export default function LandingPage() {
           <div className="bg-foreground rounded-[3rem] relative overflow-hidden py-20 px-8 text-center group">
             {/* Background decoration */}
             <div className="absolute inset-0 opacity-20">
-              <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary rounded-full blur-[150px] group-hover:bg-indigo-500 transition-colors duration-700" />
+              <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary rounded-full blur-[150px] group-hover:bg-slate-800 transition-colors duration-700" />
               <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-[150px] group-hover:bg-emerald-400 transition-colors duration-700" />
             </div>
 
@@ -988,13 +987,13 @@ export default function LandingPage() {
               <h2 className="text-4xl lg:text-6xl font-bold text-white mb-8 tracking-tight">
                 Ready to stop chasing files?
               </h2>
-              <p className="text-xl text-indigo-100 mb-12 max-w-2xl mx-auto font-medium">
+              <p className="text-xl text-slate-200 mb-12 max-w-2xl mx-auto font-medium">
                 Join thousands of professionals who have simplified their file collection. Set up your first portal in under 2 minutes.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                 <Link
                   href="/auth/signin"
-                  className="w-full sm:w-auto bg-white text-foreground px-8 py-4 rounded-xl font-bold text-lg hover:bg-indigo-50 transition-all shadow-xl hover:shadow-2xl hover:scale-[1.02] flex items-center justify-center gap-2 group/btn"
+                  className="w-full sm:w-auto bg-white text-foreground px-8 py-4 rounded-xl font-bold text-lg hover:bg-slate-50 transition-all shadow-xl hover:shadow-2xl hover:scale-[1.02] flex items-center justify-center gap-2 group/btn"
                 >
                   Start Free Today
                   <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
@@ -1006,7 +1005,7 @@ export default function LandingPage() {
                   View Pricing
                 </a>
               </div>
-              <p className="text-indigo-200/80 text-sm mt-10 font-medium tracking-wide uppercase">
+              <p className="text-slate-300/80 text-sm mt-10 font-medium tracking-wide uppercase">
                 Free forever plan &nbsp;•&nbsp; No credit card required &nbsp;•&nbsp; Cancel anytime
               </p>
             </div>

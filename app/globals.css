@@ -8,8 +8,8 @@
   --foreground: #0f172a;
   /* Slate 900 */
 
-  --primary: #4f46e5;
-  /* Indigo 600 */
+  --primary: #0f172a;
+  /* Slate 900 */
   --primary-foreground: #ffffff;
 
   --secondary: #f8fafc;
@@ -21,9 +21,9 @@
   --muted-foreground: #64748b;
   /* Slate 500 */
 
-  --accent: #eef2ff;
-  /* Indigo 50 */
-  --accent-foreground: #4f46e5;
+  --accent: #f8fafc;
+  /* Slate 50 */
+  --accent-foreground: #0f172a;
 
   --border: #e2e8f0;
   /* Slate 200 */
