@@ -157,20 +157,20 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
-              <div className="bg-indigo-600 p-1.5 rounded-lg">
+              <div className="bg-slate-800 p-1.5 rounded-lg">
                 <ShieldCheck className="w-6 h-6 text-white" />
               </div>
               <span className="text-xl font-bold tracking-tight text-slate-900">SecureUploadHub</span>
             </div>
 
             <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Features</a>
-              <a href="#use-cases" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Use Cases</a>
-              <a href="#how-it-works" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">How It Works</a>
-              <a href="#security" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Security</a>
-              <a href="#integrations" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Integrations</a>
-              <a href="#pricing" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">Pricing</a>
-              <a href="#faq" className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">FAQ</a>
+              <a href="#features" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Features</a>
+              <a href="#use-cases" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Use Cases</a>
+              <a href="#how-it-works" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">How It Works</a>
+              <a href="#security" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Security</a>
+              <a href="#integrations" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Integrations</a>
+              <a href="#pricing" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Pricing</a>
+              <a href="#faq" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">FAQ</a>
               <Link href="/auth/signin" className="bg-slate-900 text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-slate-800 transition-all shadow-md hover:shadow-lg active:scale-95">
                 Get Started Free
               </Link>
@@ -187,13 +187,13 @@ export default function LandingPage() {
           {isMenuOpen && (
             <div className="md:hidden border-t border-slate-200 py-4">
               <div className="flex flex-col gap-4">
-                <a href="#use-cases" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors px-4 py-2">Use Cases</a>
-                <a href="#features" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors px-4 py-2">Features</a>
-                <a href="#how-it-works" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors px-4 py-2">How It Works</a>
-                <a href="#security" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors px-4 py-2">Security</a>
-                <a href="#integrations" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors px-4 py-2">Integrations</a>
-                <a href="#pricing" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors px-4 py-2">Pricing</a>
-                <a href="#faq" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors px-4 py-2">FAQ</a>
+                <a href="#use-cases" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors px-4 py-2">Use Cases</a>
+                <a href="#features" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors px-4 py-2">Features</a>
+                <a href="#how-it-works" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors px-4 py-2">How It Works</a>
+                <a href="#security" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors px-4 py-2">Security</a>
+                <a href="#integrations" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors px-4 py-2">Integrations</a>
+                <a href="#pricing" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors px-4 py-2">Pricing</a>
+                <a href="#faq" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors px-4 py-2">FAQ</a>
                 <div className="px-4 pt-2">
                   <Link href="/auth/signin" className="block w-full bg-slate-900 text-white px-5 py-3 rounded-full text-sm font-semibold hover:bg-slate-800 transition-all text-center">
                     Get Started Free
@@ -209,12 +209,12 @@ export default function LandingPage() {
       <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
         {/* Abstract Background Decoration */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-100/50 blur-[120px]" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-100/50 blur-[120px]" />
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-slate-900/50 blur-[120px]" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-slate-900/50 blur-[120px]" />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-100 px-3 py-1 rounded-full text-indigo-700 text-xs font-bold tracking-wide uppercase mb-6 animate-fade-in">
+          <div className="inline-flex items-center gap-2 bg-slate-900 border border-slate-900 px-3 py-1 rounded-full text-white text-xs font-bold tracking-wide uppercase mb-6 animate-fade-in">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
@@ -223,7 +223,7 @@ export default function LandingPage() {
           </div>
 
           <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight text-slate-900 mb-8 max-w-4xl mx-auto leading-[1.1]">
-            The professional way to <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500">collect client files.</span>
+            The professional way to <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-800">collect client files.</span>
           </h1>
 
           <p className="text-lg lg:text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
@@ -234,7 +234,7 @@ export default function LandingPage() {
             <Link
               href="/auth/signin"
               onClick={handleCtaClick}
-              className="w-auto bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 flex items-center justify-center gap-2 group"
+              className="w-auto bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold text-lg hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 flex items-center justify-center gap-2 group"
             >
               Create Your Portal Link
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -283,28 +283,40 @@ export default function LandingPage() {
             </div>
 
             {/* Small Card 1 */}
-            <div className="bg-indigo-600 p-8 rounded-3xl text-white flex flex-col justify-between">
-              <Lock className="w-10 h-10 opacity-80" />
-              <div>
-                <h3 className="text-xl font-bold mb-2">Permission Control</h3>
-                <p className="text-indigo-100 text-sm">No "Request Access" loops. Clients upload, you own the file instantly.</p>
+            <div className="bg-slate-900 text-slate-50 rounded-3xl p-6 flex flex-col items-start justify-between relative overflow-hidden">
+              <div className="absolute inset-0 opacity-20 pointer-events-none">
+                <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-slate-800 blur-3xl" />
+                <div className="absolute -left-16 -bottom-10 w-52 h-52 rounded-full bg-slate-700 blur-3xl" />
+              </div>
+              <div className="relative z-10">
+                <Lock className="w-10 h-10 opacity-80" />
+                <div>
+                  <h3 className="text-xl font-bold mb-2">Permission Control</h3>
+                  <p className="text-indigo-100 text-sm">No "Request Access" loops. Clients upload, you own the file instantly.</p>
+                </div>
               </div>
             </div>
 
             {/* Small Card 2 */}
-            <div className="bg-slate-900 p-8 rounded-3xl text-white flex flex-col justify-between">
-              <ShieldCheck className="w-10 h-10 text-emerald-400" />
-              <div>
-                <h3 className="text-xl font-bold mb-2">SOC2 Ready</h3>
-                <p className="text-slate-400 text-sm">Enterprise-grade encryption for sensitive tax and legal documents.</p>
+            <div className="bg-slate-900 text-slate-50 rounded-3xl p-6 flex flex-col items-start justify-between relative overflow-hidden">
+              <div className="absolute inset-0 opacity-20 pointer-events-none">
+                <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-slate-800 blur-3xl" />
+                <div className="absolute -left-16 -bottom-10 w-52 h-52 rounded-full bg-slate-700 blur-3xl" />
+              </div>
+              <div className="relative z-10">
+                <ShieldCheck className="w-10 h-10 text-emerald-400" />
+                <div>
+                  <h3 className="text-xl font-bold mb-2">SOC2 Ready</h3>
+                  <p className="text-slate-100 text-sm">Enterprise-grade encryption for sensitive tax and legal documents.</p>
+                </div>
               </div>
             </div>
 
             {/* Medium Card */}
             <div className="md:col-span-2 bg-slate-50 border border-slate-100 p-8 rounded-3xl flex flex-col md:flex-row gap-8 items-center">
               <div className="flex-1">
-                <div className="bg-blue-100 w-12 h-12 rounded-2xl flex items-center justify-center mb-6">
-                  <Zap className="text-blue-600" />
+                <div className="bg-slate-100 w-12 h-12 rounded-2xl flex items-center justify-center mb-6">
+                  <Zap className="text-slate-900" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4">Zero-Friction for Clients</h3>
                 <p className="text-slate-600">Your clients don't need to create an account, download an app, or remember a password. They just drag, drop, and done.</p>
@@ -344,7 +356,7 @@ export default function LandingPage() {
             </div>
 
             <div className="bg-white border border-slate-100 rounded-3xl p-6 flex flex-col gap-3">
-              <div className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-blue-50 text-blue-600">
+              <div className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-slate-50 text-slate-900">
                 <UploadCloud className="w-5 h-5" />
               </div>
               <h3 className="font-semibold text-slate-900">Agencies & Creatives</h3>
@@ -431,26 +443,26 @@ export default function LandingPage() {
 
             {/* Step 2 */}
             <div className="relative text-center">
-              <div 
-                className="bg-blue-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 cursor-pointer hover:bg-blue-200 transition-all hover:scale-110 relative"
+              <div
+                className="bg-slate-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 cursor-pointer hover:bg-slate-200 transition-all hover:scale-110 relative"
                 onClick={() => setExpandedStep(expandedStep === 1 ? null : 1)}
               >
-                <Send className="w-8 h-8 text-blue-600" />
+                <Send className="w-8 h-8 text-slate-900" />
                 {expandedStep === 1 && (
                   <>
                     <div className="absolute left-1/2 -top-16 transform -translate-x-1/2 animate-ping z-10">
-                      <div className="bg-blue-100 w-10 h-10 rounded-xl flex items-center justify-center opacity-75">
-                        <Mail className="w-5 h-5 text-blue-600" />
+                      <div className="bg-slate-100 w-10 h-10 rounded-xl flex items-center justify-center opacity-75">
+                        <Mail className="w-5 h-5 text-slate-900" />
                       </div>
                     </div>
                     <div className="absolute -right-6 -top-6 animate-bounce z-10" style={{ animation: 'bounce 2s infinite 0.1s' }}>
-                      <div className="bg-blue-100 w-10 h-10 rounded-xl flex items-center justify-center">
-                        <Mail className="w-5 h-5 text-blue-600" />
+                      <div className="bg-slate-100 w-10 h-10 rounded-xl flex items-center justify-center">
+                        <Mail className="w-5 h-5 text-slate-900" />
                       </div>
                     </div>
                     <div className="absolute -left-6 -top-6 animate-bounce z-10" style={{ animation: 'bounce 2s infinite 0.2s' }}>
-                      <div className="bg-blue-100 w-10 h-10 rounded-xl flex items-center justify-center">
-                        <Globe className="w-5 h-5 text-blue-600" />
+                      <div className="bg-slate-100 w-10 h-10 rounded-xl flex items-center justify-center">
+                        <Globe className="w-5 h-5 text-slate-900" />
                       </div>
                     </div>
                   </>
@@ -543,7 +555,7 @@ export default function LandingPage() {
             </div>
 
             <div className="bg-slate-50 border border-slate-100 rounded-3xl p-6 h-full">
-              <div className="inline-flex w-10 h-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 mb-4">
+              <div className="inline-flex w-10 h-10 items-center justify-center rounded-2xl bg-slate-50 text-slate-900 mb-4">
                 <Globe className="w-5 h-5" />
               </div>
               <h3 className="font-semibold text-slate-900 mb-2">Regional data residency</h3>
@@ -600,8 +612,8 @@ export default function LandingPage() {
 
             <div className="bg-slate-900 text-slate-50 rounded-3xl p-6 flex flex-col items-start justify-between relative overflow-hidden">
               <div className="absolute inset-0 opacity-20 pointer-events-none">
-                <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-indigo-500 blur-3xl" />
-                <div className="absolute -left-16 -bottom-10 w-52 h-52 rounded-full bg-blue-500 blur-3xl" />
+                <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-slate-800 blur-3xl" />
+                <div className="absolute -left-16 -bottom-10 w-52 h-52 rounded-full bg-slate-700 blur-3xl" />
               </div>
               <div className="relative z-10">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-200 mb-3">Coming soon</p>
@@ -662,7 +674,7 @@ export default function LandingPage() {
                 "The branded portals make us look incredibly professional. Clients love how easy it is — no login required, just drag and drop."
               </p>
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
+                <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-900 font-bold">
                   {/* PLACEHOLDER: Replace with actual avatar */}
                   JR
                 </div>
@@ -771,7 +783,7 @@ export default function LandingPage() {
             </div>
 
             {/* Pro Plan */}
-            <div className="bg-white p-8 rounded-3xl border-2 border-indigo-600 shadow-xl shadow-indigo-100 flex flex-col relative overflow-hidden">
+            <div className="bg-white p-8 rounded-3xl border-2 border-slate-900 shadow-xl shadow-slate-100 flex flex-col relative overflow-hidden">
               <div className="absolute top-0 right-0 bg-indigo-600 text-white px-4 py-1 rounded-bl-xl text-xs font-bold uppercase tracking-widest">
                 Most Popular
               </div>
@@ -782,19 +794,19 @@ export default function LandingPage() {
               </div>
               <ul className="space-y-4 mb-8 flex-1">
                 <li className="flex items-center gap-3 text-slate-600 text-sm">
-                  <CheckCircle2 className="w-5 h-5 text-indigo-500" /> Unlimited Portal Links
+                  <CheckCircle2 className="w-5 h-5 text-slate-900" /> Unlimited Portal Links
                 </li>
                 <li className="flex items-center gap-3 text-slate-600 text-sm">
-                  <CheckCircle2 className="w-5 h-5 text-indigo-500" /> 100GB Max File Size
+                  <CheckCircle2 className="w-5 h-5 text-slate-900" /> 100GB Max File Size
                 </li>
                 <li className="flex items-center gap-3 text-slate-600 text-sm">
-                  <CheckCircle2 className="w-5 h-5 text-indigo-500" /> Custom Branding (Logo & Colors)
+                  <CheckCircle2 className="w-5 h-5 text-slate-900" /> Custom Branding (Logo & Colors)
                 </li>
                 <li className="flex items-center gap-3 text-slate-600 text-sm">
-                  <CheckCircle2 className="w-5 h-5 text-indigo-500" /> Password Protected Portals
+                  <CheckCircle2 className="w-5 h-5 text-slate-900" /> Password Protected Portals
                 </li>
               </ul>
-              <Link href="/auth/signin" className="block w-full py-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 text-center">Start 14-Day Free Trial</Link>
+              <Link href="/auth/signin" className="block w-full py-3 rounded-xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 text-center">Start 14-Day Free Trial</Link>
             </div>
           </div>
         </div>
@@ -874,7 +886,7 @@ export default function LandingPage() {
             <p className="text-slate-600 mb-4">Still have questions?</p>
             <a
               href="#"
-              className="inline-flex items-center gap-2 text-indigo-600 font-semibold hover:text-indigo-700 transition-colors"
+              className="inline-flex items-center gap-2 text-slate-900 font-semibold hover:text-slate-800 transition-colors"
             >
               <MessageSquare className="w-4 h-4" />
               Contact our support team
@@ -886,7 +898,7 @@ export default function LandingPage() {
       {/* Final CTA Section */}
       <section className="py-12 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-gradient-to-br from-indigo-600 to-blue-600 rounded-3xl relative overflow-hidden py-16 sm:py-24 px-4 sm:px-8 text-center">
+          <div className="bg-gradient-to-br from-slate-900 to-slate-900 rounded-3xl relative overflow-hidden py-16 sm:py-24 px-4 sm:px-8 text-center">
             {/* Background decoration */}
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl" />
@@ -903,7 +915,7 @@ export default function LandingPage() {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
                   href="/auth/signin"
-                  className="w-auto bg-white text-indigo-600 px-6 py-3 rounded-2xl font-bold text-lg hover:bg-indigo-50 transition-all shadow-xl flex items-center justify-center gap-2 group"
+                  className="w-auto bg-white text-slate-900 px-6 py-3 rounded-2xl font-bold text-lg hover:bg-slate-50 transition-all shadow-xl flex items-center justify-center gap-2 group"
                 >
                   Start Free Today
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

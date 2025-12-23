@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma"
 import { sendUploadNotification } from "@/lib/email"
 import { jwtVerify } from "jose"
 import { assertUploadAllowed } from "@/lib/billing"
+import { revalidatePath } from "next/cache"
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.PORTAL_PASSWORD_SECRET || process.env.NEXTAUTH_SECRET || "default-secret-change-me"
@@ -108,6 +109,8 @@ export async function POST(request: NextRequest) {
         console.error("Failed to send upload notification:", err)
       })
     }
+    
+    revalidatePath("/dashboard")
 
     return NextResponse.json({
       success: true,

@@ -1,6 +1,6 @@
 Here is a B2B SaaS idea that targets a different kind of friction: **File Management & Client Workflow.**
 
-### The Idea: "DropPortal" (The Frictionless File Collector)
+### The Idea: "secureuploadhub" (The Frictionless File Collector)
 
 **The Pitch:** A secure, branded "upload portal" for service businesses (Accountants, Mortgage Brokers, Print Shops, Video Editors) that allows their clients to send large files without creating an account, logging in, or dealing with Google Drive permission errors.
 
@@ -17,7 +17,7 @@ Service providers constantly struggle to get files from non-technical clients.
 ### 2. The Solution (How it works)
 
 1. **The Setup:** The professional (User) connects their own storage (Google Drive, OneDrive, S3, or Dropbox) to DropPortal.
-2. **The Link:** They get a permanent, branded link (e.g., `dropportal.io/cpa-solutions`).
+2. **The Link:** They get a permanent, branded link (e.g., `secureuploadhub.io/cpa-solutions`).
 3. **The Client Experience:** The client clicks the link. They see the CPA's logo and a big "Drag and Drop Files Here" box. They drop files, type their name, and hit "Send." **No signup required for the client.**
 4. **The Delivery:** The files automatically appear in the User's Google Drive in a folder named after the client (e.g., `/Client_Uploads/John_Doe/`). The User gets an email notification.
 
@@ -27,7 +27,7 @@ You act as a "dumb pipe" or a UI layer on top of existing storage APIs.
 
 * **Storage:** You don't need to host terabytes of data yourself. You stream the upload directly to the user's existing Cloud Storage via API.
 * **Features:** MVP needs: Dashboard to connect cloud account, customizable upload page (logo/colors), and the file transfer logic.
-* **Tech Stack:** Node.js/React. Use the official APIs for Google Drive/Dropbox/AWS S3.
+* **Tech Stack:** nextjs. Use the official APIs for Google Drive/Dropbox/AWS S3.
 
 ### 4. Why it is "Marketable"
 
@@ -57,11 +57,6 @@ You act as a "dumb pipe" or a UI layer on top of existing storage APIs.
 * **Risk:** Liability for hosting illegal content.
 * **Mitigation:** Since you are piping data to *their* cloud storage, they own the files. Your Terms of Service (ToS) must clearly state you are a transit tunnel, not a host. (Consult a lawyer, but this generally reduces your liability compared to hosting the files yourself).
 
-### Next Step
 
-Would you like me to create a **feature list for the MVP** to keep the scope small, or would you like **5 specific email subject lines** to pitch this to Video Editors?
-
-## Billing & Paystack Setup
-- Set `PAYSTACK_PUBLIC_KEY`, `PAYSTACK_SECRET_KEY`, and `PAYSTACK_WEBHOOK_SECRET` in your environment.
-- Ensure `NEXTAUTH_URL` matches the deployed base URL for correct callback redirects.
-- Webhooks: Configure Paystack to post to `/api/billing/webhook` and keep the secret in sync with `PAYSTACK_WEBHOOK_SECRET`.
+* **Risk:** Users forget to set up their cloud storage.
+* **Mitigation:** Onboarding flow should be a 3-step process: 1) Connect Cloud Storage, 2) Customize Upload Page, 3) Get Link.

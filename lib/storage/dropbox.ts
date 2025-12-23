@@ -7,7 +7,7 @@ const DROPBOX_API = "https://api.dropboxapi.com/2"
 const DROPBOX_CONTENT_API = "https://content.dropboxapi.com/2"
 
 export class DropboxService implements CloudStorageService {
-  provider = "dropbox" as const
+ provider = "dropbox" as const
 
   async uploadFile(
     accessToken: string,
@@ -140,9 +140,9 @@ export class DropboxService implements CloudStorageService {
 
       const data = await response.json()
       
-      // Filter to only folders
       return data.entries
-        .filter((entry: { ".tag": string }) => entry[".tag"] === "folder")
+      .filter((entry: { ".tag": string }) => entry[".tag"] === "folder")
+      // Filter to only folders
         .map((f: { id: string; name: string; path_display: string }) => ({
           id: f.path_display, // Use path as ID for Dropbox
           name: f.name,
