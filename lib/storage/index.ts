@@ -111,7 +111,7 @@ export async function getConnectedAccounts(userId: string) {
 
     const storageProvider = account.provider === "google" ? "google_drive" : "dropbox"
     const service = getStorageService(storageProvider)
-    
+
     let email: string | undefined
     let name: string | undefined
     let isConnected = true
@@ -155,10 +155,6 @@ export async function uploadToCloudStorage(
   folderId?: string,
   folderPath?: string
 ): Promise<UploadResult> {
-  if (provider === "local") {
-    return { success: false, error: "Local storage should use file system directly" }
-  }
-
   const oauthProvider = provider === "google_drive" ? "google" : "dropbox"
   const tokenResult = await getValidAccessToken(userId, oauthProvider)
 
@@ -189,10 +185,6 @@ export async function listCloudFolders(
   provider: StorageProvider,
   parentFolderId?: string
 ): Promise<StorageFolder[]> {
-  if (provider === "local") {
-    return []
-  }
-
   const oauthProvider = provider === "google_drive" ? "google" : "dropbox"
   const tokenResult = await getValidAccessToken(userId, oauthProvider)
 
@@ -217,10 +209,6 @@ export async function createCloudFolder(
   folderName: string,
   parentFolderId?: string
 ): Promise<StorageFolder | null> {
-  if (provider === "local") {
-    return null
-  }
-
   const oauthProvider = provider === "google_drive" ? "google" : "dropbox"
   const tokenResult = await getValidAccessToken(userId, oauthProvider)
 

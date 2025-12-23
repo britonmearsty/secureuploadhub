@@ -121,7 +121,7 @@ model UploadPortal {
   passwordHash       String? // Optional password protection
 
   // Cloud storage destination
-  storageProvider   String  @default("local") // "google_drive", "dropbox", "local"
+  storageProvider   String  @default("google_drive") // "google_drive", "dropbox"
   storageFolderId   String? // Folder ID in cloud storage
   storageFolderPath String? // Human-readable folder path
 

@@ -76,7 +76,7 @@ export default function CreatePortalPage() {
     requireClientName: true,
     requireClientEmail: false,
     maxFileSize: 500,
-    storageProvider: "local" as "local" | "google_drive" | "dropbox",
+    storageProvider: "google_drive" as "google_drive" | "dropbox",
     storageFolderId: "",
     storageFolderPath: "",
     password: "",
@@ -101,7 +101,7 @@ export default function CreatePortalPage() {
     }
   }
 
-  async function selectStorageProvider(provider: "local" | "google_drive" | "dropbox") {
+  async function selectStorageProvider(provider: "google_drive" | "dropbox") {
     setFormData({
       ...formData,
       storageProvider: provider,
@@ -110,11 +110,7 @@ export default function CreatePortalPage() {
     })
     setFolderPath([])
 
-    if (provider !== "local") {
-      await fetchFolders(provider)
-    } else {
-      setFolders([])
-    }
+    await fetchFolders(provider)
   }
 
   async function fetchFolders(provider: string, parentFolderId?: string) {
@@ -436,7 +432,6 @@ export default function CreatePortalPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
-                  { id: "local", name: "Internal", icon: FolderOpen, color: "slate" },
                   { id: "google_drive", name: "Google", icon: Cloud, color: "emerald", disabled: !accounts.find(a => a.provider === "google") },
                   { id: "dropbox", name: "Dropbox", icon: Cloud, color: "blue", disabled: !accounts.find(a => a.provider === "dropbox") }
                 ].map((provider) => {
@@ -469,7 +464,7 @@ export default function CreatePortalPage() {
 
               {/* Folder Selector UI */}
               <AnimatePresence mode="wait">
-                {formData.storageProvider !== "local" && (
+                {true && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}

@@ -1,6 +1,6 @@
 // Cloud storage service types and interfaces
 
-export type StorageProvider = "local" | "google_drive" | "dropbox"
+export type StorageProvider = "google_drive" | "dropbox"
 
 export interface StorageFile {
   id: string
@@ -36,7 +36,7 @@ export interface StorageAccount {
 
 export interface CloudStorageService {
   provider: StorageProvider
-  
+
   /**
    * Initiate a resumable upload session
    * Returns an upload URL that the client can PUT to directly
@@ -60,7 +60,7 @@ export interface CloudStorageService {
     folderId?: string,
     folderPath?: string
   ): Promise<UploadResult>
-  
+
   /**
    * List folders in the storage
    */
@@ -68,7 +68,7 @@ export interface CloudStorageService {
     accessToken: string,
     parentFolderId?: string
   ): Promise<StorageFolder[]>
-  
+
   /**
    * Create a folder in the storage
    */
@@ -77,14 +77,14 @@ export interface CloudStorageService {
     folderName: string,
     parentFolderId?: string
   ): Promise<StorageFolder>
-  
+
   /**
    * Refresh the access token
    */
   refreshAccessToken(
     refreshToken: string
   ): Promise<{ accessToken: string; expiresAt?: number }>
-  
+
   /**
    * Get account info (email, name)
    */

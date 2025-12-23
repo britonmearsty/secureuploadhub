@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
-import { writeFile, mkdir } from "fs/promises"
-import path from "path"
 import { uploadToCloudStorage, StorageProvider } from "@/lib/storage"
 import { sendUploadNotification } from "@/lib/email"
 import { jwtVerify } from "jose"
@@ -102,8 +100,8 @@ export async function POST(request: NextRequest) {
 
     // Get client info from request
     const ipAddress = request.headers.get("x-forwarded-for") ||
-                      request.headers.get("x-real-ip") ||
-                      "unknown"
+      request.headers.get("x-real-ip") ||
+      "unknown"
     const userAgent = request.headers.get("user-agent") || "unknown"
 
     // Read file into buffer
@@ -116,16 +114,16 @@ export async function POST(request: NextRequest) {
 
     if (scanResult.status === "infected") {
       console.warn(`Blocked upload of infected file: ${file.name} (${scanResult.threat})`)
-      return NextResponse.json({ 
-        error: "Security Alert: File rejected due to detected malware signature." 
+      return NextResponse.json({
+        error: "Security Alert: File rejected due to detected malware signature."
       }, { status: 400 })
     }
 
     if (scanResult.status === "error") {
       // Fail open or closed? For high security, fail closed.
       console.error("File scan failed, rejecting upload")
-      return NextResponse.json({ 
-        error: "Security Check Failed: Unable to scan file. Please try again." 
+      return NextResponse.json({
+        error: "Security Check Failed: Unable to scan file. Please try again."
       }, { status: 500 })
     }
 
@@ -148,38 +146,21 @@ export async function POST(request: NextRequest) {
       targetFolderPath = clientName.replace(/[^a-zA-Z0-9\s-]/g, "_")
     }
 
-    // Upload to cloud storage or local
-    if (storageProvider !== "local") {
-      // Upload to cloud storage
-      const result = await uploadToCloudStorage(
-        portal.userId,
-        storageProvider,
-        buffer,
-        uniqueFileName,
-        mimeType,
-        portal.storageFolderId || undefined,
-        targetFolderPath || undefined
-      )
+    // Upload to cloud storage
+    const result = await uploadToCloudStorage(
+      portal.userId,
+      storageProvider,
+      buffer,
+      uniqueFileName,
+      mimeType,
+      portal.storageFolderId || undefined,
+      targetFolderPath || undefined
+    )
 
-      if (result.success) {
-        uploadSuccess = true
-        storageFileId = result.fileId
-        storagePath = result.webViewLink || targetFolderPath
-      } else {
-        // Fall back to local storage
-        console.error("Cloud upload failed, falling back to local:", result.error)
-        storageProvider = "local"
-      }
-    }
-
-    // Local storage (either primary or fallback)
-    if (storageProvider === "local") {
-      const uploadsDir = path.join(process.cwd(), "uploads", portalId)
-      await mkdir(uploadsDir, { recursive: true })
-      const filePath = path.join(uploadsDir, uniqueFileName)
-      await writeFile(filePath, buffer)
+    if (result.success) {
       uploadSuccess = true
-      storagePath = filePath
+      storageFileId = result.fileId
+      storagePath = result.webViewLink || targetFolderPath
     }
 
     if (!uploadSuccess) {

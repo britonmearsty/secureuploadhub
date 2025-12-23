@@ -94,7 +94,7 @@ export default function EditPortalPage() {
     requireClientName: true,
     requireClientEmail: false,
     maxFileSize: 500,
-    storageProvider: "local" as "local" | "google_drive" | "dropbox",
+    storageProvider: "google_drive" as "google_drive" | "dropbox",
     storageFolderId: "",
     storageFolderPath: "",
     newPassword: "",
@@ -146,9 +146,7 @@ export default function EditPortalPage() {
         })
         setHasPassword(!!data.passwordHash)
 
-        if (data.storageProvider !== "local") {
-          await fetchFolders(data.storageProvider, data.storageFolderId)
-        }
+        await fetchFolders(data.storageProvider, data.storageFolderId)
       } else {
         setError("Portal not found")
       }
@@ -171,7 +169,7 @@ export default function EditPortalPage() {
     }
   }
 
-  async function selectStorageProvider(provider: "local" | "google_drive" | "dropbox") {
+  async function selectStorageProvider(provider: "google_drive" | "dropbox") {
     setFormData({
       ...formData,
       storageProvider: provider,
@@ -180,11 +178,7 @@ export default function EditPortalPage() {
     })
     setFolderPath([])
 
-    if (provider !== "local") {
-      await fetchFolders(provider)
-    } else {
-      setFolders([])
-    }
+    await fetchFolders(provider)
   }
 
   async function fetchFolders(provider: string, parentFolderId?: string) {
@@ -597,7 +591,6 @@ export default function EditPortalPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
-                  { id: "local", name: "Internal", icon: FolderOpen, disabled: false },
                   { id: "google_drive", name: "Google", icon: Cloud, disabled: !accounts.find(a => a.provider === "google") },
                   { id: "dropbox", name: "Dropbox", icon: Cloud, disabled: !accounts.find(a => a.provider === "dropbox") }
                 ].map((provider) => {
@@ -625,7 +618,7 @@ export default function EditPortalPage() {
 
               {/* Modern Folder Explorer */}
               <AnimatePresence mode="wait">
-                {formData.storageProvider !== "local" && (
+                {true && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
