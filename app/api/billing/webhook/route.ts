@@ -3,6 +3,8 @@ import prisma from "@/lib/prisma"
 import { PAYSTACK_CONFIG } from "@/lib/paystack-config"
 import crypto from "crypto"
 
+export const dynamic = 'force-dynamic'
+
 const addMonths = (date: Date, months: number) => {
   const copy = new Date(date)
   copy.setMonth(copy.getMonth() + months)
