@@ -53,7 +53,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
 
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
 
   --animate-fade-in: fade-in 0.5s ease-out;
