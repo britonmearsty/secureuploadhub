@@ -136,6 +136,32 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
         }
     }
 
+    const [downloadingInvoice, setDownloadingInvoice] = useState<string | null>(null)
+
+    const handleDownloadInvoice = async (paymentId: string) => {
+        setDownloadingInvoice(paymentId)
+        try {
+            const response = await fetch(`/api/billing/invoices/${paymentId}`)
+            if (response.ok) {
+                const blob = await response.blob()
+                const url = window.URL.createObjectURL(blob)
+                const a = document.createElement("a")
+                a.href = url
+                a.download = `invoice-${paymentId}.pdf`
+                document.body.appendChild(a)
+                a.click()
+                a.remove()
+            } else {
+                alert("Failed to download invoice.")
+            }
+        } catch (error) {
+            console.error("Error downloading invoice:", error)
+            alert("Failed to download invoice.")
+        } finally {
+            setDownloadingInvoice(null)
+        }
+    }
+
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
             <div className="mb-8">
@@ -384,8 +410,12 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                                     </span>
                                                                 </td>
                                                                 <td className="py-4 text-right">
-                                                                    <button className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors">
-                                                                        Download PDF
+                                                                    <button
+                                                                        onClick={() => handleDownloadInvoice(p.id)}
+                                                                        disabled={downloadingInvoice === p.id}
+                                                                        className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors disabled:opacity-50"
+                                                                    >
+                                                                        {downloadingInvoice === p.id ? "Downloading..." : "Download PDF"}
                                                                     </button>
                                                                 </td>
                                                             </tr>
