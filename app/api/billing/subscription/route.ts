@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { getPaystack } from "@/lib/billing"
 import { PAYSTACK_CONFIG } from "@/lib/paystack-config"
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const session = await auth()
