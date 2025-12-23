@@ -245,6 +245,7 @@ export default function PublicUploadPage() {
         const session = await sessionRes.json()
 
         if (session.strategy === "resumable") {
+          let uploadedFileId: string | null = null
           await new Promise<void>((resolve, reject) => {
             const xhr = new XMLHttpRequest()
             xhr.upload.onprogress = (event) => {
@@ -256,11 +257,23 @@ export default function PublicUploadPage() {
               }
             }
             xhr.onload = () => {
-              if (xhr.status >= 200 && xhr.status < 300 || xhr.status === 308) resolve()
-              else reject(new Error("Cloud stream interruption"))
+              if (xhr.status >= 200 && xhr.status < 300) {
+                // Parse response to get file ID
+                try {
+                  const data = JSON.parse(xhr.responseText)
+                  uploadedFileId = data.id || null
+                } catch (e) {
+                  // Ignore parse errors
+                }
+                resolve()
+              } else {
+                reject(new Error("Cloud stream interruption"))
+              }
             }
             xhr.onerror = () => reject(new Error("Network layer instability"))
             xhr.open("PUT", session.uploadUrl)
+            xhr.setRequestHeader("Content-Type", uploadFile.file.type || "application/octet-stream")
+            xhr.setRequestHeader("Content-Range", `bytes 0-${uploadFile.file.size - 1}/${uploadFile.file.size}`)
             xhr.send(uploadFile.file)
           })
 
@@ -278,7 +291,7 @@ export default function PublicUploadPage() {
               clientMessage,
               storageProvider: session.storageProvider,
               token: accessToken,
-              fileId: session.fileId
+              fileId: uploadedFileId || session.fileId
             })
           })
 

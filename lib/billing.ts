@@ -1,5 +1,4 @@
 import prisma from "./prisma"
-import { PAYSTACK_CONFIG } from "./paystack-config"
 
 const BYTES_IN_GB = 1024 * 1024 * 1024
 
@@ -56,6 +55,7 @@ const getCurrentPeriodBounds = (overrideStart?: Date, overrideEnd?: Date) => {
 }
 
 export const getPaystack = async () => {
+  const { PAYSTACK_CONFIG } = await import("./paystack-config")
   const Paystack = (await import("paystack-api")).default
   return new Paystack(PAYSTACK_CONFIG.secretKey)
 }
