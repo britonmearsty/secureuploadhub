@@ -7,7 +7,7 @@ const DROPBOX_API = "https://api.dropboxapi.com/2"
 const DROPBOX_CONTENT_API = "https://content.dropboxapi.com/2"
 
 export class DropboxService implements CloudStorageService {
- provider = "dropbox" as const
+  provider = "dropbox" as const
 
   async uploadFile(
     accessToken: string,
@@ -22,7 +22,7 @@ export class DropboxService implements CloudStorageService {
       // folderId here is actually the folder path
       const targetPath = folderPath || folderId || ""
       const fullPath = `${targetPath}/${fileName}`.replace(/\/+/g, "/")
-      
+
       // Ensure path starts with /
       const normalizedPath = fullPath.startsWith("/") ? fullPath : `/${fullPath}`
 
@@ -48,12 +48,12 @@ export class DropboxService implements CloudStorageService {
           statusText: response.statusText,
           error: errorData,
         })
-        
+
         let errorMessage = errorData.error_summary || "Failed to upload to Dropbox"
         if (errorData.error?.[".tag"] === "missing_scope" || errorMessage.includes("missing_scope")) {
           errorMessage = "Your Dropbox connection is missing required permissions. Please reconnect your account."
         }
-        
+
         return {
           success: false,
           error: errorMessage,
@@ -61,7 +61,7 @@ export class DropboxService implements CloudStorageService {
       }
 
       const data = await response.json()
-      
+
       // Get a shared link for viewing
       let webViewLink: string | undefined
       try {
@@ -133,16 +133,16 @@ export class DropboxService implements CloudStorageService {
           error: errorData,
         })
         throw new Error(
-          errorData.error_summary || 
+          errorData.error_summary ||
           `Dropbox API error: ${response.status} ${response.statusText}`
         )
       }
 
       const data = await response.json()
-      
+
       return data.entries
-      .filter((entry: { ".tag": string }) => entry[".tag"] === "folder")
-      // Filter to only folders
+        .filter((entry: { ".tag": string }) => entry[".tag"] === "folder")
+        // Filter to only folders
         .map((f: { id: string; name: string; path_display: string }) => ({
           id: f.path_display, // Use path as ID for Dropbox
           name: f.name,
@@ -239,6 +239,50 @@ export class DropboxService implements CloudStorageService {
     return {
       email: data.email,
       name: data.name?.display_name,
+    }
+  }
+
+  async downloadFile(
+    accessToken: string,
+    fileId: string
+  ): Promise<{ data: ReadableStream | Buffer; mimeType: string; fileName: string }> {
+    const response = await fetch(`${DROPBOX_CONTENT_API}/files/download`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Dropbox-API-Arg": JSON.stringify({
+          path: fileId,
+        }),
+      },
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      let errorMessage = errorData.error_summary ||
+        `Failed to download from Dropbox: ${response.status} ${response.statusText}`
+
+      if (errorMessage.includes("missing_scope") || (errorData.error && errorData.error[".tag"] === "missing_scope")) {
+        errorMessage = "Your Dropbox connection is missing required permissions (files.content.read). Please disconnect and reconnect your Dropbox account in the dashboard."
+      }
+
+      throw new Error(errorMessage)
+    }
+
+    const apiResult = response.headers.get("dropbox-api-result")
+    if (!apiResult) {
+      throw new Error("Missing dropbox-api-result header")
+    }
+
+    const metadata = JSON.parse(apiResult)
+
+    if (!response.body) {
+      throw new Error("No response body received from Dropbox")
+    }
+
+    return {
+      data: response.body as unknown as ReadableStream,
+      mimeType: "application/octet-stream", // Dropbox doesn't always provide mime type in fixed metadata, but we can infer or use generic
+      fileName: metadata.name,
     }
   }
 }

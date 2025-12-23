@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import prisma from "@/lib/prisma"
+import { downloadFromCloudStorage } from "@/lib/storage"
 
 // GET /api/uploads/[id]/download - Download a file
 export async function GET(
@@ -36,15 +37,48 @@ export async function GET(
     }
 
     if (upload.storageProvider === "google_drive" || upload.storageProvider === "dropbox") {
-      if (upload.storagePath && upload.storagePath.startsWith("http")) {
-        return NextResponse.redirect(upload.storagePath)
+      let storageId = upload.storageFileId || (upload.storagePath && !upload.storagePath.startsWith("http") ? upload.storagePath : "");
+
+      // Recovery logic for Google Drive if ID is missing (common in old or failed resumable uploads)
+      if (!storageId && upload.storageProvider === "google_drive" && upload.storagePath) {
+        const { googleDriveService } = await import("@/lib/storage/google-drive");
+        const { getValidAccessToken } = await import("@/lib/storage");
+        const tokenResult = await getValidAccessToken(session.user.id, "google");
+        if (tokenResult) {
+          const foundId = await googleDriveService.findFileByName(tokenResult.accessToken, upload.storagePath);
+          if (foundId) {
+            storageId = foundId;
+            // Update the DB so we don't have to search again
+            await prisma.fileUpload.update({
+              where: { id: upload.id },
+              data: { storageFileId: foundId }
+            });
+          }
+        }
       }
 
-      return NextResponse.json({
-        message: "File is stored in cloud storage",
-        provider: upload.storageProvider,
-        fileId: upload.storageFileId,
-        fileName: upload.fileName,
+      const fileData = await downloadFromCloudStorage(
+        session.user.id,
+        upload.storageProvider,
+        storageId || ""
+      ).catch((err: any) => {
+        console.error("Catch in API route:", err)
+        return null
+      })
+
+      if (!fileData) {
+        return NextResponse.json({
+          error: "Failed to download file from cloud storage",
+          details: "Check server logs for more information. This usually means the cloud provider rejected the request (e.g. invalid file ID or expired token)."
+        }, { status: 500 })
+      }
+
+      // Return the file as a stream
+      return new NextResponse(fileData.data as any, {
+        headers: {
+          "Content-Type": fileData.mimeType || "application/octet-stream",
+          "Content-Disposition": `attachment; filename="${fileData.fileName || upload.fileName}"`,
+        },
       })
     }
 

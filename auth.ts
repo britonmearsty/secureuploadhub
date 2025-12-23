@@ -27,7 +27,7 @@ export const authConfig: NextAuthConfig = {
       authorization: {
         params: {
           token_access_type: "offline",
-          scope: "files.metadata.read files.content.write",
+          scope: "files.metadata.read files.content.write files.content.read",
         },
       },
       profile: async (profile) => {

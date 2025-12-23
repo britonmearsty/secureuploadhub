@@ -282,6 +282,94 @@ export class GoogleDriveService implements CloudStorageService {
     }
   }
 
+  async downloadFile(
+    accessToken: string,
+    fileId: string
+  ): Promise<{ data: ReadableStream | Buffer; mimeType: string; fileName: string }> {
+    // Basic validation to prevent passing URLs as file IDs
+    if (!fileId || fileId.startsWith("http")) {
+      throw new Error(`Invalid Google Drive file ID: "${fileId}". This might happen if the file record is corrupted or missing the cloud ID.`)
+    }
+
+    // First get the file metadata to get the name and mime type
+    const metadataResponse = await fetch(
+      `${GOOGLE_DRIVE_API}/files/${fileId}?fields=name,mimeType`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    )
+
+    if (!metadataResponse.ok) {
+      const errorData = await metadataResponse.json().catch(() => ({}))
+      let message = `Failed to get file metadata: ${metadataResponse.statusText}`
+      if (errorData.error?.errors?.some((e: any) => e.reason === "insufficientPermissions")) {
+        message = "Insufficient permissions to access Google Drive file. Please reconnect your account."
+      }
+      throw new Error(`${message} ${JSON.stringify(errorData)}`)
+    }
+
+    const metadata = await metadataResponse.json()
+
+    // Then get the binary content
+    const contentResponse = await fetch(
+      `${GOOGLE_DRIVE_API}/files/${fileId}?alt=media`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    )
+
+    if (!contentResponse.ok) {
+      const errorData = await contentResponse.json().catch(() => ({}))
+      let message = `Failed to download file content: ${contentResponse.statusText}`
+      if (errorData.error?.errors?.some((e: any) => e.reason === "insufficientPermissions")) {
+        message = "Insufficient permissions to download Google Drive file. Please reconnect your account."
+      }
+      throw new Error(`${message} ${JSON.stringify(errorData)}`)
+    }
+
+    if (!contentResponse.body) {
+      throw new Error("No response body received from Google Drive")
+    }
+
+    return {
+      data: contentResponse.body as unknown as ReadableStream,
+      mimeType: metadata.mimeType,
+      fileName: metadata.name,
+    }
+  }
+
+  async findFileByName(
+    accessToken: string,
+    fileName: string,
+    parentFolderId?: string
+  ): Promise<string | null> {
+    try {
+      let query = `name = '${fileName.replace(/'/g, "\\'")}' and trashed = false`
+      if (parentFolderId) {
+        query += ` and '${parentFolderId}' in parents`
+      }
+
+      const response = await fetch(
+        `${GOOGLE_DRIVE_API}/files?q=${encodeURIComponent(query)}&fields=files(id)&pageSize=1`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      )
+
+      if (!response.ok) return null
+      const data = await response.json()
+      return data.files?.[0]?.id || null
+    } catch {
+      return null
+    }
+  }
+
   /**
    * Ensure a folder path exists, creating folders as needed
    * Returns the ID of the deepest folder

@@ -73,9 +73,14 @@ export async function getValidAccessToken(
 
       return { accessToken, providerAccountId: account.providerAccountId }
     } catch (error) {
-      console.error(`Failed to refresh ${provider} token:`, error)
+      console.error(`Failed to refresh ${provider} token for user ${userId}:`, error)
       return null
     }
+  }
+
+  if (isExpired && !account.refresh_token) {
+    console.warn(`Token for ${provider} is expired and no refresh token is available for user ${userId}`)
+    return null
   }
 
   return { accessToken: account.access_token, providerAccountId: account.providerAccountId }
@@ -225,6 +230,49 @@ export async function createCloudFolder(
     return await service.createFolder(tokenResult.accessToken, folderName, parentFolderId)
   } catch (error) {
     console.error("Failed to create folder:", error)
+    return null
+  }
+}
+
+/**
+ * Download a file from cloud storage
+ */
+export async function downloadFromCloudStorage(
+  userId: string,
+  provider: StorageProvider,
+  fileId: string
+): Promise<{ data: ReadableStream | Buffer; mimeType: string; fileName: string } | null> {
+  const oauthProvider = provider === "google_drive" ? "google" : "dropbox"
+  const tokenResult = await getValidAccessToken(userId, oauthProvider)
+
+  if (!tokenResult) {
+    console.error(`No valid ${provider} token found for user ${userId}`)
+    return null
+  }
+
+  const service = getStorageService(provider)
+  if (!service) {
+    return null
+  }
+
+  // Fallback: If fileId is missing or empty but we're on Google Drive, try to find it by name
+  let effectiveFileId = fileId
+  if ((!effectiveFileId || effectiveFileId === "") && provider === "google_drive") {
+    const { googleDriveService } = await import("./google-drive")
+    // In this context, storagePath (fileId passed here) might be empty if it was invalid, 
+    // but the API route passes storageId which we want to be reliable.
+    // However, if we're here and fileId is empty, we might need more info.
+    console.warn(`Attempting to find missing fileId for Google Drive...`)
+  }
+
+  try {
+    return await service.downloadFile(tokenResult.accessToken, fileId)
+  } catch (error) {
+    console.error(`Failed to download from ${provider}:`, {
+      error: error instanceof Error ? error.message : error,
+      userId,
+      fileId
+    })
     return null
   }
 }

@@ -92,5 +92,13 @@ export interface CloudStorageService {
   getAccountInfo(
     accessToken: string
   ): Promise<{ email?: string; name?: string }>
+
+  /**
+   * Download a file from the storage
+   */
+  downloadFile(
+    accessToken: string,
+    fileId: string
+  ): Promise<{ data: ReadableStream | Buffer; mimeType: string; fileName: string }>
 }
 
