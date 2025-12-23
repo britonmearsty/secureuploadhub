@@ -12,14 +12,14 @@ const JWT_SECRET = new TextEncoder().encode(
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { 
-      portalId, 
-      fileName, 
-      fileSize, 
-      mimeType, 
-      clientName, 
+    const {
+      portalId,
+      fileName,
+      fileSize,
+      mimeType,
+      clientName,
       clientEmail,
-      token 
+      token
     } = body
 
     // Validate required fields
@@ -100,23 +100,15 @@ export async function POST(request: NextRequest) {
     // Determine storage provider
     const storageProvider = portal.storageProvider as StorageProvider
 
-    // If local, we can't do resumable upload via this endpoint (yet), 
-    // or we could implement a local chunked upload. 
     // For now, we'll only support Google Drive via this flow.
-    if (storageProvider === "local") {
-      return NextResponse.json({ 
-        strategy: "local",
-        message: "Use standard upload endpoint" 
-      })
-    }
 
     // Get storage service
     const service = getStorageService(storageProvider)
     if (!service || !service.createResumableUpload) {
       // Fallback to standard upload if provider doesn't support resumable
-      return NextResponse.json({ 
+      return NextResponse.json({
         strategy: "proxy",
-        message: "Use standard upload endpoint" 
+        message: "Use standard upload endpoint"
       })
     }
 

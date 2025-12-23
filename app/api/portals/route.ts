@@ -68,8 +68,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate storage provider
-    const validProviders = ["local", "google_drive", "dropbox"]
-    const provider = validProviders.includes(storageProvider) ? storageProvider : "local"
+    const validProviders = ["google_drive", "dropbox"]
+    const provider = validProviders.includes(storageProvider) ? storageProvider : "google_drive"
 
     // Normalize max file size (incoming in bytes) and cap to 5GB to avoid runaway values
     const DEFAULT_MAX_BYTES = 500 * 1024 * 1024
@@ -85,20 +85,18 @@ export async function POST(request: NextRequest) {
       : []
 
     // If using cloud storage, verify user has connected account
-    if (provider !== "local") {
-      const oauthProvider = provider === "google_drive" ? "google" : "dropbox"
-      const account = await prisma.account.findFirst({
-        where: {
-          userId: session.user.id,
-          provider: oauthProvider,
-        },
-      })
+    const oauthProvider = provider === "google_drive" ? "google" : "dropbox"
+    const account = await prisma.account.findFirst({
+      where: {
+        userId: session.user.id,
+        provider: oauthProvider,
+      },
+    })
 
-      if (!account) {
-        return NextResponse.json({
-          error: `Please connect your ${provider === "google_drive" ? "Google" : "Dropbox"} account first`
-        }, { status: 400 })
-      }
+    if (!account) {
+      return NextResponse.json({
+        error: `Please connect your ${provider === "google_drive" ? "Google" : "Dropbox"} account first`
+      }, { status: 400 })
     }
 
     // Check if slug is already taken

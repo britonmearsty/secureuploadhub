@@ -99,7 +99,7 @@ export async function PATCH(
     }
 
     // Validate storage provider if changing
-    if (safeUpdates.storageProvider && safeUpdates.storageProvider !== "local") {
+    if (safeUpdates.storageProvider) {
       const oauthProvider = safeUpdates.storageProvider === "google_drive" ? "google" : "dropbox"
       const account = await prisma.account.findFirst({
         where: {
