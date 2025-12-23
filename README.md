@@ -7,6 +7,7 @@ Here is a B2B SaaS idea that targets a different kind of friction: **File Manage
 ---
 
 ### 1. The Problem
+###
 
 Service providers constantly struggle to get files from non-technical clients.
 
