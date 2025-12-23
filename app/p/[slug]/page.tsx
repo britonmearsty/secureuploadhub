@@ -231,6 +231,7 @@ export default function PublicUploadPage() {
       ))
 
       try {
+        console.log(`Initiating upload session for: ${uploadFile.file.name}`);
         const sessionRes = await fetch("/api/upload/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -247,13 +248,16 @@ export default function PublicUploadPage() {
 
         if (!sessionRes.ok) {
           const error = await sessionRes.json()
+          console.error("Session initiation failed:", error);
           throw new Error(error.error || "Failed to initiate upload")
         }
 
         const session = await sessionRes.json()
+        console.log(`Session obtained, strategy: ${session.strategy}`);
 
         if (session.strategy === "resumable") {
           let uploadedFileId: string | null = null
+          console.log(`Starting resumable PUT to: ${session.uploadUrl}`);
           await new Promise<void>((resolve, reject) => {
             const xhr = new XMLHttpRequest()
             xhr.upload.onprogress = (event) => {
@@ -265,26 +269,35 @@ export default function PublicUploadPage() {
               }
             }
             xhr.onload = () => {
+              console.log(`Upload status for ${uploadFile.file.name}: ${xhr.status}`);
               if (xhr.status >= 200 && xhr.status < 300) {
                 // Parse response to get file ID
                 try {
-                  const data = JSON.parse(xhr.responseText)
-                  uploadedFileId = data.id || null
+                  if (xhr.responseText) {
+                    const data = JSON.parse(xhr.responseText)
+                    uploadedFileId = data.id || null
+                    console.log(`Extracted file ID: ${uploadedFileId}`);
+                  }
                 } catch (e) {
-                  // Ignore parse errors
+                  console.warn("Could not parse Google Drive response:", e);
                 }
                 resolve()
               } else {
-                reject(new Error("Cloud stream interruption"))
+                console.error(`Upload failed with status ${xhr.status}: ${xhr.responseText}`);
+                reject(new Error(`Cloud stream interruption (Status: ${xhr.status})`))
               }
             }
-            xhr.onerror = () => reject(new Error("Network layer instability"))
+            xhr.onerror = () => {
+              console.error("XHR network error occurred");
+              reject(new Error("Network layer instability"));
+            }
             xhr.open("PUT", session.uploadUrl)
             xhr.setRequestHeader("Content-Type", uploadFile.file.type || "application/octet-stream")
             xhr.setRequestHeader("Content-Range", `bytes 0-${uploadFile.file.size - 1}/${uploadFile.file.size}`)
             xhr.send(uploadFile.file)
           })
 
+          console.log("Upload successful, finalizing with backend...");
           const completeRes = await fetch("/api/upload/complete", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -303,7 +316,12 @@ export default function PublicUploadPage() {
             })
           })
 
-          if (!completeRes.ok) throw new Error("Sync finalization failure")
+          if (!completeRes.ok) {
+            const errorData = await completeRes.json().catch(() => ({}));
+            console.error("Finalization failed:", errorData);
+            throw new Error(errorData.error || "Sync finalization failure");
+          }
+          console.log("Finalization complete!");
         } else {
           await new Promise<void>((resolve, reject) => {
             const xhr = new XMLHttpRequest()

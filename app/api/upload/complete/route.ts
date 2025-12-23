@@ -114,10 +114,14 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error("Error completing upload:", error)
-    console.error("Error details:", error instanceof Error ? error.message : String(error))
+    console.error("Error completing upload process:")
+    console.error("- Error:", error instanceof Error ? error.message : String(error))
+    if (error instanceof Error && error.stack) {
+      console.error("- Stack:", error.stack)
+    }
+
     return NextResponse.json({
-      error: "Internal server error",
+      error: "Internal server error during finalization",
       details: error instanceof Error ? error.message : undefined
     }, { status: 500 })
   }
