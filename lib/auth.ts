@@ -3,6 +3,9 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import prisma from "@/lib/prisma"
 import { authConfig } from "@/auth"
 import { getPostHogClient } from "@/lib/posthog-server"
+import { resend } from "@/lib/resend"
+import SignInEmail from "@/emails/SignInEmail"
+import { headers } from "next/headers"
 
 // Full auth config with Prisma adapter for server-side use
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -88,6 +91,34 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
 
       return true
+    },
+  },
+  events: {
+    async signIn({ user }) {
+      if (user.email) {
+        try {
+          const headerList = await headers();
+          const userAgent = headerList.get("user-agent") || "Unknown Device";
+          const ip = headerList.get("x-forwarded-for")?.split(",")[0] || "Unknown IP";
+
+          await resend.emails.send({
+            from: process.env.EMAIL_FROM || 'SecureUploadHub <notifications@secureuploadhub.com>',
+            to: user.email,
+            subject: 'New sign-in detected',
+            react: SignInEmail({
+              userFirstname: user.name?.split(' ')[0] || 'User',
+              signInDate: new Date().toLocaleString('en-US', {
+                dateStyle: 'full',
+                timeStyle: 'long',
+              }),
+              signInDevice: userAgent,
+              signInLocation: ip,
+            }),
+          });
+        } catch (error) {
+          console.error("Failed to send sign-in email:", error);
+        }
+      }
     },
   },
 })
