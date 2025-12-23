@@ -28,7 +28,8 @@
     "posthog-node": "^5.17.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "redis": "^4.6.0"
+    "redis": "^4.6.0",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -31,6 +31,35 @@ import {
   Sparkles,
   Bell
 } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+function FadeIn({ children, delay = 0, className = "" }: { children: React.ReactNode, delay?: number, className?: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.6, delay, ease: "easeOut" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function ScaleIn({ children, delay = 0, className = "" }: { children: React.ReactNode, delay?: number, className?: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.5, delay, ease: "easeOut" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 function Counter({ end, duration = 2000, suffix = '', prefix = '', decimals = 0 }: { end: number, duration?: number, suffix?: string, prefix?: string, decimals?: number }) {
   const [count, setCount] = useState(0);
@@ -65,10 +94,10 @@ function Counter({ end, duration = 2000, suffix = '', prefix = '', decimals = 0 
       if (!startTime) startTime = timestamp;
       const progress = timestamp - startTime;
       const percentage = Math.min(progress / duration, 1);
-      
+
       // Ease out quart
       const ease = 1 - Math.pow(1 - percentage, 4);
-      
+
       setCount(end * ease);
 
       if (progress < duration) {
@@ -153,49 +182,75 @@ export default function LandingPage() {
 
 
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 backdrop-blur-md bg-white/70 border-b border-slate-200/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-2">
-              <div className="bg-slate-800 p-1.5 rounded-lg">
-                <ShieldCheck className="w-6 h-6 text-white" />
+      <nav className="fixed top-0 w-full z-50 transition-all duration-300">
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-xl border-b border-border/50 support-[backdrop-filter]:bg-white/60"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="flex justify-between items-center h-20">
+            {/* Logo */}
+            <div className="flex items-center gap-2 group cursor-pointer">
+              <div className="bg-primary/10 p-2 rounded-xl group-hover:bg-primary/20 transition-colors">
+                <ShieldCheck className="w-6 h-6 text-primary" />
               </div>
-              <span className="text-xl font-bold tracking-tight text-slate-900">SecureUploadHub</span>
+              <span className="text-xl font-bold tracking-tight text-foreground group-hover:text-primary transition-colors">
+                SecureUploadHub
+              </span>
             </div>
 
-            <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Features</a>
-              <a href="#use-cases" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Use Cases</a>
-              <a href="#how-it-works" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">How It Works</a>
-              <a href="#security" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Security</a>
-              <a href="#integrations" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Integrations</a>
-              <a href="#pricing" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Pricing</a>
-              <a href="#faq" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">FAQ</a>
-              <Link href="/auth/signin" className="bg-slate-900 text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-slate-800 transition-all shadow-md hover:shadow-lg active:scale-95">
-                Get Started Free
+            {/* Desktop Nav */}
+            <div className="hidden md:flex items-center gap-1">
+              {['Features', 'Use Cases', 'How It Works', 'Security', 'Pricing'].map((item) => (
+                <a
+                  key={item}
+                  href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
+                  className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-full transition-all"
+                >
+                  {item}
+                </a>
+              ))}
+            </div>
+
+            {/* CTA */}
+            <div className="hidden md:flex items-center gap-4">
+              <a href="#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">FAQ</a>
+              <Link
+                href="/auth/signin"
+                className="bg-primary text-primary-foreground px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-95"
+              >
+                Get Started
               </Link>
             </div>
 
+            {/* Mobile Menu Button */}
             <div className="md:hidden">
-              <button onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
-                {isMenuOpen ? <X /> : <Menu />}
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                aria-label="Toggle menu"
+              >
+                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
             </div>
           </div>
 
           {/* Mobile Menu */}
           {isMenuOpen && (
-            <div className="md:hidden border-t border-slate-200 py-4">
-              <div className="flex flex-col gap-4">
-                <a href="#use-cases" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors px-4 py-2">Use Cases</a>
-                <a href="#features" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors px-4 py-2">Features</a>
-                <a href="#how-it-works" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors px-4 py-2">How It Works</a>
-                <a href="#security" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors px-4 py-2">Security</a>
-                <a href="#integrations" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors px-4 py-2">Integrations</a>
-                <a href="#pricing" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors px-4 py-2">Pricing</a>
-                <a href="#faq" onClick={() => setIsMenuOpen(false)} className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors px-4 py-2">FAQ</a>
-                <div className="px-4 pt-2">
-                  <Link href="/auth/signin" className="block w-full bg-slate-900 text-white px-5 py-3 rounded-full text-sm font-semibold hover:bg-slate-800 transition-all text-center">
+            <div className="md:hidden absolute top-full left-0 w-full bg-white/95 backdrop-blur-xl border-b border-border p-4 shadow-xl animate-slide-up">
+              <div className="flex flex-col gap-2">
+                {['Features', 'Use Cases', 'How It Works', 'Security', 'Integrations', 'Pricing', 'FAQ'].map((item) => (
+                  <a
+                    key={item}
+                    href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="text-sm font-medium text-muted-foreground hover:text-primary hover:bg-accent px-4 py-3 rounded-xl transition-all"
+                  >
+                    {item}
+                  </a>
+                ))}
+                <div className="px-4 pt-4 border-t border-border mt-2">
+                  <Link
+                    href="/auth/signin"
+                    className="flex items-center justify-center w-full bg-primary text-primary-foreground px-5 py-3 rounded-xl text-sm font-semibold hover:opacity-90 transition-all"
+                  >
                     Get Started Free
                   </Link>
                 </div>
@@ -206,125 +261,154 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
-        {/* Abstract Background Decoration */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10">
-          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-slate-900/50 blur-[120px]" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-slate-900/50 blur-[120px]" />
+      <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-40 overflow-hidden">
+        {/* Premium Background */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-100/40 via-white to-white"></div>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 overflow-hidden">
+          <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px] animate-pulse" style={{ animationDuration: '4s' }} />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-300/10 blur-[100px]" />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 bg-slate-900 border border-slate-900 px-3 py-1 rounded-full text-white text-xs font-bold tracking-wide uppercase mb-6 animate-fade-in">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-            </span>
-            Now supporting 100GB+ Transfers
-          </div>
-
-          <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight text-slate-900 mb-8 max-w-4xl mx-auto leading-[1.1]">
-            The professional way to <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-800">collect client files.</span>
-          </h1>
-
-          <p className="text-lg lg:text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Stop chasing email attachments. Give your clients a secure, branded upload portal that pipes files directly into your Google Drive or Dropbox.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-            <Link
-              href="/auth/signin"
-              onClick={handleCtaClick}
-              className="w-auto bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold text-lg hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 flex items-center justify-center gap-2 group"
-            >
-              Create Your Portal Link
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <button
-              onClick={handleDemoVideoClick}
-              className="w-auto bg-white border border-slate-200 text-slate-700 px-6 py-3 rounded-2xl font-bold text-lg hover:bg-slate-50 transition-all"
-            >
-              Watch 1-min Demo
-            </button>
-          </div>
-
-          <div className="flex flex-col items-center gap-4">
-            <p className="text-sm font-semibold text-slate-400 uppercase tracking-widest">Trusted by industry leaders</p>
-            <div className="flex flex-wrap justify-center gap-8 opacity-50 grayscale">
-              <span className="text-xl font-bold">TAXPRO</span>
-              <span className="text-xl font-bold">CREATIVE-CO</span>
-              <span className="text-xl font-bold">LEGAL-LY</span>
-              <span className="text-xl font-bold">STREAMLINE</span>
+          <FadeIn>
+            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-border px-4 py-1.5 rounded-full text-foreground text-xs font-semibold tracking-wide uppercase mb-8 shadow-sm animate-fade-in hover:scale-105 transition-transform cursor-default">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span>Now supporting 100GB+ Transfers</span>
             </div>
-          </div>
+          </FadeIn>
+
+          <FadeIn delay={0.1}>
+            <h1 className="text-5xl lg:text-7xl font-bold tracking-tight text-foreground mb-8 max-w-5xl mx-auto leading-[1.1]">
+              Client file collection, <br className="hidden lg:block" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600 relative">
+                perfected for professionals.
+                {/* Underline decoration */}
+                <svg className="absolute w-full h-3 -bottom-2 left-0 text-primary opacity-30" viewBox="0 0 100 10" preserveAspectRatio="none">
+                  <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="2" fill="none" />
+                </svg>
+              </span>
+            </h1>
+          </FadeIn>
+
+          <FadeIn delay={0.2}>
+            <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
+              Stop chasing email attachments. Create a secure, branded portal in seconds and receive files directly to your Google Drive or Dropbox.
+            </p>
+          </FadeIn>
+
+          <FadeIn delay={0.3}>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-20">
+              <Link
+                href="/auth/signin"
+                onClick={handleCtaClick}
+                className="w-full sm:w-auto bg-primary text-primary-foreground px-8 py-4 rounded-2xl font-bold text-lg hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 group ring-4 ring-transparent hover:ring-primary/10"
+              >
+                Start for Free
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <button
+                onClick={handleDemoVideoClick}
+                className="w-full sm:w-auto bg-white border border-border text-foreground px-8 py-4 rounded-2xl font-bold text-lg hover:bg-muted/50 transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
+              >
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <div className="w-0 h-0 border-t-[5px] border-t-transparent border-l-[8px] border-l-primary border-b-[5px] border-b-transparent ml-1"></div>
+                </div>
+                Watch Demo
+              </button>
+            </div>
+          </FadeIn>
+
+          <FadeIn delay={0.4}>
+            <div className="flex flex-col items-center gap-6">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Trusted by forward-thinking teams</p>
+              <div className="flex flex-wrap justify-center gap-x-12 gap-y-8 opacity-60 hover:opacity-100 transition-opacity duration-500">
+                {/* Logos could be images but using text for now with refined styles */}
+                <span className="text-xl font-bold font-serif text-foreground/80">TAXPRO</span>
+                <span className="text-xl font-bold tracking-tighter text-foreground/80">CREATIVE<span className="text-primary">CO</span></span>
+                <span className="text-xl font-semibold italic text-foreground/80">Legal.ly</span>
+                <span className="text-xl font-mono text-foreground/80">STREAMLINE</span>
+              </div>
+            </div>
+          </FadeIn>
         </div>
       </section>
 
       {/* Bento Grid Feature Section */}
-      <section id="features" className="py-24 bg-white">
+      <section id="features" className="py-24 bg-secondary/50 relative overflow-hidden">
+        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[100px] -z-10" />
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">Why file transfer is broken</h2>
-            <p className="text-slate-600 max-w-xl mx-auto">Standard tools weren't built for client workflows. SecureUploadHub was.</p>
+          <div className="text-center mb-20">
+            <h2 className="text-3xl lg:text-5xl font-bold text-foreground mb-6 tracking-tight">Why file transfer is broken</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              Standard tools weren't built for client workflows. SecureUploadHub was designed to solve the friction.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[minmax(200px,auto)]">
             {/* Large Card */}
-            <div className="md:col-span-2 bg-slate-50 border border-slate-100 p-8 rounded-3xl">
-              <div className="bg-red-100 w-12 h-12 rounded-2xl flex items-center justify-center mb-6">
-                <MailWarning className="text-red-600" />
-              </div>
-              <h3 className="text-2xl font-bold mb-4">No more "File too large" emails</h3>
-              <p className="text-slate-600 leading-relaxed mb-6">
-                Gmail's 25MB limit is the enemy of productivity. We handle files up to 100GB without breaking a sweat, ensuring you get the high-res content you actually need.
-              </p>
-              <div className="flex gap-2">
-                <span className="bg-white border border-slate-200 px-3 py-1 rounded-full text-xs font-semibold text-slate-500 italic">"Sent 5 emails for 1 project" — Never again.</span>
-              </div>
+            <div className="md:col-span-2 glass-panel p-10 rounded-[2rem] hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300 group">
+              <FadeIn delay={0.1} className="h-full">
+                <div className="bg-red-500/10 w-14 h-14 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-red-500/20 transition-colors">
+                  <MailWarning className="w-7 h-7 text-red-600" />
+                </div>
+                <h3 className="text-3xl font-bold mb-4 text-foreground tracking-tight">No more "File too large" emails</h3>
+                <p className="text-lg text-muted-foreground leading-relaxed mb-8 max-w-lg">
+                  Gmail's 25MB limit is the enemy of productivity. We handle files up to 100GB without breaking a sweat, ensuring you get the high-res content you actually need.
+                </p>
+                <div className="flex gap-2">
+                  <span className="bg-white/50 border border-border/50 px-4 py-1.5 rounded-full text-sm font-semibold text-muted-foreground italic backdrop-blur-sm">"Sent 5 emails for 1 project" — Never again.</span>
+                </div>
+              </FadeIn>
             </div>
 
             {/* Small Card 1 */}
-            <div className="bg-slate-900 text-slate-50 rounded-3xl p-6 flex flex-col items-start justify-between relative overflow-hidden">
+            <div className="bg-foreground text-background rounded-[2rem] p-8 flex flex-col items-start justify-between relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
               <div className="absolute inset-0 opacity-20 pointer-events-none">
-                <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-slate-800 blur-3xl" />
-                <div className="absolute -left-16 -bottom-10 w-52 h-52 rounded-full bg-slate-700 blur-3xl" />
+                <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-primary blur-3xl group-hover:bg-primary/80 transition-colors" />
+                <div className="absolute -left-16 -bottom-10 w-52 h-52 rounded-full bg-indigo-500 blur-3xl group-hover:bg-indigo-400 transition-colors" />
               </div>
-              <div className="relative z-10">
-                <Lock className="w-10 h-10 opacity-80" />
-                <div>
-                  <h3 className="text-xl font-bold mb-2">Permission Control</h3>
-                  <p className="text-indigo-100 text-sm">No "Request Access" loops. Clients upload, you own the file instantly.</p>
+              <ScaleIn delay={0.2} className="relative z-10 w-full h-full flex flex-col">
+                <div className="bg-white/10 w-12 h-12 rounded-xl flex items-center justify-center mb-auto backdrop-blur-md">
+                  <Lock className="w-6 h-6 text-white" />
                 </div>
-              </div>
+                <div className="mt-8">
+                  <h3 className="text-xl font-bold mb-3 text-white">Permission Control</h3>
+                  <p className="text-indigo-100/80 text-sm leading-relaxed">No "Request Access" loops. Clients upload, you own the file instantly.</p>
+                </div>
+              </ScaleIn>
             </div>
 
             {/* Small Card 2 */}
-            <div className="bg-slate-900 text-slate-50 rounded-3xl p-6 flex flex-col items-start justify-between relative overflow-hidden">
-              <div className="absolute inset-0 opacity-20 pointer-events-none">
-                <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-slate-800 blur-3xl" />
-                <div className="absolute -left-16 -bottom-10 w-52 h-52 rounded-full bg-slate-700 blur-3xl" />
-              </div>
-              <div className="relative z-10">
-                <ShieldCheck className="w-10 h-10 text-emerald-400" />
-                <div>
-                  <h3 className="text-xl font-bold mb-2">SOC2 Ready</h3>
-                  <p className="text-slate-100 text-sm">Enterprise-grade encryption for sensitive tax and legal documents.</p>
+            <div className="bg-white border border-border p-8 rounded-[2rem] flex flex-col items-start justify-between relative overflow-hidden group hover:border-emerald-500/30 transition-colors shadow-sm hover:shadow-lg">
+              <ScaleIn delay={0.3} className="w-full h-full flex flex-col justify-between">
+                <div className="bg-emerald-500/10 w-12 h-12 rounded-xl flex items-center justify-center mb-auto">
+                  <ShieldCheck className="w-6 h-6 text-emerald-600" />
                 </div>
-              </div>
+                <div className="mt-8">
+                  <h3 className="text-xl font-bold mb-3 text-foreground">SOC2 Ready</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">Enterprise-grade encryption for sensitive tax and legal documents.</p>
+                </div>
+              </ScaleIn>
             </div>
 
             {/* Medium Card */}
-            <div className="md:col-span-2 bg-slate-50 border border-slate-100 p-8 rounded-3xl flex flex-col md:flex-row gap-8 items-center">
-              <div className="flex-1">
-                <div className="bg-slate-100 w-12 h-12 rounded-2xl flex items-center justify-center mb-6">
-                  <Zap className="text-slate-900" />
+            <div className="md:col-span-2 glass-panel p-10 rounded-[2rem] flex flex-col md:flex-row gap-10 items-center hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300">
+              <FadeIn delay={0.4} className="flex-1">
+                <div className="bg-primary/10 w-14 h-14 rounded-2xl flex items-center justify-center mb-6">
+                  <Zap className="w-7 h-7 text-primary" />
                 </div>
-                <h3 className="text-2xl font-bold mb-4">Zero-Friction for Clients</h3>
-                <p className="text-slate-600">Your clients don't need to create an account, download an app, or remember a password. They just drag, drop, and done.</p>
-              </div>
+                <h3 className="text-3xl font-bold mb-4 text-foreground tracking-tight">Zero-Friction for Clients</h3>
+                <p className="text-lg text-muted-foreground leading-relaxed">Your clients don't need to create an account, download an app, or remember a password. They just drag, drop, and done.</p>
+              </FadeIn>
               <div className="w-full md:w-2/5 flex justify-center">
-                <div className="w-72 h-72">
+                <ScaleIn delay={0.5} className="w-60 h-60 bg-white rounded-full shadow-2xl shadow-indigo-100 flex items-center justify-center p-4">
+                  {/* Kept Lottie but constrained size properly */}
                   <Lottie animationData={featureAnimation} loop={true} />
-                </div>
+                </ScaleIn>
               </div>
             </div>
           </div>
@@ -332,189 +416,149 @@ export default function LandingPage() {
       </section>
 
       {/* Use Cases Section */}
-      <section id="use-cases" className="py-24 bg-slate-50">
+      <section id="use-cases" className="py-32 bg-secondary/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">Built for modern client workflows</h2>
-            <p className="text-slate-600 max-w-2xl mx-auto">
+          <div className="text-center mb-20">
+            <h2 className="text-3xl lg:text-5xl font-bold text-foreground mb-6 tracking-tight">Built for modern client workflows</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               SecureUploadHub is designed for teams that handle sensitive, high-volume client files every day.
             </p>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <div className="bg-white border border-slate-100 rounded-3xl p-6 flex flex-col gap-3">
-              <div className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600">
-                <FileText className="w-5 h-5" />
-              </div>
-              <h3 className="font-semibold text-slate-900">Accounting & Tax</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Collect W‑2s, 1099s, receipts, and full tax packages without chasing attachments or dealing with broken portals.
-              </p>
-              <p className="text-xs text-slate-500 mt-1">
-                Popular with solo CPAs and multi-partner firms.
-              </p>
-            </div>
-
-            <div className="bg-white border border-slate-100 rounded-3xl p-6 flex flex-col gap-3">
-              <div className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-slate-50 text-slate-900">
-                <UploadCloud className="w-5 h-5" />
-              </div>
-              <h3 className="font-semibold text-slate-900">Agencies & Creatives</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Receive 4K footage, design files, and large exports without drive permission issues or hard drive swaps.
-              </p>
-              <p className="text-xs text-slate-500 mt-1">
-                Ideal for video, photo, and brand studios.
-              </p>
-            </div>
-
-            <div className="bg-white border border-slate-100 rounded-3xl p-6 flex flex-col gap-3">
-              <div className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <h3 className="font-semibold text-slate-900">Legal & Compliance</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Share and receive contracts, KYC documents, and evidence securely with full audit trails and access control.
-              </p>
-              <p className="text-xs text-slate-500 mt-1">
-                Perfect for law firms and specialists handling PII.
-              </p>
-            </div>
-
-            <div className="bg-white border border-slate-100 rounded-3xl p-6 flex flex-col gap-3">
-              <div className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-slate-900/5 text-slate-900">
-                <Zap className="w-5 h-5" />
-              </div>
-              <h3 className="font-semibold text-slate-900">Operations & CS</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Give customers a single, self-serve place to submit documents so your team can focus on work—not reminders.
-              </p>
-              <p className="text-xs text-slate-500 mt-1">
-                Great for onboarding, claims, and account updates.
-              </p>
-            </div>
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                icon: FileText,
+                color: "text-indigo-600 bg-indigo-50",
+                title: "Accounting & Tax",
+                desc: "Collect W‑2s, 1099s, receipts, and full tax packages without chasing attachments or dealing with broken portals.",
+                note: "Popular with solo CPAs and multi-partner firms."
+              },
+              {
+                icon: UploadCloud,
+                color: "text-slate-900 bg-slate-50",
+                title: "Agencies & Creatives",
+                desc: "Receive 4K footage, design files, and large exports without drive permission issues or hard drive swaps.",
+                note: "Ideal for video, photo, and brand studios."
+              },
+              {
+                icon: ShieldCheck,
+                color: "text-emerald-600 bg-emerald-50",
+                title: "Legal & Compliance",
+                desc: "Share and receive contracts, KYC documents, and evidence securely with full audit trails and access control.",
+                note: "Perfect for law firms and specialists handling PII."
+              },
+              {
+                icon: Zap,
+                color: "text-amber-600 bg-amber-50",
+                title: "Operations & CS",
+                desc: "Give customers a single, self-serve place to submit documents so your team can focus on work—not reminders.",
+                note: "Great for onboarding, claims, and account updates."
+              }
+            ].map((item, i) => (
+              <FadeIn key={i} delay={i * 0.1} className="h-full">
+                <div className="bg-background border border-border rounded-3xl p-8 flex flex-col gap-4 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 group h-full">
+                  <div className={`inline-flex items-center justify-center w-12 h-12 rounded-2xl ${item.color} group-hover:scale-110 transition-transform`}>
+                    <item.icon className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-lg font-bold text-foreground tracking-tight">{item.title}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed flex-grow">
+                    {item.desc}
+                  </p>
+                  <div className="pt-4 border-t border-border/50">
+                    <p className="text-xs text-muted-foreground/80 font-medium">
+                      {item.note}
+                    </p>
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
           </div>
         </div>
       </section>
 
       {/* How It Works Section */}
-      <section id="how-it-works" className="py-24 bg-slate-50">
+      <section id="how-it-works" className="py-32 bg-background relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">How it works</h2>
-            <p className="text-slate-600 max-w-xl mx-auto">Get started in under 2 minutes. No technical setup required.</p>
+          <div className="text-center mb-24">
+            <h2 className="text-3xl lg:text-5xl font-bold text-foreground mb-6 tracking-tight">How it works</h2>
+            <p className="text-xl text-muted-foreground max-w-xl mx-auto">Get started in under 2 minutes. No technical setup required.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
+          <div className="grid md:grid-cols-3 gap-12 lg:gap-16 relative">
+            <div className="absolute top-12 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-border to-transparent hidden md:block" />
+
             {/* Step 1 */}
-            <div className="relative text-center">
-              <div 
-                className="bg-indigo-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 cursor-pointer hover:bg-indigo-200 transition-all hover:scale-110 relative"
-                onClick={() => setExpandedStep(expandedStep === 0 ? null : 0)}
-              >
-                <LinkIcon className="w-8 h-8 text-indigo-600" />
-                {expandedStep === 0 && (
-                  <>
-                    <div className="absolute left-1/2 -top-16 transform -translate-x-1/2 animate-ping z-10">
-                      <div className="bg-indigo-100 w-10 h-10 rounded-xl flex items-center justify-center opacity-75">
-                        <Palette className="w-5 h-5 text-indigo-600" />
-                      </div>
-                    </div>
-                    <div className="absolute -right-6 -top-6 animate-bounce z-10" style={{ animation: 'bounce 2s infinite 0.1s' }}>
-                      <div className="bg-indigo-100 w-10 h-10 rounded-xl flex items-center justify-center">
-                        <Palette className="w-5 h-5 text-indigo-600" />
-                      </div>
-                    </div>
-                    <div className="absolute -left-6 -top-6 animate-bounce z-10" style={{ animation: 'bounce 2s infinite 0.2s' }}>
-                      <div className="bg-indigo-100 w-10 h-10 rounded-xl flex items-center justify-center">
-                        <Sparkles className="w-5 h-5 text-indigo-600" />
-                      </div>
-                    </div>
-                  </>
-                )}
+            <FadeIn delay={0.1}>
+              <div className="relative text-center group">
+                <div
+                  className="bg-background relative z-10 w-24 h-24 rounded-3xl border border-border shadow-sm flex items-center justify-center mx-auto mb-8 cursor-pointer group-hover:border-primary group-hover:shadow-lg group-hover:shadow-primary/10 transition-all duration-300"
+                  onClick={() => setExpandedStep(expandedStep === 0 ? null : 0)}
+                >
+                  <div className="bg-primary/5 w-16 h-16 rounded-2xl flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                    <LinkIcon className="w-8 h-8 text-primary" />
+                  </div>
+                  {expandedStep === 0 && (
+                    <div className="absolute inset-0 animate-ping rounded-3xl bg-primary/20 -z-10" />
+                  )}
+                </div>
+                <span className="inline-block bg-primary/10 text-primary text-xs font-bold px-3 py-1 rounded-full mb-6 tracking-wide uppercase">Step 1</span>
+                <h3 className="text-2xl font-bold mb-4 text-foreground">Create Your Portal</h3>
+                <p className="text-muted-foreground leading-relaxed px-4">
+                  Sign up and create a branded upload portal in seconds. Customize colors, add your logo, and set file requirements.
+                </p>
               </div>
-              <div className="absolute top-8 left-[60%] w-[80%] h-0.5 bg-indigo-200 hidden md:block" />
-              <span className="inline-block bg-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-full mb-4">Step 1</span>
-              <h3 className="text-xl font-bold mb-3">Create Your Portal</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Sign up and create a branded upload portal in seconds. Customize colors, add your logo, and set file requirements.
-              </p>
-            </div>
+            </FadeIn>
 
             {/* Step 2 */}
-            <div className="relative text-center">
-              <div
-                className="bg-slate-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 cursor-pointer hover:bg-slate-200 transition-all hover:scale-110 relative"
-                onClick={() => setExpandedStep(expandedStep === 1 ? null : 1)}
-              >
-                <Send className="w-8 h-8 text-slate-900" />
-                {expandedStep === 1 && (
-                  <>
-                    <div className="absolute left-1/2 -top-16 transform -translate-x-1/2 animate-ping z-10">
-                      <div className="bg-slate-100 w-10 h-10 rounded-xl flex items-center justify-center opacity-75">
-                        <Mail className="w-5 h-5 text-slate-900" />
-                      </div>
-                    </div>
-                    <div className="absolute -right-6 -top-6 animate-bounce z-10" style={{ animation: 'bounce 2s infinite 0.1s' }}>
-                      <div className="bg-slate-100 w-10 h-10 rounded-xl flex items-center justify-center">
-                        <Mail className="w-5 h-5 text-slate-900" />
-                      </div>
-                    </div>
-                    <div className="absolute -left-6 -top-6 animate-bounce z-10" style={{ animation: 'bounce 2s infinite 0.2s' }}>
-                      <div className="bg-slate-100 w-10 h-10 rounded-xl flex items-center justify-center">
-                        <Globe className="w-5 h-5 text-slate-900" />
-                      </div>
-                    </div>
-                  </>
-                )}
+            <FadeIn delay={0.2}>
+              <div className="relative text-center group">
+                <div
+                  className="bg-background relative z-10 w-24 h-24 rounded-3xl border border-border shadow-sm flex items-center justify-center mx-auto mb-8 cursor-pointer group-hover:border-slate-900 group-hover:shadow-lg transition-all duration-300"
+                  onClick={() => setExpandedStep(expandedStep === 1 ? null : 1)}
+                >
+                  <div className="bg-secondary w-16 h-16 rounded-2xl flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+                    <Send className="w-8 h-8 text-foreground" />
+                  </div>
+                  {expandedStep === 1 && (
+                    <div className="absolute inset-0 animate-ping rounded-3xl bg-foreground/20 -z-10" />
+                  )}
+                </div>
+                <span className="inline-block bg-muted text-muted-foreground text-xs font-bold px-3 py-1 rounded-full mb-6 tracking-wide uppercase">Step 2</span>
+                <h3 className="text-2xl font-bold mb-4 text-foreground">Share the Link</h3>
+                <p className="text-muted-foreground leading-relaxed px-4">
+                  Send your unique portal link to clients via email, text, or embed it on your website. No account needed for them.
+                </p>
               </div>
-              <div className="absolute top-8 left-[60%] w-[80%] h-0.5 bg-indigo-200 hidden md:block" />
-              <span className="inline-block bg-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-full mb-4">Step 2</span>
-              <h3 className="text-xl font-bold mb-3">Share the Link</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Send your unique portal link to clients via email, text, or embed it on your website. No account needed for them.
-              </p>
-            </div>
+            </FadeIn>
 
             {/* Step 3 */}
-            <div className="relative text-center">
-              <div 
-                className="bg-emerald-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 cursor-pointer hover:bg-emerald-200 transition-all hover:scale-110 relative"
-                onClick={() => setExpandedStep(expandedStep === 2 ? null : 2)}
-              >
-                <FolderSync className="w-8 h-8 text-emerald-600" />
-                {expandedStep === 2 && (
-                  <>
-                    <div className="absolute left-1/2 -top-16 transform -translate-x-1/2 animate-ping z-10">
-                      <div className="bg-emerald-100 w-10 h-10 rounded-xl flex items-center justify-center opacity-75">
-                        <Bell className="w-5 h-5 text-emerald-600" />
-                      </div>
-                    </div>
-                    <div className="absolute -right-6 -top-6 animate-bounce z-10" style={{ animation: 'bounce 2s infinite 0.1s' }}>
-                      <div className="bg-emerald-100 w-10 h-10 rounded-xl flex items-center justify-center">
-                        <Bell className="w-5 h-5 text-emerald-600" />
-                      </div>
-                    </div>
-                    <div className="absolute -left-6 -top-6 animate-bounce z-10" style={{ animation: 'bounce 2s infinite 0.2s' }}>
-                      <div className="bg-emerald-100 w-10 h-10 rounded-xl flex items-center justify-center">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                      </div>
-                    </div>
-                  </>
-                )}
+            <FadeIn delay={0.3}>
+              <div className="relative text-center group">
+                <div
+                  className="bg-background relative z-10 w-24 h-24 rounded-3xl border border-border shadow-sm flex items-center justify-center mx-auto mb-8 cursor-pointer group-hover:border-emerald-500 group-hover:shadow-lg group-hover:shadow-emerald-500/10 transition-all duration-300"
+                  onClick={() => setExpandedStep(expandedStep === 2 ? null : 2)}
+                >
+                  <div className="bg-emerald-500/10 w-16 h-16 rounded-2xl flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
+                    <FolderSync className="w-8 h-8 text-emerald-600" />
+                  </div>
+                  {expandedStep === 2 && (
+                    <div className="absolute inset-0 animate-ping rounded-3xl bg-emerald-500/20 -z-10" />
+                  )}
+                </div>
+                <span className="inline-block bg-emerald-500/10 text-emerald-600 text-xs font-bold px-3 py-1 rounded-full mb-6 tracking-wide uppercase">Step 3</span>
+                <h3 className="text-2xl font-bold mb-4 text-foreground">Files Sync Automatically</h3>
+                <p className="text-muted-foreground leading-relaxed px-4">
+                  Uploaded files appear instantly in your Google Drive or Dropbox. Get email notifications for every upload.
+                </p>
               </div>
-              <span className="inline-block bg-indigo-600 text-white text-xs font-bold px-2.5 py-1 rounded-full mb-4">Step 3</span>
-              <h3 className="text-xl font-bold mb-3">Files Sync Automatically</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Uploaded files appear instantly in your Google Drive or Dropbox. Get email notifications for every upload.
-              </p>
-            </div>
+            </FadeIn>
           </div>
 
-          <div className="text-center mt-12">
+          <div className="text-center mt-20">
             <Link
               href="/auth/signin"
-              className="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-all"
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-xl font-bold hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25 transition-all active:scale-95"
             >
               Try It Free — No Credit Card
               <ArrowRight className="w-4 h-4" />
@@ -524,300 +568,338 @@ export default function LandingPage() {
       </section>
 
       {/* Security Section */}
-      <section id="security" className="py-24 bg-white">
+      <section id="security" className="py-32 bg-secondary/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">Security you can show your auditor</h2>
-            <p className="text-slate-600 max-w-2xl mx-auto">
-              SecureUploadHub is built from the ground up for privacy‑sensitive industries where compliance actually matters.
-            </p>
-          </div>
-
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-            <div className="bg-slate-50 border border-slate-100 rounded-3xl p-6 h-full">
-              <div className="inline-flex w-10 h-10 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 mb-4">
-                <Lock className="w-5 h-5" />
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-6">
+                <Lock className="w-3 h-3" />
+                Enterprise Grade
               </div>
-              <h3 className="font-semibold text-slate-900 mb-2">End‑to‑end encryption</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Files are encrypted in transit with TLS 1.3 and at rest with AES‑256. We never inspect or monetize your data.
+              <h2 className="text-3xl lg:text-5xl font-bold text-foreground mb-6 tracking-tight">Security you can show your auditor</h2>
+              <p className="text-xl text-muted-foreground leading-relaxed mb-10">
+                SecureUploadHub is built from the ground up for privacy‑sensitive industries where compliance actually matters.
               </p>
+
+              <div className="space-y-6">
+                {[
+                  { icon: Lock, title: "End-to-end Encryption", desc: "TLS 1.3 in transit and AES-256 at rest." },
+                  { icon: FileText, title: "SOC 2-ready controls", desc: "Audit trails, access logging, and least-privilege design." },
+                  { icon: Globe, title: "Data Residency", desc: "Choose US or EU regions to meet GDPR requirements." },
+                  { icon: Clock, title: "99.9% Uptime", desc: "Redundant infrastructure with continuous backups." },
+                ].map((item, i) => (
+                  <div key={i} className="flex gap-4">
+                    <div className="bg-white border border-border p-3 rounded-xl shadow-sm">
+                      <item.icon className="w-6 h-6 text-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-foreground">{item.title}</h3>
+                      <p className="text-muted-foreground text-sm">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="bg-slate-50 border border-slate-100 rounded-3xl p-6 h-full">
-              <div className="inline-flex w-10 h-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 mb-4">
-                <FileText className="w-5 h-5" />
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/20 to-primary/20 rounded-[3rem] blur-3xl -z-10" />
+              <div className="glass-panel p-8 rounded-[2.5rem] border border-white/40 shadow-2xl">
+                <div className="bg-slate-950 rounded-2xl p-6 font-mono text-xs text-slate-300 shadow-inner">
+                  <div className="flex gap-2 mb-4">
+                    <div className="w-3 h-3 rounded-full bg-red-500" />
+                    <div className="w-3 h-3 rounded-full bg-amber-500" />
+                    <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                  </div>
+                  <p className="text-emerald-400">$ Encrypting file "tax_return_2024.pdf"...</p>
+                  <p className="text-slate-500 mt-1">Done (0.4s)</p>
+                  <p className="text-emerald-400 mt-2">$ Verifying signature...</p>
+                  <p className="text-slate-500 mt-1">Verified.</p>
+                  <p className="text-emerald-400 mt-2">$ Uploading to secure_bucket_us_east...</p>
+                  <div className="w-full bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
+                    <div className="bg-emerald-500 w-[75%] h-full rounded-full animate-pulse" />
+                  </div>
+                </div>
+                <div className="mt-6 flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-foreground">Audit Log</p>
+                    <p className="text-sm text-muted-foreground">Real-time security monitoring</p>
+                  </div>
+                  <div className="bg-emerald-500/10 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold">Active</div>
+                </div>
               </div>
-              <h3 className="font-semibold text-slate-900 mb-2">SOC 2–ready controls</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Access logging, least‑privilege permissions, and audit trails designed to plug into your SOC 2 / ISO 27001 program.
-              </p>
-            </div>
-
-            <div className="bg-slate-50 border border-slate-100 rounded-3xl p-6 h-full">
-              <div className="inline-flex w-10 h-10 items-center justify-center rounded-2xl bg-slate-50 text-slate-900 mb-4">
-                <Globe className="w-5 h-5" />
-              </div>
-              <h3 className="font-semibold text-slate-900 mb-2">Regional data residency</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Choose EU or US data residency (where available) to align with your GDPR and local compliance requirements.
-              </p>
-            </div>
-
-            <div className="bg-slate-50 border border-slate-100 rounded-3xl p-6 h-full">
-              <div className="inline-flex w-10 h-10 items-center justify-center rounded-2xl bg-slate-900/5 text-slate-900 mb-4">
-                <Clock className="w-5 h-5" />
-              </div>
-              <h3 className="font-semibold text-slate-900 mb-2">Business continuity</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Redundant infrastructure, continuous backups, and a 99.9% uptime target keep your client uploads always available.
-              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Integrations Section */}
-      <section id="integrations" className="py-24 bg-slate-50">
+      <section id="integrations" className="py-32 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">Fits into your existing storage</h2>
-            <p className="text-slate-600 max-w-2xl mx-auto">
+          <div className="text-center mb-20">
+            <h2 className="text-3xl lg:text-5xl font-bold text-foreground mb-6 tracking-tight">Fits into your existing storage</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               Keep using the tools your team already knows. SecureUploadHub simply becomes the front door for uploads.
             </p>
           </div>
 
           <div className="grid gap-8 md:grid-cols-3 items-stretch">
-            <div className="bg-white border border-slate-100 rounded-3xl p-6 flex flex-col items-start justify-between">
+            <div className="bg-white border border-border rounded-[2rem] p-8 flex flex-col items-start justify-between hover:border-primary/50 transition-colors shadow-sm hover:shadow-lg group">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">Available today</p>
-                <h3 className="font-semibold text-slate-900 mb-2">Google Drive</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">
+                <p className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground mb-4">Available today</p>
+                <h3 className="text-2xl font-bold text-foreground mb-3">Google Drive</h3>
+                <p className="text-muted-foreground leading-relaxed">
                   Route uploads directly into structured Drive folders by client, project, or date—no extra steps required.
                 </p>
               </div>
-              <p className="mt-4 text-xs text-slate-500">Supports shared drives and granular folder permissions.</p>
+              <div className="mt-8 pt-8 border-t border-border w-full flex justify-between items-center">
+                <span className="text-xs text-muted-foreground font-medium">Supports shared drives</span>
+                <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                  <FolderSync className="w-5 h-5" />
+                </div>
+              </div>
             </div>
 
-            <div className="bg-white border border-slate-100 rounded-3xl p-6 flex flex-col items-start justify-between">
+            <div className="bg-white border border-border rounded-[2rem] p-8 flex flex-col items-start justify-between hover:border-blue-500/50 transition-colors shadow-sm hover:shadow-lg group">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 mb-3">Available today</p>
-                <h3 className="font-semibold text-slate-900 mb-2">Dropbox</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">
+                <p className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground mb-4">Available today</p>
+                <h3 className="text-2xl font-bold text-foreground mb-3">Dropbox</h3>
+                <p className="text-muted-foreground leading-relaxed">
                   Automatically organize incoming assets into your existing Dropbox structure for instant team access.
                 </p>
               </div>
-              <p className="mt-4 text-xs text-slate-500">Great for agencies and studios with large media libraries.</p>
+              <div className="mt-8 pt-8 border-t border-border w-full flex justify-between items-center">
+                <span className="text-xs text-muted-foreground font-medium">Auto-organization included</span>
+                <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center group-hover:bg-blue-500/10 group-hover:text-blue-600 transition-colors">
+                  <UploadCloud className="w-5 h-5" />
+                </div>
+              </div>
             </div>
 
-            <div className="bg-slate-900 text-slate-50 rounded-3xl p-6 flex flex-col items-start justify-between relative overflow-hidden">
+            <div className="bg-foreground text-background rounded-[2rem] p-8 flex flex-col items-start justify-between relative overflow-hidden group">
               <div className="absolute inset-0 opacity-20 pointer-events-none">
-                <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-slate-800 blur-3xl" />
-                <div className="absolute -left-16 -bottom-10 w-52 h-52 rounded-full bg-slate-700 blur-3xl" />
+                <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-primary blur-3xl" />
+                <div className="absolute -left-16 -bottom-10 w-52 h-52 rounded-full bg-indigo-500 blur-3xl" />
               </div>
               <div className="relative z-10">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-200 mb-3">Coming soon</p>
-                <h3 className="font-semibold text-white mb-2">More destinations</h3>
-                <p className="text-sm text-slate-100 leading-relaxed">
+                <p className="text-xs font-bold uppercase tracking-[0.15em] text-indigo-300 mb-4">Coming soon</p>
+                <h3 className="text-2xl font-bold text-white mb-3">More destinations</h3>
+                <p className="text-slate-300 leading-relaxed">
                   OneDrive, S3 buckets, and direct webhooks are on our roadmap so you can plug uploads into any workflow.
                 </p>
               </div>
-              <p className="mt-4 text-xs text-indigo-100 relative z-10">
-                Need something specific? Reach out and help shape the roadmap.
-              </p>
+              <div className="mt-8 pt-8 border-t border-white/10 w-full relative z-10">
+                <p className="text-xs text-indigo-200">
+                  Need something specific? <a href="#" className="underline hover:text-white">Reach out</a>.
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Testimonials Section */}
-      <section id="testimonials" className="py-24 bg-white">
+      <section id="testimonials" className="py-32 bg-background relative overflow-hidden">
+        {/* Background blobs */}
+        <div className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[100px] -z-10" />
+        <div className="absolute bottom-0 right-0 translate-y-1/3 translate-x-1/3 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-[100px] -z-10" />
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">Loved by professionals</h2>
-            <p className="text-slate-600 max-w-xl mx-auto">See why thousands of businesses trust SecureUploadHub for their file collection.</p>
+          <div className="text-center mb-20">
+            <h2 className="text-3xl lg:text-5xl font-bold text-foreground mb-6 tracking-tight">Loved by professionals</h2>
+            <p className="text-xl text-muted-foreground max-w-xl mx-auto">See why thousands of businesses trust SecureUploadHub for their file collection.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {/* Testimonial 1 */}
-            <div className="bg-slate-50 p-8 rounded-3xl border border-slate-100">
-              <div className="flex gap-1 mb-4">
+            <div className="bg-white border border-border p-8 rounded-[2rem] hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 flex flex-col">
+              <div className="flex gap-1 mb-6">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
                 ))}
               </div>
-              <p className="text-slate-700 mb-6 leading-relaxed">
-                {/* PLACEHOLDER: Replace with real testimonial */}
+              <p className="text-muted-foreground mb-8 leading-relaxed text-lg flex-grow">
                 "SecureUploadHub has transformed how we collect documents from clients. What used to take days of back-and-forth emails now happens in minutes."
               </p>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold">
-                  {/* PLACEHOLDER: Replace with actual avatar */}
+              <div className="flex items-center gap-4 pt-6 border-t border-border/50">
+                <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-lg">
                   SM
                 </div>
                 <div>
-                  <p className="font-semibold text-slate-900">{/* PLACEHOLDER */}Sarah Mitchell</p>
-                  <p className="text-sm text-slate-500">{/* PLACEHOLDER */}CPA, Mitchell & Associates</p>
+                  <p className="font-bold text-foreground">Sarah Mitchell</p>
+                  <p className="text-sm text-muted-foreground font-medium">CPA, Mitchell & Associates</p>
                 </div>
               </div>
             </div>
 
             {/* Testimonial 2 */}
-            <div className="bg-slate-50 p-8 rounded-3xl border border-slate-100">
-              <div className="flex gap-1 mb-4">
+            <div className="bg-white border border-border p-8 rounded-[2rem] hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 flex flex-col relative">
+              {/* Decoration */}
+              <div className="absolute top-0 right-0 p-8 opacity-10">
+                <Zap className="w-24 h-24 text-primary rotate-12" />
+              </div>
+              <div className="flex gap-1 mb-6 relative z-10">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
                 ))}
               </div>
-              <p className="text-slate-700 mb-6 leading-relaxed">
-                {/* PLACEHOLDER: Replace with real testimonial */}
+              <p className="text-muted-foreground mb-8 leading-relaxed text-lg flex-grow relative z-10">
                 "The branded portals make us look incredibly professional. Clients love how easy it is — no login required, just drag and drop."
               </p>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-900 font-bold">
-                  {/* PLACEHOLDER: Replace with actual avatar */}
+              <div className="flex items-center gap-4 pt-6 border-t border-border/50 relative z-10">
+                <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-900 font-bold text-lg">
                   JR
                 </div>
                 <div>
-                  <p className="font-semibold text-slate-900">{/* PLACEHOLDER */}James Rodriguez</p>
-                  <p className="text-sm text-slate-500">{/* PLACEHOLDER */}Creative Director, PixelCraft Studio</p>
+                  <p className="font-bold text-foreground">James Rodriguez</p>
+                  <p className="text-sm text-muted-foreground font-medium">Creative Director, PixelCraft</p>
                 </div>
               </div>
             </div>
 
             {/* Testimonial 3 */}
-            <div className="bg-slate-50 p-8 rounded-3xl border border-slate-100">
-              <div className="flex gap-1 mb-4">
+            <div className="bg-white border border-border p-8 rounded-[2rem] hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 flex flex-col">
+              <div className="flex gap-1 mb-6">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
                 ))}
               </div>
-              <p className="text-slate-700 mb-6 leading-relaxed">
-                {/* PLACEHOLDER: Replace with real testimonial */}
+              <p className="text-muted-foreground mb-8 leading-relaxed text-lg flex-grow">
                 "Security was our top concern with client documents. The SOC2 compliance and encryption gives us peace of mind."
               </p>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 font-bold">
-                  {/* PLACEHOLDER: Replace with actual avatar */}
+              <div className="flex items-center gap-4 pt-6 border-t border-border/50">
+                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 font-bold text-lg">
                   AL
                 </div>
                 <div>
-                  <p className="font-semibold text-slate-900">{/* PLACEHOLDER */}Amanda Liu</p>
-                  <p className="text-sm text-slate-500">{/* PLACEHOLDER */}Partner, Liu Legal Group</p>
+                  <p className="font-bold text-foreground">Amanda Liu</p>
+                  <p className="text-sm text-muted-foreground font-medium">Partner, Liu Legal Group</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Stats Row */}
-          <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <p className="text-4xl font-bold text-indigo-600">
+          <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-border/50">
+            <div className="p-4">
+              <p className="text-4xl lg:text-5xl font-bold text-primary mb-2">
                 <Counter end={10} suffix="K+" />
               </p>
-              <p className="text-slate-600 text-sm mt-1">Active Users</p>
+              <p className="text-muted-foreground font-medium">Active Users</p>
             </div>
-            <div>
-              <p className="text-4xl font-bold text-indigo-600">
+            <div className="p-4">
+              <p className="text-4xl lg:text-5xl font-bold text-primary mb-2">
                 <Counter end={2} suffix="M+" />
               </p>
-              <p className="text-slate-600 text-sm mt-1">Files Transferred</p>
+              <p className="text-muted-foreground font-medium">Files Transferred</p>
             </div>
-            <div>
-              <p className="text-4xl font-bold text-indigo-600">
+            <div className="p-4">
+              <p className="text-4xl lg:text-5xl font-bold text-primary mb-2">
                 <Counter end={99.9} suffix="%" decimals={1} />
               </p>
-              <p className="text-slate-600 text-sm mt-1">Uptime SLA</p>
+              <p className="text-muted-foreground font-medium">Uptime SLA</p>
             </div>
-            <div>
-              <p className="text-4xl font-bold text-indigo-600">
+            <div className="p-4">
+              <p className="text-4xl lg:text-5xl font-bold text-primary mb-2">
                 <Counter end={4.9} suffix="/5" decimals={1} />
               </p>
-              <p className="text-slate-600 text-sm mt-1">Customer Rating</p>
+              <p className="text-muted-foreground font-medium">Customer Rating</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-24 bg-slate-50">
+      <section id="pricing" className="py-32 bg-secondary/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-6">Simple, transparent pricing</h2>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-5xl font-bold text-foreground mb-6 tracking-tight">Simple, transparent pricing</h2>
 
             {/* Toggle */}
             <div className="flex items-center justify-center gap-4">
-              <span className={`text-sm ${!isAnnual ? 'text-slate-900 font-bold' : 'text-slate-500'}`}>Monthly</span>
+              <span className={`text-sm ${!isAnnual ? 'text-foreground font-bold' : 'text-muted-foreground'}`}>Monthly</span>
               <button
                 onClick={handlePricingToggle}
-                className="w-12 h-6 bg-slate-200 rounded-full relative transition-colors duration-200"
+                className="w-14 h-8 bg-zinc-200 rounded-full relative transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50"
               >
-                <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200 ${isAnnual ? 'translate-x-6 !bg-indigo-600' : ''}`} />
+                <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ${isAnnual ? 'translate-x-6 bg-primary' : ''}`} >
+                  {isAnnual && <div className="w-full h-full rounded-full bg-primary" />}
+                </div>
               </button>
-              <span className={`text-sm ${isAnnual ? 'text-slate-900 font-bold' : 'text-slate-500'}`}>
-                Yearly <span className="text-emerald-600 font-bold ml-1">(-20%)</span>
+              <span className={`text-sm ${isAnnual ? 'text-foreground font-bold' : 'text-muted-foreground'}`}>
+                Yearly <span className="text-emerald-600 font-bold ml-1 text-xs uppercase tracking-wide bg-emerald-100 px-2 py-0.5 rounded-full">Save 20%</span>
               </span>
             </div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Free Plan */}
-            <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col">
-              <h3 className="text-lg font-bold mb-2">Individual</h3>
-              <div className="mb-6">
-                <span className="text-4xl font-bold">$0</span>
-                <span className="text-slate-500">/mo</span>
+            <ScaleIn className="h-full">
+              <div className="bg-background p-10 rounded-[2.5rem] border border-border flex flex-col hover:border-border/80 transition-all duration-300 h-full">
+                <h3 className="text-xl font-bold mb-2 text-foreground">Individual</h3>
+                <p className="text-sm text-muted-foreground mb-6">Perfect for getting started</p>
+                <div className="mb-8">
+                  <span className="text-5xl font-bold text-foreground tracking-tight">$0</span>
+                  <span className="text-muted-foreground font-medium">/mo</span>
+                </div>
+                <ul className="space-y-4 mb-10 flex-1">
+                  <li className="flex items-center gap-3 text-foreground/80 text-sm font-medium">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" /> 1 Portal Link
+                  </li>
+                  <li className="flex items-center gap-3 text-foreground/80 text-sm font-medium">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" /> 500MB Max File Size
+                  </li>
+                  <li className="flex items-center gap-3 text-foreground/80 text-sm font-medium">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" /> Google Drive Integration
+                  </li>
+                </ul>
+                <Link href="/auth/signin" onClick={handleFreePlanClick} className="block w-full py-4 rounded-xl border-2 border-border font-bold hover:bg-muted transition-all text-center text-foreground hover:border-foreground/10">Get Started</Link>
               </div>
-              <ul className="space-y-4 mb-8 flex-1">
-                <li className="flex items-center gap-3 text-slate-600 text-sm">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-500" /> 1 Portal Link
-                </li>
-                <li className="flex items-center gap-3 text-slate-600 text-sm">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-500" /> 500MB Max File Size
-                </li>
-                <li className="flex items-center gap-3 text-slate-600 text-sm">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-500" /> Google Drive Integration
-                </li>
-              </ul>
-              <Link href="/auth/signin" onClick={handleFreePlanClick} className="block w-full py-3 rounded-xl border border-slate-200 font-bold hover:bg-slate-50 transition-all text-center">Get Started</Link>
-            </div>
+            </ScaleIn>
 
             {/* Pro Plan */}
-            <div className="bg-white p-8 rounded-3xl border-2 border-slate-900 shadow-xl shadow-slate-100 flex flex-col relative overflow-hidden">
-              <div className="absolute top-0 right-0 bg-indigo-600 text-white px-4 py-1 rounded-bl-xl text-xs font-bold uppercase tracking-widest">
-                Most Popular
+            <ScaleIn delay={0.1} className="h-full">
+              <div className="bg-foreground p-10 rounded-[2.5rem] border-2 border-foreground shadow-2xl flex flex-col relative overflow-hidden group h-full">
+                <div className="absolute top-0 right-0 bg-primary text-white px-6 py-2 rounded-bl-3xl text-sm font-bold uppercase tracking-widest">
+                  Most Popular
+                </div>
+                {/* Abstract shine */}
+                <div className="absolute -top-[100px] -right-[100px] w-[300px] h-[300px] bg-primary/20 blur-[80px] rounded-full pointer-events-none" />
+
+                <h3 className="text-xl font-bold mb-2 text-white relative z-10">Professional</h3>
+                <p className="text-sm text-slate-400 mb-6 relative z-10">For serious professionals</p>
+                <div className="mb-8 relative z-10">
+                  <span className="text-5xl font-bold text-white tracking-tight">{isAnnual ? '$12' : '$15'}</span>
+                  <span className="text-slate-400 font-medium">/mo</span>
+                </div>
+                <ul className="space-y-4 mb-10 flex-1 relative z-10">
+                  <li className="flex items-center gap-3 text-slate-200 text-sm font-medium">
+                    <div className="bg-white/10 p-1 rounded-full"><CheckCircle2 className="w-4 h-4 text-emerald-400" /></div> Unlimited Portal Links
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-200 text-sm font-medium">
+                    <div className="bg-white/10 p-1 rounded-full"><CheckCircle2 className="w-4 h-4 text-emerald-400" /></div> 100GB Max File Size
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-200 text-sm font-medium">
+                    <div className="bg-white/10 p-1 rounded-full"><CheckCircle2 className="w-4 h-4 text-emerald-400" /></div> Custom Branding
+                  </li>
+                  <li className="flex items-center gap-3 text-slate-200 text-sm font-medium">
+                    <div className="bg-white/10 p-1 rounded-full"><CheckCircle2 className="w-4 h-4 text-emerald-400" /></div> Password Protection
+                  </li>
+                </ul>
+                <Link href="/auth/signin" className="relative z-10 block w-full py-4 rounded-xl bg-white text-foreground font-bold hover:bg-indigo-50 transition-all shadow-lg hover:shadow-xl text-center hover:scale-[1.02] active:scale-[0.98]">
+                  Start 14-Day Free Trial
+                </Link>
               </div>
-              <h3 className="text-lg font-bold mb-2">Professional</h3>
-              <div className="mb-6">
-                <span className="text-4xl font-bold">{isAnnual ? '$12' : '$15'}</span>
-                <span className="text-slate-500">/mo</span>
-              </div>
-              <ul className="space-y-4 mb-8 flex-1">
-                <li className="flex items-center gap-3 text-slate-600 text-sm">
-                  <CheckCircle2 className="w-5 h-5 text-slate-900" /> Unlimited Portal Links
-                </li>
-                <li className="flex items-center gap-3 text-slate-600 text-sm">
-                  <CheckCircle2 className="w-5 h-5 text-slate-900" /> 100GB Max File Size
-                </li>
-                <li className="flex items-center gap-3 text-slate-600 text-sm">
-                  <CheckCircle2 className="w-5 h-5 text-slate-900" /> Custom Branding (Logo & Colors)
-                </li>
-                <li className="flex items-center gap-3 text-slate-600 text-sm">
-                  <CheckCircle2 className="w-5 h-5 text-slate-900" /> Password Protected Portals
-                </li>
-              </ul>
-              <Link href="/auth/signin" className="block w-full py-3 rounded-xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 text-center">Start 14-Day Free Trial</Link>
-            </div>
+            </ScaleIn>
           </div>
         </div>
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="py-24 bg-white">
+      <section id="faq" className="py-32 bg-white">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-slate-900 mb-4">Frequently asked questions</h2>
-            <p className="text-slate-600">Everything you need to know about SecureUploadHub.</p>
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4 tracking-tight">Frequently asked questions</h2>
+            <p className="text-muted-foreground">Everything you need to know.</p>
           </div>
 
           <div className="space-y-4">
@@ -855,25 +937,22 @@ export default function LandingPage() {
                 answer: "Absolutely! We offer a 14-day free trial of the Professional plan with all features included. No credit card required to start."
               }
             ].map((faq, index) => (
-              <div key={index} className="border border-slate-200 rounded-2xl overflow-hidden">
+              <div key={index} className="border border-border/50 rounded-2xl overflow-hidden bg-secondary/10 hover:bg-secondary/30 transition-colors duration-300">
                 <button
                   onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                  className="w-full flex items-center justify-between p-6 text-left hover:bg-slate-50 transition-colors"
+                  className="w-full flex items-center justify-between p-6 text-left"
                 >
-                  <span className="font-semibold text-slate-900 pr-4">{faq.question}</span>
-                  <ChevronDown 
-                    className={`w-5 h-5 text-slate-400 flex-shrink-0 transition-transform duration-300 ${
-                      openFaq === index ? 'rotate-180' : ''
-                    }`} 
-                  />
+                  <span className="font-semibold text-foreground pr-4 text-base md:text-lg">{faq.question}</span>
+                  <div className={`w-8 h-8 rounded-full bg-background flex items-center justify-center border border-border/50 transition-transform duration-300 ${openFaq === index ? 'rotate-180 bg-primary text-white border-primary' : 'text-muted-foreground'}`}>
+                    <ChevronDown className="w-5 h-5" />
+                  </div>
                 </button>
-                <div 
-                  className={`grid transition-all duration-300 ease-in-out ${
-                    openFaq === index ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-                  }`}
+                <div
+                  className={`grid transition-all duration-300 ease-in-out ${openFaq === index ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+                    }`}
                 >
                   <div className="overflow-hidden">
-                    <div className="px-6 pb-6 text-slate-600 leading-relaxed">
+                    <div className="px-6 pb-6 text-muted-foreground leading-relaxed">
                       {faq.answer}
                     </div>
                   </div>
@@ -883,10 +962,10 @@ export default function LandingPage() {
           </div>
 
           <div className="text-center mt-12">
-            <p className="text-slate-600 mb-4">Still have questions?</p>
+            <p className="text-muted-foreground mb-4">Still have questions?</p>
             <a
               href="#"
-              className="inline-flex items-center gap-2 text-slate-900 font-semibold hover:text-slate-800 transition-colors"
+              className="inline-flex items-center gap-2 text-primary font-bold hover:underline underline-offset-4 transition-all"
             >
               <MessageSquare className="w-4 h-4" />
               Contact our support team
@@ -896,39 +975,39 @@ export default function LandingPage() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="py-12 sm:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-gradient-to-br from-slate-900 to-slate-900 rounded-3xl relative overflow-hidden py-16 sm:py-24 px-4 sm:px-8 text-center">
+      <section className="py-12 sm:py-24 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-foreground rounded-[3rem] relative overflow-hidden py-20 px-8 text-center group">
             {/* Background decoration */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl" />
-              <div className="absolute bottom-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl" />
+            <div className="absolute inset-0 opacity-20">
+              <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary rounded-full blur-[150px] group-hover:bg-indigo-500 transition-colors duration-700" />
+              <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-emerald-500 rounded-full blur-[150px] group-hover:bg-emerald-400 transition-colors duration-700" />
             </div>
 
             <div className="max-w-4xl mx-auto relative z-10">
-              <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6">
+              <h2 className="text-4xl lg:text-6xl font-bold text-white mb-8 tracking-tight">
                 Ready to stop chasing files?
               </h2>
-              <p className="text-xl text-indigo-100 mb-10 max-w-2xl mx-auto">
+              <p className="text-xl text-indigo-100 mb-12 max-w-2xl mx-auto font-medium">
                 Join thousands of professionals who have simplified their file collection. Set up your first portal in under 2 minutes.
               </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                 <Link
                   href="/auth/signin"
-                  className="w-auto bg-white text-slate-900 px-6 py-3 rounded-2xl font-bold text-lg hover:bg-slate-50 transition-all shadow-xl flex items-center justify-center gap-2 group"
+                  className="w-full sm:w-auto bg-white text-foreground px-8 py-4 rounded-xl font-bold text-lg hover:bg-indigo-50 transition-all shadow-xl hover:shadow-2xl hover:scale-[1.02] flex items-center justify-center gap-2 group/btn"
                 >
                   Start Free Today
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
                 </Link>
                 <a
                   href="#pricing"
-                  className="w-auto border-2 border-white/30 text-white px-6 py-3 rounded-2xl font-bold text-lg hover:bg-white/10 transition-all text-center"
+                  className="w-full sm:w-auto border-2 border-white/20 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-white/10 hover:border-white/40 transition-all text-center"
                 >
                   View Pricing
                 </a>
               </div>
-              <p className="text-indigo-200 text-sm mt-8">
-                ✓ Free forever plan available &nbsp;&nbsp; ✓ No credit card required &nbsp;&nbsp; ✓ Cancel anytime
+              <p className="text-indigo-200/80 text-sm mt-10 font-medium tracking-wide uppercase">
+                Free forever plan &nbsp;•&nbsp; No credit card required &nbsp;•&nbsp; Cancel anytime
               </p>
             </div>
           </div>
@@ -936,47 +1015,65 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-slate-400">
+      <footer className="bg-background border-t border-border pt-20 pb-10">
         {/* Main Footer Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-16">
             {/* Brand Column */}
-            <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center gap-2 text-white mb-4">
-                <ShieldCheck className="w-8 h-8 text-indigo-500" />
-                <span className="text-xl font-bold tracking-tight">SecureUploadHub</span>
+            <div className="col-span-2 lg:col-span-2">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="bg-foreground p-2 rounded-xl">
+                  <ShieldCheck className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-xl font-bold tracking-tight text-foreground">SecureUploadHub</span>
               </div>
-              <p className="text-sm leading-relaxed max-w-xs text-slate-400">
+              <p className="text-muted-foreground leading-relaxed max-w-xs mb-8">
                 Secure file sharing for professionals. Fast, simple, and remarkably reliable.
               </p>
+              <div className="flex gap-4">
+                {/* Social placeholders could go here */}
+              </div>
             </div>
 
             {/* Links Column */}
             <div>
-              <h4 className="text-white font-bold mb-4 text-sm">Product</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
-                <li><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="#faq" className="hover:text-white transition-colors">FAQ</a></li>
+              <h4 className="font-bold mb-6 text-foreground">Product</h4>
+              <ul className="space-y-4 text-sm text-muted-foreground">
+                <li><a href="#features" className="hover:text-primary transition-colors">Features</a></li>
+                <li><a href="#how-it-works" className="hover:text-primary transition-colors">How it works</a></li>
+                <li><a href="#pricing" className="hover:text-primary transition-colors">Pricing</a></li>
+                <li><a href="#faq" className="hover:text-primary transition-colors">FAQ</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-bold mb-6 text-foreground">Company</h4>
+              <ul className="space-y-4 text-sm text-muted-foreground">
+                <li><a href="#" className="hover:text-primary transition-colors">About</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Blog</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Careers</a></li>
+                <li><a href="#" className="hover:text-primary transition-colors">Contact</a></li>
               </ul>
             </div>
 
             {/* Legal Links */}
             <div>
-              <h4 className="text-white font-bold mb-4 text-sm">Legal</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="/terms" className="hover:text-white transition-colors">Terms of Service</a></li>
-                <li><a href="/cookie-policy" className="hover:text-white transition-colors">Cookie Policy</a></li>
-                <li><a href="/gdpr" className="hover:text-white transition-colors">GDPR</a></li>
-                <li><a href="/security" className="hover:text-white transition-colors">Security</a></li>
+              <h4 className="font-bold mb-6 text-foreground">Legal</h4>
+              <ul className="space-y-4 text-sm text-muted-foreground">
+                <li><a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a></li>
+                <li><a href="/terms" className="hover:text-primary transition-colors">Terms of Service</a></li>
+                <li><a href="/cookie-policy" className="hover:text-primary transition-colors">Cookie Policy</a></li>
+                <li><a href="/gdpr" className="hover:text-primary transition-colors">GDPR</a></li>
               </ul>
             </div>
           </div>
 
           {/* Bottom Bar */}
-          <div className="border-t border-slate-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs">
+          <div className="border-t border-border pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-muted-foreground">
             <p>© {new Date().getFullYear()} SecureUploadHub Inc. All rights reserved.</p>
+            <div className="flex gap-8">
+              <span>Made with ❤️ for professionals</span>
+            </div>
           </div>
         </div>
       </footer>
