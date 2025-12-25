@@ -48,6 +48,6 @@ export async function GET(
     })
   } catch (error) {
     console.error("Error fetching portal:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json({ error: "Internal server error" }, { status:  500})
   }
 }

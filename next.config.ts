@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
 
   /* config options here */
-  images: { domains: ["us.i.posthog.com", "us-assets.i.posthog.com", "lh3.googleusercontent.com", "ibb.co"] },
+  images: { domains: ["us.i.posthog.com", "us-assets.i.posthog.com", "lh3.googleusercontent.com"] },
   async rewrites() {
     return [
       {

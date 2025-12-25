@@ -273,10 +273,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <FadeIn delay={0.1}>
             <h1 className="text-5xl lg:text-7xl font-bold tracking-tight text-foreground mb-8 max-w-5xl mx-auto leading-[1.1]">
-              The professional way to receive client files — <br className="hidden lg:block" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-slate-600 relative">
-                securely and effortlessly
-              </span>
+              The professional way to receive client files ! <br className="hidden lg:block" />
             </h1>
           </FadeIn>
 
@@ -449,8 +446,14 @@ export default function LandingPage() {
                 </FadeIn>
               ))}
             </div>
-            <div className="relative h-full">
-              <Image src="https://ibb.co/KjZ0r0bx" alt=' secura data illustration' width={500} height={500} />
+            <div className="relative h-full flex justify-center items-center">
+              <Image 
+                src="/images/secure-data.png" 
+                alt="Secure data illustration" 
+                width={500} 
+                height={500} 
+                className="rounded-3xl shadow-2xl"
+              />
             </div>
           </div>
         </div>
