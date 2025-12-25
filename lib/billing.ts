@@ -57,8 +57,12 @@ const getCurrentPeriodBounds = (overrideStart?: Date, overrideEnd?: Date) => {
 export const getPaystack = async () => {
   const { PAYSTACK_CONFIG } = await import("./paystack-config")
   const paystackModule = await import("paystack-api")
-  const Paystack = (paystackModule.default || paystackModule) as any
-  return new Paystack(PAYSTACK_CONFIG.secretKey)
+  // Handle various import styles (CJS, ESM, etc.)
+  const PaystackConstructor = (paystackModule as any).default || paystackModule
+  if (typeof PaystackConstructor !== 'function') {
+    throw new Error('Paystack constructor not found in paystack-api module')
+  }
+  return new (PaystackConstructor as any)(PAYSTACK_CONFIG.secretKey)
 }
 
 export const getUserBillingContext = async (userId: string) => {
@@ -77,26 +81,7 @@ export const getUserBillingContext = async (userId: string) => {
     orderBy: { updatedAt: "desc" }
   })
 
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/dedfc9f2-1f60-4578-9e5d-d5e6a43692a1', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      sessionId: 'debug-session',
-      runId: 'pre-fix',
-      hypothesisId: 'D',
-      location: 'lib/billing.ts:getUserBillingContext',
-      message: 'Subscription fetched',
-      data: {
-        hasSubscription: !!subscription,
-        hasPayments: !!(subscription as any)?.payments,
-        paymentsCount: (subscription as any)?.payments?.length ?? 0,
-        planId: subscription?.planId
-      },
-      timestamp: Date.now()
-    })
-  }).catch(() => { })
-  // #endregion
+  // Subscription fetched
 
   const plan = subscription?.plan ? toPlanWithLimits(subscription.plan as any) : toPlanWithLimits(FREE_PLAN)
 
