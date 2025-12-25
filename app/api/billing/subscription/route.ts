@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth"
 import { NextRequest, NextResponse } from "next/server"
 import { getPaystack } from "@/lib/billing"
 import { PAYSTACK_CONFIG } from "@/lib/paystack-config"
+import prisma from "@/lib/prisma"
 
 export const dynamic = 'force-dynamic'
 
@@ -12,7 +13,6 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const prisma = (await import("@/lib/prisma")).default
 
     const subscription = await prisma.subscription.findFirst({
       where: {
@@ -45,7 +45,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const prisma = (await import("@/lib/prisma")).default
 
     const { planId } = await request.json()
 
@@ -138,10 +137,13 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating subscription:", error)
     return NextResponse.json(
-      { error: "Failed to create subscription" },
+      {
+        error: "Failed to create subscription",
+        details: error.message || String(error)
+      },
       { status: 500 }
     )
   }
@@ -154,7 +156,6 @@ export async function DELETE() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const prisma = (await import("@/lib/prisma")).default
 
     const subscription = await prisma.subscription.findFirst({
       where: {

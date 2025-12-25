@@ -8,29 +8,22 @@ datasource db {
 }
 
 model User {
-  id            String          @id @default(cuid())
-  name          String?
-  email         String          @unique
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
-  // Optional for WebAuthn support
-  Authenticator Authenticator[]
-  // Upload portals owned by this user
-  uploadPortals UploadPortal[]
-
-  // Billing
-  subscriptions Subscription[]
-  payments      Payment[]
-
-  // Settings
-  notificationEmail Boolean @default(true)
-  marketingEmail    Boolean @default(true)
-  theme             String  @default("system") // "light", "dark", "system"
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String          @id @default(cuid())
+  email             String          @unique
+  name              String?
+  createdAt         DateTime        @default(now())
+  emailVerified     DateTime?
+  image             String?
+  updatedAt         DateTime        @updatedAt
+  marketingEmail    Boolean         @default(true)
+  notificationEmail Boolean         @default(true)
+  theme             String          @default("system")
+  accounts          Account[]
+  Authenticator     Authenticator[]
+  payments          Payment[]
+  sessions          Session[]
+  subscriptions     Subscription[]
+  uploadPortals     UploadPortal[]
 }
 
 model Account {
@@ -45,11 +38,9 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([provider, providerAccountId])
   @@index([userId, provider])
@@ -59,10 +50,9 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 model VerificationToken {
@@ -73,7 +63,6 @@ model VerificationToken {
   @@id([identifier, token])
 }
 
-// Optional for WebAuthn support
 model Authenticator {
   credentialID         String  @unique
   userId               String
@@ -83,174 +72,131 @@ model Authenticator {
   credentialDeviceType String
   credentialBackedUp   Boolean
   transports           String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                 User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, credentialID])
 }
 
-// Upload Portal - the branded upload page for clients
 model UploadPortal {
-  id          String  @id @default(cuid())
-  userId      String
-  name        String // Display name, e.g., "Tax Documents"
-  slug        String  @unique // URL slug, e.g., "cpa-solutions"
-  description String? // Optional description shown on portal
-
-  // Branding
-  logoUrl      String? // Custom logo URL
-  primaryColor String  @default("#4F46E5") // Brand color
-
-  // Extended Branding
-  backgroundImageUrl  String? // Full page background
-  backgroundColor     String? // Page background color fallback
-  cardBackgroundColor String? @default("#ffffff") // Content card background
-  textColor           String? @default("#0f172a") // Primary text color
-
-  // Messaging & Experience
-  welcomeMessage   String? // Custom greeting
-  submitButtonText String? @default("Initialize Transfer")
-  successMessage   String? @default("Transmission Verified")
-
-  // Settings
-  isActive           Boolean  @default(true)
-  maxFileSize        Int      @default(104857600) // 100MB default in bytes
-  allowedFileTypes   String[] @default([]) // Empty = allow all
-  requireClientName  Boolean  @default(true)
-  requireClientEmail Boolean  @default(false)
-  passwordHash       String? // Optional password protection
-
-  // Cloud storage destination
-  storageProvider   String  @default("google_drive") // "google_drive", "dropbox"
-  storageFolderId   String? // Folder ID in cloud storage
-  storageFolderPath String? // Human-readable folder path
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  uploads FileUpload[]
+  id                  String       @id @default(cuid())
+  userId              String
+  name                String
+  slug                String       @unique
+  description         String?
+  logoUrl             String?
+  primaryColor        String       @default("#4F46E5")
+  isActive            Boolean      @default(true)
+  maxFileSize         Int          @default(104857600)
+  allowedFileTypes    String[]     @default([])
+  requireClientName   Boolean      @default(true)
+  requireClientEmail  Boolean      @default(false)
+  passwordHash        String?
+  storageProvider     String       @default("local")
+  storageFolderId     String?
+  storageFolderPath   String?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  backgroundColor     String?
+  backgroundImageUrl  String?
+  cardBackgroundColor String?      @default("#ffffff")
+  submitButtonText    String?      @default("Initialize Transfer")
+  successMessage      String?      @default("Transmission Verified")
+  textColor           String?      @default("#0f172a")
+  welcomeMessage      String?
+  uploads             FileUpload[]
+  user                User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
 }
 
-// File Upload - tracks each file uploaded through a portal
 model FileUpload {
-  id       String @id @default(cuid())
-  portalId String
-
-  // File info
-  fileName String
-  fileSize Int // Size in bytes
-  mimeType String
-
-  // Client info (optional based on portal settings)
-  clientName    String?
-  clientEmail   String?
-  clientMessage String? // Optional message from client
-
-  // Storage info
-  storageProvider String // Where the file was stored
-  storageFileId   String? // File ID in cloud storage
-  storagePath     String? // Path in cloud storage
-
-  // Status
-  status       String  @default("pending") // "pending", "uploaded", "failed"
-  errorMessage String? // Error message if upload failed
-
-  // Metadata
-  ipAddress String? // Client IP for audit
-  userAgent String? // Client browser info
-
-  createdAt  DateTime  @default(now())
-  uploadedAt DateTime? // When file was successfully stored
-
-  portal UploadPortal @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  id              String       @id @default(cuid())
+  portalId        String
+  fileName        String
+  fileSize        Int
+  mimeType        String
+  clientName      String?
+  clientEmail     String?
+  clientMessage   String?
+  storageProvider String
+  storageFileId   String?
+  storagePath     String?
+  status          String       @default("pending")
+  errorMessage    String?
+  ipAddress       String?
+  userAgent       String?
+  createdAt       DateTime     @default(now())
+  uploadedAt      DateTime?
+  portal          UploadPortal @relation(fields: [portalId], references: [id], onDelete: Cascade)
 
   @@index([portalId, createdAt])
   @@index([clientEmail])
   @@index([clientName])
 }
 
-// Newsletter Subscriber - tracks email subscribers
 model NewsletterSubscriber {
   id        String   @id @default(cuid())
   email     String   @unique
-  status    String   @default("subscribed") // "subscribed", "unsubscribed"
+  status    String   @default("subscribed")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([status])
 }
 
-// Billing Plans - predefined subscription plans
 model BillingPlan {
-  id          String   @id @default(cuid())
-  name        String   @unique // e.g., "Starter", "Pro", "Enterprise"
-  description String?
-  price       Float // Monthly price in USD
-  currency    String   @default("USD")
-  features    String[] // Array of feature descriptions
-  isActive    Boolean  @default(true)
-
-  // Limits
-  maxPortals      Int @default(1)
-  maxStorageGB    Int @default(1) // Storage in GB
-  maxUploadsMonth Int @default(100)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  subscriptions Subscription[]
+  id              String         @id @default(cuid())
+  name            String         @unique
+  description     String?
+  price           Float
+  currency        String         @default("USD")
+  features        String[]
+  isActive        Boolean        @default(true)
+  maxPortals      Int            @default(1)
+  maxStorageGB    Int            @default(1)
+  maxUploadsMonth Int            @default(100)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  subscriptions   Subscription[]
 
   @@index([isActive])
   @@index([price])
 }
 
-// User Subscriptions
 model Subscription {
-  id                 String   @id @default(cuid())
-  userId             String
-  planId             String
-  status             String   @default("active") // "active", "canceled", "past_due", "incomplete"
-  currentPeriodStart DateTime
-  currentPeriodEnd   DateTime
-  cancelAtPeriodEnd  Boolean  @default(false)
-
-  // Payment provider data
-  providerSubscriptionId String? // Flutterwave subscription ID
-  providerCustomerId     String? // Flutterwave customer ID
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plan     BillingPlan @relation(fields: [planId], references: [id])
-  payments Payment[]
+  id                     String      @id @default(cuid())
+  userId                 String
+  planId                 String
+  status                 String      @default("active")
+  currentPeriodStart     DateTime
+  currentPeriodEnd       DateTime
+  cancelAtPeriodEnd      Boolean     @default(false)
+  providerSubscriptionId String?
+  providerCustomerId     String?
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
+  payments               Payment[]
+  plan                   BillingPlan @relation(fields: [planId], references: [id])
+  user                   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
 }
 
-// Payment records
 model Payment {
-  id             String  @id @default(cuid())
-  subscriptionId String?
-  userId         String
-  amount         Float
-  currency       String  @default("USD")
-  status         String  @default("pending") // "pending", "succeeded", "failed", "canceled"
-  description    String?
-
-  // Payment provider data
-  providerPaymentId  String? // Flutterwave payment ID
-  providerPaymentRef String? // Flutterwave payment reference
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subscription Subscription? @relation(fields: [subscriptionId], references: [id])
+  id                 String        @id @default(cuid())
+  subscriptionId     String?
+  userId             String
+  amount             Float
+  currency           String        @default("USD")
+  status             String        @default("pending")
+  description        String?
+  providerPaymentId  String?
+  providerPaymentRef String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  subscription       Subscription? @relation(fields: [subscriptionId], references: [id])
+  user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])

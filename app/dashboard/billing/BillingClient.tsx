@@ -105,7 +105,8 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
             if (response.ok && data.paymentLink) {
                 window.location.href = data.paymentLink
             } else {
-                alert(data.error || "Failed to create subscription")
+                const errorMessage = data.details ? `${data.error}: ${data.details}` : (data.error || "Failed to create subscription")
+                alert(errorMessage)
             }
         } catch (error) {
             console.error("Error subscribing:", error)
@@ -192,8 +193,8 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
-                                            ? "bg-white shadow-sm border border-slate-200 text-slate-900"
-                                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                                        ? "bg-white shadow-sm border border-slate-200 text-slate-900"
+                                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                                         }`}
                                 >
                                     <Icon className={`w-5 h-5 ${isActive ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
@@ -240,10 +241,10 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                         <div>
                                                             <p className="text-slate-400 text-sm font-medium uppercase tracking-wider mb-2">Current Plan</p>
                                                             <h3 className="text-3xl font-bold mb-2">
-                                                        {currentPlan.name}
+                                                                {currentPlan.name}
                                                             </h3>
                                                             <p className="text-slate-300 text-lg">
-                                                        {`${currentPlan.currency} ${currentPlan.price}/month`}
+                                                                {`${currentPlan.currency} ${currentPlan.price}/month`}
                                                             </p>
                                                         </div>
 
@@ -262,7 +263,7 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                         )}
                                                     </div>
 
-                                                        {subscription && !subscription.cancelAtPeriodEnd && (
+                                                    {subscription && !subscription.cancelAtPeriodEnd && (
                                                         <div className="mt-8 flex gap-4">
                                                             <button
                                                                 onClick={handleCancelSubscription}
@@ -274,7 +275,7 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                         </div>
                                                     )}
 
-                                                        {subscription?.cancelAtPeriodEnd && (
+                                                    {subscription?.cancelAtPeriodEnd && (
                                                         <div className="mt-6 p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center gap-3">
                                                             <AlertCircle className="w-5 h-5 text-orange-400" />
                                                             <p className="text-sm text-orange-200">
@@ -332,8 +333,8 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                     <div
                                                         key={plan.id}
                                                         className={`flex flex-col p-6 rounded-2xl border-2 transition-all duration-200 ${isCurrent
-                                                                ? "border-slate-900 bg-slate-50 ring-4 ring-slate-900/5 relative"
-                                                                : "border-slate-100 bg-white hover:border-slate-200"
+                                                            ? "border-slate-900 bg-slate-50 ring-4 ring-slate-900/5 relative"
+                                                            : "border-slate-100 bg-white hover:border-slate-200"
                                                             }`}
                                                     >
                                                         {isCurrent && (
@@ -361,8 +362,8 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                             onClick={() => handleSubscribe(plan.id)}
                                                             disabled={isCurrent || subscribing === plan.id}
                                                             className={`w-full py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${isCurrent
-                                                                    ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-                                                                    : "bg-slate-900 hover:bg-slate-800 text-white shadow-sm active:scale-95"
+                                                                ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                                                                : "bg-slate-900 hover:bg-slate-800 text-white shadow-sm active:scale-95"
                                                                 }`}
                                                         >
                                                             {subscribing === plan.id ? (
@@ -403,8 +404,8 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                                 </td>
                                                                 <td className="py-4">
                                                                     <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${p.status === 'succeeded' ? 'bg-emerald-100 text-emerald-700' :
-                                                                            p.status === 'pending' ? 'bg-orange-100 text-orange-700' :
-                                                                                'bg-red-100 text-red-700'
+                                                                        p.status === 'pending' ? 'bg-orange-100 text-orange-700' :
+                                                                            'bg-red-100 text-red-700'
                                                                         }`}>
                                                                         {p.status}
                                                                     </span>

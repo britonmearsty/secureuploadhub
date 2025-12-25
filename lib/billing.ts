@@ -56,7 +56,8 @@ const getCurrentPeriodBounds = (overrideStart?: Date, overrideEnd?: Date) => {
 
 export const getPaystack = async () => {
   const { PAYSTACK_CONFIG } = await import("./paystack-config")
-  const Paystack = (await import("paystack-api")).default
+  const paystackModule = await import("paystack-api")
+  const Paystack = (paystackModule.default || paystackModule) as any
   return new Paystack(PAYSTACK_CONFIG.secretKey)
 }
 
@@ -66,7 +67,7 @@ export const getUserBillingContext = async (userId: string) => {
       userId,
       status: { in: ["active", "past_due", "incomplete"] }
     },
-    include: { 
+    include: {
       plan: true,
       payments: {
         orderBy: { createdAt: "desc" },
@@ -77,24 +78,24 @@ export const getUserBillingContext = async (userId: string) => {
   })
 
   // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/dedfc9f2-1f60-4578-9e5d-d5e6a43692a1',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      sessionId:'debug-session',
-      runId:'pre-fix',
-      hypothesisId:'D',
-      location:'lib/billing.ts:getUserBillingContext',
-      message:'Subscription fetched',
-      data:{
+  fetch('http://127.0.0.1:7242/ingest/dedfc9f2-1f60-4578-9e5d-d5e6a43692a1', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sessionId: 'debug-session',
+      runId: 'pre-fix',
+      hypothesisId: 'D',
+      location: 'lib/billing.ts:getUserBillingContext',
+      message: 'Subscription fetched',
+      data: {
         hasSubscription: !!subscription,
         hasPayments: !!(subscription as any)?.payments,
         paymentsCount: (subscription as any)?.payments?.length ?? 0,
         planId: subscription?.planId
       },
-      timestamp:Date.now()
+      timestamp: Date.now()
     })
-  }).catch(()=>{})
+  }).catch(() => { })
   // #endregion
 
   const plan = subscription?.plan ? toPlanWithLimits(subscription.plan as any) : toPlanWithLimits(FREE_PLAN)
