@@ -19,6 +19,14 @@ export const authConfig: NextAuthConfig = {
           scope: "openid email profile https://www.googleapis.com/auth/drive.file",
         },
       },
+      profile: (profile) => {
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+        }
+      },
     }),
     Dropbox({
       clientId: process.env.DROPBOX_CLIENT_ID!,
@@ -44,13 +52,36 @@ export const authConfig: NextAuthConfig = {
     signIn: "/auth/signin",
   },
   callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role
+      }
+      return token
+    },
+    async session({ session, token }) {
+      if (session.user && token.role) {
+        session.user.role = token.role as string
+      }
+      return session
+    },
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user
       const isOnDashboard = nextUrl.pathname.startsWith("/dashboard")
+      const isOnAdmin = nextUrl.pathname.startsWith("/admin")
       const isOnAuthPage = nextUrl.pathname.startsWith("/auth")
+      const role = auth?.user?.role
 
       if (isLoggedIn && isOnAuthPage) {
+        if (role === 'admin') {
+          return Response.redirect(new URL("/admin", nextUrl))
+        }
         return Response.redirect(new URL("/dashboard", nextUrl))
+      }
+
+      if (isOnAdmin) {
+        if (isLoggedIn && role === 'admin') return true
+        if (isLoggedIn) return Response.redirect(new URL("/dashboard", nextUrl)) // Redirect non-admins
+        return false // Redirect uninit requests
       }
 
       if (isOnDashboard) {

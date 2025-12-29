@@ -18,6 +18,7 @@ model User {
   marketingEmail    Boolean         @default(true)
   notificationEmail Boolean         @default(true)
   theme             String          @default("system")
+  role              String          @default("user")
   accounts          Account[]
   Authenticator     Authenticator[]
   payments          Payment[]
