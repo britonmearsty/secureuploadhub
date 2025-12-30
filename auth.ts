@@ -5,6 +5,7 @@ import type { NextAuthConfig } from "next-auth"
 
 // Shared auth configuration (Edge-compatible, no Prisma)
 export const authConfig: NextAuthConfig = {
+  secret: process.env.AUTH_SECRET,
   trustHost: true,
   useSecureCookies: process.env.NODE_ENV === "production",
   providers: [
