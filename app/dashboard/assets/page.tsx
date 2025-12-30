@@ -17,7 +17,16 @@ export default async function AssetsPage() {
         userId: session.user.id,
       },
     },
-    include: {
+    select: {
+      id: true,
+      fileName: true,
+      fileSize: true,
+      mimeType: true,
+      clientName: true,
+      clientEmail: true,
+      storageProvider: true,
+      storagePath: true,
+      createdAt: true,
       portal: {
         select: {
           name: true,

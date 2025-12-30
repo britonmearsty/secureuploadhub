@@ -3,8 +3,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import prisma from "@/lib/prisma"
 import { authConfig } from "@/auth"
 import { getPostHogClient } from "@/lib/posthog-server"
-import { resend } from "@/lib/resend"
-import SignInEmail from "@/emails/SignInEmail"
+import { sendSignInNotification, sendWelcomeEmail } from "@/lib/email-templates"
 import { headers } from "next/headers"
 
 // Full auth config with Prisma adapter for server-side use
@@ -90,6 +89,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         });
       }
 
+      // Send welcome email to new users
+      if (isNewUser && user.email) {
+        sendWelcomeEmail({
+          to: user.email,
+          userFirstname: user.name?.split(' ')[0],
+          dashboardUrl: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard`,
+        }).catch((err) => {
+          console.error("Failed to send welcome email:", err);
+        });
+      }
+
       return true
     },
   },
@@ -101,22 +111,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           const userAgent = headerList.get("user-agent") || "Unknown Device";
           const ip = headerList.get("x-forwarded-for")?.split(",")[0] || "Unknown IP";
 
-          await resend.emails.send({
-            from: process.env.EMAIL_FROM || 'SecureUploadHub <notifications@secureuploadhub.com>',
+          // Send sign-in notification using new email template service
+          await sendSignInNotification({
             to: user.email,
-            subject: 'New sign-in detected',
-            react: SignInEmail({
-              userFirstname: user.name?.split(' ')[0] || 'User',
-              signInDate: new Date().toLocaleString('en-US', {
-                dateStyle: 'full',
-                timeStyle: 'long',
-              }),
-              signInDevice: userAgent,
-              signInLocation: ip,
+            userFirstname: user.name?.split(' ')[0],
+            signInDate: new Date().toLocaleString('en-US', {
+              dateStyle: 'full',
+              timeStyle: 'long',
             }),
+            signInDevice: userAgent,
+            signInLocation: ip,
           });
         } catch (error) {
-          console.error("Failed to send sign-in email:", error);
+          console.error("Failed to send sign-in notification:", error);
         }
       }
     },

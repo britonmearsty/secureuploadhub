@@ -370,6 +370,32 @@ export class GoogleDriveService implements CloudStorageService {
     }
   }
 
+  async deleteFile(
+    accessToken: string,
+    fileId: string
+  ): Promise<void> {
+    if (!fileId || fileId.startsWith("http")) {
+      throw new Error(`Invalid Google Drive file ID: "${fileId}"`)
+    }
+
+    const response = await fetch(
+      `${GOOGLE_DRIVE_API}/files/${fileId}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    )
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(
+        errorData.error?.message || `Failed to delete file: ${response.statusText}`
+      )
+    }
+  }
+
   /**
    * Ensure a folder path exists, creating folders as needed
    * Returns the ID of the deepest folder

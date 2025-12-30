@@ -277,3 +277,26 @@ export async function downloadFromCloudStorage(
   }
 }
 
+/**
+ * Delete a file from cloud storage
+ */
+export async function deleteFromCloudStorage(
+  userId: string,
+  provider: StorageProvider,
+  fileId: string
+): Promise<void> {
+  const oauthProvider = provider === "google_drive" ? "google" : "dropbox"
+  const tokenResult = await getValidAccessToken(userId, oauthProvider)
+
+  if (!tokenResult) {
+    throw new Error(`No valid ${provider} account connected`)
+  }
+
+  const service = getStorageService(provider)
+  if (!service) {
+    throw new Error(`Unknown storage provider: ${provider}`)
+  }
+
+  return service.deleteFile(tokenResult.accessToken, fileId)
+}
+

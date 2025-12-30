@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import Email from '@/emails/email';
 
 function FadeIn({ children, delay = 0, className = "" }: { children: React.ReactNode, delay?: number, className?: string }) {
   return (
@@ -285,6 +286,7 @@ export default function LandingPage() {
 
           <FadeIn delay={0.3}>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-20">
+              <Email/>
               <Link
                 href="/auth/signin"
                 onClick={handleCtaClick}

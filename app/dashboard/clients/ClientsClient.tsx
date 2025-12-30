@@ -85,6 +85,15 @@ export default function ClientsClient({ clients: initialClients }: ClientsClient
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
     }
 
+    const handleContactClient = (client: Client) => {
+        if (!client.email) return
+
+        const subject = encodeURIComponent(`Message regarding your uploads`)
+        const body = encodeURIComponent(`Hi ${client.name || 'there'},\n\nI wanted to follow up regarding your recent uploads.\n\nBest regards`)
+        const mailtoLink = `mailto:${client.email}?subject=${subject}&body=${body}`
+        window.location.href = mailtoLink
+    }
+
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
             <div className="mb-8">
@@ -377,9 +386,14 @@ export default function ClientsClient({ clients: initialClients }: ClientsClient
                                 >
                                     Close
                                 </button>
-                                <button className="px-6 py-2.5 bg-slate-900 text-white rounded-2xl text-sm font-bold hover:bg-slate-800 shadow-sm transition-all flex items-center gap-2">
-                                    Contact Client <ArrowUpRight className="w-4 h-4" />
-                                </button>
+                                {selectedClient.email && (
+                                    <button 
+                                        onClick={() => handleContactClient(selectedClient)}
+                                        className="px-6 py-2.5 bg-slate-900 text-white rounded-2xl text-sm font-bold hover:bg-slate-800 shadow-sm transition-all flex items-center gap-2"
+                                    >
+                                        Contact Client <ArrowUpRight className="w-4 h-4" />
+                                    </button>
+                                )}
                             </div>
                         </motion.div>
                     </div>

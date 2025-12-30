@@ -19,10 +19,17 @@ import {
     PieChart,
     TrendingUp,
     Calendar,
-    MoreVertical,
     ExternalLink,
     ChevronDown,
-    Inbox
+    Inbox,
+    FileText,
+    FileJson,
+    FileCode,
+    FileImage,
+    Music,
+    Video,
+    Archive,
+    Trash2
 } from "lucide-react"
 
 interface FileUpload {
@@ -33,6 +40,8 @@ interface FileUpload {
     storageProvider: string
     storagePath: string | null
     createdAt: string
+    clientName: string | null
+    clientEmail: string | null
     portal: {
         name: string
         slug: string
@@ -89,6 +98,41 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
             case 'google_drive': return <HardDrive className="w-5 h-5 text-emerald-500" />
             default: return <Server className="w-5 h-5 text-slate-400" />
         }
+    }
+
+    const getFileIcon = (fileName: string) => {
+        const ext = fileName.split('.').pop()?.toLowerCase() || ''
+        const iconProps = "w-5 h-5"
+
+        // Document types
+        if (['doc', 'docx'].includes(ext)) return <FileText className={`${iconProps} text-blue-500`} />
+        if (ext === 'pdf') return <File className={`${iconProps} text-red-500`} />
+        if (['xls', 'xlsx', 'csv'].includes(ext)) return <FileText className={`${iconProps} text-green-500`} />
+        if (['ppt', 'pptx'].includes(ext)) return <FileText className={`${iconProps} text-orange-500`} />
+
+        // Code/JSON files
+        if (['json', 'xml'].includes(ext)) return <FileJson className={`${iconProps} text-yellow-600`} />
+        if (['py', 'js', 'ts', 'tsx', 'jsx', 'java', 'cpp', 'c', 'cs', 'rb', 'php', 'go', 'rs', 'sh', 'bash', 'html', 'css', 'scss'].includes(ext))
+            return <FileCode className={`${iconProps} text-purple-500`} />
+
+        // Image files
+        if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(ext))
+            return <FileImage className={`${iconProps} text-pink-500`} />
+
+        // Audio files
+        if (['mp3', 'wav', 'flac', 'aac', 'm4a'].includes(ext))
+            return <Music className={`${iconProps} text-cyan-500`} />
+
+        // Video files
+        if (['mp4', 'avi', 'mov', 'mkv', 'wmv', 'flv', 'webm'].includes(ext))
+            return <Video className={`${iconProps} text-indigo-500`} />
+
+        // Archive files
+        if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext))
+            return <Archive className={`${iconProps} text-amber-600`} />
+
+        // Default
+        return <File className={`${iconProps} text-slate-400`} />
     }
 
     const toggleFolder = (path: string) => {
@@ -221,7 +265,7 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                                         <div className={viewMode === "list" ? "divide-y divide-slate-100" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6"}>
                                             {filteredUploads.length > 0 ? (
                                                 filteredUploads.map((file) => (
-                                                    <FileItem key={file.id} file={file} viewMode={viewMode} formatFileSize={formatFileSize} getProviderIcon={getProviderIcon} />
+                                                    <FileItem key={file.id} file={file} viewMode={viewMode} formatFileSize={formatFileSize} getProviderIcon={getProviderIcon} getFileIcon={getFileIcon} />
                                                 ))
                                             ) : (
                                                 <div className="text-center py-24 px-6 col-span-full">
@@ -256,7 +300,7 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                                                         </div>
                                                         <div className="divide-y divide-slate-100/50">
                                                             {providerFiles.map(file => (
-                                                                <FileItem key={file.id} file={file} viewMode="list" formatFileSize={formatFileSize} getProviderIcon={getProviderIcon} />
+                                                                <FileItem key={file.id} file={file} viewMode="list" formatFileSize={formatFileSize} getProviderIcon={getProviderIcon} getFileIcon={getFileIcon} />
                                                             ))}
                                                         </div>
                                                     </div>
@@ -307,8 +351,9 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
     )
 }
 
-function FileItem({ file, viewMode, formatFileSize, getProviderIcon }: any) {
+function FileItem({ file, viewMode, formatFileSize, getProviderIcon, getFileIcon }: any) {
     const isGrid = viewMode === "grid"
+    const [isDeleting, setIsDeleting] = useState(false)
 
     const handleDownload = (e: React.MouseEvent) => {
         e.stopPropagation()
@@ -320,20 +365,47 @@ function FileItem({ file, viewMode, formatFileSize, getProviderIcon }: any) {
         document.body.removeChild(link)
     }
 
+    const handleDelete = async (e: React.MouseEvent) => {
+        e.stopPropagation()
+        if (!confirm(`Delete "${file.fileName}"?`)) return
+
+        setIsDeleting(true)
+        try {
+            const res = await fetch(`/api/uploads/${file.id}`, {
+                method: 'DELETE',
+            })
+            if (res.ok) {
+                window.location.reload()
+            } else {
+                alert('Failed to delete file')
+                setIsDeleting(false)
+            }
+        } catch (error) {
+            alert('Error deleting file')
+            setIsDeleting(false)
+        }
+    }
+
+    const clientIdentifier = file.clientName || file.clientEmail || "Unknown Client"
+
     if (isGrid) {
         return (
             <div className="group bg-white rounded-2xl border border-slate-100 p-4 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/40 transition-all">
                 <div className="flex justify-between items-start mb-4">
                     <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 group-hover:bg-white transition-colors">
-                        <File className="w-6 h-6 text-slate-400" />
+                        {getFileIcon(file.fileName)}
                     </div>
                     <div className="flex gap-1">
                         <button onClick={handleDownload} className="p-2 text-slate-300 hover:text-slate-900 hover:bg-white rounded-lg transition-all">
                             <Download className="w-4 h-4" />
                         </button>
+                        <button onClick={handleDelete} disabled={isDeleting} className="p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50">
+                            <Trash2 className="w-4 h-4" />
+                        </button>
                     </div>
                 </div>
                 <h4 className="font-bold text-slate-900 truncate text-sm" title={file.fileName}>{file.fileName}</h4>
+                <div className="text-xs text-slate-500 truncate mt-1" title={clientIdentifier}>{clientIdentifier}</div>
                 <div className="flex items-center gap-2 mt-2">
                     <span className="text-[10px] font-bold text-slate-400 uppercase">{formatFileSize(file.fileSize)}</span>
                     <span className="w-1 h-1 bg-slate-200 rounded-full" />
@@ -354,11 +426,13 @@ function FileItem({ file, viewMode, formatFileSize, getProviderIcon }: any) {
     return (
         <div className="flex items-center gap-4 p-4 hover:bg-slate-50/50 transition-colors group">
             <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-white border border-transparent group-hover:border-slate-200 transition-all shrink-0">
-                <File className="w-5 h-5" />
+                {getFileIcon(file.fileName)}
             </div>
             <div className="flex-1 min-w-0">
                 <h4 className="text-sm font-bold text-slate-900 truncate" title={file.fileName}>{file.fileName}</h4>
                 <div className="flex items-center gap-3 mt-0.5">
+                    <span className="text-xs text-slate-500">{clientIdentifier}</span>
+                    <span className="w-1 h-1 bg-slate-300 rounded-full" />
                     <span className="text-xs text-slate-500">{formatFileSize(file.fileSize)}</span>
                     <span className="w-1 h-1 bg-slate-300 rounded-full" />
                     <span className="text-xs text-slate-500 flex items-center gap-1.5">
@@ -383,8 +457,8 @@ function FileItem({ file, viewMode, formatFileSize, getProviderIcon }: any) {
                 <button onClick={handleDownload} className="p-2 text-slate-300 hover:text-slate-900 hover:bg-white rounded-xl border border-transparent hover:border-slate-200 transition-all">
                     <Download className="w-4 h-4" />
                 </button>
-                <button className="p-2 text-slate-300 hover:text-slate-900 hover:bg-white rounded-xl border border-transparent hover:border-slate-200 transition-all">
-                    <MoreVertical className="w-4 h-4" />
+                <button onClick={handleDelete} disabled={isDeleting} className="p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl border border-transparent hover:border-red-200 transition-all disabled:opacity-50">
+                    <Trash2 className="w-4 h-4" />
                 </button>
             </div>
         </div>

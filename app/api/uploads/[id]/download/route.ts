@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import { downloadFromCloudStorage } from "@/lib/storage"
+import { invalidateCache, getUserDashboardKey, getUserUploadsKey, getUserStatsKey } from "@/lib/cache"
 
 // GET /api/uploads/[id]/download - Download a file
 export async function GET(
@@ -49,10 +50,16 @@ export async function GET(
           if (foundId) {
             storageId = foundId;
             // Update the DB so we don't have to search again
-            await prisma.fileUpload.update({
-              where: { id: upload.id },
-              data: { storageFileId: foundId }
-            });
+              await prisma.fileUpload.update({
+                where: { id: upload.id },
+                data: { storageFileId: foundId }
+              });
+              // Invalidate caches since upload metadata changed
+              await Promise.all([
+                invalidateCache(getUserDashboardKey(session.user.id)),
+                invalidateCache(getUserUploadsKey(session.user.id)),
+                invalidateCache(getUserStatsKey(session.user.id))
+              ]);
           }
         }
       }

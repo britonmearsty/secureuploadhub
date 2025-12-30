@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import prisma from "@/lib/prisma"
 import { hashPassword } from "@/lib/password"
-import { invalidateCache, getUserDashboardKey } from "@/lib/cache"
+import { invalidateCache, getUserDashboardKey, getUserPortalsKey, getUserUploadsKey, getUserStatsKey } from "@/lib/cache"
 import { assertPortalLimit } from "@/lib/billing"
 
 // GET /api/portals - List all portals for the current user
@@ -145,8 +145,13 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Invalidate dashboard cache since new portal was created
-    await invalidateCache(getUserDashboardKey(session.user.id))
+    // Invalidate all relevant caches since new portal was created
+    await Promise.all([
+      invalidateCache(getUserDashboardKey(session.user.id)),
+      invalidateCache(getUserPortalsKey(session.user.id)),
+      invalidateCache(getUserUploadsKey(session.user.id)),
+      invalidateCache(getUserStatsKey(session.user.id))
+    ])
 
     return NextResponse.json(portal)
   } catch (error) {

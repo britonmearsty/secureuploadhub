@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { uploadToCloudStorage, StorageProvider } from "@/lib/storage"
-import { sendUploadNotification } from "@/lib/email"
+import { sendUploadNotification } from "@/lib/email-templates"
 import { jwtVerify } from "jose"
-import { invalidateCache, getUserDashboardKey } from "@/lib/cache"
+import { invalidateCache, getUserDashboardKey, getUserUploadsKey, getUserStatsKey, getUserPortalsKey } from "@/lib/cache"
 import { assertUploadAllowed } from "@/lib/billing"
 
 const JWT_SECRET = new TextEncoder().encode(
@@ -188,13 +188,19 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Invalidate dashboard cache since new upload was created
-    await invalidateCache(getUserDashboardKey(portal.userId))
+    // Invalidate all relevant caches since new upload was created
+    await Promise.all([
+      invalidateCache(getUserDashboardKey(portal.userId)),
+      invalidateCache(getUserUploadsKey(portal.userId)),
+      invalidateCache(getUserStatsKey(portal.userId)),
+      invalidateCache(getUserPortalsKey(portal.userId))
+    ])
 
     // Send email notification to portal owner (async, don't block response)
     if (portal.user.email) {
       const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
-      sendUploadNotification(portal.user.email, {
+      sendUploadNotification({
+        to: portal.user.email,
         portalName: portal.name,
         fileName: file.name,
         fileSize: file.size,

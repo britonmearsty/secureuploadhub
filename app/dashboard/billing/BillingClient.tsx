@@ -268,7 +268,7 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                             <button
                                                                 onClick={handleCancelSubscription}
                                                                 disabled={canceling}
-                                                                className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors border border-white/10"
+                                                                className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
                                                             >
                                                                 {canceling ? "Processing..." : "Cancel Subscription"}
                                                             </button>
@@ -328,7 +328,8 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                     {activeTab === "plans" && (
                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                             {plans.map((plan) => {
-                                                const isCurrent = subscription?.plan.id === plan.id
+                                                const isCurrent = subscription?.plan.id === plan.id || (subscription === null && plan.id === "free")
+                                                const isFreePlan = plan.id === "free"
                                                 return (
                                                     <div
                                                         key={plan.id}
@@ -360,8 +361,8 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                         </ul>
                                                         <button
                                                             onClick={() => handleSubscribe(plan.id)}
-                                                            disabled={isCurrent || subscribing === plan.id}
-                                                            className={`w-full py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${isCurrent
+                                                            disabled={isCurrent || subscribing === plan.id || isFreePlan}
+                                                            className={`w-full py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${isCurrent || isFreePlan
                                                                 ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                                                                 : "bg-slate-900 hover:bg-slate-800 text-white shadow-sm active:scale-95"
                                                                 }`}
@@ -370,6 +371,8 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                                 <Clock className="w-4 h-4 animate-spin" />
                                                             ) : isCurrent ? (
                                                                 "Current Plan"
+                                                            ) : isFreePlan ? (
+                                                                "Free Plan"
                                                             ) : (
                                                                 <>Upgrade Now <ArrowUpRight className="w-4 h-4" /></>
                                                             )}

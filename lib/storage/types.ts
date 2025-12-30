@@ -100,5 +100,13 @@ export interface CloudStorageService {
     accessToken: string,
     fileId: string
   ): Promise<{ data: ReadableStream | Buffer; mimeType: string; fileName: string }>
+
+  /**
+   * Delete a file from the storage
+   */
+  deleteFile(
+    accessToken: string,
+    fileId: string
+  ): Promise<void>
 }
 

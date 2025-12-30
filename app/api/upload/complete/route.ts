@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma"
 import { sendUploadNotification } from "@/lib/email"
 import { jwtVerify } from "jose"
 import { revalidatePath } from "next/cache"
+import { invalidateCache, getUserDashboardKey, getUserUploadsKey, getUserStatsKey, getUserPortalsKey } from "@/lib/cache"
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.PORTAL_PASSWORD_SECRET || process.env.NEXTAUTH_SECRET || "default-secret-change-me"
@@ -106,6 +107,16 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    // Invalidate all relevant caches for this user
+    const userId = portal.userId
+    await Promise.all([
+      invalidateCache(getUserDashboardKey(userId)),
+      invalidateCache(getUserUploadsKey(userId)),
+      invalidateCache(getUserStatsKey(userId)),
+      invalidateCache(getUserPortalsKey(userId))
+    ])
+
+    // Also revalidate dashboard paths
     revalidatePath("/dashboard")
 
     return NextResponse.json({

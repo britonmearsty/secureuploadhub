@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
     Cloud,
@@ -13,19 +13,72 @@ import {
     Zap,
     LayoutGrid,
     Search,
-    ArrowUpRight
+    ArrowUpRight,
+    Loader2
 } from "lucide-react"
 import ConnectedAccounts from "../settings/components/ConnectedAccounts"
 
 export default function IntegrationsClient() {
     const [activeTab, setActiveTab] = useState("available")
     const [searchQuery, setSearchQuery] = useState("")
+    const [syncSettings, setSyncSettings] = useState({
+        autoSync: true,
+        deleteAfterSync: false,
+        syncInterval: 3600
+    })
+    const [savingSettings, setSavingSettings] = useState(false)
+    const [loadingSettings, setLoadingSettings] = useState(true)
 
     const tabs = [
         { id: "available", name: "Available", icon: LayoutGrid, description: "Explore new integrations" },
         { id: "connected", name: "Connected", icon: Link, description: "Manage your active connections" },
         { id: "settings", name: "Sync Settings", icon: Settings2, description: "Configure how data syncs" },
     ]
+
+    // Load sync settings on mount
+    useEffect(() => {
+        async function loadSyncSettings() {
+            try {
+                const res = await fetch("/api/storage/sync-settings")
+                if (res.ok) {
+                    const data = await res.json()
+                    setSyncSettings({
+                        autoSync: data.autoSync ?? true,
+                        deleteAfterSync: data.deleteAfterSync ?? false,
+                        syncInterval: data.syncInterval ?? 3600
+                    })
+                }
+            } catch (error) {
+                console.error("Error loading sync settings:", error)
+            } finally {
+                setLoadingSettings(false)
+            }
+        }
+
+        loadSyncSettings()
+    }, [])
+
+    async function saveSyncSettings() {
+        setSavingSettings(true)
+        try {
+            const res = await fetch("/api/storage/sync-settings", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(syncSettings)
+            })
+
+            if (res.ok) {
+                // Success - could add a toast notification here
+                console.log("Sync settings saved")
+            } else {
+                console.error("Failed to save sync settings")
+            }
+        } catch (error) {
+            console.error("Error saving sync settings:", error)
+        } finally {
+            setSavingSettings(false)
+        }
+    }
 
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
@@ -46,8 +99,8 @@ export default function IntegrationsClient() {
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
-                                            ? "bg-white shadow-sm border border-slate-200 text-slate-900"
-                                            : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                                        ? "bg-white shadow-sm border border-slate-200 text-slate-900"
+                                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                                         }`}
                                 >
                                     <Icon className={`w-5 h-5 ${isActive ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
@@ -109,6 +162,7 @@ export default function IntegrationsClient() {
                                                     icon={<GoogleDriveIcon />}
                                                     category="Storage"
                                                     status="disconnected"
+                                                    provider="google"
                                                 />
                                                 <IntegrationCard
                                                     name="Dropbox"
@@ -116,6 +170,7 @@ export default function IntegrationsClient() {
                                                     icon={<DropboxIcon />}
                                                     category="Storage"
                                                     status="disconnected"
+                                                    provider="dropbox"
                                                 />
                                                 <IntegrationCard
                                                     name="Box"
@@ -144,21 +199,39 @@ export default function IntegrationsClient() {
                                     {activeTab === "settings" && (
                                         <div className="space-y-8">
                                             <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100">
-                                                <h3 className="font-semibold text-slate-900 mb-4">Default Synchronization</h3>
-                                                <div className="space-y-4">
+                                                <h3 className="font-semibold text-slate-900 mb-6">Default Synchronization</h3>
+                                                <div className="space-y-5">
                                                     <div className="flex items-center justify-between">
                                                         <div>
                                                             <p className="text-sm font-medium text-slate-900">Auto-sync new uploads</p>
                                                             <p className="text-xs text-slate-500">Automatically push files to connected storage as they arrive.</p>
                                                         </div>
-                                                        <Switch checked={true} />
+                                                        <Switch
+                                                            checked={syncSettings.autoSync}
+                                                            onChange={(value) => setSyncSettings({ ...syncSettings, autoSync: value })}
+                                                        />
                                                     </div>
                                                     <div className="flex items-center justify-between">
                                                         <div>
                                                             <p className="text-sm font-medium text-slate-900">Delete from SecureUpload after sync</p>
                                                             <p className="text-xs text-slate-500">Free up local space once file is safely in your cloud.</p>
                                                         </div>
-                                                        <Switch checked={false} />
+                                                        <Switch
+                                                            checked={syncSettings.deleteAfterSync}
+                                                            onChange={(value) => setSyncSettings({ ...syncSettings, deleteAfterSync: value })}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-slate-900 mb-2">Sync Interval (seconds)</label>
+                                                        <input
+                                                            type="number"
+                                                            min="300"
+                                                            step="300"
+                                                            value={syncSettings.syncInterval}
+                                                            onChange={(e) => setSyncSettings({ ...syncSettings, syncInterval: parseInt(e.target.value) })}
+                                                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 outline-none"
+                                                        />
+                                                        <p className="text-xs text-slate-500 mt-1">Minimum 5 minutes (300 seconds)</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -172,6 +245,21 @@ export default function IntegrationsClient() {
                                                     </p>
                                                 </div>
                                             </div>
+
+                                            <button
+                                                onClick={saveSyncSettings}
+                                                disabled={savingSettings}
+                                                className="w-full px-6 py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                                            >
+                                                {savingSettings ? (
+                                                    <>
+                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                        Saving...
+                                                    </>
+                                                ) : (
+                                                    "Save Settings"
+                                                )}
+                                            </button>
                                         </div>
                                     )}
                                 </div>
@@ -184,7 +272,18 @@ export default function IntegrationsClient() {
     )
 }
 
-function IntegrationCard({ name, description, icon, category, status }: any) {
+function IntegrationCard({ name, description, icon, category, status, provider }: any) {
+    const [configuringProvider, setConfiguringProvider] = useState<string | null>(null)
+
+    const handleConfigure = async () => {
+        if (!provider) return
+
+        setConfiguringProvider(provider)
+        // This will trigger the OAuth flow via signIn
+        const { signIn: nextAuthSignIn } = await import("next-auth/react")
+        nextAuthSignIn(provider, { callbackUrl: "/dashboard/integrations?tab=connected" })
+    }
+
     return (
         <div className="group p-6 rounded-2xl border border-slate-100 bg-white hover:border-slate-200 hover:shadow-sm transition-all flex flex-col">
             <div className="flex justify-between items-start mb-4">
@@ -200,26 +299,42 @@ function IntegrationCard({ name, description, icon, category, status }: any) {
             <h4 className="font-bold text-slate-900">{name}</h4>
             <p className="text-xs text-slate-500 mt-1 mb-6 flex-1">{description}</p>
             <button
-                disabled={status === 'coming-soon'}
+                onClick={handleConfigure}
+                disabled={status === 'coming-soon' || configuringProvider === provider}
                 className={`w-full py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${status === 'coming-soon'
-                        ? "bg-slate-50 text-slate-300 cursor-not-allowed"
-                        : "bg-slate-900 text-white hover:bg-slate-800 shadow-sm active:scale-95"
+                    ? "bg-slate-50 text-slate-300 cursor-not-allowed"
+                    : "bg-slate-900 text-white hover:bg-slate-800 shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                     }`}
             >
-                {status === 'coming-soon' ? 'Coming Soon' : 'Configure Account'}
-                {status !== 'coming-soon' && <ArrowUpRight className="w-4 h-4" />}
+                {configuringProvider === provider ? (
+                    <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Connecting...
+                    </>
+                ) : (
+                    <>
+                        {status === 'coming-soon' ? 'Coming Soon' : 'Configure Account'}
+                        {status !== 'coming-soon' && <ArrowUpRight className="w-4 h-4" />}
+                    </>
+                )}
             </button>
         </div>
     )
 }
 
-function Switch({ checked }: { checked: boolean }) {
+function Switch({ checked, onChange }: { checked: boolean; onChange?: (value: boolean) => void }) {
     return (
-        <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${checked ? 'bg-slate-900' : 'bg-slate-200'
-            }`}>
+        <button
+            onClick={() => onChange?.(!checked)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${checked ? 'bg-slate-900' : 'bg-slate-200'
+                }`}
+            type="button"
+            role="switch"
+            aria-checked={checked}
+        >
             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'
                 }`} />
-        </div>
+        </button>
     )
 }
 
