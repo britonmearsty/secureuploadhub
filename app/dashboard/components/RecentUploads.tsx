@@ -56,14 +56,7 @@ export default function RecentUploads({ uploads }: RecentUploadsProps) {
   }
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-      <div className="p-6 border-b border-slate-100 flex items-center bg-slate-50/30">
-        <div className="flex items-center gap-2">
-          <History className="w-5 h-5 text-slate-400" />
-          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900">Recent Activity</h3>
-        </div>
-      </div>
-
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="divide-y divide-slate-100">
         {uploads.length > 0 ? (
           uploads.map((upload, index) => (

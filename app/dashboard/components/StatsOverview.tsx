@@ -101,32 +101,38 @@ export default function StatsOverview({ initialStats, onStatsUpdate }: StatsOver
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       {statCards.map((card, index) => {
         const Icon = card.icon
         return (
           <motion.div
             key={index}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.1 }}
-            className="group relative bg-white rounded-3xl border border-slate-200 p-6 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/50 transition-all overflow-hidden"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1, duration: 0.4 }}
+            className="group relative bg-white rounded-2xl border border-slate-100 p-6 hover:border-slate-200 hover:shadow-xl hover:shadow-slate-200/40 transition-all duration-300"
           >
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 relative z-10">
               <div className="flex items-center justify-between">
-                <div className={`p-2 rounded-xl ${card.bg} ${card.color}`}>
+                <div className={`p-2.5 rounded-xl ${card.bg} ${card.color} bg-opacity-50`}>
                   <Icon className="w-5 h-5" />
                 </div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{card.trend}</span>
+                {card.trend && (
+                  <span className="text-xs font-semibold text-slate-500 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                    {card.trend}
+                  </span>
+                )}
               </div>
+
               <div>
-                <p className="text-3xl font-black text-slate-900 tracking-tight">{card.value}</p>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">{card.title}</p>
+                <p className="text-3xl font-bold text-slate-900 tracking-tighter tabular-nums">
+                  {card.value}
+                </p>
+                <p className="text-sm font-medium text-slate-500 mt-1">
+                  {card.title}
+                </p>
               </div>
             </div>
-
-            {/* Subtle background decoration */}
-            <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-slate-50 rounded-full blur-2xl group-hover:bg-slate-100 transition-colors" />
           </motion.div>
         )
       })}
