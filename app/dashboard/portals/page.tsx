@@ -2,6 +2,12 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import prisma from "@/lib/prisma"
 import PortalsClient from "./PortalsClient"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "My Portals | Secure Upload Hub",
+  description: "Manage your secure file collection portals, track uploads, and configure security settings.",
+}
 
 export default async function PortalsPage() {
   const session = await auth()

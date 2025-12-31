@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
       id: true,
       fileName: true,
       fileSize: true,
+      mimeType: true,
       createdAt: true,
       portal: {
         select: {

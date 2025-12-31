@@ -28,14 +28,15 @@ export default function IntegrationsClient() {
     })
     const [savingSettings, setSavingSettings] = useState(false)
     const [loadingSettings, setLoadingSettings] = useState(true)
+    const [connectedAccounts, setConnectedAccounts] = useState<string[]>([])
 
     const tabs = [
-        { id: "available", name: "Available", icon: LayoutGrid, description: "Explore new integrations" },
-        { id: "connected", name: "Connected", icon: Link, description: "Manage your active connections" },
-        { id: "settings", name: "Sync Settings", icon: Settings2, description: "Configure how data syncs" },
+        { id: "available", name: "Available", icon: LayoutGrid, description: "Browse and connect cloud storage providers" },
+        { id: "connected", name: "Connected", icon: Link, description: "View and manage connected storage accounts" },
+        { id: "settings", name: "Sync Settings", icon: Settings2, description: "Customize automatic file synchronization" },
     ]
 
-    // Load sync settings on mount
+    // Load sync settings and connected accounts on mount
     useEffect(() => {
         async function loadSyncSettings() {
             try {
@@ -55,7 +56,21 @@ export default function IntegrationsClient() {
             }
         }
 
+        async function loadConnectedAccounts() {
+            try {
+                const res = await fetch("/api/storage/accounts")
+                if (res.ok) {
+                    const data = await res.json()
+                    const connected = data.filter((a: any) => a.isConnected).map((a: any) => a.provider)
+                    setConnectedAccounts(connected)
+                }
+            } catch (error) {
+                console.error("Error loading connected accounts:", error)
+            }
+        }
+
         loadSyncSettings()
+        loadConnectedAccounts()
     }, [])
 
     async function saveSyncSettings() {
@@ -83,8 +98,8 @@ export default function IntegrationsClient() {
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Integrations</h1>
-                <p className="text-slate-500 mt-1 text-lg">Connect SecureUpload with your favorite tools and cloud storage.</p>
+                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Cloud Storage Integrations</h1>
+                <p className="text-slate-500 mt-1 text-lg">Seamlessly connect your cloud storage providers to automatically sync and backup uploaded files.</p>
             </div>
 
             <div className="flex flex-col lg:flex-row gap-8">
@@ -163,6 +178,7 @@ export default function IntegrationsClient() {
                                                     category="Storage"
                                                     status="disconnected"
                                                     provider="google"
+                                                    isConnected={connectedAccounts.includes("google")}
                                                 />
                                                 <IntegrationCard
                                                     name="Dropbox"
@@ -171,6 +187,7 @@ export default function IntegrationsClient() {
                                                     category="Storage"
                                                     status="disconnected"
                                                     provider="dropbox"
+                                                    isConnected={connectedAccounts.includes("dropbox")}
                                                 />
                                                 <IntegrationCard
                                                     name="Box"
@@ -199,12 +216,12 @@ export default function IntegrationsClient() {
                                     {activeTab === "settings" && (
                                         <div className="space-y-8">
                                             <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100">
-                                                <h3 className="font-semibold text-slate-900 mb-6">Default Synchronization</h3>
+                                                <h3 className="font-semibold text-slate-900 mb-6">Automatic Synchronization Settings</h3>
                                                 <div className="space-y-5">
                                                     <div className="flex items-center justify-between">
                                                         <div>
-                                                            <p className="text-sm font-medium text-slate-900">Auto-sync new uploads</p>
-                                                            <p className="text-xs text-slate-500">Automatically push files to connected storage as they arrive.</p>
+                                                            <p className="text-sm font-medium text-slate-900">Enable auto-sync for new uploads</p>
+                                                            <p className="text-xs text-slate-500">Automatically upload files to connected cloud storage when received.</p>
                                                         </div>
                                                         <Switch
                                                             checked={syncSettings.autoSync}
@@ -213,8 +230,8 @@ export default function IntegrationsClient() {
                                                     </div>
                                                     <div className="flex items-center justify-between">
                                                         <div>
-                                                            <p className="text-sm font-medium text-slate-900">Delete from SecureUpload after sync</p>
-                                                            <p className="text-xs text-slate-500">Free up local space once file is safely in your cloud.</p>
+                                                            <p className="text-sm font-medium text-slate-900">Delete local files after successful sync</p>
+                                                            <p className="text-xs text-slate-500">Automatically remove files from SecureUpload storage after cloud backup.</p>
                                                         </div>
                                                         <Switch
                                                             checked={syncSettings.deleteAfterSync}
@@ -222,16 +239,30 @@ export default function IntegrationsClient() {
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-sm font-medium text-slate-900 mb-2">Sync Interval (seconds)</label>
+                                                        <label className="block text-sm font-medium text-slate-900 mb-2">Sync interval (seconds)</label>
                                                         <input
                                                             type="number"
                                                             min="300"
+                                                            max="86400"
                                                             step="300"
                                                             value={syncSettings.syncInterval}
-                                                            onChange={(e) => setSyncSettings({ ...syncSettings, syncInterval: parseInt(e.target.value) })}
+                                                            onChange={(e) => {
+                                                                const value = parseInt(e.target.value)
+                                                                if (value >= 300 && value <= 86400) {
+                                                                    setSyncSettings({ ...syncSettings, syncInterval: value })
+                                                                }
+                                                            }}
+                                                            onBlur={(e) => {
+                                                                const value = parseInt(e.target.value)
+                                                                if (value < 300) {
+                                                                    setSyncSettings({ ...syncSettings, syncInterval: 300 })
+                                                                } else if (value > 86400) {
+                                                                    setSyncSettings({ ...syncSettings, syncInterval: 86400 })
+                                                                }
+                                                            }}
                                                             className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 outline-none"
                                                         />
-                                                        <p className="text-xs text-slate-500 mt-1">Minimum 5 minutes (300 seconds)</p>
+                                                        <p className="text-xs text-slate-500 mt-1">Set between 5 minutes (300s) and 24 hours (86400s)</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -239,9 +270,9 @@ export default function IntegrationsClient() {
                                             <div className="p-6 rounded-2xl bg-amber-50 border border-amber-100 flex gap-4">
                                                 <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
                                                 <div>
-                                                    <p className="text-sm font-semibold text-amber-900">Storage Optimization</p>
+                                                    <p className="text-sm font-semibold text-amber-900">Storage Optimization Tip</p>
                                                     <p className="text-xs text-amber-700 mt-1">
-                                                        Your current plan includes 1GB of storage. Using auto-sync with deletion can help you stay within limits.
+                                                        Enable auto-sync with automatic deletion to maximize your storage capacity and ensure files are safely backed up to the cloud.
                                                     </p>
                                                 </div>
                                             </div>
@@ -272,11 +303,11 @@ export default function IntegrationsClient() {
     )
 }
 
-function IntegrationCard({ name, description, icon, category, status, provider }: any) {
+function IntegrationCard({ name, description, icon, category, status, provider, isConnected }: any) {
     const [configuringProvider, setConfiguringProvider] = useState<string | null>(null)
 
     const handleConfigure = async () => {
-        if (!provider) return
+        if (!provider || isConnected) return
 
         setConfiguringProvider(provider)
         // This will trigger the OAuth flow via signIn
@@ -292,18 +323,20 @@ function IntegrationCard({ name, description, icon, category, status, provider }
                 </div>
                 {status === 'coming-soon' ? (
                     <span className="text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-400 px-2 py-1 rounded">Coming Soon</span>
+                ) : isConnected ? (
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-600 px-2 py-1 rounded">Connected</span>
                 ) : (
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-600 px-2 py-1 rounded">Available</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-600 px-2 py-1 rounded">Available</span>
                 )}
             </div>
             <h4 className="font-bold text-slate-900">{name}</h4>
             <p className="text-xs text-slate-500 mt-1 mb-6 flex-1">{description}</p>
             <button
                 onClick={handleConfigure}
-                disabled={status === 'coming-soon' || configuringProvider === provider}
-                className={`w-full py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${status === 'coming-soon'
-                    ? "bg-slate-50 text-slate-300 cursor-not-allowed"
-                    : "bg-slate-900 text-white hover:bg-slate-800 shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={status === 'coming-soon' || configuringProvider === provider || isConnected}
+                className={`w-full py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${status === 'coming-soon' || isConnected
+                        ? "bg-slate-50 text-slate-400 cursor-not-allowed border border-slate-200"
+                        : "bg-slate-900 text-white hover:bg-slate-800 shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                     }`}
             >
                 {configuringProvider === provider ? (
@@ -313,8 +346,8 @@ function IntegrationCard({ name, description, icon, category, status, provider }
                     </>
                 ) : (
                     <>
-                        {status === 'coming-soon' ? 'Coming Soon' : 'Configure Account'}
-                        {status !== 'coming-soon' && <ArrowUpRight className="w-4 h-4" />}
+                        {status === 'coming-soon' ? 'Coming Soon' : isConnected ? 'Already Connected' : 'Configure Account'}
+                        {status !== 'coming-soon' && !isConnected && <ArrowUpRight className="w-4 h-4" />}
                     </>
                 )}
             </button>

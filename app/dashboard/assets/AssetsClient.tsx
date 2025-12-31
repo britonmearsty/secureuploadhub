@@ -65,24 +65,7 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
         { id: "stats", name: "Insights", icon: PieChart, description: "Storage usage and distribution" },
     ]
 
-    const filteredUploads = initialUploads.filter(u =>
-        u.fileName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        u.portal.name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
 
-    const stats = useMemo(() => {
-        const totalSize = initialUploads.reduce((acc, u) => acc + u.fileSize, 0)
-        const byProvider = initialUploads.reduce((acc, u) => {
-            acc[u.storageProvider] = (acc[u.storageProvider] || 0) + 1
-            return acc
-        }, {} as Record<string, number>)
-
-        return {
-            totalFiles: initialUploads.length,
-            totalSizeMB: (totalSize / (1024 * 1024)).toFixed(2),
-            byProvider
-        }
-    }, [initialUploads])
 
     const formatFileSize = (bytes: number) => {
         if (bytes === 0) return '0 Bytes'
@@ -100,38 +83,34 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
         }
     }
 
-    const getFileIcon = (fileName: string) => {
+    const getFileIcon = (fileName: string, mimeType: string) => {
         const ext = fileName.split('.').pop()?.toLowerCase() || ''
         const iconProps = "w-5 h-5"
 
-        // Document types
+        // Check mime types first
+        if (mimeType?.startsWith('image/')) return <FileImage className={`${iconProps} text-pink-500`} />
+        if (mimeType?.startsWith('audio/')) return <Music className={`${iconProps} text-cyan-500`} />
+        if (mimeType?.startsWith('video/')) return <Video className={`${iconProps} text-indigo-500`} />
+        if (mimeType === 'application/pdf') return <File className={`${iconProps} text-red-500`} />
+        if (mimeType?.includes('spreadsheet') || mimeType?.includes('excel') || mimeType?.includes('csv'))
+            return <FileText className={`${iconProps} text-green-500`} />
+        if (mimeType?.includes('presentation') || mimeType?.includes('powerpoint'))
+            return <FileText className={`${iconProps} text-orange-500`} />
+        if (mimeType?.includes('word') || mimeType?.includes('document'))
+            return <FileText className={`${iconProps} text-blue-500`} />
+        if (mimeType?.includes('json') || mimeType?.includes('xml'))
+            return <FileJson className={`${iconProps} text-yellow-600`} />
+        if (mimeType?.includes('zip') || mimeType?.includes('compressed') || mimeType?.includes('tar') || mimeType?.includes('archive'))
+            return <Archive className={`${iconProps} text-amber-600`} />
+
+        // Fallback to extensions
         if (['doc', 'docx'].includes(ext)) return <FileText className={`${iconProps} text-blue-500`} />
-        if (ext === 'pdf') return <File className={`${iconProps} text-red-500`} />
         if (['xls', 'xlsx', 'csv'].includes(ext)) return <FileText className={`${iconProps} text-green-500`} />
         if (['ppt', 'pptx'].includes(ext)) return <FileText className={`${iconProps} text-orange-500`} />
 
-        // Code/JSON files
-        if (['json', 'xml'].includes(ext)) return <FileJson className={`${iconProps} text-yellow-600`} />
         if (['py', 'js', 'ts', 'tsx', 'jsx', 'java', 'cpp', 'c', 'cs', 'rb', 'php', 'go', 'rs', 'sh', 'bash', 'html', 'css', 'scss'].includes(ext))
             return <FileCode className={`${iconProps} text-purple-500`} />
 
-        // Image files
-        if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(ext))
-            return <FileImage className={`${iconProps} text-pink-500`} />
-
-        // Audio files
-        if (['mp3', 'wav', 'flac', 'aac', 'm4a'].includes(ext))
-            return <Music className={`${iconProps} text-cyan-500`} />
-
-        // Video files
-        if (['mp4', 'avi', 'mov', 'mkv', 'wmv', 'flv', 'webm'].includes(ext))
-            return <Video className={`${iconProps} text-indigo-500`} />
-
-        // Archive files
-        if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext))
-            return <Archive className={`${iconProps} text-amber-600`} />
-
-        // Default
         return <File className={`${iconProps} text-slate-400`} />
     }
 
@@ -144,11 +123,65 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
         })
     }
 
+    // Delete Modal State
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
+    const [fileToDelete, setFileToDelete] = useState<FileUpload | null>(null)
+    const [isDeleting, setIsDeleting] = useState(false)
+    const [uploads, setUploads] = useState(initialUploads)
+
+    const handleDeleteRequest = (file: FileUpload) => {
+        setFileToDelete(file)
+        setShowDeleteModal(true)
+    }
+
+    const confirmDelete = async () => {
+        if (!fileToDelete) return
+
+        setIsDeleting(true)
+        try {
+            const res = await fetch(`/api/uploads/${fileToDelete.id}`, {
+                method: 'DELETE',
+            })
+            if (res.ok) {
+                setUploads(prev => prev.filter(u => u.id !== fileToDelete.id))
+                setShowDeleteModal(false)
+                setFileToDelete(null)
+            } else {
+                alert('Failed to delete file')
+            }
+        } catch (error) {
+            alert('Error deleting file')
+        } finally {
+            setIsDeleting(false)
+        }
+    }
+
+    // Update filtered uploads to use local state 'uploads' instead of prop 'initialUploads'
+    const filteredUploads = uploads.filter(u =>
+        u.fileName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.portal.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+
+    // Update stats to depend on 'uploads'
+    const stats = useMemo(() => {
+        const totalSize = uploads.reduce((acc, u) => acc + u.fileSize, 0)
+        const byProvider = uploads.reduce((acc, u) => {
+            acc[u.storageProvider] = (acc[u.storageProvider] || 0) + 1
+            return acc
+        }, {} as Record<string, number>)
+
+        return {
+            totalFiles: uploads.length,
+            totalSizeMB: (totalSize / (1024 * 1024)).toFixed(2),
+            byProvider
+        }
+    }, [uploads])
+
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Assets</h1>
-                <p className="text-slate-500 mt-1 text-lg">Centralized access to all files collected via your portals.</p>
+                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Secure Asset Vault</h1>
+                <p className="text-slate-500 mt-1 text-lg">Centralized file management for all your client data and documents.</p>
             </div>
 
             <div className="flex flex-col lg:flex-row gap-8">
@@ -265,16 +298,16 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                                         <div className={viewMode === "list" ? "divide-y divide-slate-100" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6"}>
                                             {filteredUploads.length > 0 ? (
                                                 filteredUploads.map((file) => (
-                                                    <FileItem key={file.id} file={file} viewMode={viewMode} formatFileSize={formatFileSize} getProviderIcon={getProviderIcon} getFileIcon={getFileIcon} />
+                                                    <FileItem key={file.id} file={file} viewMode={viewMode} formatFileSize={formatFileSize} getProviderIcon={getProviderIcon} getFileIcon={getFileIcon} onDelete={handleDeleteRequest} />
                                                 ))
                                             ) : (
                                                 <div className="text-center py-24 px-6 col-span-full">
                                                     <div className="p-4 bg-slate-50 rounded-full w-fit mx-auto mb-4">
                                                         <Inbox className="w-8 h-8 text-slate-200" />
                                                     </div>
-                                                    <h4 className="text-slate-900 font-bold mb-1 text-lg">Empty Vault</h4>
+                                                    <h4 className="text-slate-900 font-bold mb-1 text-lg">No Assets Found</h4>
                                                     <p className="text-slate-500 text-sm max-w-xs mx-auto">
-                                                        No assets match your search or haven't been uploaded yet.
+                                                        Your vault is empty or no files match your current search criteria.
                                                     </p>
                                                 </div>
                                             )}
@@ -298,9 +331,9 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                                                             </div>
                                                             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{providerFiles.length} items</span>
                                                         </div>
-                                                        <div className="divide-y divide-slate-100/50">
+                                                        <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4" : "divide-y divide-slate-100/50"}>
                                                             {providerFiles.map(file => (
-                                                                <FileItem key={file.id} file={file} viewMode="list" formatFileSize={formatFileSize} getProviderIcon={getProviderIcon} getFileIcon={getFileIcon} />
+                                                                <FileItem key={file.id} file={file} viewMode={viewMode} formatFileSize={formatFileSize} getProviderIcon={getProviderIcon} getFileIcon={getFileIcon} onDelete={handleDeleteRequest} />
                                                             ))}
                                                         </div>
                                                     </div>
@@ -321,7 +354,7 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                                             <p className="text-slate-500 text-sm max-w-md mx-auto mb-10">
                                                 Monitor how your storage is distributed across your connected cloud ecosystems.
                                             </p>
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+                                            <div className={viewMode === 'list' ? "flex flex-col gap-4 max-w-2xl mx-auto" : "grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto"}>
                                                 <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
                                                     <p className="text-3xl font-black text-slate-900">{stats.totalFiles}</p>
                                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Files Collected</p>
@@ -351,9 +384,8 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
     )
 }
 
-function FileItem({ file, viewMode, formatFileSize, getProviderIcon, getFileIcon }: any) {
+function FileItem({ file, viewMode, formatFileSize, getProviderIcon, getFileIcon, onDelete }: any) {
     const isGrid = viewMode === "grid"
-    const [isDeleting, setIsDeleting] = useState(false)
 
     const handleDownload = (e: React.MouseEvent) => {
         e.stopPropagation()
@@ -365,25 +397,9 @@ function FileItem({ file, viewMode, formatFileSize, getProviderIcon, getFileIcon
         document.body.removeChild(link)
     }
 
-    const handleDelete = async (e: React.MouseEvent) => {
+    const handleDelete = (e: React.MouseEvent) => {
         e.stopPropagation()
-        if (!confirm(`Delete "${file.fileName}"?`)) return
-
-        setIsDeleting(true)
-        try {
-            const res = await fetch(`/api/uploads/${file.id}`, {
-                method: 'DELETE',
-            })
-            if (res.ok) {
-                window.location.reload()
-            } else {
-                alert('Failed to delete file')
-                setIsDeleting(false)
-            }
-        } catch (error) {
-            alert('Error deleting file')
-            setIsDeleting(false)
-        }
+        if (onDelete) onDelete(file)
     }
 
     const clientIdentifier = file.clientName || file.clientEmail || "Unknown Client"
@@ -393,13 +409,13 @@ function FileItem({ file, viewMode, formatFileSize, getProviderIcon, getFileIcon
             <div className="group bg-white rounded-2xl border border-slate-100 p-4 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/40 transition-all">
                 <div className="flex justify-between items-start mb-4">
                     <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 group-hover:bg-white transition-colors">
-                        {getFileIcon(file.fileName)}
+                        {getFileIcon(file.fileName, file.mimeType)}
                     </div>
                     <div className="flex gap-1">
                         <button onClick={handleDownload} className="p-2 text-slate-300 hover:text-slate-900 hover:bg-white rounded-lg transition-all">
                             <Download className="w-4 h-4" />
                         </button>
-                        <button onClick={handleDelete} disabled={isDeleting} className="p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50">
+                        <button onClick={handleDelete} className="p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
                             <Trash2 className="w-4 h-4" />
                         </button>
                     </div>
@@ -426,7 +442,7 @@ function FileItem({ file, viewMode, formatFileSize, getProviderIcon, getFileIcon
     return (
         <div className="flex items-center gap-4 p-4 hover:bg-slate-50/50 transition-colors group">
             <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-white border border-transparent group-hover:border-slate-200 transition-all shrink-0">
-                {getFileIcon(file.fileName)}
+                {getFileIcon(file.fileName, file.mimeType)}
             </div>
             <div className="flex-1 min-w-0">
                 <h4 className="text-sm font-bold text-slate-900 truncate" title={file.fileName}>{file.fileName}</h4>
@@ -457,7 +473,7 @@ function FileItem({ file, viewMode, formatFileSize, getProviderIcon, getFileIcon
                 <button onClick={handleDownload} className="p-2 text-slate-300 hover:text-slate-900 hover:bg-white rounded-xl border border-transparent hover:border-slate-200 transition-all">
                     <Download className="w-4 h-4" />
                 </button>
-                <button onClick={handleDelete} disabled={isDeleting} className="p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl border border-transparent hover:border-red-200 transition-all disabled:opacity-50">
+                <button onClick={handleDelete} className="p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl border border-transparent hover:border-red-200 transition-all">
                     <Trash2 className="w-4 h-4" />
                 </button>
             </div>

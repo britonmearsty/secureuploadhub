@@ -18,7 +18,11 @@ import {
     MoreVertical,
     Mail,
     Filter,
-    RefreshCw
+    RefreshCw,
+    FileImage,
+    FileVideo,
+    FileAudio,
+    File as FileIcon
 } from "lucide-react"
 
 interface Client {
@@ -30,6 +34,7 @@ interface Client {
         date: string
         fileName: string
         portal: string
+        mimeType: string
     }
     uploadCount: number
     totalStorageBytes: number
@@ -94,11 +99,19 @@ export default function ClientsClient({ clients: initialClients }: ClientsClient
         window.location.href = mailtoLink
     }
 
+    const getFileIcon = (mimeType: string = "") => {
+        if (mimeType.startsWith("image/")) return <FileImage className="w-5 h-5 text-indigo-500" />
+        if (mimeType.startsWith("video/")) return <FileVideo className="w-5 h-5 text-pink-500" />
+        if (mimeType.startsWith("audio/")) return <FileAudio className="w-5 h-5 text-amber-500" />
+        if (mimeType.includes("pdf")) return <FileText className="w-5 h-5 text-red-500" />
+        return <FileIcon className="w-5 h-5 text-slate-400" />
+    }
+
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Clients</h1>
-                <p className="text-slate-500 mt-1 text-lg">Manage relationships and track files from your uploaders.</p>
+                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Client Directory</h1>
+                <p className="text-slate-500 mt-1 text-lg">Manage your client relationships, track recent file transfers, and monitor activity across all your portals.</p>
             </div>
 
             <div className="flex flex-col lg:flex-row gap-8">
@@ -226,7 +239,7 @@ export default function ClientsClient({ clients: initialClients }: ClientsClient
                                                     </div>
                                                     <h4 className="text-slate-900 font-semibold mb-1">No clients found</h4>
                                                     <p className="text-slate-500 text-sm max-w-xs mx-auto">
-                                                        Try adjusting your search or check back later once people start uploading.
+                                                        We couldn't find any clients matching your search. Try a different term or invite new clients to upload.
                                                     </p>
                                                 </div>
                                             )}
@@ -240,7 +253,7 @@ export default function ClientsClient({ clients: initialClients }: ClientsClient
                                                 .map((client) => (
                                                     <div key={client.key} className="p-5 flex gap-4 transition-colors hover:bg-slate-50/30">
                                                         <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                                                            <FileText className="w-5 h-5 text-slate-400" />
+                                                            {getFileIcon(client.lastUpload.mimeType)}
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <p className="text-sm text-slate-900">
@@ -268,7 +281,7 @@ export default function ClientsClient({ clients: initialClients }: ClientsClient
                                             </div>
                                             <h3 className="text-xl font-bold text-slate-900 mb-2">Detailed Insights</h3>
                                             <p className="text-slate-500 text-sm max-w-md mx-auto mb-8">
-                                                We're building advanced analytics to help you understand your client engagement better. Check back soon for growth charts and portal performance.
+                                                We are building advanced analytics to help you understand your client engagement better. Check back soon for growth charts and portal performance.
                                             </p>
                                             <div className="flex flex-wrap justify-center gap-4">
                                                 <div className="bg-slate-50 px-6 py-4 rounded-2xl border border-slate-100 min-w-[140px]">
@@ -357,15 +370,20 @@ export default function ClientsClient({ clients: initialClients }: ClientsClient
                                     ) : files.length > 0 ? (
                                         files.map((file) => (
                                             <div key={file.id} className="p-4 rounded-2xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50/50 transition-all flex items-center justify-between group">
-                                                <div className="min-w-0 pr-4">
-                                                    <p className="text-sm font-bold text-slate-900 truncate">{file.fileName}</p>
-                                                    <p className="text-xs text-slate-500 mt-0.5">
-                                                        {formatFileSize(file.fileSize)} · {new Date(file.createdAt).toLocaleDateString()}
-                                                    </p>
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100 group-hover:bg-white group-hover:shadow-sm transition-all shrink-0">
+                                                        {getFileIcon(file.mimeType)}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-bold text-slate-900 truncate">{file.fileName}</p>
+                                                        <p className="text-xs text-slate-500 mt-0.5">
+                                                            {formatFileSize(file.fileSize)} · {new Date(file.createdAt).toLocaleDateString()}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                                 <a
                                                     href={`/api/uploads/${file.id}/download`}
-                                                    className="w-10 h-10 bg-white shadow-sm border border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-900 hover:border-slate-300 transition-all group-hover:scale-105"
+                                                    className="w-10 h-10 bg-white shadow-sm border border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-900 hover:border-slate-300 transition-all group-hover:scale-105 shrink-0"
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                 >
@@ -387,7 +405,7 @@ export default function ClientsClient({ clients: initialClients }: ClientsClient
                                     Close
                                 </button>
                                 {selectedClient.email && (
-                                    <button 
+                                    <button
                                         onClick={() => handleContactClient(selectedClient)}
                                         className="px-6 py-2.5 bg-slate-900 text-white rounded-2xl text-sm font-bold hover:bg-slate-800 shadow-sm transition-all flex items-center gap-2"
                                     >
@@ -397,8 +415,9 @@ export default function ClientsClient({ clients: initialClients }: ClientsClient
                             </div>
                         </motion.div>
                     </div>
-                )}
-            </AnimatePresence>
-        </div>
+                )
+                }
+            </AnimatePresence >
+        </div >
     )
 }

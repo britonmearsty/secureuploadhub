@@ -2,6 +2,12 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import prisma from "@/lib/prisma"
 import ClientsClient from "./ClientsClient"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Client Directory | Secure Upload Hub",
+  description: "Manage your client relationships, track file uploads, and monitor shared documents across all your portals.",
+}
 
 export default async function ClientsPage() {
   const session = await auth()
@@ -22,6 +28,7 @@ export default async function ClientsPage() {
       clientEmail: true,
       fileName: true,
       fileSize: true,
+      mimeType: true,
       createdAt: true,
       portal: {
         select: {
@@ -39,7 +46,7 @@ export default async function ClientsPage() {
     name: string | null;
     email: string | null;
     portals: Set<string>;
-    lastUpload: { date: string; fileName: string; portal: string };
+    lastUpload: { date: string; fileName: string; portal: string; mimeType: string };
     uploadCount: number;
     totalStorageBytes: number;
   }>()
@@ -60,7 +67,8 @@ export default async function ClientsPage() {
         existing.lastUpload = {
           date: upload.createdAt.toISOString(),
           fileName: upload.fileName,
-          portal: upload.portal.name
+          portal: upload.portal.name,
+          mimeType: upload.mimeType
         }
       }
     } else {
@@ -71,7 +79,8 @@ export default async function ClientsPage() {
         lastUpload: {
           date: upload.createdAt.toISOString(),
           fileName: upload.fileName,
-          portal: upload.portal.name
+          portal: upload.portal.name,
+          mimeType: upload.mimeType
         },
         uploadCount: 1,
         totalStorageBytes: upload.fileSize

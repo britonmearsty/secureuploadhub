@@ -147,16 +147,11 @@ export default function ConnectedAccounts() {
             })}
 
             {connectedAccounts.length > 0 && (
-                <div className="mt-8 p-4 rounded-xl bg-slate-900 text-white flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-white/10 rounded-lg">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        </div>
-                        <p className="text-sm font-medium">Automatic sync is active for {connectedAccounts.length} account(s)</p>
+                <div className="mt-8 p-4 rounded-xl bg-slate-900 text-white flex items-center gap-3">
+                    <div className="p-2 bg-white/10 rounded-lg">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                     </div>
-                    <button className="text-xs font-bold text-slate-400 hover:text-white transition-colors">
-                        View Sync Log
-                    </button>
+                    <p className="text-sm font-medium">Automatic sync is active for {connectedAccounts.length} account{connectedAccounts.length > 1 ? 's' : ''}</p>
                 </div>
             )}
         </div>
