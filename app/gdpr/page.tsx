@@ -8,8 +8,13 @@ export const metadata = {
 
 export default function GDPRCompliance() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-300">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="min-h-screen bg-black text-slate-300 relative overflow-hidden">
+      {/* Fixed blurry glowing component */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="fixed -top-60 -left-60 w-[500px] h-[500px] bg-blue-600 rounded-full mix-blend-screen opacity-[0.08] blur-3xl"></div>
+        <div className="fixed -bottom-60 -right-60 w-[450px] h-[450px] bg-blue-500 rounded-full mix-blend-screen opacity-[0.05] blur-3xl"></div>
+      </div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 mb-8 transition-colors"
@@ -19,7 +24,7 @@ export default function GDPRCompliance() {
         </Link>
 
         <h1 className="text-4xl font-bold text-white mb-2">GDPR Compliance</h1>
-        <p className="text-sm text-slate-400 mb-12">Last updated: December 2024</p>
+        <p className="text-sm text-slate-400 mb-12">Last updated: December 31, 2025</p>
 
         <div className="space-y-8">
           <section>
@@ -131,7 +136,7 @@ export default function GDPRCompliance() {
             </p>
             <div className="bg-slate-800 rounded-lg p-6">
               <p className="font-semibold text-white mb-2">Contact us at:</p>
-              <p>Email: gdpr@secureuploadhub.com</p>
+              <p>Email: hello@secureuploadhub.com</p>
               <p className="text-sm text-slate-400 mt-2">Include "GDPR Request" in your subject line</p>
             </div>
           </section>
@@ -143,7 +148,7 @@ export default function GDPRCompliance() {
             </p>
             <div className="bg-slate-800 rounded-lg p-6">
               <p className="font-semibold text-white mb-2">Data Protection Officer</p>
-              <p>Email: dpo@secureuploadhub.com</p>
+              <p>Email: hello@secureuploadhub.com</p>
             </div>
           </section>
 
@@ -223,18 +228,26 @@ export default function GDPRCompliance() {
             <div className="bg-slate-800 rounded-lg p-6 space-y-4">
               <div>
                 <p className="font-semibold text-white mb-2">For GDPR-related inquiries:</p>
-                <p>Email: gdpr@secureuploadhub.com</p>
+                <p>Email: hello@secureuploadhub.com</p>
               </div>
               <div>
                 <p className="font-semibold text-white mb-2">For general inquiries:</p>
-                <p>Email: privacy@secureuploadhub.com</p>
+                <p>Email: hello@secureuploadhub.com</p>
               </div>
               <div>
                 <p className="font-semibold text-white mb-2">Data Protection Officer:</p>
-                <p>Email: dpo@secureuploadhub.com</p>
+                <p>Email: hello@secureuploadhub.com</p>
               </div>
             </div>
           </section>
+        </div>
+
+        <div className="mt-20 pt-8 border-t border-slate-700 flex items-center justify-center gap-6 text-sm text-slate-400 flex-wrap">
+          <Link href="/privacy" className="hover:text-slate-200 transition-colors">Privacy</Link>
+          <Link href="/terms" className="hover:text-slate-200 transition-colors">Terms</Link>
+          <Link href="/security" className="hover:text-slate-200 transition-colors">Security</Link>
+          <Link href="/cookie-policy" className="hover:text-slate-200 transition-colors">Cookies</Link>
+          <Link href="/gdpr" className="hover:text-slate-200 transition-colors">GDPR</Link>
         </div>
       </div>
     </div>
