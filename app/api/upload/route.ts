@@ -104,13 +104,13 @@ export async function POST(request: NextRequest) {
       "unknown"
     const userAgent = request.headers.get("user-agent") || "unknown"
 
-    // Read file into buffer
+    // Read file into buffer (consider streaming for very large files)
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
-    // Security Scan
+    // Security Scan (pass mimeType to skip safe file types)
     const { scanFile } = await import("@/lib/scanner")
-    const scanResult = await scanFile(buffer, file.name)
+    const scanResult = await scanFile(buffer, file.name, mimeType)
 
     if (scanResult.status === "infected") {
       console.warn(`Blocked upload of infected file: ${file.name} (${scanResult.threat})`)
