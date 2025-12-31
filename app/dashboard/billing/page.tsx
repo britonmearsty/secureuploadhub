@@ -4,6 +4,8 @@ import prisma from "@/lib/prisma"
 import BillingClient from "./BillingClient"
 import { FREE_PLAN, getUserBillingContext, getUserUsage } from "@/lib/billing"
 
+export const dynamic = "force-dynamic"
+
 export default async function BillingPage() {
   const session = await auth()
 

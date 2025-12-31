@@ -3,6 +3,8 @@ import { redirect } from "next/navigation"
 import prisma from "@/lib/prisma"
 import AssetsClient from "./AssetsClient"
 
+export const dynamic = "force-dynamic"
+
 export default async function AssetsPage() {
   const session = await auth()
 

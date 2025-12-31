@@ -41,45 +41,35 @@ const quickActions = [
 
 export default function QuickActions() {
   return (
-    <div className="mb-8">
-      <div className="flex items-center gap-2 mb-4">
-        <Zap className="w-5 h-5 text-slate-400" />
-        <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">Quick Actions</h3>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {quickActions.map((action, index) => {
-          const Icon = action.icon
-          return (
-            <motion.div
-              key={index}
-              whileHover={{ y: -4 }}
-              transition={{ duration: 0.2 }}
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      {quickActions.map((action, index) => {
+        const Icon = action.icon
+        return (
+          <motion.div
+            key={index}
+            whileHover={{ y: -4 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Link
+              href={action.href}
+              className="group bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 transition-all hover:shadow-md relative overflow-hidden"
             >
-              <Link
-                href={action.href}
-                className="group relative block p-5 bg-white rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/50 transition-all overflow-hidden"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`p-3 rounded-xl ${action.bg} ${action.accent} transition-colors`}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <ArrowUpRight className="w-4 h-4 text-slate-300 group-hover:text-slate-900 transition-colors" />
-                </div>
-
-                <div>
-                  <h4 className="font-bold text-slate-900 group-hover:text-slate-600 transition-colors">
-                    {action.title}
-                  </h4>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    {action.description}
-                  </p>
-                </div>
-              </Link>
-            </motion.div>
-          )
-        })}
-      </div>
+              <div className="absolute top-4 right-4 text-slate-600 dark:text-slate-400 opacity-30 group-hover:opacity-100 transition-opacity">
+                <ArrowUpRight className="w-4 h-4 transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              </div>
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${action.bg} ${action.accent} mb-4 group-hover:scale-110 transition-transform`}>
+                <Icon className="w-5 h-5" />
+              </div>
+              <h3 className="font-bold text-slate-900 dark:text-slate-100 mb-1">
+                {action.title}
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                {action.description}
+              </p>
+            </Link>
+          </motion.div>
+        )
+      })}
     </div>
   )
 }

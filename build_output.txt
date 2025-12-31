@@ -1,0 +1,27 @@
+
+> secureuploadhub@0.1.0 build
+> prisma generate && cross-env NEXT_TURBOPACK=0 next build
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma\schema.prisma.
+
+✔ Generated Prisma Client (7.2.0) to .\app\generated\prisma in 410ms
+
+⚠ `images.domains` is deprecated in favor of `images.remotePatterns`. Please update next.config.ts to protect your application from malicious users.
+▲ Next.js 16.1.0 (Turbopack)
+- Environments: .env
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 34.7s
+  Running TypeScript ...
+  Collecting page data using 3 workers ...
+  Generating static pages using 3 workers (0/45) ...
+  Generating static pages using 3 workers (11/45) 
+Error occurred prerendering page "/_not-found". Read more: https://nextjs.org/docs/messages/prerender-error
+Error [InvariantError]: Invariant: Expected workUnitAsyncStorage to have a store. This is a bug in Next.js.
+    at M (c:\Users\mears\Desktop\workspace\secureuploadhub\.next\server\chunks\ssr\a2001_next_dist_4072d1a6._.js:1:80420)
+    at bM (c:\Users\mears\Desktop\workspace\secureuploadhub\.next\server\chunks\ssr\a2001_next_dist_4072d1a6._.js:4:7729)
+Export encountered an error on /_not-found/page: /_not-found, exiting the build.
+⨯ Next.js build worker exited with code: 1 and signal: null

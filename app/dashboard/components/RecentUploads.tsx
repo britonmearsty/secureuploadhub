@@ -56,83 +56,68 @@ export default function RecentUploads({ uploads }: RecentUploadsProps) {
   }
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-      <div className="p-6 border-b border-slate-100 flex items-center bg-slate-50/30">
-        <div className="flex items-center gap-2">
-          <History className="w-5 h-5 text-slate-400" />
-          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900">Recent Activity</h3>
-        </div>
-      </div>
-
-      <div className="divide-y divide-slate-100">
+    <>
+      <div className="flex-1 p-8 flex flex-col items-center justify-center text-center min-h-[300px]">
         {uploads.length > 0 ? (
-          uploads.map((upload, index) => (
-            <motion.div
-              key={upload.id}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className="p-5 flex items-center gap-4 hover:bg-slate-50/50 transition-all group"
-            >
-              <div
-                className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border border-transparent group-hover:bg-white group-hover:border-slate-100 transition-all"
-                style={{ backgroundColor: upload.portal.primaryColor + "10" }}
+          <div className="w-full space-y-2">
+            {uploads.map((upload, index) => (
+              <motion.div
+                key={upload.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="p-4 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors rounded-lg group"
               >
-                <FileIcon className="w-5 h-5" style={{ color: upload.portal.primaryColor }} />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <h4 className="text-sm font-bold text-slate-900 truncate" title={upload.fileName}>
-                    {upload.fileName}
-                  </h4>
-                  <span className="text-[10px] font-black text-slate-300 uppercase shrink-0">
-                    {formatFileSize(upload.fileSize)}
-                  </span>
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: upload.portal.primaryColor + "20" }}
+                >
+                  <FileIcon className="w-5 h-5" style={{ color: upload.portal.primaryColor }} />
                 </div>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-medium text-slate-500">
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="w-3 h-3 text-slate-300" />
-                    {formatTimeAgo(upload.createdAt)}
-                  </div>
-                  {(upload.clientName || upload.clientEmail) && (
-                    <div className="flex items-center gap-1.5">
-                      <User className="w-3 h-3 text-slate-300" />
-                      {upload.clientName || upload.clientEmail}
-                    </div>
-                  )}
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-1 h-1 rounded-full bg-slate-300" />
-                    <span className="bg-slate-100 px-1.5 py-0.5 rounded text-[10px] uppercase font-bold text-slate-500">
-                      {upload.portal.name}
+
+                <div className="flex-1 min-w-0 text-left">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate" title={upload.fileName}>
+                      {upload.fileName}
+                    </h4>
+                    <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase shrink-0">
+                      {formatFileSize(upload.fileSize)}
                     </span>
                   </div>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {formatTimeAgo(upload.createdAt)}
+                    </div>
+                    {(upload.clientName || upload.clientEmail) && (
+                      <div className="flex items-center gap-1">
+                        <User className="w-3 h-3" />
+                        {upload.clientName || upload.clientEmail}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex items-center gap-1">
                 <a
                   href={`/api/uploads/${upload.id}/download`}
-                  className="p-2.5 text-slate-300 hover:text-slate-900 hover:bg-white rounded-xl border border-transparent hover:border-slate-200 transition-all shadow-none hover:shadow-sm"
+                  className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-700 rounded-lg border border-transparent hover:border-slate-200 dark:hover:border-slate-600 transition-all"
                   title="Download"
                 >
                   <Download className="w-4 h-4" />
                 </a>
-                <button className="p-2.5 text-slate-300 hover:text-slate-900 hover:bg-white rounded-xl border border-transparent hover:border-slate-200 transition-all shadow-none hover:shadow-sm">
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </motion.div>
-          ))
-        ) : (
-          <div className="py-20 text-center">
-            <div className="p-4 bg-slate-50 rounded-full w-fit mx-auto mb-4">
-              <Inbox className="w-8 h-8 text-slate-200" />
-            </div>
-            <p className="text-slate-500 text-sm font-medium">No recent activity detected.</p>
+              </motion.div>
+            ))}
           </div>
+        ) : (
+          <>
+            <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center mb-4 text-slate-400 dark:text-slate-500">
+              <Inbox className="w-8 h-8" />
+            </div>
+            <p className="text-sm font-medium text-slate-600 dark:text-slate-400">No recent activity detected.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-500 opacity-60 mt-1">Activities will appear here once you start using portals.</p>
+          </>
         )}
       </div>
-    </div>
+    </>
   )
 }

@@ -16,6 +16,15 @@ import {
     FolderOpen,
     CreditCard,
     Zap,
+    FileText,
+    BarChart3,
+    Lock,
+    Activity,
+    FileBarChart,
+    Database,
+    Mail,
+    HelpCircle,
+    BookOpen,
 } from "lucide-react"
 
 interface AdminSidebarProps {
@@ -44,6 +53,51 @@ const navItems = [
         name: "Billing",
         href: "/admin/billing",
         icon: CreditCard,
+    },
+    {
+        name: "Logs",
+        href: "/admin/logs",
+        icon: FileText,
+    },
+    {
+        name: "Analytics",
+        href: "/admin/analytics",
+        icon: BarChart3,
+    },
+    {
+        name: "Security",
+        href: "/admin/security",
+        icon: Lock,
+    },
+    {
+        name: "System Health",
+        href: "/admin/health",
+        icon: Activity,
+    },
+    {
+        name: "Reports",
+        href: "/admin/reports",
+        icon: FileBarChart,
+    },
+    {
+        name: "Database",
+        href: "/admin/database",
+        icon: Database,
+    },
+    {
+        name: "Email Templates",
+        href: "/admin/email-templates",
+        icon: Mail,
+    },
+    {
+        name: "Blogs",
+        href: "/admin/blogs",
+        icon: HelpCircle,
+    },
+    {
+        name: "Audit Logs",
+        href: "/admin/audit-logs",
+        icon: BookOpen,
     },
     {
         name: "Settings",

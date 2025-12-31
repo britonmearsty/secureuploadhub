@@ -19,6 +19,12 @@ const nextConfig: NextConfig = {
   },
   // This is required to support PostHog trailing slash API requests
   skipTrailingSlashRedirect: true,
+  // Workaround for Next.js 16.1 global-error prerendering issue
+  staticPageGenerationTimeout: 60,
+  onDemandEntries: {
+    maxInactiveAge: 60000,
+    pagesBufferLength: 5,
+  },
 };
 
 export default nextConfig;

@@ -2,6 +2,7 @@ import { signIn } from "@/lib/auth"
 import { ShieldCheck } from "lucide-react"
 import { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Sign In | SecureUploadHub",
@@ -130,7 +131,7 @@ export default function SignInPage() {
 
             <div className="mt-12 pt-8 border-t border-slate-200/60 lg:max-w-xs">
               <p className="text-xs text-slate-400 leading-relaxed text-center lg:text-left">
-                By signing in, you agree to our <a href="#" className="underline hover:text-slate-600 transition-colors">Terms of Service</a> and <a href="#" className="underline hover:text-slate-600 transition-colors">Privacy Policy</a>
+                By signing in, you agree to our <Link href="/terms" className="underline hover:text-slate-600 transition-colors">Terms of Service</Link> and <Link href="/privacy" className="underline hover:text-slate-600 transition-colors">Privacy Policy</Link>
               </p>
             </div>
           </div>

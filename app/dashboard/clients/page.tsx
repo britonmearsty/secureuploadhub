@@ -3,6 +3,8 @@ import { redirect } from "next/navigation"
 import prisma from "@/lib/prisma"
 import ClientsClient from "./ClientsClient"
 
+export const dynamic = "force-dynamic"
+
 export default async function ClientsPage() {
   const session = await auth()
 

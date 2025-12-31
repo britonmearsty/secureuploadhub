@@ -1,7 +1,9 @@
-import { auth } from "@/lib/auth"
+import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import prisma from "@/lib/prisma"
 import UsersManagementClient from "./UsersManagementClient"
+
+export const dynamic = "force-dynamic"
 
 export default async function AdminUsersPage() {
     const session = await auth()

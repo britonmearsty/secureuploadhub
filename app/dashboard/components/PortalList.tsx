@@ -156,17 +156,17 @@ export default function PortalList({
         // Empty state for "All Portals" - no portals exist yet
         if (emptyStateTab === "all" && activePortalsCount === 0 && archivedPortalsCount === 0) {
             return (
-                <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-white rounded-3xl border border-slate-200 border-dashed">
-                    <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
-                        <Folder className="w-10 h-10 text-slate-200" />
+                <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-white dark:bg-slate-800 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700">
+                    <div className="w-20 h-20 bg-slate-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center mb-6 text-slate-400 dark:text-slate-500">
+                        <Folder className="w-10 h-10" />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">Build your first portal</h3>
-                    <p className="text-slate-500 max-w-sm mb-8">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">Build your first portal</h3>
+                    <p className="text-slate-600 dark:text-slate-400 max-w-sm mb-8">
                         Start collecting files from clients with a branded portal. It takes less than a minute.
                     </p>
                     <Link
                         href="/dashboard/portals/new"
-                        className="px-8 py-3 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-sm active:scale-95"
+                        className="px-8 py-3 bg-slate-900 dark:bg-slate-700 text-white rounded-xl font-medium hover:bg-slate-800 dark:hover:bg-slate-600 transition-all shadow-sm active:scale-95"
                     >
                         Create Portal
                     </Link>
@@ -177,12 +177,12 @@ export default function PortalList({
         // Empty state for "Active" tab - no active portals
         if (emptyStateTab === "active") {
             return (
-                <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-white rounded-3xl border border-slate-200 border-dashed">
-                    <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mb-6">
-                        <Activity className="w-10 h-10 text-emerald-200" />
+                <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-white dark:bg-slate-800 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700">
+                    <div className="w-20 h-20 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center mb-6 text-emerald-500">
+                        <Activity className="w-10 h-10" />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">No active portals</h3>
-                    <p className="text-slate-500 max-w-sm mb-8">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">No active portals</h3>
+                    <p className="text-slate-600 dark:text-slate-400 max-w-sm mb-8">
                         {activePortalsCount === 0 && archivedPortalsCount > 0
                             ? `You have ${archivedPortalsCount} archived portal${archivedPortalsCount !== 1 ? 's' : ''}. Activate one to get started.`
                             : "Create a new portal to start collecting files from your clients."
@@ -191,14 +191,14 @@ export default function PortalList({
                     <div className="flex gap-3">
                         <Link
                             href="/dashboard/portals/new"
-                            className="px-8 py-3 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-sm active:scale-95"
+                            className="px-8 py-3 bg-slate-900 dark:bg-slate-700 text-white rounded-xl font-medium hover:bg-slate-800 dark:hover:bg-slate-600 transition-all shadow-sm active:scale-95"
                         >
                             Create New Portal
                         </Link>
                         {activePortalsCount === 0 && archivedPortalsCount > 0 && (
                             <Link
                                 href="/dashboard/portals"
-                                className="px-8 py-3 bg-slate-100 text-slate-900 rounded-2xl font-bold hover:bg-slate-200 transition-all"
+                                className="px-8 py-3 bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100 rounded-xl font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-all"
                             >
                                 View Archived
                             </Link>
@@ -211,12 +211,12 @@ export default function PortalList({
         // Empty state for "Archived" tab - no archived portals
         if (emptyStateTab === "archived") {
             return (
-                <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-white rounded-3xl border border-slate-200 border-dashed">
-                    <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-6">
-                        <Archive className="w-10 h-10 text-slate-300" />
+                <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-white dark:bg-slate-800 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700">
+                    <div className="w-20 h-20 bg-slate-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center mb-6 text-slate-400 dark:text-slate-500">
+                        <Archive className="w-10 h-10" />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">No archived portals</h3>
-                    <p className="text-slate-500 max-w-sm mb-8">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">No archived portals</h3>
+                    <p className="text-slate-600 dark:text-slate-400 max-w-sm mb-8">
                         {activePortalsCount > 0
                             ? `You have ${activePortalsCount} active portal${activePortalsCount !== 1 ? 's' : ''}. Archive unused ones here.`
                             : "Disabled portals will appear here. You can reactivate them anytime."
@@ -224,7 +224,7 @@ export default function PortalList({
                     </p>
                     <Link
                         href="/dashboard/portals"
-                        className="px-8 py-3 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-sm active:scale-95"
+                        className="px-8 py-3 bg-slate-900 dark:bg-slate-700 text-white rounded-xl font-medium hover:bg-slate-800 dark:hover:bg-slate-600 transition-all shadow-sm active:scale-95"
                     >
                         Back to All Portals
                     </Link>
@@ -234,17 +234,17 @@ export default function PortalList({
 
         // Default fallback empty state
         return (
-            <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-white rounded-3xl border border-slate-200 border-dashed">
-                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
-                    <Folder className="w-10 h-10 text-slate-200" />
+            <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-white dark:bg-slate-800 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700">
+                <div className="w-20 h-20 bg-slate-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center mb-6 text-slate-400 dark:text-slate-500">
+                    <Folder className="w-10 h-10" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">No portals found</h3>
-                <p className="text-slate-500 max-w-sm mb-8">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">No portals found</h3>
+                <p className="text-slate-600 dark:text-slate-400 max-w-sm mb-8">
                     No portals match your search criteria.
                 </p>
                 <Link
                     href="/dashboard/portals/new"
-                    className="px-8 py-3 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-sm active:scale-95"
+                    className="px-8 py-3 bg-slate-900 dark:bg-slate-700 text-white rounded-xl font-medium hover:bg-slate-800 dark:hover:bg-slate-600 transition-all shadow-sm active:scale-95"
                 >
                     Create Portal
                 </Link>
@@ -260,7 +260,7 @@ export default function PortalList({
                 {portals.map((portal) => (
                     <div
                         key={portal.id}
-                        className={`group bg-white rounded-3xl border border-slate-200 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 overflow-hidden flex flex-col relative ${!isGrid ? 'flex-row items-center p-4' : ''}`}
+                        className={`group bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col relative ${!isGrid ? 'flex-row items-center p-4' : ''}`}
                     >
                         {/* Card Header/Top Section */}
                         <div className={`p-6 flex-1 ${!isGrid ? 'py-0 flex-row gap-4 flex items-center' : ''} w-full`}>
@@ -270,17 +270,17 @@ export default function PortalList({
                                 className="flex items-start gap-3 group/header mb-4 w-full hover:opacity-75 transition-opacity"
                             >
                                 <div
-                                    className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-inner ring-4 ring-slate-50 flex-shrink-0 group-hover/header:scale-110 transition-transform duration-300"
+                                    className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-inner ring-4 ring-slate-100 dark:ring-slate-700 flex-shrink-0 group-hover/header:scale-110 transition-transform duration-300"
                                     style={{ backgroundColor: portal.primaryColor }}
                                 >
                                     {portal.name.charAt(0).toUpperCase()}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <h4 className="text-lg font-bold text-slate-900 group-hover/header:text-slate-600 transition-colors flex items-center gap-2 leading-snug">
+                                    <h4 className="text-lg font-bold text-slate-900 dark:text-slate-100 group-hover/header:text-slate-600 dark:group-hover/header:text-slate-400 transition-colors flex items-center gap-2 leading-snug">
                                         {portal.name}
                                         <ArrowUpRight className="w-4 h-4 opacity-0 -translate-y-1 group-hover/header:opacity-100 group-hover/header:translate-y-0 transition-all flex-shrink-0" />
                                     </h4>
-                                    <p className="text-sm text-slate-500 font-medium mt-0.5 truncate">/p/{portal.slug}</p>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate">/p/{portal.slug}</p>
                                 </div>
                             </Link>
 
@@ -300,23 +300,23 @@ export default function PortalList({
 
                             {/* Description */}
                             {portal.description && (
-                                <p className="text-xs text-slate-400 mb-4 line-clamp-2">{portal.description}</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 line-clamp-2">{portal.description}</p>
                             )}
 
                             {/* Stats Grid */}
                             <div className="grid grid-cols-2 gap-3 w-full">
-                                <div className="bg-slate-50 px-4 py-3 rounded-2xl border border-slate-100 hover:border-slate-200 transition-colors">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Uploads</p>
-                                    <p className="text-lg font-bold text-slate-900 mt-1">{portal._count.uploads}</p>
+                                <div className="bg-slate-50 dark:bg-slate-700 px-4 py-3 rounded-2xl border border-slate-100 dark:border-slate-600 hover:border-slate-200 dark:hover:border-slate-500 transition-colors">
+                                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Uploads</p>
+                                    <p className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-1">{portal._count.uploads}</p>
                                 </div>
                                 <div className={`px-4 py-3 rounded-2xl border transition-all ${portal.isActive
-                                        ? 'bg-emerald-50 border-emerald-200'
-                                        : 'bg-slate-50 border-slate-100'
+                                        ? 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-700'
+                                        : 'bg-slate-50 dark:bg-slate-700 border-slate-100 dark:border-slate-600'
                                     }`}>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</p>
+                                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Status</p>
                                     <div className="flex items-center gap-1.5 mt-1">
-                                        <div className={`w-2 h-2 rounded-full ${portal.isActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
-                                        <span className={`text-xs font-bold ${portal.isActive ? 'text-emerald-700' : 'text-slate-500'}`}>
+                                        <div className={`w-2 h-2 rounded-full ${portal.isActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400 dark:bg-slate-500'}`} />
+                                        <span className={`text-xs font-bold ${portal.isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400'}`}>
                                             {portal.isActive ? 'Live' : 'Hidden'}
                                         </span>
                                     </div>
@@ -325,13 +325,13 @@ export default function PortalList({
                         </div>
 
                         {/* Card Actions Bottom */}
-                        <div className={`p-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between gap-2 ${!isGrid ? 'border-t-0 p-0 pr-4 border-l border-slate-100 pl-4' : ''}`}>
+                        <div className={`p-4 bg-slate-50/50 dark:bg-slate-700/50 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between gap-2 ${!isGrid ? 'border-t-0 p-0 pr-4 border-l border-slate-100 dark:border-slate-700 pl-4' : ''}`}>
                             <div className="flex items-center gap-1">
                                 <button
                                     onClick={() => copyPortalLink(portal.slug)}
                                     className={`p-2 rounded-xl border transition-all ${copiedSlug === portal.slug
-                                        ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
-                                        : 'text-slate-400 hover:text-slate-900 hover:bg-white border-transparent hover:border-slate-200'
+                                        ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700'
+                                        : 'text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-700 border-transparent hover:border-slate-200 dark:hover:border-slate-600'
                                         }`}
                                     title="Copy portal link to clipboard"
                                 >
@@ -344,14 +344,14 @@ export default function PortalList({
                                 <Link
                                     href={`/p/${portal.slug}`}
                                     target="_blank"
-                                    className="p-2 text-slate-400 hover:text-slate-900 hover:bg-white rounded-xl border border-transparent hover:border-slate-200 transition-all"
+                                    className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-700 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-slate-600 transition-all"
                                     title="Open portal preview in new tab"
                                 >
                                     <Eye className="w-4 h-4" />
                                 </Link>
                                 <Link
                                     href={`/dashboard/portals/${portal.id}`}
-                                    className="p-2 text-slate-400 hover:text-slate-900 hover:bg-white rounded-xl border border-transparent hover:border-slate-200 transition-all"
+                                    className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-700 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-slate-600 transition-all"
                                     title="Go to settings"
                                 >
                                     <Settings className="w-4 h-4" />
@@ -364,7 +364,7 @@ export default function PortalList({
                                     setShowDeleteModal(true)
                                 }}
                                 disabled={deletingId === portal.id}
-                                className="p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl border border-transparent hover:border-red-200 transition-all"
+                                className="p-2 text-slate-300 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl border border-transparent hover:border-red-200 dark:hover:border-red-700 transition-all"
                                 title="Delete this portal"
                             >
                                 <Trash2 className="w-4 h-4" />
@@ -381,25 +381,25 @@ export default function PortalList({
                         className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
                         onClick={() => setShowDeleteModal(false)}
                     />
-                    <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden p-8 text-center">
-                        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <Trash2 className="w-8 h-8 text-red-500" />
+                    <div className="relative w-full max-w-sm bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden p-8 text-center">
+                        <div className="w-16 h-16 bg-red-50 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500">
+                            <Trash2 className="w-8 h-8" />
                         </div>
-                        <h3 className="text-xl font-bold text-slate-900 mb-2">Delete Portal?</h3>
-                        <p className="text-slate-500 text-sm mb-8">
-                            Are you sure you want to delete <span className="font-bold text-slate-900">"{portalToDelete.name}"</span>?
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2">Delete Portal?</h3>
+                        <p className="text-slate-600 dark:text-slate-400 text-sm mb-8">
+                            Are you sure you want to delete <span className="font-bold text-slate-900 dark:text-slate-100">"{portalToDelete.name}"</span>?
                             This will remove all associated settings and link access.
                         </p>
                         <div className="flex flex-col gap-2">
                             <button
                                 onClick={confirmDeletePortal}
-                                className="w-full py-3 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 transition-all active:scale-95 shadow-lg shadow-red-200"
+                                className="w-full py-3 bg-red-500 dark:bg-red-600 text-white rounded-xl font-medium hover:bg-red-600 dark:hover:bg-red-700 transition-all active:scale-95 shadow-lg shadow-red-200/50"
                             >
                                 Delete Forever
                             </button>
                             <button
                                 onClick={() => setShowDeleteModal(false)}
-                                className="w-full py-3 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-all"
+                                className="w-full py-3 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-all"
                             >
                                 Cancel
                             </button>
