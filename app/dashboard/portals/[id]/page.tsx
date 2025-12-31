@@ -476,25 +476,38 @@ export default function EditPortalPage() {
             </motion.div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-12">
-            <div className="flex border-b border-slate-200 mb-6">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="flex items-center gap-1 p-1 bg-slate-100/50 rounded-2xl border border-slate-200/50 overflow-x-auto no-scrollbar mb-4">
               {['Portal Details', 'Branding', 'Storage & Files', 'Access & Security', 'Messages'].map((tab) => (
                 <button
                   key={tab}
                   type="button"
                   onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 font-semibold text-sm uppercase tracking-wide transition-all hover:scale-105 ${activeTab === tab ? 'border-b-2 border-slate-900 text-slate-900' : 'text-slate-400 hover:text-slate-900'}`}
+                  className={`flex-1 min-w-fit px-4 py-2 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all ${
+                    activeTab === tab 
+                      ? 'bg-slate-900 text-white shadow-md' 
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'
+                  }`}
                 >
                   {tab}
                 </button>
               ))}
             </div>
-            {/* Field Set: Identity */}
-            <section className="space-y-6">
-  <div className="flex items-center gap-2 pb-2 border-b border-slate-50">
-    <Type className="w-4 h-4 text-slate-400" />
-    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Identity & Branding</h3>
-  </div>
+
+            <AnimatePresence mode="wait">
+              {activeTab === 'Portal Details' && (
+                <motion.div
+                  key="details"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="space-y-6"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 pb-2 border-b border-slate-50">
+                      <Type className="w-4 h-4 text-slate-400" />
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Identity & Branding</h3>
+                    </div>
 
   <div className="space-y-6">
     <div>
@@ -543,15 +556,31 @@ export default function EditPortalPage() {
   </div>
 </div>
 
-              </div>
-            </section>
+</div>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={() => setActiveTab('Branding')}
+                    className="w-full py-3 bg-slate-50 text-slate-900 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-100 transition-colors"
+                  >
+                    Next: Visual Design
+                  </button>
+                </motion.div>
+              )}
 
-            {/* Field Set: Visual Customization */}
-            <section className="space-y-6">
-  <div className="flex items-center gap-2 pb-3 border-b border-slate-50">
-    <Palette className="w-4 h-4 text-slate-400" />
-    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Branding</h3>
-  </div>
+              {activeTab === 'Branding' && (
+                <motion.div
+                  key="branding"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="space-y-6"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 pb-3 border-b border-slate-50">
+                      <Palette className="w-4 h-4 text-slate-400" />
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Branding</h3>
+                    </div>
 
   <div className="space-y-4">
     {/* Logo URL */}
@@ -658,58 +687,31 @@ export default function EditPortalPage() {
        </motion.div>
      )}
    </AnimatePresence>
-              </div>
-            </section>
-
-            {/* Field Set: Messaging & Experience */}
-<section className="space-y-6">
-  <div className="flex items-center gap-2 pb-3 border-b border-slate-50">
-    <Type className="w-4 h-4 text-slate-400" />
-    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Message & Tone</h3>
-  </div>
-
-  <div className="space-y-4">
-    <div>
-      <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Welcome Note</label>
-      <textarea
-        value={formData.welcomeMessage}
-        onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
-        placeholder="Welcome to our secure upload portal. Please submit your files below."
-        rows={2}
-        className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300 resize-none"
-      />
-    </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-  <div>
-    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Action Button Label</label>
-    <input
-      type="text"
-      value={formData.submitButtonText}
-      onChange={(e) => setFormData({ ...formData, submitButtonText: e.target.value })}
-      placeholder="Initialize Transfer"
-      className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
-    />
-  </div>
-  <div>
-    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Success Note</label>
-    <input
-      type="text"
-      value={formData.successMessage}
-      onChange={(e) => setFormData({ ...formData, successMessage: e.target.value })}
-      placeholder="Transmission Verified"
-      className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
-    />
-  </div>
 </div>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={() => setActiveTab('Storage & Files')}
+                    className="w-full py-3 bg-slate-50 text-slate-900 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-100 transition-colors"
+                  >
+                    Next: Storage Configuration
+                  </button>
+                </motion.div>
+              )}
 
-              </div>
-            </section>
-{/* Storage Section */}
-<section className="space-y-2">
-  <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400 flex items-center gap-2">
-    <Cloud className="w-4 h-4" /> Storage Backbone
-  </h3>
+              {activeTab === 'Storage & Files' && (
+                <motion.div
+                  key="storage"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="space-y-6"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 pb-2 border-b border-slate-50">
+                      <Cloud className="w-4 h-4 text-slate-400" />
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Storage Backbone</h3>
+                    </div>
 
   {/* Storage Options */}
   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -781,20 +783,34 @@ export default function EditPortalPage() {
       )}
     </AnimatePresence>
 
-    {/* Footer */}
-    <div className="p-1 bg-slate-900/5 text-[10px] font-semibold text-slate-500 uppercase tracking-wide text-center">
-      Active Destination: <span className="text-slate-900">{formData.storageFolderPath || "SecureUploadHub"}</span>
-    </div>
-  </div>
-</section>
+                    <div className="p-2 bg-slate-900/5 text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] text-center">
+                      Active Sync: <span className="text-slate-900">{formData.storageFolderPath || "SecureUploadHub"}</span>
+                    </div>
+</div>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={() => setActiveTab('Access & Security')}
+                    className="w-full py-3 bg-slate-50 text-slate-900 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-100 transition-colors"
+                  >
+                    Next: Security Protocol
+                  </button>
+                </motion.div>
+              )}
 
-
-            {/* Field Set: Rules */}
-<section className="space-y-6">
-  <div className="flex items-center gap-2 pb-3 border-b border-slate-50">
-    <Settings2 className="w-4 h-4 text-slate-400" />
-    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Security & Scale</h3>
-  </div>
+              {activeTab === 'Access & Security' && (
+                <motion.div
+                  key="security"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="space-y-6"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 pb-2 border-b border-slate-50">
+                      <Lock className="w-4 h-4 text-slate-400" />
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Security & Restrictions</h3>
+                    </div>
 
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div>
@@ -844,80 +860,103 @@ export default function EditPortalPage() {
   </div>
 </div>
 
-             <div className="relative space-y-2" ref={dropdownRef}>
-  <button
-    type="button"
-    onClick={() => setDropdownOpen((prev) => !prev)}
-    className="w-full text-left bg-white border border-slate-100 rounded-xl px-3 py-1.5 flex justify-between items-center text-sm font-semibold hover:border-slate-200 transition-colors"
-  >
-    {formData.allowedFileTypes.length === 0
-      ? "File Categories"
-      : `${formData.allowedFileTypes.length} categories enabled`}
-    <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
-  </button>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={() => setActiveTab('Messages')}
+                    className="w-full py-3 bg-slate-50 text-slate-900 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-100 transition-colors"
+                  >
+                    Next: Messaging Protocol
+                  </button>
+                </motion.div>
+              )}
 
-  {dropdownOpen && (
-    <div className="absolute z-50 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-lg px-3 py-1.5 space-y-1 max-h-52 overflow-y-auto">
-      <label className="flex items-center gap-2 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={formData.allowedFileTypes.length === FILE_TYPE_OPTIONS.length}
-          onChange={(e) =>
-            setFormData((prev) => ({
-              ...prev,
-              allowedFileTypes: e.target.checked ? FILE_TYPE_OPTIONS.map((f) => f.value) : [],
-            }))
-          }
-          className="w-4 h-4 rounded border-slate-300"
-        />
-        <span className="text-sm font-semibold">Enable All Categories</span>
-      </label>
+              {activeTab === 'Messages' && (
+                <motion.div
+                  key="messages"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="space-y-6"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 pb-3 border-b border-slate-50">
+                      <Type className="w-4 h-4 text-slate-400" />
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Message & Tone</h3>
+                    </div>
 
-      <hr className="border-slate-100 my-1" />
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Welcome Note</label>
+                        <textarea
+                          value={formData.welcomeMessage}
+                          onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
+                          placeholder="Welcome! Please submit your assets for processing."
+                          rows={3}
+                          className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300 resize-none"
+                        />
+                      </div>
 
-      {FILE_TYPE_OPTIONS.map((opt) => {
-        const isSelected = formData.allowedFileTypes.includes(opt.value);
-        return (
-          <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={isSelected}
-              onChange={() =>
-                setFormData((prev) => ({
-                  ...prev,
-                  allowedFileTypes: isSelected
-                    ? prev.allowedFileTypes.filter((v) => v !== opt.value)
-                    : [...prev.allowedFileTypes, opt.value],
-                }))
-              }
-              className="w-4 h-4 rounded border-slate-300"
-            />
-            <span className={`text-sm font-medium ${isSelected ? "text-slate-900" : "text-slate-500"}`}>
-              {opt.label}
-            </span>
-          </label>
-        );
-      })}
-    </div>
-  )}
-</div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Button Label</label>
+                          <input
+                            type="text"
+                            value={formData.submitButtonText}
+                            onChange={(e) => setFormData({ ...formData, submitButtonText: e.target.value })}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Success Note</label>
+                          <input
+                            type="text"
+                            value={formData.successMessage}
+                            onChange={(e) => setFormData({ ...formData, successMessage: e.target.value })}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-bold"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-            </section>
+                  <div className="bg-slate-900 text-white p-6 rounded-[2.5rem] space-y-4 shadow-2xl shadow-slate-200">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-white/10 rounded-xl">
+                        <Info className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm">System Verification</h4>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Active configuration integrity check</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                      Updating these parameters will immediately sync with the live portal at 
+                      <span className="text-white font-bold italic"> /p/{portal.slug} </span>. 
+                      Ensure your <span className="text-white font-bold">{formData.storageProvider === 'google_drive' ? 'Drive' : 'Dropbox'}</span> account is active for seamless transfers.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-            {/* Actions */}
-<div className="flex gap-4 pt-4">
-  <button
-    type="submit"
-    disabled={saving}
-    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all shadow-sm disabled:opacity-50 font-bold text-xs uppercase tracking-wide active:scale-[0.97]"
-  >
-    {saving ? (
-      <Loader2 className="w-5 h-5 animate-spin" />
-    ) : (
-      <>Commit Changes <Save className="w-4 h-4" /></>
-    )}
-  </button>
-</div>
+            {/* Action Buttons */}
+            <div className="flex gap-4 pt-6 border-t border-slate-50">
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex-1 flex items-center justify-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 disabled:opacity-50 font-black text-xs uppercase tracking-[0.2em] active:scale-95"
+              >
+                {saving ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Commit Changes
+                  </>
+                )}
+              </button>
+            </div>
 
           </form>
         </motion.div>
