@@ -111,6 +111,19 @@ export default function CreatePortalPage() {
     { label: "Upload Icon", value: "https://via.placeholder.com/150x50/10b981/ffffff?text=Upload" },
     { label: "Generic Logo", value: "https://via.placeholder.com/150x50/6b7280/ffffff?text=Logo" },
   ]
+  
+  const COLOR_PRESETS = [
+    { name: "Blue", value: "#3b82f6" },
+    { name: "Red", value: "#ef4444" },
+    { name: "Green", value: "#10b981" },
+    { name: "Yellow", value: "#f59e0b" },
+    { name: "Purple", value: "#8b5cf6" },
+    { name: "Pink", value: "#ec4899" },
+    { name: "Gray", value: "#6b7280" },
+    { name: "Indigo", value: "#6366f1" },
+    { name: "Teal", value: "#14b8a6" },
+    { name: "Orange", value: "#f97316" },
+  ]
 
   const [formData, setFormData] = useState({
     name: "",
@@ -136,7 +149,7 @@ export default function CreatePortalPage() {
   })
   const [folderSectionOpen, setFolderSectionOpen] = useState(false)
   const [colorSectionOpen, setColorSectionOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState('Identity')
+  const [activeTab, setActiveTab] = useState('identity')
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   
   const toggleFolder = (id: string) => {
@@ -209,11 +222,12 @@ export default function CreatePortalPage() {
   }
 
   function navigateToFolder(folder: StorageFolder) {
-    setFolderPath([...folderPath, folder])
+    const newPath = [...folderPath, folder]
+    setFolderPath(newPath)
     setFormData({
       ...formData,
       storageFolderId: folder.id,
-      storageFolderPath: folder.path,
+      storageFolderPath: newPath.map(f => f.name).join('/'),
     })
     fetchFolders(formData.storageProvider, folder.id)
   }
@@ -394,21 +408,8 @@ export default function CreatePortalPage() {
   {/* Logo URL */}
   <div>
     <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
-      Logo Link
+      Tag Logo
     </label>
-    <div>
-      <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
-        Choose Default Logo
-      </label>
-      <select
-        onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
-        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium mb-3"
-      >
-        {DEFAULT_LOGOS.map((logo) => (
-          <option key={logo.value} value={logo.value}>{logo.label}</option>
-        ))}
-      </select>
-    </div>
     <input
       type="url"
       value={formData.logoUrl}
@@ -425,36 +426,37 @@ export default function CreatePortalPage() {
   >
     Manage Colors
   </button>
-<AnimatePresence>
-  {colorSectionOpen && (
-    <motion.div
-      initial={{ opacity: 0, height: 0 }}
-      animate={{ opacity: 1, height: "auto" }}
-      exit={{ opacity: 0, height: 0 }}
-      className="grid grid-cols-2 gap-3"
-    >
-      {/* Primary Brand Color */}
-      <div>
-        <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
-          Primary Color
-        </label>
-        <div className="flex items-center gap-2">
-          <div className="relative group w-12 h-12">
-            <input
-              type="color"
-              value={formData.primaryColor}
-              onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-              className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
-            />
-          </div>
-          <input
-            type="text"
-            value={formData.primaryColor}
-            onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-            className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-mono text-sm uppercase"
-          />
-        </div>
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  {/* Primary Brand Color */}
+  <div>
+    <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
+      Primary Color
+    </label>
+    <div className="flex items-center gap-2">
+      <select
+        onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+        className="px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
+      >
+        {COLOR_PRESETS.map((preset) => (
+          <option key={preset.value} value={preset.value}>{preset.name}</option>
+        ))}
+      </select>
+      <div className="relative group w-12 h-12">
+        <input
+          type="color"
+          value={formData.primaryColor}
+          onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+          className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
+        />
       </div>
+      <input
+        type="text"
+        value={formData.primaryColor}
+        onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+        className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-mono text-sm uppercase"
+      />
+    </div>
+  </div>
 {/* Text Color */}
 <div>
   <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
@@ -523,9 +525,7 @@ export default function CreatePortalPage() {
     />
   </div>
 </div>
- </motion.div>
-    )}
-   </AnimatePresence>
+</div>
    </div>
    </div>
   </section>
