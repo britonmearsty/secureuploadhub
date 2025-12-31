@@ -118,6 +118,8 @@ export default function EditPortalPage() {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   // Folder section toggle
   const [folderSectionOpen, setFolderSectionOpen] = useState(false)
+  const [colorSectionOpen, setColorSectionOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState('Identity')
 
 
 
@@ -140,7 +142,7 @@ export default function EditPortalPage() {
     name: "",
     slug: "",
     description: "",
-    primaryColor: "#0f172a",
+    primaryColor: "#3b82f6",
     logoUrl: "",
     backgroundImageUrl: "",
     backgroundColor: "",
@@ -167,6 +169,13 @@ export default function EditPortalPage() {
     { label: "Archives (ZIP, RAR)", value: "application/zip,application/x-rar-compressed,application/x-7z-compressed" },
     { label: "Videos (MP4, MOV)", value: "video/*" },
     { label: "Audio (MP3, WAV)", value: "audio/*" },
+  ]
+
+  const DEFAULT_LOGOS = [
+    { label: "No Logo", value: "" },
+    { label: "Secure Hub Logo", value: "https://via.placeholder.com/150x50/3b82f6/ffffff?text=Secure+Hub" },
+    { label: "Upload Icon", value: "https://via.placeholder.com/150x50/10b981/ffffff?text=Upload" },
+    { label: "Generic Logo", value: "https://via.placeholder.com/150x50/6b7280/ffffff?text=Logo" },
   ]
   const toggleFolder = (id: string) => {
   setExpandedFolders(prev => {
@@ -468,6 +477,18 @@ export default function EditPortalPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-12">
+            <div className="flex border-b border-slate-200 mb-6">
+              {['Identity', 'Branding', 'Storage', 'Security', 'Messaging'].map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-2 font-semibold text-sm uppercase tracking-wide transition-all hover:scale-105 ${activeTab === tab ? 'border-b-2 border-slate-900 text-slate-900' : 'text-slate-400 hover:text-slate-900'}`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
             {/* Field Set: Identity */}
             <section className="space-y-6">
   <div className="flex items-center gap-2 pb-2 border-b border-slate-50">
@@ -506,17 +527,17 @@ export default function EditPortalPage() {
         type="color"
         value={formData.primaryColor}
         onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-        className="w-14 h-14 rounded-2xl cursor-pointer border-4 border-white shadow-xl overflow-hidden shrink-0"
+        className="w-12 h-12 rounded-2xl cursor-pointer border-4 border-white shadow-xl overflow-hidden shrink-0"
       />
       <div className="absolute inset-0 rounded-2xl border border-slate-200 pointer-events-none" />
     </div>
     <div className="flex-1 relative">
-      <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+      <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
       <input
         type="text"
         value={formData.primaryColor}
         onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-        className="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-mono text-sm uppercase font-bold"
+        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-mono text-sm uppercase font-bold"
       />
     </div>
   </div>
@@ -536,6 +557,17 @@ export default function EditPortalPage() {
     {/* Logo URL */}
     <div>
       <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Logo Link</label>
+      <div>
+        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Choose Default Logo</label>
+        <select
+          onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+          className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium mb-3"
+        >
+          {DEFAULT_LOGOS.map((logo) => (
+            <option key={logo.value} value={logo.value}>{logo.label}</option>
+          ))}
+        </select>
+      </div>
       <input
         type="url"
         value={formData.logoUrl}
@@ -544,72 +576,88 @@ export default function EditPortalPage() {
         className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300 text-sm"
       />
     </div>
-<div className="grid grid-cols-2 gap-3">
-  {/* Text Color */}
-  <div>
-    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Text Color</label>
-    <div className="flex items-center gap-2">
-      <div className="relative w-10 h-10">
-        <input
-          type="color"
-          value={formData.textColor}
-          onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
-          className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-sm overflow-hidden"
-        />
-      </div>
-      <input
-        type="text"
-        value={formData.textColor}
-        onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
-        className="flex-1 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl font-mono text-xs uppercase"
-      />
-    </div>
-  </div>
 
-                {/* Background Color */}
-<div>
-  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Page BG</label>
-  <div className="flex items-center gap-2">
-    <div className="relative w-10 h-10">
-      <input
-        type="color"
-        value={formData.backgroundColor || "#ffffff"}
-        onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
-        className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-sm overflow-hidden"
-      />
-    </div>
-    <input
-      type="text"
-      value={formData.backgroundColor || ""}
-      onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
-      placeholder="#HEX"
-      className="flex-1 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl font-mono text-xs uppercase"
-    />
-  </div>
-</div>
+   <button
+     type="button"
+     onClick={() => setColorSectionOpen(!colorSectionOpen)}
+     className="text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors cursor-pointer"
+   >
+     Manage Colors
+   </button>
+   <AnimatePresence>
+     {colorSectionOpen && (
+       <motion.div
+         initial={{ opacity: 0, height: 0 }}
+         animate={{ opacity: 1, height: "auto" }}
+         exit={{ opacity: 0, height: 0 }}
+         className="grid grid-cols-2 gap-3"
+       >
+         {/* Text Color */}
+         <div>
+           <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Text Color</label>
+           <div className="flex items-center gap-2">
+             <div className="relative w-12 h-12">
+               <input
+                 type="color"
+                 value={formData.textColor}
+                 onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
+                 className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-sm overflow-hidden"
+               />
+             </div>
+             <input
+               type="text"
+               value={formData.textColor}
+               onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
+               className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-mono text-sm uppercase"
+             />
+           </div>
+         </div>
 
-                  {/* Card Color */}
-<div>
-  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Card BG</label>
-  <div className="flex items-center gap-2">
-    <div className="relative w-10 h-10">
-      <input
-        type="color"
-        value={formData.cardBackgroundColor}
-        onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
-        className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-sm overflow-hidden"
-      />
-    </div>
-    <input
-      type="text"
-      value={formData.cardBackgroundColor}
-      onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
-      className="flex-1 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl font-mono text-xs uppercase"
-    />
-  </div>
-</div>
+         {/* Background Color */}
+         <div>
+           <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Page BG</label>
+           <div className="flex items-center gap-2">
+             <div className="relative w-12 h-12">
+               <input
+                 type="color"
+                 value={formData.backgroundColor || "#ffffff"}
+                 onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
+                 className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-sm overflow-hidden"
+               />
+             </div>
+             <input
+               type="text"
+               value={formData.backgroundColor || ""}
+               onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
+               placeholder="#HEX"
+               className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-mono text-sm uppercase"
+             />
+           </div>
+         </div>
 
-                </div>
+         {/* Card Color */}
+         <div>
+           <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Card BG</label>
+           <div className="flex items-center gap-2">
+             <div className="relative w-12 h-12">
+               <input
+                 type="color"
+                 value={formData.cardBackgroundColor}
+                 onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
+                 className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-sm overflow-hidden"
+               />
+             </div>
+             <input
+               type="text"
+               value={formData.cardBackgroundColor}
+               onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
+               className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-mono text-sm uppercase"
+             />
+           </div>
+         </div>
+       </motion.div>
+     )}
+   </AnimatePresence>
               </div>
             </section>
 
@@ -698,7 +746,7 @@ export default function EditPortalPage() {
       onClick={() => setFolderSectionOpen(prev => !prev)}
       className="w-full px-2 py-1.5 flex justify-between items-center text-sm font-semibold text-slate-900 uppercase tracking-wide bg-white border-b border-slate-100 rounded-t-2xl hover:bg-slate-50 transition-colors"
     >
-      <span>Current Folder: {formData.storageFolderPath || "Home Directory"}</span>
+      <span>Current Folder: {formData.storageFolderPath || "SecureUploadHub"}</span>
       <ChevronRight className={`w-4 h-4 transition-transform ${folderSectionOpen ? "rotate-90" : ""}`} />
     </button>
 
@@ -735,7 +783,7 @@ export default function EditPortalPage() {
 
     {/* Footer */}
     <div className="p-1 bg-slate-900/5 text-[10px] font-semibold text-slate-500 uppercase tracking-wide text-center">
-      Active Destination: <span className="text-slate-900">{formData.storageFolderPath || "Home Directory"}</span>
+      Active Destination: <span className="text-slate-900">{formData.storageFolderPath || "SecureUploadHub"}</span>
     </div>
   </div>
 </section>

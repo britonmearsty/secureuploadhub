@@ -105,11 +105,18 @@ export default function CreatePortalPage() {
     { label: "Audio (MP3, WAV)", value: "audio/*" },
   ]
 
+  const DEFAULT_LOGOS = [
+    { label: "No Logo", value: "" },
+    { label: "Secure Hub Logo", value: "https://via.placeholder.com/150x50/3b82f6/ffffff?text=Secure+Hub" },
+    { label: "Upload Icon", value: "https://via.placeholder.com/150x50/10b981/ffffff?text=Upload" },
+    { label: "Generic Logo", value: "https://via.placeholder.com/150x50/6b7280/ffffff?text=Logo" },
+  ]
+
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
     description: "",
-    primaryColor: "#0f172a", // Default to slate-900
+    primaryColor: "#3b82f6", // Default to blue-500
     logoUrl: "",
     backgroundImageUrl: "",
     backgroundColor: "",
@@ -129,6 +136,7 @@ export default function CreatePortalPage() {
   })
   const [folderSectionOpen, setFolderSectionOpen] = useState(false)
   const [colorSectionOpen, setColorSectionOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState('Identity')
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   
   const toggleFolder = (id: string) => {
@@ -324,6 +332,18 @@ export default function CreatePortalPage() {
 </div>
 
 <form onSubmit={handleSubmit} className="space-y-4">
+  <div className="flex border-b border-slate-200 mb-6">
+    {['Identity', 'Branding', 'Storage', 'Security', 'Messaging'].map((tab) => (
+      <button
+        key={tab}
+        type="button"
+        onClick={() => setActiveTab(tab)}
+        className={`px-4 py-2 font-semibold text-sm uppercase tracking-wide transition-all hover:scale-105 ${activeTab === tab ? 'border-b-2 border-slate-900 text-slate-900' : 'text-slate-400 hover:text-slate-900'}`}
+      >
+        {tab}
+      </button>
+    ))}
+  </div>
   {/* Identity Group */}
   <section className="space-y-3">
     <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
@@ -376,6 +396,19 @@ export default function CreatePortalPage() {
     <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
       Logo Link
     </label>
+    <div>
+      <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
+        Choose Default Logo
+      </label>
+      <select
+        onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium mb-3"
+      >
+        {DEFAULT_LOGOS.map((logo) => (
+          <option key={logo.value} value={logo.value}>{logo.label}</option>
+        ))}
+      </select>
+    </div>
     <input
       type="url"
       value={formData.logoUrl}
@@ -406,7 +439,7 @@ export default function CreatePortalPage() {
           Primary Color
         </label>
         <div className="flex items-center gap-2">
-          <div className="relative group w-10 h-10">
+          <div className="relative group w-12 h-12">
             <input
               type="color"
               value={formData.primaryColor}
@@ -418,7 +451,7 @@ export default function CreatePortalPage() {
             type="text"
             value={formData.primaryColor}
             onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-            className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl font-mono text-xs uppercase"
+            className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-mono text-sm uppercase"
           />
         </div>
       </div>
@@ -428,7 +461,7 @@ export default function CreatePortalPage() {
     Text Color
   </label>
   <div className="flex items-center gap-2">
-    <div className="relative group w-10 h-10">
+    <div className="relative group w-12 h-12">
       <input
         type="color"
         value={formData.textColor}
@@ -440,7 +473,7 @@ export default function CreatePortalPage() {
       type="text"
       value={formData.textColor}
       onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
-      className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl font-mono text-xs uppercase"
+      className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-mono text-sm uppercase"
     />
   </div>
 </div>
@@ -450,7 +483,7 @@ export default function CreatePortalPage() {
     Background Color
   </label>
   <div className="flex items-center gap-2">
-    <div className="relative group w-10 h-10">
+    <div className="relative group w-12 h-12">
       <input
         type="color"
         value={formData.backgroundColor || "#ffffff"}
@@ -463,7 +496,7 @@ export default function CreatePortalPage() {
       value={formData.backgroundColor || ""}
       onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
       placeholder="#HEX"
-      className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl font-mono text-xs uppercase"
+      className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-mono text-sm uppercase"
     />
   </div>
 </div>
@@ -474,7 +507,7 @@ export default function CreatePortalPage() {
     Card Background Color
   </label>
   <div className="flex items-center gap-2">
-    <div className="relative group w-10 h-10">
+    <div className="relative group w-12 h-12">
       <input
         type="color"
         value={formData.cardBackgroundColor}
@@ -486,7 +519,7 @@ export default function CreatePortalPage() {
       type="text"
       value={formData.cardBackgroundColor}
       onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
-      className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl font-mono text-xs uppercase"
+      className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-mono text-sm uppercase"
     />
   </div>
 </div>
@@ -545,7 +578,7 @@ export default function CreatePortalPage() {
     onClick={() => setFolderSectionOpen(prev => !prev)}
     className="w-full px-3 py-2 flex justify-between items-center text-sm font-semibold text-slate-900 uppercase tracking-wide bg-white border-b border-slate-100 rounded-t-2xl hover:bg-slate-50 transition-colors"
   >
-    <span>Current Folder: {formData.storageFolderPath || "Home Directory"}</span>
+    <span>Current Folder: {formData.storageFolderPath || "SecureUploadHub"}</span>
     <ChevronRight className={`w-4 h-4 transition-transform ${folderSectionOpen ? "rotate-90" : ""}`} />
   </button>
 
@@ -581,7 +614,7 @@ export default function CreatePortalPage() {
 
   {/* Footer */}
   <div className="p-1.5 bg-slate-900/5 text-[10px] font-semibold text-slate-500 uppercase tracking-wide text-center">
-    Selected: <span className="text-slate-900">{formData.storageFolderPath || "Home Directory"}</span>
+    Selected: <span className="text-slate-900">{formData.storageFolderPath || "SecureUploadHub"}</span>
   </div>
 </div>
 </section>
@@ -598,7 +631,9 @@ export default function CreatePortalPage() {
         Maximum File Size (MB)
       </label>
       <input
-        type="number"
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
         value={formData.maxFileSize}
         onChange={(e) => setFormData({ ...formData, maxFileSize: parseInt(e.target.value) || 100 })}
         className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
