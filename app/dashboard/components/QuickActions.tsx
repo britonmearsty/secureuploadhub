@@ -2,84 +2,67 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { Plus, FolderOpen, Settings, Cloud, Zap, ArrowUpRight } from "lucide-react"
+import { Plus, FolderOpen, Settings, Cloud, ArrowRight } from "lucide-react"
 
 const quickActions = [
   {
-    title: "Create Portal",
-    description: "Set up a new branding destination",
+    title: "New Portal",
     href: "/dashboard/portals/new",
     icon: Plus,
-    accent: "text-blue-500",
-    bg: "bg-blue-50"
+    color: "text-blue-600",
+    bg: "bg-blue-50",
+    border: "group-hover:border-blue-200"
   },
   {
-    title: "View Portals",
-    description: "Manage your existing portals",
+    title: "All Portals",
     href: "/dashboard/portals",
     icon: FolderOpen,
-    accent: "text-purple-500",
-    bg: "bg-purple-50"
+    color: "text-purple-600",
+    bg: "bg-purple-50",
+    border: "group-hover:border-purple-200"
   },
   {
     title: "Integrations",
-    description: "Connect cloud storage accounts",
     href: "/dashboard/integrations",
     icon: Cloud,
-    accent: "text-emerald-500",
-    bg: "bg-emerald-50"
+    color: "text-emerald-600",
+    bg: "bg-emerald-50",
+    border: "group-hover:border-emerald-200"
   },
   {
     title: "Settings",
-    description: "Configure your account",
     href: "/dashboard/settings",
     icon: Settings,
-    accent: "text-slate-500",
-    bg: "bg-slate-50"
+    color: "text-slate-600",
+    bg: "bg-slate-50",
+    border: "group-hover:border-slate-200"
   }
 ]
 
 export default function QuickActions() {
   return (
-    <div className="mb-8">
-      <div className="flex items-center gap-2 mb-4">
-        <Zap className="w-5 h-5 text-slate-400" />
-        <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">Quick Actions</h3>
-      </div>
+    <div className="grid grid-cols-2 gap-3">
+      {quickActions.map((action, index) => {
+        const Icon = action.icon
+        return (
+          <Link
+            key={index}
+            href={action.href}
+            className={`group flex flex-col gap-3 p-4 bg-white rounded-2xl border border-slate-200 hover:shadow-lg hover:shadow-slate-100 transition-all duration-300 ${action.border}`}
+          >
+            <div className="flex items-start justify-between">
+              <div className={`p-2.5 rounded-xl ${action.bg} ${action.color} transition-colors`}>
+                <Icon className="w-5 h-5" />
+              </div>
+              <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-slate-400 group-hover:-rotate-45 transition-all duration-300" />
+            </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {quickActions.map((action, index) => {
-          const Icon = action.icon
-          return (
-            <motion.div
-              key={index}
-              whileHover={{ y: -4 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Link
-                href={action.href}
-                className="group relative block p-5 bg-white rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/50 transition-all overflow-hidden"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`p-3 rounded-xl ${action.bg} ${action.accent} transition-colors`}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <ArrowUpRight className="w-4 h-4 text-slate-300 group-hover:text-slate-900 transition-colors" />
-                </div>
-
-                <div>
-                  <h4 className="font-bold text-slate-900 group-hover:text-slate-600 transition-colors">
-                    {action.title}
-                  </h4>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    {action.description}
-                  </p>
-                </div>
-              </Link>
-            </motion.div>
-          )
-        })}
-      </div>
+            <span className="font-bold text-slate-700 text-sm group-hover:text-slate-900 transition-colors">
+              {action.title}
+            </span>
+          </Link>
+        )
+      })}
     </div>
   )
 }

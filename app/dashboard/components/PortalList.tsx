@@ -146,7 +146,7 @@ export default function PortalList({
         return (
             <div className={className || "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"}>
                 {[...Array(3)].map((_, i) => (
-                    <div key={i} className="h-64 bg-slate-50 border border-slate-100 rounded-3xl animate-pulse" />
+                    <div key={i} className="h-64 bg-slate-50 border border-slate-100 rounded-2xl animate-pulse" />
                 ))}
             </div>
         )
@@ -156,7 +156,7 @@ export default function PortalList({
         // Empty state for "All Portals" - no portals exist yet
         if (emptyStateTab === "all" && activePortalsCount === 0 && archivedPortalsCount === 0) {
             return (
-                <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-white rounded-3xl border border-slate-200 border-dashed">
+                <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-white rounded-2xl border border-slate-200 border-dashed">
                     <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
                         <Folder className="w-10 h-10 text-slate-200" />
                     </div>
@@ -177,7 +177,7 @@ export default function PortalList({
         // Empty state for "Active" tab - no active portals
         if (emptyStateTab === "active") {
             return (
-                <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-white rounded-3xl border border-slate-200 border-dashed">
+                <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-white rounded-2xl border border-slate-200 border-dashed">
                     <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mb-6">
                         <Activity className="w-10 h-10 text-emerald-200" />
                     </div>
@@ -211,7 +211,7 @@ export default function PortalList({
         // Empty state for "Archived" tab - no archived portals
         if (emptyStateTab === "archived") {
             return (
-                <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-white rounded-3xl border border-slate-200 border-dashed">
+                <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-white rounded-2xl border border-slate-200 border-dashed">
                     <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-6">
                         <Archive className="w-10 h-10 text-slate-300" />
                     </div>
@@ -234,7 +234,7 @@ export default function PortalList({
 
         // Default fallback empty state
         return (
-            <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-white rounded-3xl border border-slate-200 border-dashed">
+            <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-white rounded-2xl border border-slate-200 border-dashed">
                 <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
                     <Folder className="w-10 h-10 text-slate-200" />
                 </div>
@@ -260,7 +260,7 @@ export default function PortalList({
                 {portals.map((portal) => (
                     <div
                         key={portal.id}
-                        className={`group bg-white rounded-3xl border border-slate-200 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 overflow-hidden flex flex-col relative ${!isGrid ? 'flex-row items-center p-4' : ''}`}
+                        className={`group bg-white rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 overflow-hidden flex flex-col relative ${!isGrid ? 'flex-row items-center p-4' : ''}`}
                     >
                         {/* Card Header/Top Section */}
                         <div className={`p-6 flex-1 ${!isGrid ? 'py-0 flex-row gap-4 flex items-center' : ''} w-full`}>
@@ -310,8 +310,8 @@ export default function PortalList({
                                     <p className="text-lg font-bold text-slate-900 mt-1">{portal._count.uploads}</p>
                                 </div>
                                 <div className={`px-4 py-3 rounded-2xl border transition-all ${portal.isActive
-                                        ? 'bg-emerald-50 border-emerald-200'
-                                        : 'bg-slate-50 border-slate-100'
+                                    ? 'bg-emerald-50 border-emerald-200'
+                                    : 'bg-slate-50 border-slate-100'
                                     }`}>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status</p>
                                     <div className="flex items-center gap-1.5 mt-1">

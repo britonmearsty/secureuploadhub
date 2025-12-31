@@ -8,24 +8,28 @@ interface FinalCTASectionProps {
 
 export function FinalCTASection({ onCtaClick }: FinalCTASectionProps) {
   return (
-    <section className="py-12 sm:py-24 px-4">
+    <section className="py-24 px-4 bg-slate-50">
       <div className="max-w-7xl mx-auto">
-        <div className="bg-foreground rounded-[3rem] relative overflow-hidden py-20 px-8 text-center">
-          <div className="max-w-4xl mx-auto relative z-10">
-            <h2 className="text-4xl lg:text-6xl font-bold text-white mb-8 tracking-tight">
-              Ready to stop chasing files?
+        <div className="bg-slate-900 rounded-3xl relative overflow-hidden py-20 px-8 text-center shadow-xl">
+          {/* Background Decorative Circles */}
+          <div className="absolute top-0 left-0 w-64 h-64 bg-slate-800 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+          <div className="absolute bottom-0 right-0 w-64 h-64 bg-emerald-900/40 rounded-full blur-[100px] translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
+
+          <div className="max-w-3xl mx-auto relative z-10">
+            <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6 tracking-tight">
+              Ready to streamline your workflow?
             </h2>
-            <p className="text-xl text-slate-200 mb-12 max-w-2xl mx-auto font-medium">
-              Create a professional upload portal and let clients send files the easy way.
+            <p className="text-lg text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed">
+              Join thousands of professionals who use our platform to request files securely and professionally.
             </p>
-            <div className="flex items-center justify-center">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/auth/signin"
                 onClick={onCtaClick}
-                className="bg-white text-foreground px-4 py-3 rounded-lg font-medium text-sm hover:bg-slate-50 transition-all shadow-md inline-flex items-center justify-center gap-2"
+                className="w-full sm:w-auto bg-white text-slate-900 px-8 py-4 rounded-xl font-bold text-lg hover:bg-slate-100 transition-all shadow-lg flex items-center justify-center gap-2"
               >
-                Create your free portal
-                <ArrowRight className="w-3 h-3" />
+                Get Started for Free
+                <ArrowRight className="w-5 h-5" />
               </Link>
             </div>
           </div>
