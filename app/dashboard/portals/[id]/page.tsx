@@ -119,7 +119,7 @@ export default function EditPortalPage() {
   // Folder section toggle
   const [folderSectionOpen, setFolderSectionOpen] = useState(false)
   const [colorSectionOpen, setColorSectionOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState('Identity')
+  const [activeTab, setActiveTab] = useState('Portal Details')
 
 
 
@@ -478,7 +478,7 @@ export default function EditPortalPage() {
 
           <form onSubmit={handleSubmit} className="space-y-12">
             <div className="flex border-b border-slate-200 mb-6">
-              {['Identity', 'Branding', 'Storage', 'Security', 'Messaging'].map((tab) => (
+              {['Portal Details', 'Branding', 'Storage & Files', 'Access & Security', 'Messages'].map((tab) => (
                 <button
                   key={tab}
                   type="button"
