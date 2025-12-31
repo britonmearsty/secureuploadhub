@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
@@ -20,6 +20,7 @@ import {
   AlertCircle,
   Hash,
   Palette,
+  ChevronDown,
   Eye,
   Type,
   ExternalLink,
@@ -57,11 +58,70 @@ interface StorageFolder {
   name: string
   path: string
 }
+interface FolderNodeProps {
+  folder: StorageFolder & { subfolders?: StorageFolder[] } // include subfolders
+  navigateToFolder: (folder: StorageFolder) => void
+  expandedFolders: Set<string>
+  toggleFolder: (id: string) => void
+  level?: number // optional, default = 0
+}
+
+const FolderNode: React.FC<FolderNodeProps> = ({ folder, navigateToFolder, expandedFolders, toggleFolder, level = 0 }) => {
+  const isExpanded = expandedFolders.has(folder.id)
+  const { subfolders = [] } = folder  // <-- default to empty array
+
+  return (
+    <div className="pl-4">
+      <button
+        type="button"
+        onClick={() => toggleFolder(folder.id)}
+        className="w-full flex items-center justify-between py-2 text-left hover:bg-slate-50 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <FolderOpen className="w-4 h-4 text-amber-500" />
+          <span className="text-sm font-semibold text-slate-700">{folder.name}</span>
+        </div>
+        <ChevronRight className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+      </button>
+
+      {isExpanded && subfolders.length > 0 && (
+        <div className="pl-4 border-l border-slate-100">
+          {subfolders.map((sub) => (
+            <FolderNode
+              key={sub.id}
+              folder={sub}
+              navigateToFolder={navigateToFolder}
+              expandedFolders={expandedFolders}
+              toggleFolder={toggleFolder}
+              level={level + 1}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 
 export default function EditPortalPage() {
   const router = useRouter()
   const params = useParams()
   const portalId = params.id as string
+
+  // State for dropdown visibility
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+// FILE_TYPE_OPTIONS is already defined in EditPortalPage
+
+
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
+  // Folder section toggle
+  const [folderSectionOpen, setFolderSectionOpen] = useState(false)
+  const [colorSectionOpen, setColorSectionOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState('Identity')
+
+
 
   const [portal, setPortal] = useState<Portal | null>(null)
   const [loading, setLoading] = useState(true)
@@ -82,7 +142,7 @@ export default function EditPortalPage() {
     name: "",
     slug: "",
     description: "",
-    primaryColor: "#0f172a",
+    primaryColor: "#3b82f6",
     logoUrl: "",
     backgroundImageUrl: "",
     backgroundColor: "",
@@ -111,10 +171,37 @@ export default function EditPortalPage() {
     { label: "Audio (MP3, WAV)", value: "audio/*" },
   ]
 
+  const DEFAULT_LOGOS = [
+    { label: "No Logo", value: "" },
+    { label: "Secure Hub Logo", value: "https://via.placeholder.com/150x50/3b82f6/ffffff?text=Secure+Hub" },
+    { label: "Upload Icon", value: "https://via.placeholder.com/150x50/10b981/ffffff?text=Upload" },
+    { label: "Generic Logo", value: "https://via.placeholder.com/150x50/6b7280/ffffff?text=Logo" },
+  ]
+  const toggleFolder = (id: string) => {
+  setExpandedFolders(prev => {
+    const newSet = new Set(prev)
+    if (newSet.has(id)) newSet.delete(id)
+    else newSet.add(id)
+    return newSet
+  })
+}
+
+
   useEffect(() => {
     fetchPortal()
     fetchAccounts()
   }, [portalId])
+
+  useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      setDropdownOpen(false);
+    }
+  };
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
 
   async function fetchPortal() {
     try {
@@ -313,45 +400,52 @@ export default function EditPortalPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-        <div>
-          <Link
-            href="/dashboard"
-            className="group inline-flex items-center gap-2 text-slate-400 hover:text-slate-900 mb-4 transition-colors font-medium text-sm"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            Back to Dashboard
-          </Link>
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-slate-900 rounded-2xl shadow-lg shadow-slate-200">
-              <Settings2 className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tight">Configure Portal</h1>
-          </div>
-          <p className="text-slate-400 mt-2 text-sm font-bold uppercase tracking-widest">
-            Registry ID: <span className="text-slate-900 font-mono">{portal.id.slice(0, 8)}</span>
-          </p>
-        </div>
+    <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+    {/* Portal Info */}
+    <div>
+      <Link
+        href="/dashboard"
+        className="group inline-flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-colors text-sm font-medium"
+      >
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        Back to Dashboard
+      </Link>
 
-        <div className="flex items-center gap-3">
-          <Link
-            href={`/p/${portal.slug}`}
-            target="_blank"
-            className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-900 rounded-2xl hover:bg-slate-50 transition-all font-bold text-xs uppercase tracking-widest shadow-sm"
-          >
-            <ExternalLink className="w-4 h-4" />
-            Preview Live
-          </Link>
-          <button
-            onClick={() => setShowDeleteModal(true)}
-            className="flex items-center justify-center p-3 bg-red-50 text-red-500 hover:bg-red-100 rounded-2xl transition-all"
-            title="Decommission Portal"
-          >
-            <Trash2 className="w-5 h-5" />
-          </button>
+      <div className="flex items-center gap-2 mt-2">
+        <div className="p-2 bg-slate-900 rounded-xl shadow-lg shadow-slate-200">
+          <Settings2 className="w-5 h-5 text-white" />
         </div>
+        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          Portal Configuration
+        </h1>
       </div>
+
+      <p className="text-slate-400 mt-1 text-xs font-semibold uppercase tracking-widest">
+        Registry ID: <span className="text-slate-900 font-mono">{portal.id.slice(0, 8)}</span>
+      </p>
+    </div>
+
+    {/* Actions */}
+    <div className="flex items-center gap-2 mt-2 md:mt-0">
+      <Link
+        href={`/p/${portal.slug}`}
+        target="_blank"
+        className="flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 text-slate-900 rounded-xl hover:bg-slate-50 transition-all text-xs font-bold uppercase tracking-wide shadow-sm"
+      >
+        <ExternalLink className="w-3.5 h-3.5" />
+        Preview Live
+      </Link>
+
+      <button
+        onClick={() => setShowDeleteModal(true)}
+        className="flex items-center justify-center p-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-all"
+        title="Decommission Portal"
+      >
+        <Trash2 className="w-4.5 h-4.5" />
+      </button>
+    </div>
+  </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
         {/* Form Container */}
@@ -383,509 +477,580 @@ export default function EditPortalPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-12">
+            <div className="flex border-b border-slate-200 mb-6">
+              {['Identity', 'Branding', 'Storage', 'Security', 'Messaging'].map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-2 font-semibold text-sm uppercase tracking-wide transition-all hover:scale-105 ${activeTab === tab ? 'border-b-2 border-slate-900 text-slate-900' : 'text-slate-400 hover:text-slate-900'}`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
             {/* Field Set: Identity */}
-            <section className="space-y-8">
-              <div className="flex items-center gap-2 pb-4 border-b border-slate-50">
-                <Type className="w-4 h-4 text-slate-400" />
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Identity & Branding</h3>
-              </div>
+            <section className="space-y-6">
+  <div className="flex items-center gap-2 pb-2 border-b border-slate-50">
+    <Type className="w-4 h-4 text-slate-400" />
+    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Identity & Branding</h3>
+  </div>
 
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Portal Designation</label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-bold text-slate-900"
-                    required
-                  />
-                </div>
+  <div className="space-y-6">
+    <div>
+      <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Portal Name</label>
+      <input
+        type="text"
+        value={formData.name}
+        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-bold text-slate-900"
+        required
+      />
+    </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Permanent Access Handle</label>
-                  <div className="flex items-center px-5 py-4 bg-slate-100 border border-slate-200 rounded-2xl opacity-60 cursor-not-allowed">
-                    <span className="text-slate-400 text-xs font-bold uppercase tracking-widest mr-2">Handle:</span>
-                    <span className="text-slate-900 font-mono text-sm">{portal.slug}</span>
-                    <Lock className="w-3.5 h-3.5 text-slate-300 ml-auto" />
-                  </div>
-                  <p className="text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-tight">Handles cannot be modified after registration.</p>
-                </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Interface Accent Color</label>
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      <input
-                        type="color"
-                        value={formData.primaryColor}
-                        onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-                        className="w-16 h-16 rounded-2xl cursor-pointer border-4 border-white shadow-xl overflow-hidden shrink-0"
-                      />
-                      <div className="absolute inset-0 rounded-2xl border border-slate-200 pointer-events-none" />
-                    </div>
-                    <div className="flex-1 relative">
-                      <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                      <input
-                        type="text"
-                        value={formData.primaryColor}
-                        onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-                        className="w-full pl-10 pr-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-mono text-sm uppercase font-bold"
-                      />
-                    </div>
-                  </div>
-                </div>
+  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Permanent Handle</label>
+  <div className="flex items-center px-4 py-3 bg-slate-100 border border-slate-200 rounded-2xl opacity-60 cursor-not-allowed">
+    <span className="text-slate-400 text-xs font-bold uppercase tracking-widest mr-2">Handle:</span>
+    <span className="text-slate-900 font-mono text-sm">{portal.slug}</span>
+    <Lock className="w-3.5 h-3.5 text-slate-300 ml-auto" />
+  </div>
+  <p className="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-tight">Handles cannot be modified after registration.</p>
+</div>
+
+<div>
+  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Accent Color</label>
+  <div className="flex items-center gap-3">
+    <div className="relative">
+      <input
+        type="color"
+        value={formData.primaryColor}
+        onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+        className="w-12 h-12 rounded-2xl cursor-pointer border-4 border-white shadow-xl overflow-hidden shrink-0"
+      />
+      <div className="absolute inset-0 rounded-2xl border border-slate-200 pointer-events-none" />
+    </div>
+    <div className="flex-1 relative">
+      <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+      <input
+        type="text"
+        value={formData.primaryColor}
+        onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-mono text-sm uppercase font-bold"
+      />
+    </div>
+  </div>
+</div>
+
               </div>
             </section>
 
             {/* Field Set: Visual Customization */}
-            <section className="space-y-8">
-              <div className="flex items-center gap-2 pb-4 border-b border-slate-50">
-                <Palette className="w-4 h-4 text-slate-400" />
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Visual DNA</h3>
-              </div>
+            <section className="space-y-6">
+  <div className="flex items-center gap-2 pb-3 border-b border-slate-50">
+    <Palette className="w-4 h-4 text-slate-400" />
+    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Branding</h3>
+  </div>
 
-              <div className="space-y-6">
-                {/* Logo URL */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Logo URL</label>
-                  <input
-                    type="url"
-                    value={formData.logoUrl}
-                    onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
-                    placeholder="https://..."
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300 text-sm"
-                  />
-                </div>
+  <div className="space-y-4">
+    {/* Logo URL */}
+    <div>
+      <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Logo Link</label>
+      <div>
+        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Choose Default Logo</label>
+        <select
+          onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+          className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium mb-3"
+        >
+          {DEFAULT_LOGOS.map((logo) => (
+            <option key={logo.value} value={logo.value}>{logo.label}</option>
+          ))}
+        </select>
+      </div>
+      <input
+        type="url"
+        value={formData.logoUrl}
+        onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+        placeholder="https://..."
+        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300 text-sm"
+      />
+    </div>
 
-                {/* Background Image URL */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Background Image URL</label>
-                  <input
-                    type="url"
-                    value={formData.backgroundImageUrl}
-                    onChange={(e) => setFormData({ ...formData, backgroundImageUrl: e.target.value })}
-                    placeholder="https://..."
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300 text-sm"
-                  />
-                </div>
+   <button
+     type="button"
+     onClick={() => setColorSectionOpen(!colorSectionOpen)}
+     className="text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors cursor-pointer"
+   >
+     Manage Colors
+   </button>
+   <AnimatePresence>
+     {colorSectionOpen && (
+       <motion.div
+         initial={{ opacity: 0, height: 0 }}
+         animate={{ opacity: 1, height: "auto" }}
+         exit={{ opacity: 0, height: 0 }}
+         className="grid grid-cols-2 gap-3"
+       >
+         {/* Text Color */}
+         <div>
+           <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Text Color</label>
+           <div className="flex items-center gap-2">
+             <div className="relative w-12 h-12">
+               <input
+                 type="color"
+                 value={formData.textColor}
+                 onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
+                 className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-sm overflow-hidden"
+               />
+             </div>
+             <input
+               type="text"
+               value={formData.textColor}
+               onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
+               className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-mono text-sm uppercase"
+             />
+           </div>
+         </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Text Color */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Content Text</label>
-                    <div className="flex items-center gap-3">
-                      <div className="relative group w-12 h-12">
-                        <input
-                          type="color"
-                          value={formData.textColor}
-                          onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
-                          className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        value={formData.textColor}
-                        onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
-                        className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-mono text-xs uppercase"
-                      />
-                    </div>
-                  </div>
+         {/* Background Color */}
+         <div>
+           <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Page BG</label>
+           <div className="flex items-center gap-2">
+             <div className="relative w-12 h-12">
+               <input
+                 type="color"
+                 value={formData.backgroundColor || "#ffffff"}
+                 onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
+                 className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-sm overflow-hidden"
+               />
+             </div>
+             <input
+               type="text"
+               value={formData.backgroundColor || ""}
+               onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
+               placeholder="#HEX"
+               className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-mono text-sm uppercase"
+             />
+           </div>
+         </div>
 
-                  {/* Background Color */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Page BG</label>
-                    <div className="flex items-center gap-3">
-                      <div className="relative group w-12 h-12">
-                        <input
-                          type="color"
-                          value={formData.backgroundColor || "#ffffff"}
-                          onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
-                          className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        value={formData.backgroundColor || ""}
-                        onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
-                        placeholder="#HEX"
-                        className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-mono text-xs uppercase"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Card Color */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Card BG</label>
-                    <div className="flex items-center gap-3">
-                      <div className="relative group w-12 h-12">
-                        <input
-                          type="color"
-                          value={formData.cardBackgroundColor}
-                          onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
-                          className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
-                        />
-                      </div>
-                      <input
-                        type="text"
-                        value={formData.cardBackgroundColor}
-                        onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
-                        className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-mono text-xs uppercase"
-                      />
-                    </div>
-                  </div>
-                </div>
+         {/* Card Color */}
+         <div>
+           <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Card BG</label>
+           <div className="flex items-center gap-2">
+             <div className="relative w-12 h-12">
+               <input
+                 type="color"
+                 value={formData.cardBackgroundColor}
+                 onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
+                 className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-sm overflow-hidden"
+               />
+             </div>
+             <input
+               type="text"
+               value={formData.cardBackgroundColor}
+               onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
+               className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-mono text-sm uppercase"
+             />
+           </div>
+         </div>
+       </motion.div>
+     )}
+   </AnimatePresence>
               </div>
             </section>
 
             {/* Field Set: Messaging & Experience */}
-            <section className="space-y-8">
-              <div className="flex items-center gap-2 pb-4 border-b border-slate-50">
-                <Type className="w-4 h-4 text-slate-400" />
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Message & Tone</h3>
-              </div>
+<section className="space-y-6">
+  <div className="flex items-center gap-2 pb-3 border-b border-slate-50">
+    <Type className="w-4 h-4 text-slate-400" />
+    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Message & Tone</h3>
+  </div>
 
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Welcome Message</label>
-                  <textarea
-                    value={formData.welcomeMessage}
-                    onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
-                    placeholder="Welcome to our secure upload portal. Please submit your files below."
-                    rows={2}
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300 resize-none"
-                  />
-                </div>
+  <div className="space-y-4">
+    <div>
+      <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Welcome Note</label>
+      <textarea
+        value={formData.welcomeMessage}
+        onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
+        placeholder="Welcome to our secure upload portal. Please submit your files below."
+        rows={2}
+        className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300 resize-none"
+      />
+    </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Submit Button Label</label>
-                    <input
-                      type="text"
-                      value={formData.submitButtonText}
-                      onChange={(e) => setFormData({ ...formData, submitButtonText: e.target.value })}
-                      placeholder="Initialize Transfer"
-                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Success Message</label>
-                    <input
-                      type="text"
-                      value={formData.successMessage}
-                      onChange={(e) => setFormData({ ...formData, successMessage: e.target.value })}
-                      placeholder="Transmission Verified"
-                      className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
-                    />
-                  </div>
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div>
+    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Action Button Label</label>
+    <input
+      type="text"
+      value={formData.submitButtonText}
+      onChange={(e) => setFormData({ ...formData, submitButtonText: e.target.value })}
+      placeholder="Initialize Transfer"
+      className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
+    />
+  </div>
+  <div>
+    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Success Note</label>
+    <input
+      type="text"
+      value={formData.successMessage}
+      onChange={(e) => setFormData({ ...formData, successMessage: e.target.value })}
+      placeholder="Transmission Verified"
+      className="w-full px-3 py-2 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
+    />
+  </div>
+</div>
+
               </div>
             </section>
+{/* Storage Section */}
+<section className="space-y-2">
+  <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400 flex items-center gap-2">
+    <Cloud className="w-4 h-4" /> Storage Backbone
+  </h3>
 
-            {/* Field Set: Storage */}
-            <section className="space-y-8">
-              <div className="flex items-center gap-2 pb-4 border-b border-slate-50">
-                <Cloud className="w-4 h-4 text-slate-400" />
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Storage Architecture</h3>
-              </div>
+  {/* Storage Options */}
+  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+    {[
+      { id: "google_drive", name: "Google Drive", icon: Cloud, disabled: !accounts.find(a => a.provider === "google") },
+      { id: "dropbox", name: "Dropbox", icon: Cloud, disabled: !accounts.find(a => a.provider === "dropbox") }
+    ].map((provider) => {
+      const Icon = provider.icon;
+      const isActive = formData.storageProvider === provider.id;
+      return (
+        <button
+          key={provider.id}
+          type="button"
+          disabled={provider.disabled}
+          onClick={() => selectStorageProvider(provider.id as any)}
+          className={`relative p-3 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 overflow-hidden ${
+            isActive ? "border-slate-900 bg-slate-50/50 shadow-sm" : "border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50"
+          } ${provider.disabled ? "opacity-40 grayscale cursor-not-allowed" : ""}`}
+        >
+          <div className={`p-2 rounded-xl ${isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-400 transition-colors group-hover:bg-slate-200"}`}>
+            <Icon className="w-5 h-5" />
+          </div>
+          <span className="font-semibold text-xs text-slate-900">{provider.name}</span>
+        </button>
+      );
+    })}
+  </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[
-                  { id: "google_drive", name: "Google", icon: Cloud, disabled: !accounts.find(a => a.provider === "google") },
-                  { id: "dropbox", name: "Dropbox", icon: Cloud, disabled: !accounts.find(a => a.provider === "dropbox") }
-                ].map((provider) => {
-                  const Icon = provider.icon
-                  const isActive = formData.storageProvider === provider.id
-                  return (
-                    <button
-                      key={provider.id}
-                      type="button"
-                      disabled={provider.disabled}
-                      onClick={() => selectStorageProvider(provider.id as any)}
-                      className={`group relative p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 ${isActive
-                        ? "border-slate-900 bg-slate-50"
-                        : "border-slate-50 bg-white hover:border-slate-200"
-                        } ${provider.disabled ? "opacity-30 grayscale cursor-not-allowed" : ""}`}
-                    >
-                      <div className={`p-3 rounded-2xl transition-colors ${isActive ? "bg-slate-900 text-white shadow-lg shadow-slate-200" : "bg-slate-50 text-slate-300 group-hover:bg-slate-100"}`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <span className="font-black text-[10px] uppercase tracking-widest text-slate-900">{provider.name}</span>
-                    </button>
-                  )
-                })}
-              </div>
+  {/* Folder Selection Section */}
+  <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden">
+    {/* Toggle */}
+    <button
+      type="button"
+      onClick={() => setFolderSectionOpen(prev => !prev)}
+      className="w-full px-2 py-1.5 flex justify-between items-center text-sm font-semibold text-slate-900 uppercase tracking-wide bg-white border-b border-slate-100 rounded-t-2xl hover:bg-slate-50 transition-colors"
+    >
+      <span>Current Folder: {formData.storageFolderPath || "SecureUploadHub"}</span>
+      <ChevronRight className={`w-4 h-4 transition-transform ${folderSectionOpen ? "rotate-90" : ""}`} />
+    </button>
 
-              {/* Modern Folder Explorer */}
-              <AnimatePresence mode="wait">
-                {true && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="bg-slate-50 border border-slate-100 rounded-3xl overflow-hidden"
-                  >
-                    <div className="p-4 bg-white border-b border-slate-50 flex items-center gap-2 overflow-x-auto scrollbar-hide">
-                      <button type="button" onClick={navigateToRoot} className="text-[10px] font-black text-slate-300 hover:text-slate-900 transition-colors uppercase tracking-[0.2em] shrink-0">Root</button>
-                      {folderPath.map((folder, index) => (
-                        <div key={folder.id} className="flex items-center gap-2 shrink-0">
-                          <ChevronRight className="w-3 h-3 text-slate-300" />
-                          <button type="button" onClick={() => navigateBack(index)} className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em]">{folder.name}</button>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="max-h-60 overflow-y-auto divide-y divide-slate-100/50">
-                      {loadingFolders ? (
-                        <div className="p-12 text-center">
-                          <Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-200" />
-                        </div>
-                      ) : folders.length === 0 ? (
-                        <div className="p-12 text-center text-slate-400 text-[10px] font-black uppercase tracking-widest">End of Directory</div>
-                      ) : (
-                        folders.map((folder) => (
-                          <button
-                            key={folder.id}
-                            type="button"
-                            onClick={() => navigateToFolder(folder)}
-                            className="w-full px-6 py-4 text-left hover:bg-white flex items-center justify-between group transition-all"
-                          >
-                            <div className="flex items-center gap-3">
-                              <FolderOpen className="w-4 h-4 text-amber-500" />
-                              <span className="text-sm font-bold text-slate-600 group-hover:text-slate-900">{folder.name}</span>
-                            </div>
-                            <ChevronRight className="w-4 h-4 text-slate-200 group-hover:text-slate-400 transition-all group-hover:translate-x-1" />
-                          </button>
-                        ))
-                      )}
-                    </div>
-                    <div className="p-4 bg-slate-900/5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">
-                      Active Destination: <span className="text-slate-900">{formData.storageFolderPath || "Core Workspace"}</span>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </section>
+    {/* Expandable Tree */}
+    <AnimatePresence>
+      {folderSectionOpen && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto", transition: { duration: 0.2 } }}
+          exit={{ opacity: 0, height: 0, transition: { duration: 0.15 } }}
+          className="max-h-44 overflow-y-auto divide-y divide-slate-100/50 px-2"
+        >
+          {loadingFolders ? (
+            <div className="p-2 text-center">
+              <Loader2 className="w-5 h-5 animate-spin mx-auto text-slate-300" />
+            </div>
+          ) : folders.length === 0 ? (
+            <div className="p-2 text-center text-slate-400 text-sm font-medium">No subdirectories found</div>
+          ) : (
+            folders.map((folder) => (
+              <FolderNode
+                key={folder.id}
+                folder={folder}
+                navigateToFolder={navigateToFolder}
+                expandedFolders={expandedFolders}
+                toggleFolder={toggleFolder}
+                level={0} // pass level for indentation
+              />
+            ))
+          )}
+        </motion.div>
+      )}
+    </AnimatePresence>
+
+    {/* Footer */}
+    <div className="p-1 bg-slate-900/5 text-[10px] font-semibold text-slate-500 uppercase tracking-wide text-center">
+      Active Destination: <span className="text-slate-900">{formData.storageFolderPath || "SecureUploadHub"}</span>
+    </div>
+  </div>
+</section>
+
 
             {/* Field Set: Rules */}
-            <section className="space-y-8">
-              <div className="flex items-center gap-2 pb-4 border-b border-slate-50">
-                <Settings2 className="w-4 h-4 text-slate-400" />
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Security & Scale</h3>
-              </div>
+<section className="space-y-6">
+  <div className="flex items-center gap-2 pb-3 border-b border-slate-50">
+    <Settings2 className="w-4 h-4 text-slate-400" />
+    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Security & Scale</h3>
+  </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Payload Ceiling (MB)</label>
-                  <input
-                    type="number"
-                    value={formData.maxFileSize}
-                    onChange={(e) => setFormData({ ...formData, maxFileSize: parseInt(e.target.value) || 100 })}
-                    className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-bold"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Entrance Passkey</label>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                    <input
-                      type="password"
-                      value={formData.newPassword}
-                      onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                      placeholder={hasPassword ? "Roll to new key..." : "Establish encryption key..."}
-                      className="w-full pl-10 pr-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-bold"
-                    />
-                  </div>
-                </div>
-              </div>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Payload Limit (MB)</label>
+      <input
+        type="number"
+        value={formData.maxFileSize}
+        onChange={(e) => setFormData({ ...formData, maxFileSize: parseInt(e.target.value) || 100 })}
+        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-bold"
+      />
+    </div>
+    <div>
+      <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Access Passkey</label>
+      <div className="relative">
+        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+        <input
+          type="password"
+          value={formData.newPassword}
+          onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+          placeholder={hasPassword ? "Roll to new key..." : "Establish encryption key..."}
+          className="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-bold"
+        />
+      </div>
+    </div>
+    </div>
 
-              <div className="space-y-4">
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">Metadata Harvesting</label>
-                <div className="flex gap-4">
-                  {[
-                    { id: 'name', label: 'Identity', key: 'requireClientName' },
-                    { id: 'email', label: 'E-Mail', key: 'requireClientEmail' }
-                  ].map(req => (
-                    <button
-                      key={req.id}
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, [req.key]: !prev[req.key as keyof typeof prev] }))}
-                      className={`flex-1 p-4 rounded-2xl border-2 font-black text-[10px] uppercase tracking-widest transition-all ${formData[req.key as keyof typeof formData]
-                        ? "border-slate-900 bg-slate-900 text-white shadow-xl shadow-slate-200"
-                        : "border-slate-50 bg-slate-50 text-slate-400 hover:border-slate-200 hover:bg-white"
-                        }`}
-                    >
-                      {req.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+           <div className="space-y-3">
+  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">Client Information Collection</label>
+  <div className="flex gap-3">
+    {[
+      { id: 'name', label: 'Identity', key: 'requireClientName' },
+      { id: 'email', label: 'E-Mail', key: 'requireClientEmail' }
+    ].map(req => (
+      <button
+        key={req.id}
+        type="button"
+        onClick={() => setFormData(prev => ({ ...prev, [req.key]: !prev[req.key as keyof typeof prev] }))}
+        className={`flex-1 px-3 py-2 rounded-2xl border-2 font-black text-[10px] uppercase tracking-widest transition-all ${
+          formData[req.key as keyof typeof formData]
+            ? "border-slate-900 bg-slate-900 text-white shadow-sm"
+            : "border-slate-50 bg-slate-50 text-slate-400 hover:border-slate-200 hover:bg-white"
+        }`}
+      >
+        {req.label}
+      </button>
+    ))}
+  </div>
+</div>
 
-              <div className="space-y-3">
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">Allowed File Types</label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {FILE_TYPE_OPTIONS.map((opt) => {
-                    const isSelected = formData.allowedFileTypes.includes(opt.value)
-                    return (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            allowedFileTypes: isSelected
-                              ? prev.allowedFileTypes.filter((v) => v !== opt.value)
-                              : [...prev.allowedFileTypes, opt.value],
-                          }))
-                        }
-                        className={`flex items-center justify-between gap-3 p-4 rounded-2xl border-2 text-left transition-all ${isSelected
-                          ? "border-slate-900 bg-slate-900 text-white"
-                          : "border-slate-50 bg-slate-50 text-slate-500 hover:border-slate-200 hover:bg-white"
-                          }`}
-                      >
-                        <span className="text-sm font-semibold">{opt.label}</span>
-                        <CheckCircle2 className={`w-5 h-5 ${isSelected ? "text-white" : "text-slate-300"}`} />
-                      </button>
-                    )
-                  })}
-                </div>
-                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                  {formData.allowedFileTypes.length === 0
-                    ? "All file types permitted"
-                    : `${formData.allowedFileTypes.length} categories enabled`}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setFormData((prev) => ({ ...prev, allowedFileTypes: [] }))}
-                  className="text-[11px] font-bold text-slate-400 hover:text-slate-900 transition-colors underline"
-                >
-                  Allow any file type
-                </button>
-              </div>
+             <div className="relative space-y-2" ref={dropdownRef}>
+  <button
+    type="button"
+    onClick={() => setDropdownOpen((prev) => !prev)}
+    className="w-full text-left bg-white border border-slate-100 rounded-xl px-3 py-1.5 flex justify-between items-center text-sm font-semibold hover:border-slate-200 transition-colors"
+  >
+    {formData.allowedFileTypes.length === 0
+      ? "File Categories"
+      : `${formData.allowedFileTypes.length} categories enabled`}
+    <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+  </button>
+
+  {dropdownOpen && (
+    <div className="absolute z-50 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-lg px-3 py-1.5 space-y-1 max-h-52 overflow-y-auto">
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={formData.allowedFileTypes.length === FILE_TYPE_OPTIONS.length}
+          onChange={(e) =>
+            setFormData((prev) => ({
+              ...prev,
+              allowedFileTypes: e.target.checked ? FILE_TYPE_OPTIONS.map((f) => f.value) : [],
+            }))
+          }
+          className="w-4 h-4 rounded border-slate-300"
+        />
+        <span className="text-sm font-semibold">Enable All Categories</span>
+      </label>
+
+      <hr className="border-slate-100 my-1" />
+
+      {FILE_TYPE_OPTIONS.map((opt) => {
+        const isSelected = formData.allowedFileTypes.includes(opt.value);
+        return (
+          <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() =>
+                setFormData((prev) => ({
+                  ...prev,
+                  allowedFileTypes: isSelected
+                    ? prev.allowedFileTypes.filter((v) => v !== opt.value)
+                    : [...prev.allowedFileTypes, opt.value],
+                }))
+              }
+              className="w-4 h-4 rounded border-slate-300"
+            />
+            <span className={`text-sm font-medium ${isSelected ? "text-slate-900" : "text-slate-500"}`}>
+              {opt.label}
+            </span>
+          </label>
+        );
+      })}
+    </div>
+  )}
+</div>
+
             </section>
 
             {/* Actions */}
-            <div className="flex gap-4 pt-6">
-              <button
-                type="submit"
-                disabled={saving}
-                className="flex-1 flex items-center justify-center gap-2 px-8 py-5 bg-slate-900 text-white rounded-3xl hover:bg-slate-800 transition-all shadow-2xl shadow-slate-200 disabled:opacity-50 font-black text-xs uppercase tracking-[0.2em] active:scale-[0.98]"
-              >
-                {saving ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <>Commit Changes <Save className="w-4 h-4" /></>
-                )}
-              </button>
-            </div>
+<div className="flex gap-4 pt-4">
+  <button
+    type="submit"
+    disabled={saving}
+    className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all shadow-sm disabled:opacity-50 font-bold text-xs uppercase tracking-wide active:scale-[0.97]"
+  >
+    {saving ? (
+      <Loader2 className="w-5 h-5 animate-spin" />
+    ) : (
+      <>Commit Changes <Save className="w-4 h-4" /></>
+    )}
+  </button>
+</div>
+
           </form>
         </motion.div>
 
         {/* Live Preview Column */}
-        <div className="hidden lg:block sticky top-8">
-          <div className="relative">
-            <div className="absolute -inset-10 bg-slate-50 border border-slate-100 rounded-[60px] -z-10" />
+        {/* Preview Section - Modern Mockup */}
+<div className="hidden lg:block sticky top-8">
+  <div className="relative">
+    <div className="absolute -inset-4 bg-slate-100/50 rounded-[48px] -z-10" />
 
-            <div className="flex items-center justify-between mb-8 px-4">
-              <div className="flex items-center gap-2">
-                <Eye className="w-4 h-4 text-slate-400" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Environment View</span>
+    <div className="flex items-center gap-2 mb-4 px-6">
+      <Eye className="w-4 h-4 text-slate-400" />
+      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Live Preview</span>
+    </div>
+
+    <div className="bg-white rounded-[40px] shadow-2xl border border-slate-200/50 overflow-hidden max-h-[80vh] flex flex-col">
+      {/* Browser Frame */}
+      <div className="bg-slate-50 h-10 border-b border-slate-100 flex items-center px-6 gap-1.5 shrink-0 z-20 relative">
+        <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+        <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+        <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+        <div className="mx-auto bg-white border border-slate-100 rounded-md h-6 px-3 flex items-center w-1/2">
+          <span className="text-[10px] text-slate-300 font-mono italic truncate">
+            assets.secureupload.hub/p/{formData.slug || "..."}
+          </span>
+        </div>
+      </div>
+
+      {/* Portal Content Scrollable */}
+      <div
+        className="flex-1 overflow-y-auto p-8 flex flex-col items-center relative"
+        style={{
+          backgroundColor: formData.backgroundColor || '#ffffff',
+          color: formData.textColor || '#0f172a'
+        }}
+      >
+        {/* Background Image Layer */}
+        {formData.backgroundImageUrl && (
+          <div
+            className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-100"
+            style={{ backgroundImage: `url(${formData.backgroundImageUrl})` }}
+          />
+        )}
+
+        {/* Content Layer */}
+        <div className="w-full max-w-sm flex flex-col relative z-10 space-y-6">
+          {/* Header Preview */}
+          <div className="text-center mb-6">
+            {formData.logoUrl ? (
+              <div className="w-auto h-20 mx-auto mb-4 flex items-center justify-center">
+                <img src={formData.logoUrl} alt="Logo" className="max-h-full max-w-full object-contain" />
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Simulating Live</span>
+            ) : (
+              <motion.div
+                animate={{ backgroundColor: formData.primaryColor }}
+                className="w-20 h-20 rounded-3xl mx-auto mb-4 flex items-center justify-center text-white text-3xl font-black shadow-md"
+              >
+                {formData.name ? formData.name.charAt(0).toUpperCase() : <Palette className="w-8 h-8" />}
+              </motion.div>
+            )}
+
+            {formData.welcomeMessage && (
+              <p className="mb-2 text-lg font-medium opacity-80" style={{ color: formData.textColor }}>
+                {formData.welcomeMessage}
+              </p>
+            )}
+
+            <h2 className="text-2xl font-black tracking-tight leading-tight" style={{ color: formData.textColor }}>
+              {formData.name || "Untitled Portal"}
+            </h2>
+
+            {!formData.welcomeMessage && (
+              <p className="text-sm mt-2 font-medium opacity-60" style={{ color: formData.textColor }}>
+                {formData.description || "Enter portal description above to preview here."}
+              </p>
+            )}
+          </div>
+
+          {/* Password Warning if set */}
+          {(hasPassword || formData.newPassword) && (
+            <div className="bg-amber-50 border border-amber-100 rounded-2xl p-3 flex items-center gap-3">
+              <div className="p-2 bg-white rounded-lg shadow-sm">
+                <Lock className="w-3 h-3 text-amber-500" />
               </div>
+              <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Security Enabled</span>
             </div>
+          )}
 
-            <div className="bg-white rounded-[45px] shadow-2xl border border-slate-200/50 overflow-hidden min-h-[750px] flex flex-col relative">
-              {/* Browser Chrome */}
-              <div className="bg-slate-50 h-10 border-b border-slate-100 flex items-center px-6 gap-2 shrink-0">
-                <div className="flex gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-red-200" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-amber-200" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-200" />
-                </div>
-                <div className="mx-auto bg-white border border-slate-100 rounded-lg h-6 px-4 flex items-center w-3/5">
-                  <Lock className="w-2.5 h-2.5 text-emerald-400 mr-2" />
-                  <span className="text-[9px] text-slate-400 font-mono truncate">
-                    assets.uploadhub.io/p/{formData.slug}
-                  </span>
-                </div>
+          {/* Form Fields Preview */}
+          <div className="space-y-4 mb-6">
+            {formData.requireClientName && (
+              <div>
+                <div className="h-4 bg-slate-100 rounded w-1/2 mb-2" />
+                <div className="h-12 bg-slate-50 border border-slate-100 rounded-xl" />
               </div>
-
-              {/* Content Frame */}
-              <div className="flex-1 overflow-y-auto p-12 bg-white flex flex-col items-center">
-                <div className="w-full max-w-sm">
-                  {/* Branding Preview */}
-                  <div className="text-center mb-12">
-                    <motion.div
-                      animate={{ backgroundColor: formData.primaryColor }}
-                      className="w-20 h-20 rounded-[28px] mx-auto mb-6 flex items-center justify-center text-white text-3xl font-black shadow-2xl shadow-current/20 border-4 border-white"
-                    >
-                      {formData.name.charAt(0).toUpperCase() || <Palette className="w-8 h-8" />}
-                    </motion.div>
-                    <h2 className="text-2xl font-black text-slate-900 tracking-tight leading-tight px-4">
-                      {formData.name || "Portal Designation"}
-                    </h2>
-                    <p className="text-slate-400 text-xs mt-3 font-bold uppercase tracking-widest">
-                      {formData.description ? "Status: Receiving Files" : "Status: Awaiting Setup"}
-                    </p>
-                  </div>
-
-                  {/* Password Shield if active */}
-                  {(hasPassword || formData.newPassword) && (
-                    <div className="bg-slate-900 text-white rounded-3xl p-5 flex items-center gap-4 mb-8 shadow-xl shadow-slate-200">
-                      <div className="p-2 bg-white/10 rounded-xl">
-                        <Lock className="w-4 h-4 " />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Security Core</span>
-                        <span className="text-xs font-bold">Access Encryption Active</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Input Mockups */}
-                  <div className="space-y-6 mb-10">
-                    {formData.requireClientName && (
-                      <div className="space-y-2">
-                        <div className="h-3 bg-slate-50 rounded w-1/3" />
-                        <div className="h-14 bg-slate-50 border border-slate-100 rounded-2xl" />
-                      </div>
-                    )}
-                    {formData.requireClientEmail && (
-                      <div className="space-y-2">
-                        <div className="h-3 bg-slate-50 rounded w-1/4" />
-                        <div className="h-14 bg-slate-50 border border-slate-100 rounded-2xl" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Payload Zone */}
-                  <div className="border-4 border-dashed border-slate-50 rounded-[40px] p-12 flex flex-col items-center justify-center text-center bg-slate-50/30 group">
-                    <div className="p-5 bg-white rounded-full mb-5 shadow-inner transition-transform group-hover:scale-105">
-                      <Upload className="w-8 h-8 text-slate-200" />
-                    </div>
-                    <p className="text-xs font-black text-slate-900 uppercase tracking-[0.2em]">Transmission Ready</p>
-                    <p className="text-[10px] text-slate-400 mt-2 font-bold whitespace-nowrap uppercase tracking-widest">Volume Threshold: {formData.maxFileSize} MB</p>
-                  </div>
-
-                  {/* Final Submission Preview */}
-                  <motion.div
-                    animate={{ backgroundColor: formData.primaryColor }}
-                    className="h-16 rounded-3xl mt-12 flex items-center justify-center text-[10px] font-black text-white uppercase tracking-[0.3em] shadow-2xl shadow-current/30 border-4 border-white"
-                  >
-                    Initialize Transfer
-                  </motion.div>
-                </div>
+            )}
+            {formData.requireClientEmail && (
+              <div>
+                <div className="h-4 bg-slate-100 rounded w-1/3 mb-2" />
+                <div className="h-12 bg-slate-50 border border-slate-100 rounded-xl" />
               </div>
-
-              <div className="py-8 bg-slate-50 border-t border-slate-100 flex items-center justify-center gap-2">
-                <Layout className="w-3.5 h-3.5 text-slate-300" />
-                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300">Hub Architecture Verified</span>
-              </div>
+            )}
+            <div>
+              <div className="h-4 bg-slate-100 rounded w-1/4 mb-2" />
+              <div className="h-24 bg-slate-50 border border-slate-100 rounded-xl" />
             </div>
           </div>
+
+          {/* Upload Preview Zone */}
+          <div className="border-2 border-dashed border-slate-200 rounded-[32px] p-8 flex flex-col items-center justify-center text-center group bg-slate-50/20">
+            <div className="p-4 bg-white rounded-full mb-3 group-hover:scale-110 transition-transform">
+              <Upload className="w-8 h-8 text-slate-300" />
+            </div>
+            <p className="text-sm font-bold text-slate-900 tracking-tight">Drop your assets</p>
+            <p className="text-xs text-slate-400 mt-1 font-medium">Maximum volume available per file: {formData.maxFileSize} MB</p>
+          </div>
+
+          {/* CTA Preview */}
+          <motion.div
+            animate={{ backgroundColor: formData.primaryColor }}
+            className="h-12 rounded-2xl mt-6 flex items-center justify-center text-sm font-black text-white uppercase tracking-widest shadow-lg"
+          >
+            {formData.submitButtonText || "Initialize Transfer"}
+          </motion.div>
         </div>
+      </div>
+
+      <div className="py-6 border-t border-slate-50 text-center">
+        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300">Hub Integrity Ensured</span>
+      </div>
+    </div>
+  </div>
+</div>
       </div>
 
       {/* Delete Confirmation Modal */}
