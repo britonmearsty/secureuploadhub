@@ -29,6 +29,20 @@ const nextConfig: NextConfig = {
   // Optimize upload performance
   httpAgentOptions: {
     keepAlive: true,
+    // keepAliveMsecs: 30000, // Keep-alive probe every 30s
+    // maxSockets: 128, // Increased max sockets for parallel uploads
+    // maxFreeSockets: 64,
+    // freeSocketTimeout: 30000, // Close idle sockets after 30s
+  },
+  onDemandEntries: {
+    maxInactiveAge: 60 * 1000, // Keep compiled pages for 60s
+    pagesBufferLength: 5,
+  },
+  // Increase server timeout for large uploads
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '500mb', // Allow larger request bodies
+    },
   },
 };
 

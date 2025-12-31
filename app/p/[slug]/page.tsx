@@ -4,23 +4,24 @@ import { useState, useEffect, useCallback } from "react"
 import { useParams } from "next/navigation"
 import posthog from "posthog-js"
 import { motion, AnimatePresence } from "framer-motion"
+import { uploadFileInChunks } from "@/lib/chunked-upload"
 import {
-    Upload,
-    CheckCircle,
-    AlertCircle,
-    Loader2,
-    X,
-    FileIcon,
-    Lock,
-    ChevronRight,
-    ShieldCheck,
-    FileText,
-    Mail,
-    User,
-    MessageSquare,
-    CheckCircle2,
-    LockKeyhole,
-    Rocket
+  Upload,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+  X,
+  FileIcon,
+  Lock,
+  ChevronRight,
+  ShieldCheck,
+  FileText,
+  Mail,
+  User,
+  MessageSquare,
+  CheckCircle2,
+  LockKeyhole,
+  Rocket
 } from "lucide-react"
 
 interface Portal {
@@ -240,138 +241,34 @@ export default function PublicUploadPage() {
         throw lastError
     }
 
-    // Upload single file with retry logic
+    // Upload single file using chunked upload
     async function uploadSingleFile(uploadFile: UploadFile) {
         setFiles(prev => prev.map(f =>
             f.id === uploadFile.id ? { ...f, status: "uploading" as const } : f
         ))
 
         try {
-            console.log(`Initiating upload session for: ${uploadFile.file.name}`);
-            const session = await retryWithBackoff(
-                () => fetch("/api/upload/session", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        portalId: portal!.id,
-                        fileName: uploadFile.file.name,
-                        fileSize: uploadFile.file.size,
-                        mimeType: uploadFile.file.type,
-                        clientName,
-                        clientEmail,
-                        token: accessToken
-                    })
-                }).then(res => {
-                    if (!res.ok) throw new Error(res.statusText)
-                    return res.json()
-                })
+            console.log(`Starting upload for: ${uploadFile.file.name} (${formatFileSize(uploadFile.file.size)})`);
+            
+            const result = await uploadFileInChunks(
+                portal!.id,
+                uploadFile.file,
+                {
+                    clientName,
+                    clientEmail,
+                    clientMessage
+                },
+                accessToken,
+                (progress) => {
+                    console.log(`Upload progress: ${progress.percentComplete}% (${progress.chunkIndex + 1}/${progress.totalChunks} chunks)`);
+                    setFiles(prev => prev.map(f =>
+                        f.id === uploadFile.id ? { ...f, progress: progress.percentComplete } : f
+                    ))
+                }
             )
-            console.log(`Session obtained, strategy: ${session.strategy}`);
 
-            if (session.strategy === "resumable") {
-                let uploadedFileId: string | null = null
-                console.log(`Starting resumable PUT to: ${session.uploadUrl}`);
-
-                await retryWithBackoff(() =>
-                    new Promise<void>((resolve, reject) => {
-                        const xhr = new XMLHttpRequest()
-                        xhr.upload.onprogress = (event) => {
-                            if (event.lengthComputable) {
-                                const percentComplete = Math.round((event.loaded / event.total) * 100)
-                                setFiles(prev => prev.map(f =>
-                                    f.id === uploadFile.id ? { ...f, progress: percentComplete } : f
-                                ))
-                            }
-                        }
-                        xhr.onload = () => {
-                            console.log(`Upload status for ${uploadFile.file.name}: ${xhr.status}`);
-                            if (xhr.status >= 200 && xhr.status < 300) {
-                                try {
-                                    if (xhr.responseText) {
-                                        const data = JSON.parse(xhr.responseText)
-                                        uploadedFileId = data.id || null
-                                        console.log(`Extracted file ID: ${uploadedFileId}`);
-                                    }
-                                } catch (e) {
-                                    console.warn("Could not parse Google Drive response:", e);
-                                }
-                                resolve()
-                            } else {
-                                console.error(`Upload failed with status ${xhr.status}: ${xhr.responseText}`);
-                                reject(new Error(`Cloud stream interruption (Status: ${xhr.status})`))
-                            }
-                        }
-                        xhr.onerror = () => {
-                            console.error(`XHR network error for ${uploadFile.file.name}. This is often a CORS issue or network interruption. URL: ${session.uploadUrl}`);
-                            reject(new Error("Network layer instability or CORS policy violation"));
-                        }
-                        xhr.open("PUT", session.uploadUrl)
-                        xhr.setRequestHeader("Content-Type", uploadFile.file.type || "application/octet-stream")
-                        xhr.setRequestHeader("Content-Range", `bytes 0-${uploadFile.file.size - 1}/${uploadFile.file.size}`)
-                        xhr.send(uploadFile.file)
-                    })
-                )
-
-                console.log("Upload successful, finalizing with backend...");
-                await retryWithBackoff(() =>
-                    fetch("/api/upload/complete", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            portalId: portal!.id,
-                            fileName: uploadFile.file.name,
-                            uniqueFileName: session.uniqueFileName,
-                            fileSize: uploadFile.file.size,
-                            mimeType: uploadFile.file.type,
-                            clientName,
-                            clientEmail,
-                            clientMessage,
-                            storageProvider: session.storageProvider,
-                            token: accessToken,
-                            fileId: uploadedFileId || session.fileId
-                        })
-                    }).then(res => {
-                        if (!res.ok) throw new Error(res.statusText)
-                        return res.json()
-                    })
-                )
-                console.log("Finalization complete!");
-            } else {
-                await retryWithBackoff(() =>
-                    new Promise<void>((resolve, reject) => {
-                        const xhr = new XMLHttpRequest()
-                        xhr.upload.onprogress = (event) => {
-                            if (event.lengthComputable) {
-                                const percentComplete = Math.round((event.loaded / event.total) * 100)
-                                setFiles(prev => prev.map(f =>
-                                    f.id === uploadFile.id ? { ...f, progress: percentComplete } : f
-                                ))
-                            }
-                        }
-                        xhr.onload = () => {
-                            if (xhr.status >= 200 && xhr.status < 300) resolve()
-                            else {
-                                let errorMessage = "Transmission intercepted"
-                                try {
-                                    const response = JSON.parse(xhr.responseText)
-                                    errorMessage = response.error || errorMessage
-                                } catch (e) { }
-                                reject(new Error(errorMessage))
-                            }
-                        }
-                        xhr.onerror = () => reject(new Error("Protocol handshake failed"))
-                        const formData = new FormData()
-                        formData.append("file", uploadFile.file)
-                        formData.append("portalId", portal!.id)
-                        formData.append("clientName", clientName)
-                        formData.append("clientEmail", clientEmail)
-                        formData.append("clientMessage", clientMessage)
-                        if (accessToken) formData.append("token", accessToken)
-                        xhr.open("POST", "/api/upload")
-                        if (accessToken) xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`)
-                        xhr.send(formData)
-                    })
-                )
+            if (!result.success) {
+                throw new Error(result.error || "Upload failed")
             }
 
             setFiles(prev => prev.map(f =>

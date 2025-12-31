@@ -91,33 +91,34 @@ model Authenticator {
 }
 
 model UploadPortal {
-  id                  String       @id @default(cuid())
+  id                  String          @id @default(cuid())
   userId              String
   name                String
-  slug                String       @unique
+  slug                String          @unique
   description         String?
   logoUrl             String?
-  primaryColor        String       @default("#4F46E5")
-  isActive            Boolean      @default(true)
-  maxFileSize         Int          @default(104857600)
-  allowedFileTypes    String[]     @default([])
-  requireClientName   Boolean      @default(true)
-  requireClientEmail  Boolean      @default(false)
+  primaryColor        String          @default("#4F46E5")
+  isActive            Boolean         @default(true)
+  maxFileSize         Int             @default(104857600)
+  allowedFileTypes    String[]        @default([])
+  requireClientName   Boolean         @default(true)
+  requireClientEmail  Boolean         @default(false)
   passwordHash        String?
-  storageProvider     String       @default("local")
+  storageProvider     String          @default("local")
   storageFolderId     String?
   storageFolderPath   String?
-  createdAt           DateTime     @default(now())
-  updatedAt           DateTime     @updatedAt
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
   backgroundColor     String?
   backgroundImageUrl  String?
-  cardBackgroundColor String?      @default("#ffffff")
-  submitButtonText    String?      @default("Initialize Transfer")
-  successMessage      String?      @default("Transmission Verified")
-  textColor           String?      @default("#0f172a")
+  cardBackgroundColor String?         @default("#ffffff")
+  submitButtonText    String?         @default("Initialize Transfer")
+  successMessage      String?         @default("Transmission Verified")
+  textColor           String?         @default("#0f172a")
   welcomeMessage      String?
   uploads             FileUpload[]
-  user                User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chunkedUploads      ChunkedUpload[]
+  user                User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
 }
@@ -145,6 +146,27 @@ model FileUpload {
   @@index([portalId, createdAt])
   @@index([clientEmail])
   @@index([clientName])
+}
+
+model ChunkedUpload {
+  id              String       @id @default(cuid())
+  portalId        String
+  fileName        String
+  fileSize        Int
+  mimeType        String
+  totalChunks     Int
+  uploadedChunks  Int          @default(0)
+  clientName      String?
+  clientEmail     String?
+  clientMessage   String?
+  status          String       @default("in_progress")
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  expiresAt       DateTime     @default(dbgenerated("now() + interval '24 hours'"))
+  portal          UploadPortal @relation(fields: [portalId], references: [id], onDelete: Cascade)
+
+  @@index([portalId, status])
+  @@index([createdAt])
 }
 
 model NewsletterSubscriber {

@@ -9,6 +9,23 @@ const DROPBOX_CONTENT_API = "https://content.dropboxapi.com/2"
 export class DropboxService implements CloudStorageService {
   provider = "dropbox" as const
 
+  async createResumableUpload(
+    accessToken: string,
+    fileName: string,
+    mimeType: string,
+    folderId?: string,
+    folderPath?: string,
+    origin?: string
+  ): Promise<{ uploadUrl: string; fileId?: string; sessionId?: string }> {
+    // Dropbox doesn't have a traditional resumable upload URL like Google Drive
+    // Instead, we use the batch upload API which supports chunked uploads
+    // Return a fake URL that our client will recognize as needing special handling
+    return {
+      uploadUrl: `dropbox://batch-upload?file=${encodeURIComponent(fileName)}`,
+      sessionId: `dropbox-${Date.now()}`,
+    }
+  }
+
   async uploadFile(
     accessToken: string,
     file: Buffer,
