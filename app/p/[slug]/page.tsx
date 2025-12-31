@@ -6,24 +6,6 @@ import posthog from "posthog-js"
 import { motion, AnimatePresence } from "framer-motion"
 import { uploadFileInChunks } from "@/lib/chunked-upload"
 import {
-<<<<<<< Updated upstream
-  Upload,
-  CheckCircle,
-  AlertCircle,
-  Loader2,
-  X,
-  FileIcon,
-  Lock,
-  ChevronRight,
-  ShieldCheck,
-  FileText,
-  Mail,
-  User,
-  MessageSquare,
-  CheckCircle2,
-  LockKeyhole,
-  Rocket
-=======
     Upload,
     CheckCircle,
     AlertCircle,
@@ -48,7 +30,6 @@ import {
     FileSpreadsheet,
     File,
     FileType,
->>>>>>> Stashed changes
 } from "lucide-react"
 import { getFileIcon, getFileIconColor } from "@/lib/file-icons"
 
@@ -285,7 +266,7 @@ export default function PublicUploadPage() {
 
         try {
             console.log(`Starting upload for: ${uploadFile.file.name} (${formatFileSize(uploadFile.file.size)})`);
-            
+
             const result = await uploadFileInChunks(
                 portal!.id,
                 uploadFile.file,
