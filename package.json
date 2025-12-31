@@ -47,7 +47,7 @@
     "@types/react-dom": "^19",
     "@types/redis": "^4.0.0",
     "@vitest/coverage-v8": "4.0.16",
-    "@vitest/ui": "^2.0.0",
+    "@vitest/ui": "^4.0.16",
     "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.0",

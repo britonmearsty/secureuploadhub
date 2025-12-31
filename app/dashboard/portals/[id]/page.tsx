@@ -59,33 +59,41 @@ interface StorageFolder {
   path: string
 }
 interface FolderNodeProps {
-  folder: StorageFolder & { subfolders?: StorageFolder[] } // include subfolders
+  folder: StorageFolder & { subfolders?: StorageFolder[] }
   navigateToFolder: (folder: StorageFolder) => void
   expandedFolders: Set<string>
   toggleFolder: (id: string) => void
-  level?: number // optional, default = 0
 }
 
-const FolderNode: React.FC<FolderNodeProps> = ({ folder, navigateToFolder, expandedFolders, toggleFolder, level = 0 }) => {
+const FolderNode: React.FC<FolderNodeProps> = ({ folder, navigateToFolder, expandedFolders, toggleFolder }) => {
   const isExpanded = expandedFolders.has(folder.id)
-  const { subfolders = [] } = folder  // <-- default to empty array
+  const { subfolders = [] } = folder
 
   return (
     <div className="pl-4">
-      <button
-        type="button"
-        onClick={() => toggleFolder(folder.id)}
-        className="w-full flex items-center justify-between py-2 text-left hover:bg-slate-50 transition-colors"
-      >
-        <div className="flex items-center gap-2">
-          <FolderOpen className="w-4 h-4 text-amber-500" />
-          <span className="text-sm font-semibold text-slate-700">{folder.name}</span>
-        </div>
-        <ChevronRight className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
-      </button>
+      <div className="flex items-center justify-between py-2 hover:bg-slate-50 transition-colors group rounded-lg pr-2">
+        <button
+          type="button"
+          onClick={() => navigateToFolder(folder)}
+          className="flex items-center gap-2 text-left flex-1"
+        >
+          <FolderOpen className="w-4 h-4 text-amber-500 flex-shrink-0" />
+          <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900 truncate">{folder.name}</span>
+        </button>
+
+        {subfolders.length > 0 && (
+          <button
+            type="button"
+            onClick={() => toggleFolder(folder.id)}
+            className="p-1 hover:bg-slate-200 rounded-md transition-colors"
+          >
+            <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+          </button>
+        )}
+      </div>
 
       {isExpanded && subfolders.length > 0 && (
-        <div className="pl-4 border-l border-slate-100">
+        <div className="pl-4 border-l border-slate-100 ml-2">
           {subfolders.map((sub) => (
             <FolderNode
               key={sub.id}
@@ -93,7 +101,6 @@ const FolderNode: React.FC<FolderNodeProps> = ({ folder, navigateToFolder, expan
               navigateToFolder={navigateToFolder}
               expandedFolders={expandedFolders}
               toggleFolder={toggleFolder}
-              level={level + 1}
             />
           ))}
         </div>
@@ -101,7 +108,6 @@ const FolderNode: React.FC<FolderNodeProps> = ({ folder, navigateToFolder, expan
     </div>
   )
 }
-
 
 export default function EditPortalPage() {
   const router = useRouter()
@@ -112,15 +118,11 @@ export default function EditPortalPage() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // FILE_TYPE_OPTIONS is already defined in EditPortalPage
-
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   // Folder section toggle
   const [folderSectionOpen, setFolderSectionOpen] = useState(false)
-  const [colorSectionOpen, setColorSectionOpen] = useState(false)
+  const [colorSectionOpen, setColorSectionOpen] = useState(true) // Default open
   const [activeTab, setActiveTab] = useState('Portal Details')
-
-
 
   const [portal, setPortal] = useState<Portal | null>(null)
   const [loading, setLoading] = useState(true)
@@ -296,32 +298,6 @@ export default function EditPortalPage() {
     fetchFolders(formData.storageProvider, folder.id)
   }
 
-  function navigateToRoot() {
-    setFolderPath([])
-    setFormData({
-      ...formData,
-      storageFolderId: "",
-      storageFolderPath: "",
-    })
-    fetchFolders(formData.storageProvider)
-  }
-
-  function navigateBack(index: number) {
-    const newPath = folderPath.slice(0, index + 1)
-    setFolderPath(newPath)
-    const targetFolder = newPath[newPath.length - 1]
-    if (targetFolder) {
-      setFormData({
-        ...formData,
-        storageFolderId: targetFolder.id,
-        storageFolderPath: targetFolder.path,
-      })
-      fetchFolders(formData.storageProvider, targetFolder.id)
-    } else {
-      navigateToRoot()
-    }
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
@@ -399,697 +375,512 @@ export default function EditPortalPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
-        {/* Portal Info */}
-        <div>
-          <Link
-            href="/dashboard"
-            className="group inline-flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-colors text-sm font-medium mb-3"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            Back to Dashboard
-          </Link>
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      {/* Top Bar Navigation & Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <Link
+          href="/dashboard"
+          className="group inline-flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-colors font-medium text-sm"
+        >
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          Back to Dashboard
+        </Link>
 
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-slate-900 rounded-xl shadow-lg shadow-slate-200">
-              <Settings2 className="w-5 h-5 text-white" />
-            </div>
-            <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">
-              Portal Configuration
-            </h1>
-          </div>
-
-          <p className="text-slate-400 mt-2 text-xs font-semibold uppercase tracking-widest pl-1">
-            Registry ID: <span className="text-slate-900 font-mono">{portal.id.slice(0, 8)}</span>
-          </p>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-3 mt-4 md:mt-0">
+        <div className="flex items-center gap-2">
           <Link
             href={`/p/${portal.slug}`}
             target="_blank"
-            className="flex items-center gap-2 px-5 py-3 bg-white border border-slate-200 text-slate-900 rounded-2xl hover:bg-slate-50 transition-all text-xs font-bold uppercase tracking-wide shadow-sm hover:shadow-md"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 hover:text-slate-900 transition-all text-xs font-bold uppercase tracking-wide shadow-sm"
           >
             <ExternalLink className="w-3.5 h-3.5" />
-            Preview Live
+            Live Preview
           </Link>
 
           <button
             onClick={() => setShowDeleteModal(true)}
-            className="flex items-center justify-center p-3.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-2xl transition-all shadow-sm"
-            title="Decommission Portal"
+            className="flex items-center justify-center p-2.5 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl transition-all"
+            title="Delete Portal"
           >
-            <Trash2 className="w-5 h-5" />
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-        {/* Form Container */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white p-8 md:p-10 rounded-[40px] border border-slate-100 shadow-xl shadow-slate-200/40 lg:sticky lg:top-8"
-        >
-          {success && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3 text-emerald-700 text-sm font-bold mb-6"
-            >
-              <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-              {success}
-            </motion.div>
-          )}
-
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 text-sm font-bold mb-6"
-            >
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
-              {error}
-            </motion.div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div className="flex items-center gap-1 p-1 bg-slate-100/50 rounded-2xl border border-slate-200/50 overflow-x-auto no-scrollbar mb-6">
-              {['Portal Details', 'Branding', 'Storage & Files', 'Access & Security', 'Messages'].map((tab) => (
+      <div className="flex flex-col lg:flex-row gap-8">
+        {/* Navigation Sidebar */}
+        <aside className="lg:w-64 flex-shrink-0">
+          <div className="mb-6 px-2">
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Configuration</h1>
+            <p className="text-slate-500 text-sm mt-1 font-mono">{portal.slug}</p>
+          </div>
+          <nav className="space-y-1">
+            {[
+              { id: 'Portal Details', icon: Type, label: 'Details' },
+              { id: 'Branding', icon: Palette, label: 'Branding' },
+              { id: 'Storage & Files', icon: Cloud, label: 'Storage' },
+              { id: 'Access & Security', icon: Lock, label: 'Security' },
+              { id: 'Messages', icon: Settings2, label: 'Messages' }
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
                 <button
-                  key={tab}
-                  type="button"
-                  onClick={() => setActiveTab(tab)}
-                  className={`flex-1 min-w-fit px-4 py-3 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all ${activeTab === tab
-                      ? 'bg-slate-900 text-white shadow-md'
-                      : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
+                    ? "bg-white shadow-sm border border-slate-200 text-slate-900"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                     }`}
                 >
-                  {tab}
+                  <Icon className={`w-5 h-5 ${isActive ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
+                  <span className="font-medium text-sm">{tab.label}</span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="edit-portal-active-indicator"
+                      className="ml-auto"
+                      initial={{ opacity: 0, x: -5 }}
+                      animate={{ opacity: 1, x: 0 }}
+                    >
+                      <ChevronRight className="w-4 h-4 text-slate-400" />
+                    </motion.div>
+                  )}
                 </button>
-              ))}
-            </div>
+              );
+            })}
+          </nav>
+        </aside>
 
+        {/* Content Area */}
+        <main className="flex-1 min-w-0">
+          <form onSubmit={handleSubmit}>
             <AnimatePresence mode="wait">
-              {activeTab === 'Portal Details' && (
-                <motion.div
-                  key="details"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-6"
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 pb-2 border-b border-slate-50">
-                      <Type className="w-4 h-4 text-slate-400" />
-                      <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Identity & Branding</h3>
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                  <div className="p-6 border-b border-slate-100 bg-slate-50/30 flex justify-between items-center">
+                    <div>
+                      <h2 className="text-xl font-semibold text-slate-900">
+                        {activeTab}
+                      </h2>
+                      <p className="text-sm text-slate-500 mt-1">
+                        Manage settings for this section.
+                      </p>
                     </div>
-
-                    <div className="space-y-6">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Portal Name</label>
-                        <input
-                          type="text"
-                          value={formData.name}
-                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-bold text-slate-900"
-                          required
-                        />
-                      </div>
-
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Permanent Handle</label>
-                        <div className="flex items-center px-5 py-4 bg-slate-100 border border-slate-200 rounded-2xl opacity-60 cursor-not-allowed">
-                          <span className="text-slate-400 text-xs font-bold uppercase tracking-widest mr-2">Handle:</span>
-                          <span className="text-slate-900 font-mono text-sm">{portal.slug}</span>
-                          <Lock className="w-3.5 h-3.5 text-slate-300 ml-auto" />
-                        </div>
-                        <p className="text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-tight">Handles cannot be modified after registration.</p>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Accent Color</label>
-                        <div className="flex items-center gap-3">
-                          <div className="relative">
-                            <input
-                              type="color"
-                              value={formData.primaryColor}
-                              onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-                              className="w-14 h-14 rounded-2xl cursor-pointer border-4 border-white shadow-xl overflow-hidden shrink-0"
-                            />
-                            <div className="absolute inset-0 rounded-2xl border border-slate-200 pointer-events-none" />
-                          </div>
-                          <div className="flex-1 relative">
-                            <Hash className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                            <input
-                              type="text"
-                              value={formData.primaryColor}
-                              onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-                              className="w-full px-5 py-4 pl-12 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-mono text-sm uppercase font-bold"
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                    </div>
+                    {saving && <Loader2 className="w-5 h-5 animate-spin text-slate-400" />}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('Branding')}
-                    className="w-full py-4 bg-slate-50 text-slate-900 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-slate-100 transition-colors"
-                  >
-                    Next: Visual Design
-                  </button>
-                </motion.div>
-              )}
 
-              {activeTab === 'Branding' && (
-                <motion.div
-                  key="branding"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-6"
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 pb-3 border-b border-slate-50">
-                      <Palette className="w-4 h-4 text-slate-400" />
-                      <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Branding</h3>
-                    </div>
-
-                    <div className="space-y-4">
-                      {/* Logo URL */}
-                      <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Logo Link</label>
+                  <div className="p-8 space-y-8">
+                    {/* Tab Content */}
+                    {activeTab === 'Portal Details' && (
+                      <div className="space-y-6">
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Choose Default Logo</label>
-                          <select
-                            onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
-                            className="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-bold text-xs mb-3"
-                          >
-                            {DEFAULT_LOGOS.map((logo) => (
-                              <option key={logo.value} value={logo.value}>{logo.label}</option>
-                            ))}
-                          </select>
+                          <label className="block text-sm font-semibold text-slate-700 mb-2">Portal Name</label>
+                          <input
+                            type="text"
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium text-slate-900"
+                            required
+                          />
                         </div>
-                        <input
-                          type="url"
-                          value={formData.logoUrl}
-                          onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
-                          placeholder="https://..."
-                          className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-bold text-slate-900 placeholder:text-slate-300 text-sm"
-                        />
-                      </div>
 
-                      <button
-                        type="button"
-                        onClick={() => setColorSectionOpen(!colorSectionOpen)}
-                        className="text-xs font-black text-slate-400 uppercase tracking-widest hover:text-slate-900 transition-colors cursor-pointer flex items-center gap-2"
-                      >
-                        <span>Manage Colors</span>
-                        <ChevronDown className={`w-3 h-3 transition-transform ${colorSectionOpen ? "rotate-180" : ""}`} />
-                      </button>
-                      <AnimatePresence>
-                        {colorSectionOpen && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="grid grid-cols-2 gap-4"
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-700 mb-2">Permanent Handle</label>
+                          <div className="flex items-center px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl opacity-75 cursor-not-allowed">
+                            <span className="text-slate-500 text-xs font-bold uppercase tracking-wider mr-2">/p/</span>
+                            <span className="text-slate-900 font-mono text-sm font-bold">{portal.slug}</span>
+                            <Lock className="w-3.5 h-3.5 text-slate-400 ml-auto" />
+                          </div>
+                        </div>
+
+                        <div className="pt-4 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab('Branding')}
+                            className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
                           >
-                            {/* Text Color */}
+                            Next: Branding
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {activeTab === 'Branding' && (
+                      <div className="space-y-8">
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-700 mb-2">Logo Link</label>
+                          <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
+                            {DEFAULT_LOGOS.map((logo) => (
+                              logo.value && (
+                                <button
+                                  key={logo.value}
+                                  type="button"
+                                  onClick={() => setFormData({ ...formData, logoUrl: logo.value })}
+                                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-medium whitespace-nowrap transition-colors"
+                                >
+                                  {logo.label}
+                                </button>
+                              )
+                            ))}
+                          </div>
+                          <input
+                            type="url"
+                            value={formData.logoUrl}
+                            onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                            placeholder="https://..."
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium text-slate-900 placeholder:text-slate-400"
+                          />
+                        </div>
+
+                        <div className="bg-slate-50 rounded-xl p-6 border border-slate-100">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Color Palette</h3>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Text Color</label>
-                              <div className="flex items-center gap-2">
-                                <div className="relative w-12 h-12">
+                              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Text Color</label>
+                              <div className="flex items-center gap-3">
+                                <div className="relative">
                                   <input
                                     type="color"
                                     value={formData.textColor}
                                     onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
-                                    className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-sm overflow-hidden"
+                                    className="w-12 h-12 rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden shrink-0"
                                   />
+                                  <div className="absolute inset-0 rounded-xl border border-slate-200 pointer-events-none" />
                                 </div>
                                 <input
                                   type="text"
                                   value={formData.textColor}
                                   onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
-                                  className="flex-1 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl font-mono text-xs uppercase font-bold"
+                                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 transition-all outline-none font-mono text-sm uppercase"
                                 />
                               </div>
                             </div>
 
-                            {/* Background Color */}
                             <div>
-                              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Page BG</label>
-                              <div className="flex items-center gap-2">
-                                <div className="relative w-12 h-12">
+                              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Background</label>
+                              <div className="flex items-center gap-3">
+                                <div className="relative">
                                   <input
                                     type="color"
                                     value={formData.backgroundColor || "#ffffff"}
                                     onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
-                                    className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-sm overflow-hidden"
+                                    className="w-12 h-12 rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden shrink-0"
                                   />
+                                  <div className="absolute inset-0 rounded-xl border border-slate-200 pointer-events-none" />
                                 </div>
                                 <input
                                   type="text"
                                   value={formData.backgroundColor || ""}
                                   onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
-                                  placeholder="#HEX"
-                                  className="flex-1 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl font-mono text-xs uppercase font-bold"
+                                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 transition-all outline-none font-mono text-sm uppercase"
                                 />
                               </div>
                             </div>
 
-                            {/* Card Color */}
                             <div>
-                              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Card BG</label>
-                              <div className="flex items-center gap-2">
-                                <div className="relative w-12 h-12">
+                              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Card Background</label>
+                              <div className="flex items-center gap-3">
+                                <div className="relative">
                                   <input
                                     type="color"
                                     value={formData.cardBackgroundColor}
                                     onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
-                                    className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-sm overflow-hidden"
+                                    className="w-12 h-12 rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden shrink-0"
                                   />
+                                  <div className="absolute inset-0 rounded-xl border border-slate-200 pointer-events-none" />
                                 </div>
                                 <input
                                   type="text"
                                   value={formData.cardBackgroundColor}
                                   onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
-                                  className="flex-1 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl font-mono text-xs uppercase font-bold"
+                                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 transition-all outline-none font-mono text-sm uppercase"
                                 />
                               </div>
                             </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('Storage & Files')}
-                    className="w-full py-4 bg-slate-50 text-slate-900 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-slate-100 transition-colors"
-                  >
-                    Next: Storage Configuration
-                  </button>
-                </motion.div>
-              )}
 
-              {activeTab === 'Storage & Files' && (
-                <motion.div
-                  key="storage"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-6"
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 pb-2 border-b border-slate-50">
-                      <Cloud className="w-4 h-4 text-slate-400" />
-                      <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Storage Backbone</h3>
-                    </div>
-
-                    {/* Storage Options */}
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {[
-                        { id: "google_drive", name: "Google Drive", icon: Cloud, disabled: !accounts.find(a => a.provider === "google") },
-                        { id: "dropbox", name: "Dropbox", icon: Cloud, disabled: !accounts.find(a => a.provider === "dropbox") }
-                      ].map((provider) => {
-                        const Icon = provider.icon;
-                        const isActive = formData.storageProvider === provider.id;
-                        return (
-                          <button
-                            key={provider.id}
-                            type="button"
-                            disabled={provider.disabled}
-                            onClick={() => selectStorageProvider(provider.id as any)}
-                            className={`relative p-4 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 overflow-hidden ${isActive ? "border-slate-900 bg-slate-900/5 shadow-sm" : "border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50"
-                              } ${provider.disabled ? "opacity-40 grayscale cursor-not-allowed" : ""}`}
-                          >
-                            <div className={`p-3 rounded-2xl ${isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-400 transition-colors group-hover:bg-slate-200"}`}>
-                              <Icon className="w-5 h-5" />
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Primary Accent</label>
+                              <div className="flex items-center gap-3">
+                                <div className="relative">
+                                  <input
+                                    type="color"
+                                    value={formData.primaryColor}
+                                    onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+                                    className="w-12 h-12 rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden shrink-0"
+                                  />
+                                  <div className="absolute inset-0 rounded-xl border border-slate-200 pointer-events-none" />
+                                </div>
+                                <input
+                                  type="text"
+                                  value={formData.primaryColor}
+                                  onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+                                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 transition-all outline-none font-mono text-sm uppercase"
+                                />
+                              </div>
                             </div>
-                            <span className="font-bold text-xs text-slate-900 uppercase tracking-tight">{provider.name}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
+                          </div>
+                        </div>
 
-                    {/* Folder Selection Section */}
-                    <div className="bg-slate-50 border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
-                      {/* Toggle */}
-                      <button
-                        type="button"
-                        onClick={() => setFolderSectionOpen(prev => !prev)}
-                        className="w-full px-5 py-4 flex justify-between items-center text-xs font-black text-slate-900 uppercase tracking-widest bg-white border-b border-slate-100 hover:bg-slate-50 transition-colors"
-                      >
-                        <span className="truncate pr-4 flex items-center gap-2">
-                          <FolderOpen className="w-4 h-4 text-amber-500" />
-                          {formData.storageFolderPath || "SecureUploadHub"}
-                        </span>
-                        <ChevronRight className={`w-4 h-4 transition-transform ${folderSectionOpen ? "rotate-90" : ""}`} />
-                      </button>
-
-                      {/* Expandable Tree */}
-                      <AnimatePresence>
-                        {folderSectionOpen && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto", transition: { duration: 0.2 } }}
-                            exit={{ opacity: 0, height: 0, transition: { duration: 0.15 } }}
-                            className="max-h-60 overflow-y-auto divide-y divide-slate-100/50 px-2 bg-white"
+                        <div className="pt-4 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab('Storage & Files')}
+                            className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
                           >
+                            Next: Storage
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {activeTab === 'Storage & Files' && (
+                      <div className="space-y-8">
+                        <div className="grid grid-cols-2 gap-4">
+                          {[
+                            { id: "google_drive", name: "Google Drive", icon: Cloud, disabled: !accounts.find(a => a.provider === "google") },
+                            { id: "dropbox", name: "Dropbox", icon: Cloud, disabled: !accounts.find(a => a.provider === "dropbox") }
+                          ].map((provider) => {
+                            const Icon = provider.icon;
+                            const isActive = formData.storageProvider === provider.id;
+                            return (
+                              <button
+                                key={provider.id}
+                                type="button"
+                                disabled={provider.disabled}
+                                onClick={() => selectStorageProvider(provider.id as any)}
+                                className={`relative p-5 rounded-2xl border-2 transition-all flex flex-col items-center gap-3 ${isActive
+                                  ? "border-slate-900 bg-slate-50"
+                                  : "border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50"
+                                  } ${provider.disabled ? "opacity-40 grayscale cursor-not-allowed" : ""}`}
+                              >
+                                <div className={`p-3 rounded-xl ${isActive ? "bg-slate-900 text-white shadow-md" : "bg-slate-100 text-slate-400"}`}>
+                                  <Icon className="w-6 h-6" />
+                                </div>
+                                <span className="font-bold text-sm text-slate-900">{provider.name}</span>
+                                {isActive && (
+                                  <CheckCircle2 className="absolute top-3 right-3 w-5 h-5 text-slate-900" />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden">
+                          <div className="px-5 py-4 border-b border-slate-200 bg-slate-100/50 flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Sync Target</span>
+                            </div>
+                            <span className="text-xs font-mono font-bold text-slate-900">{formData.storageFolderPath || "Root"}</span>
+                          </div>
+
+                          <div className="max-h-72 overflow-y-auto p-2 bg-white">
                             {loadingFolders ? (
-                              <div className="p-4 text-center">
-                                <Loader2 className="w-5 h-5 animate-spin mx-auto text-slate-300" />
+                              <div className="p-8 text-center">
+                                <Loader2 className="w-5 h-5 animate-spin mx-auto text-slate-400" />
                               </div>
                             ) : folders.length === 0 ? (
-                              <div className="p-4 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">No subdirectories found</div>
+                              <div className="p-8 text-center text-slate-400 text-sm">No subdirectories found</div>
                             ) : (
-                              folders.map((folder) => (
-                                <FolderNode
-                                  key={folder.id}
-                                  folder={folder}
-                                  navigateToFolder={navigateToFolder}
-                                  expandedFolders={expandedFolders}
-                                  toggleFolder={toggleFolder}
-                                  level={0} // pass level for indentation
-                                />
-                              ))
+                              <div className="space-y-1">
+                                {folders.map((folder) => (
+                                  <FolderNode
+                                    key={folder.id}
+                                    folder={folder}
+                                    navigateToFolder={navigateToFolder}
+                                    expandedFolders={expandedFolders}
+                                    toggleFolder={toggleFolder}
+                                  />
+                                ))}
+                              </div>
                             )}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-
-                      <div className="p-3 bg-slate-900/5 text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] text-center border-t border-slate-200/50">
-                        Active Sync: <span className="text-slate-900">{formData.storageFolderPath || "SecureUploadHub"}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('Access & Security')}
-                    className="w-full py-4 bg-slate-50 text-slate-900 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-slate-100 transition-colors"
-                  >
-                    Next: Security Protocol
-                  </button>
-                </motion.div>
-              )}
-
-              {activeTab === 'Access & Security' && (
-                <motion.div
-                  key="security"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-6"
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 pb-2 border-b border-slate-50">
-                      <Lock className="w-4 h-4 text-slate-400" />
-                      <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Security & Restrictions</h3>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Payload Limit (MB)</label>
-                        <input
-                          type="number"
-                          value={formData.maxFileSize}
-                          onChange={(e) => setFormData({ ...formData, maxFileSize: parseInt(e.target.value) || 100 })}
-                          className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-bold text-slate-900"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Access Passkey</label>
-                        <div className="relative">
-                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                          <input
-                            type="password"
-                            value={formData.newPassword}
-                            onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                            placeholder={hasPassword ? "Roll to new key..." : "Establish encryption key..."}
-                            className="w-full pl-10 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-bold text-slate-900"
-                          />
+                          </div>
                         </div>
-                      </div>
-                    </div>
 
-                    <div className="space-y-3">
-                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">Client Information Collection</label>
-                      <div className="flex gap-3">
-                        {[
-                          { id: 'name', label: 'Identity', key: 'requireClientName' },
-                          { id: 'email', label: 'E-Mail', key: 'requireClientEmail' }
-                        ].map(req => (
+                        <div className="pt-4 flex justify-end">
                           <button
-                            key={req.id}
                             type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, [req.key]: !prev[req.key as keyof typeof prev] }))}
-                            className={`flex-1 px-4 py-3 rounded-2xl border-2 font-black text-[10px] uppercase tracking-widest transition-all ${formData[req.key as keyof typeof formData]
-                                ? "border-slate-900 bg-slate-900 text-white shadow-lg shadow-slate-200"
-                                : "border-slate-50 bg-slate-50 text-slate-400 hover:border-slate-200 hover:bg-white"
-                              }`}
+                            onClick={() => setActiveTab('Access & Security')}
+                            className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
                           >
-                            {req.label}
+                            Next: Security
                           </button>
-                        ))}
-                      </div>
-                    </div>
-
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('Messages')}
-                    className="w-full py-4 bg-slate-50 text-slate-900 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-slate-100 transition-colors"
-                  >
-                    Next: Messaging Protocol
-                  </button>
-                </motion.div>
-              )}
-
-              {activeTab === 'Messages' && (
-                <motion.div
-                  key="messages"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-6"
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2 pb-3 border-b border-slate-50">
-                      <Type className="w-4 h-4 text-slate-400" />
-                      <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Message & Tone</h3>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Welcome Note</label>
-                        <textarea
-                          value={formData.welcomeMessage}
-                          onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
-                          placeholder="Welcome! Please submit your assets for processing."
-                          rows={3}
-                          className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-bold text-slate-900 placeholder:text-slate-300 resize-none"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Button Label</label>
-                          <input
-                            type="text"
-                            value={formData.submitButtonText}
-                            onChange={(e) => setFormData({ ...formData, submitButtonText: e.target.value })}
-                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-bold text-slate-900"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Success Note</label>
-                          <input
-                            type="text"
-                            value={formData.successMessage}
-                            onChange={(e) => setFormData({ ...formData, successMessage: e.target.value })}
-                            className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-bold text-slate-900"
-                          />
                         </div>
                       </div>
-                    </div>
-                  </div>
+                    )}
 
-                  <div className="bg-slate-900 text-white p-8 rounded-[32px] space-y-4 shadow-2xl shadow-slate-200">
-                    <div className="flex items-center gap-3">
-                      <div className="p-3 bg-white/10 rounded-2xl">
-                        <Info className="w-6 h-6" />
+                    {activeTab === 'Access & Security' && (
+                      <div className="space-y-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-2">Max Payload (MB)</label>
+                            <div className="relative">
+                              <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                              <input
+                                type="number"
+                                value={formData.maxFileSize}
+                                onChange={(e) => setFormData({ ...formData, maxFileSize: parseInt(e.target.value) || 100 })}
+                                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-semibold text-slate-900"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-2">Access Passkey</label>
+                            <div className="relative">
+                              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                              <input
+                                type="password"
+                                value={formData.newPassword}
+                                onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                                placeholder={hasPassword ? "Change existing key..." : "Set new key..."}
+                                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-semibold text-slate-900"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Client Data Requirements</label>
+                          <div className="flex gap-4">
+                            {[
+                              { id: 'name', label: 'Identity (Name)', key: 'requireClientName' },
+                              { id: 'email', label: 'Contact (Email)', key: 'requireClientEmail' }
+                            ].map(req => (
+                              <button
+                                key={req.id}
+                                type="button"
+                                onClick={() => setFormData(prev => ({ ...prev, [req.key]: !prev[req.key as keyof typeof prev] }))}
+                                className={`flex-1 px-4 py-3 rounded-xl border font-bold text-sm transition-all ${formData[req.key as keyof typeof formData]
+                                  ? "border-slate-900 bg-slate-900 text-white shadow-md"
+                                  : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+                                  }`}
+                              >
+                                {req.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="pt-4 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab('Messages')}
+                            className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
+                          >
+                            Next: Messages
+                          </button>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-bold text-base">System Verification</h4>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Active configuration integrity check</p>
+                    )}
+
+                    {activeTab === 'Messages' && (
+                      <div className="space-y-8">
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-700 mb-2">Welcome Note</label>
+                          <textarea
+                            value={formData.welcomeMessage}
+                            onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
+                            placeholder="Welcome! Please submit your assets for processing."
+                            rows={3}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium text-slate-900 placeholder:text-slate-400 resize-none"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-2">Button Label</label>
+                            <input
+                              type="text"
+                              value={formData.submitButtonText}
+                              onChange={(e) => setFormData({ ...formData, submitButtonText: e.target.value })}
+                              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-semibold text-slate-900"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-2">Success Note</label>
+                            <input
+                              type="text"
+                              value={formData.successMessage}
+                              onChange={(e) => setFormData({ ...formData, successMessage: e.target.value })}
+                              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-semibold text-slate-900"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="bg-slate-900 rounded-xl p-6 text-white shadow-lg">
+                          <div className="flex items-start gap-4">
+                            <div className="p-2 bg-white/10 rounded-lg">
+                              <Info className="w-6 h-6" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-lg">Live Synchronization</h4>
+                              <p className="text-slate-300 text-sm mt-1 leading-relaxed">
+                                Changes saved here are immediately reflected on your live portal at <strong className="text-white">/p/{portal.slug}</strong>.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="pt-6 border-t border-slate-100 flex justify-end gap-3">
+                          <button
+                            type="submit"
+                            disabled={saving}
+                            className="flex items-center gap-2 px-8 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-md active:scale-95 disabled:opacity-50 font-bold text-sm"
+                          >
+                            {saving ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <>
+                                <Save className="w-4 h-4" />
+                                Save Changes
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    <p className="text-sm text-slate-300 leading-relaxed font-medium">
-                      Updating these parameters will immediately sync with the live portal at
-                      <span className="text-white font-bold italic"> /p/{portal.slug} </span>.
-                      Ensure your <span className="text-white font-bold">{formData.storageProvider === 'google_drive' ? 'Drive' : 'Dropbox'}</span> account is active for seamless transfers.
-                    </p>
+                    )}
                   </div>
-                </motion.div>
-              )}
+                </div>
+              </motion.div>
             </AnimatePresence>
 
-            {/* Action Buttons */}
-            <div className="flex gap-4 pt-6 border-t border-slate-50">
-              <button
-                type="submit"
-                disabled={saving}
-                className="flex-1 flex items-center justify-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 disabled:opacity-50 font-black text-xs uppercase tracking-[0.2em] active:scale-95"
-              >
-                {saving ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    Commit Changes
-                  </>
-                )}
-              </button>
-            </div>
-
-          </form>
-        </motion.div>
-
-        {/* Live Preview Column */}
-        {/* Preview Section - Modern Mockup */}
-        <div className="hidden lg:block sticky top-8">
-          <div className="relative">
-            <div className="absolute -inset-4 bg-slate-100/50 rounded-[48px] -z-10" />
-
-            <div className="flex items-center gap-2 mb-4 px-6">
-              <Eye className="w-4 h-4 text-slate-400" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Live Preview</span>
-            </div>
-
-            <div className="bg-white rounded-[40px] shadow-2xl border border-slate-200/50 overflow-hidden max-h-[80vh] flex flex-col">
-              {/* Browser Frame */}
-              <div className="bg-slate-50 h-10 border-b border-slate-100 flex items-center px-6 gap-1.5 shrink-0 z-20 relative">
-                <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
-                <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
-                <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
-                <div className="mx-auto bg-white border border-slate-100 rounded-md h-6 px-3 flex items-center w-1/2">
-                  <span className="text-[10px] text-slate-300 font-mono italic truncate">
-                    assets.secureupload.hub/p/{formData.slug || "..."}
-                  </span>
-                </div>
-              </div>
-
-              {/* Portal Content Scrollable */}
-              <div
-                className="flex-1 overflow-y-auto p-12 flex flex-col items-center relative custom-scrollbar"
-                style={{
-                  backgroundColor: formData.backgroundColor || '#ffffff',
-                  color: formData.textColor || '#0f172a'
-                }}
-              >
-                {/* Background Image Layer */}
-                {formData.backgroundImageUrl && (
-                  <div
-                    className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-100"
-                    style={{ backgroundImage: `url(${formData.backgroundImageUrl})` }}
-                  />
-                )}
-
-                {/* Content Layer */}
-                <div className="w-full max-w-md flex flex-col relative z-10 space-y-8">
-                  {/* Header Preview */}
-                  <div className="text-center mb-6">
-                    {formData.logoUrl ? (
-                      <div className="w-auto h-24 mx-auto mb-6 flex items-center justify-center">
-                        <img src={formData.logoUrl} alt="Logo" className="max-h-full max-w-full object-contain" />
-                      </div>
-                    ) : (
-                      <motion.div
-                        animate={{ backgroundColor: formData.primaryColor }}
-                        className="w-24 h-24 rounded-[32px] mx-auto mb-6 flex items-center justify-center text-white text-4xl font-black shadow-xl"
-                      >
-                        {formData.name ? formData.name.charAt(0).toUpperCase() : <Palette className="w-10 h-10" />}
-                      </motion.div>
-                    )}
-
-                    {formData.welcomeMessage && (
-                      <p className="mb-3 text-xl font-medium opacity-90 leading-relaxed" style={{ color: formData.textColor }}>
-                        {formData.welcomeMessage}
-                      </p>
-                    )}
-
-                    <h2 className="text-3xl font-black tracking-tight leading-tight" style={{ color: formData.textColor }}>
-                      {formData.name || "Untitled Portal"}
-                    </h2>
-
-                    {!formData.welcomeMessage && (
-                      <p className="text-base mt-3 font-medium opacity-60" style={{ color: formData.textColor }}>
-                        {formData.description || "Enter portal description above to preview here."}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Password Warning if set */}
-                  {(hasPassword || formData.newPassword) && (
-                    <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-center gap-4">
-                      <div className="p-2.5 bg-white rounded-xl shadow-sm">
-                        <Lock className="w-4 h-4 text-amber-500" />
-                      </div>
-                      <span className="text-xs font-bold text-amber-600 uppercase tracking-widest">Password Protection Enabled</span>
-                    </div>
-                  )}
-
-                  {/* Form Fields Preview */}
-                  <div className="space-y-4 mb-8">
-                    {formData.requireClientName && (
-                      <div>
-                        <div className="h-4 bg-slate-100 rounded w-1/3 mb-2" />
-                        <div className="h-14 bg-slate-50 border border-slate-100 rounded-2xl" />
-                      </div>
-                    )}
-                    {formData.requireClientEmail && (
-                      <div>
-                        <div className="h-4 bg-slate-100 rounded w-1/4 mb-2" />
-                        <div className="h-14 bg-slate-50 border border-slate-100 rounded-2xl" />
-                      </div>
-                    )}
-                    <div>
-                      <div className="h-4 bg-slate-100 rounded w-1/5 mb-2" />
-                      <div className="h-32 bg-slate-50 border border-slate-100 rounded-2xl" />
-                    </div>
-                  </div>
-
-                  {/* Upload Preview Zone */}
-                  <div className="border-3 border-dashed border-slate-200 rounded-[40px] p-10 flex flex-col items-center justify-center text-center group bg-slate-50/30">
-                    <div className="p-5 bg-white rounded-full mb-4 group-hover:scale-110 transition-transform shadow-sm">
-                      <Upload className="w-8 h-8 text-slate-400" />
-                    </div>
-                    <p className="text-base font-bold text-slate-900 tracking-tight">Drag and drop assets here</p>
-                    <p className="text-xs text-slate-400 mt-2 font-bold uppercase tracking-wide">Limit: {formData.maxFileSize} MB / File</p>
-                  </div>
-
-                  {/* CTA Preview */}
+            {/* Feedback Toasts */}
+            <div className="fixed bottom-8 right-8 flex flex-col gap-2 z-50">
+              <AnimatePresence>
+                {success && (
                   <motion.div
-                    animate={{ backgroundColor: formData.primaryColor }}
-                    className="h-16 rounded-2xl mt-8 flex items-center justify-center text-base font-black text-white uppercase tracking-widest shadow-xl shadow-slate-200"
+                    initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 20, scale: 0.9 }}
+                    className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3 text-emerald-700 text-sm font-bold shadow-xl"
                   >
-                    {formData.submitButtonText || "Initialize Transfer"}
+                    <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+                    {success}
                   </motion.div>
-                </div>
-              </div>
+                )}
 
-              <div className="py-8 border-t border-slate-50 text-center">
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300">Hub Integrity Ensured</span>
-              </div>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 20, scale: 0.9 }}
+                    className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 text-sm font-bold shadow-xl"
+                  >
+                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                    {error}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          </div>
-        </div>
+          </form>
+        </main>
       </div>
 
       {/* Delete Confirmation Modal */}

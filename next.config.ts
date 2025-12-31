@@ -5,7 +5,13 @@ const nextConfig: NextConfig = {
   /* config options here */
   serverExternalPackages: ["paystack-api"],
   compress: true, // Enable gzip compression for responses
-  images: { domains: ["us.i.posthog.com", "us-assets.i.posthog.com", "lh3.googleusercontent.com"] },
+  images: {
+    remotePatterns: [
+      { hostname: "us.i.posthog.com" },
+      { hostname: "us-assets.i.posthog.com" },
+      { hostname: "lh3.googleusercontent.com" },
+    ],
+  },
   async rewrites() {
     return [
       {
