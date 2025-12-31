@@ -128,6 +128,7 @@ export default function CreatePortalPage() {
     allowedFileTypes: [] as string[],
   })
   const [folderSectionOpen, setFolderSectionOpen] = useState(false)
+  const [colorSectionOpen, setColorSectionOpen] = useState(false)
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   
   const toggleFolder = (id: string) => {
@@ -305,7 +306,7 @@ export default function CreatePortalPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-10 lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto lg:pr-4 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent"
+          className="space-y-6"
         >
           <div>
             <div className="flex items-center gap-2 mb-3">
@@ -314,464 +315,487 @@ export default function CreatePortalPage() {
               </div>
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Portal Builder</span>
             </div>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tight">Create a New Portal</h1>
-            <p className="text-slate-500 mt-2 text-lg">
-              Design a beautiful, secure gateway for your clients' files.
-            </p>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight">
+  Create a New Workspace
+</h1>
+<p className="text-slate-500 mt-1 text-base">
+  Set up a polished, secure space for sharing client documents.
+</p>
+</div>
+
+<form onSubmit={handleSubmit} className="space-y-4">
+  {/* Identity Group */}
+  <section className="space-y-3">
+    <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+      <Type className="w-4 h-4" /> Identity & Presentation
+    </h3>
+
+
+             <div className="grid gap-3">
+  <div>
+    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+      Workspace Name
+    </label>
+    <input
+      type="text"
+      value={formData.name}
+      onChange={(e) => handleNameChange(e.target.value)}
+      placeholder="e.g. Project Delivery Materials"
+      className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300"
+      required
+    />
+  </div>
+
+  <div>
+    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+      Access Address
+    </label>
+    <div className="flex items-stretch">
+      <div className="px-4 flex items-center bg-slate-50 border border-r-0 border-slate-200 rounded-l-2xl text-slate-400 text-sm font-medium">
+        /p/
+      </div>
+      <input
+        type="text"
+        value={formData.slug}
+        onChange={(e) =>
+          setFormData({ ...formData, slug: e.target.value.toLowerCase() })
+        }
+        placeholder="custom-address"
+        className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-r-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
+        pattern="[a-z0-9-]+"
+        required
+      />
+    </div>
+  </div>
+
+  <div className="space-y-2 pt-2 border-t border-slate-100">
+  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Brand Identity</h4>
+
+  {/* Logo URL */}
+  <div>
+    <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
+      Logo Link
+    </label>
+    <input
+      type="url"
+      value={formData.logoUrl}
+      onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+      placeholder="https://..."
+      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300 text-sm"
+    />
+  </div>
+
+  <button
+    type="button"
+    onClick={() => setColorSectionOpen(!colorSectionOpen)}
+    className="text-xs font-semibold text-slate-600 uppercase tracking-wide hover:text-slate-900 transition-colors cursor-pointer"
+  >
+    Manage Colors
+  </button>
+<AnimatePresence>
+  {colorSectionOpen && (
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: "auto" }}
+      exit={{ opacity: 0, height: 0 }}
+      className="grid grid-cols-2 gap-3"
+    >
+      {/* Primary Brand Color */}
+      <div>
+        <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
+          Primary Color
+        </label>
+        <div className="flex items-center gap-2">
+          <div className="relative group w-10 h-10">
+            <input
+              type="color"
+              value={formData.primaryColor}
+              onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+              className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
+            />
           </div>
+          <input
+            type="text"
+            value={formData.primaryColor}
+            onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+            className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl font-mono text-xs uppercase"
+          />
+        </div>
+      </div>
+{/* Text Color */}
+<div>
+  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
+    Text Color
+  </label>
+  <div className="flex items-center gap-2">
+    <div className="relative group w-10 h-10">
+      <input
+        type="color"
+        value={formData.textColor}
+        onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
+        className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
+      />
+    </div>
+    <input
+      type="text"
+      value={formData.textColor}
+      onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
+      className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl font-mono text-xs uppercase"
+    />
+  </div>
+</div>
+{/* Background Color */}
+<div>
+  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
+    Background Color
+  </label>
+  <div className="flex items-center gap-2">
+    <div className="relative group w-10 h-10">
+      <input
+        type="color"
+        value={formData.backgroundColor || "#ffffff"}
+        onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
+        className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
+      />
+    </div>
+    <input
+      type="text"
+      value={formData.backgroundColor || ""}
+      onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
+      placeholder="#HEX"
+      className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl font-mono text-xs uppercase"
+    />
+  </div>
+</div>
 
-          <form onSubmit={handleSubmit} className="space-y-12">
-            {/* Identity Group */}
-            <section className="space-y-6">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                <Type className="w-4 h-4" /> Identity & Branding
-              </h3>
+  {/* Card Background Color */}
+<div>
+  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
+    Card Background Color
+  </label>
+  <div className="flex items-center gap-2">
+    <div className="relative group w-10 h-10">
+      <input
+        type="color"
+        value={formData.cardBackgroundColor}
+        onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
+        className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
+      />
+    </div>
+    <input
+      type="text"
+      value={formData.cardBackgroundColor}
+      onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
+      className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl font-mono text-xs uppercase"
+    />
+  </div>
+</div>
+ </motion.div>
+    )}
+   </AnimatePresence>
+   </div>
+   </div>
+  </section>
+                     
 
-              <div className="grid gap-6">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">
-                    Portal Name
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => handleNameChange(e.target.value)}
-                    placeholder="e.g. Project Delivery Assets"
-                    className="w-full px-5 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300"
-                    required
-                  />
-                </div>
+{/* Storage Section */}
+<section className="space-y-3">
+  <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400 flex items-center gap-2">
+    <Cloud className="w-4 h-4" /> Storage Backbone
+  </h3>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">
-                    URL Access Point
-                  </label>
-                  <div className="flex items-stretch">
-                    <div className="px-5 flex items-center bg-slate-50 border border-r-0 border-slate-200 rounded-l-2xl text-slate-400 text-sm font-medium">
-                      /p/
-                    </div>
-                    <input
-                      type="text"
-                      value={formData.slug}
-                      onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase() })}
-                      placeholder="your-custom-slug"
-                      className="flex-1 px-5 py-4 bg-white border border-slate-200 rounded-r-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
-                      pattern="[a-z0-9-]+"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-4 pt-4 border-t border-slate-100">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Visual DNA</h4>
-
-                  {/* Logo URL */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">
-                      Logo URL
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.logoUrl}
-                      onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
-                      placeholder="https://..."
-                      className="w-full px-5 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300 text-sm"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Primary Color */}
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">
-                        Brand Text
-                      </label>
-                      <div className="flex items-center gap-3">
-                        <div className="relative group w-12 h-12">
-                          <input
-                            type="color"
-                            value={formData.primaryColor}
-                            onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-                            className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
-                          />
-                        </div>
-                        <input
-                          type="text"
-                          value={formData.primaryColor}
-                          onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-                          className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-mono text-xs uppercase"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Text Color */}
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">
-                        Content Text
-                      </label>
-                      <div className="flex items-center gap-3">
-                        <div className="relative group w-12 h-12">
-                          <input
-                            type="color"
-                            value={formData.textColor}
-                            onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
-                            className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
-                          />
-                        </div>
-                        <input
-                          type="text"
-                          value={formData.textColor}
-                          onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
-                          className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-mono text-xs uppercase"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Background Color */}
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">
-                        Page BG
-                      </label>
-                      <div className="flex items-center gap-3">
-                        <div className="relative group w-12 h-12">
-                          <input
-                            type="color"
-                            value={formData.backgroundColor || "#ffffff"}
-                            onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
-                            className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
-                          />
-                        </div>
-                        <input
-                          type="text"
-                          value={formData.backgroundColor || ""}
-                          onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
-                          placeholder="#HEX"
-                          className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-mono text-xs uppercase"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Card Color */}
-                    <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">
-                        Card BG
-                      </label>
-                      <div className="flex items-center gap-3">
-                        <div className="relative group w-12 h-12">
-                          <input
-                            type="color"
-                            value={formData.cardBackgroundColor}
-                            onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
-                            className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
-                          />
-                        </div>
-                        <input
-                          type="text"
-                          value={formData.cardBackgroundColor}
-                          onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
-                          className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-mono text-xs uppercase"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* Storage Group */}
-            <section className="space-y-4">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                <Cloud className="w-4 h-4" /> Storage Backbone
-              </h3>
+  {/* Storage Options */}
+  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+    {[
+      { id: "google_drive", name: "Google Drive", icon: Cloud, color: "emerald", disabled: !accounts.find(a => a.provider === "google") },
+      { id: "dropbox", name: "Dropbox", icon: Cloud, color: "blue", disabled: !accounts.find(a => a.provider === "dropbox") }
+    ].map((provider) => {
+      const Icon = provider.icon;
+      const isActive = formData.storageProvider === provider.id;
+      return (
+        <button
+          key={provider.id}
+          type="button"
+          disabled={provider.disabled}
+          onClick={() => selectStorageProvider(provider.id as any)}
+          className={`relative p-3 rounded-2xl border-2 transition-all flex flex-col items-center gap-1.5 overflow-hidden ${isActive
+            ? "border-slate-900 bg-slate-50/50"
+            : "border-slate-100 bg-white hover:border-slate-200"
+          } ${provider.disabled ? "opacity-40 grayscale cursor-not-allowed" : ""}`}
+        >
+          <div className={`p-2 rounded-xl ${isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-400 transition-colors group-hover:bg-slate-200"}`}>
+            <Icon className="w-4 h-4" />
+          </div>
+          <span className="font-semibold text-xs text-slate-900">{provider.name}</span>
+          {isActive && (
+            <motion.div layoutId="provider-check" className="absolute top-2 right-2">
+              <CheckCircle2 className="w-4 h-4 text-slate-900" />
+            </motion.div>
+          )}
+        </button>
+      );
+    })}
+  </div>
             
-              {/* Storage Buttons - Reduced Size */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {[
-                  { id: "google_drive", name: "Google", icon: Cloud, color: "emerald", disabled: !accounts.find(a => a.provider === "google") },
-                  { id: "dropbox", name: "Dropbox", icon: Cloud, color: "blue", disabled: !accounts.find(a => a.provider === "dropbox") }
-                ].map((provider) => {
-                  const Icon = provider.icon
-                  const isActive = formData.storageProvider === provider.id
-                  return (
-                    <button
-                      key={provider.id}
-                      type="button"
-                      disabled={provider.disabled}
-                      onClick={() => selectStorageProvider(provider.id as any)}
-                      className={`relative p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 overflow-hidden ${isActive
-                        ? "border-slate-900 bg-slate-50/50"
-                        : "border-slate-100 bg-white hover:border-slate-200"
-                        } ${provider.disabled ? "opacity-40 grayscale cursor-not-allowed" : ""}`}
-                    >
-                      <div className={`p-2 rounded-xl ${isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-400 transition-colors group-hover:bg-slate-200"}`}>
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <span className="font-bold text-xs text-slate-900">{provider.name}</span>
-                      {isActive && (
-                        <motion.div layoutId="provider-check" className="absolute top-2 right-2">
-                          <CheckCircle2 className="w-4 h-4 text-slate-900" />
-                        </motion.div>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
+{/* Folder Selection Section */}
+<div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden">
+  {/* Current Folder / Toggle */}
+  <button
+    type="button"
+    onClick={() => setFolderSectionOpen(prev => !prev)}
+    className="w-full px-3 py-2 flex justify-between items-center text-sm font-semibold text-slate-900 uppercase tracking-wide bg-white border-b border-slate-100 rounded-t-2xl hover:bg-slate-50 transition-colors"
+  >
+    <span>Current Folder: {formData.storageFolderPath || "Home Directory"}</span>
+    <ChevronRight className={`w-4 h-4 transition-transform ${folderSectionOpen ? "rotate-90" : ""}`} />
+  </button>
+
+  {/* Expandable Tree */}
+  <AnimatePresence>
+    {folderSectionOpen && (
+      <motion.div
+        initial={{ opacity: 0, height: 0 }}
+        animate={{ opacity: 1, height: "auto" }}
+        exit={{ opacity: 0, height: 0 }}
+        className="max-h-52 overflow-y-auto divide-y divide-slate-100"
+      >
+        {loadingFolders ? (
+          <div className="p-4 text-center">
+            <Loader2 className="w-5 h-5 animate-spin mx-auto text-slate-300" />
+          </div>
+        ) : folders.length === 0 ? (
+          <div className="p-4 text-center text-slate-400 text-sm font-medium">No subdirectories found</div>
+        ) : (
+          folders.map((folder) => (
+            <FolderNode
+              key={folder.id}
+              folder={folder}
+              navigateToFolder={navigateToFolder}
+              expandedFolders={expandedFolders}
+              toggleFolder={toggleFolder}
+            />
+          ))
+        )}
+      </motion.div>
+    )}
+  </AnimatePresence>
+
+  {/* Footer */}
+  <div className="p-1.5 bg-slate-900/5 text-[10px] font-semibold text-slate-500 uppercase tracking-wide text-center">
+    Selected: <span className="text-slate-900">{formData.storageFolderPath || "Home Directory"}</span>
+  </div>
+</div>
+</section>
             
-              {/* Collapsible Folder Section */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden">
-                {/* Current Folder / Toggle */}
-                <button
-                  type="button"
-                  onClick={() => setFolderSectionOpen(prev => !prev)}
-                  className="w-full px-4 py-2 flex justify-between items-center text-sm font-bold text-slate-900 uppercase tracking-widest bg-white border-b border-slate-100 rounded-t-2xl hover:bg-slate-50 transition-colors"
-                >
-                  <span>Current Folder: {formData.storageFolderPath || "Home Directory"}</span>
-                  <ChevronRight className={`w-4 h-4 transition-transform ${folderSectionOpen ? "rotate-90" : ""}`} />
-                </button>
-            
-                {/* Expandable Tree */}
-                <AnimatePresence>
-                  {folderSectionOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="max-h-60 overflow-y-auto divide-y divide-slate-100"
-                    >
-                      {loadingFolders ? (
-                        <div className="p-6 text-center">
-                          <Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-300" />
-                        </div>
-                      ) : folders.length === 0 ? (
-                        <div className="p-6 text-center text-slate-400 text-sm font-medium">No subdirectories found</div>
-                      ) : (
-                        folders.map((folder) => (
-                          <FolderNode
-                            key={folder.id}
-                            folder={folder}
-                            navigateToFolder={navigateToFolder}
-                            expandedFolders={expandedFolders}
-                            toggleFolder={toggleFolder}
-                          />
-                        ))
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-            
-                {/* Footer */}
-                <div className="p-2 bg-slate-900/5 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">
-                  Selected: <span className="text-slate-900">{formData.storageFolderPath || "Home Directory"}</span>
-                </div>
-              </div>
-            </section>
-            
+{/* Security & Parameters Section */}
+<section className="space-y-4">
+  <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400 flex items-center gap-2">
+    <Settings2 className="w-4 h-4" /> Parameters & Security
+  </h3>
 
-            {/* Security & Rules */}
-            <section className="space-y-6">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                <Settings2 className="w-4 h-4" /> Parameters & Security
-              </h3>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
+        Maximum File Size (MB)
+      </label>
+      <input
+        type="number"
+        value={formData.maxFileSize}
+        onChange={(e) => setFormData({ ...formData, maxFileSize: parseInt(e.target.value) || 100 })}
+        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
+      />
+    </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">Max File Size (MB)</label>
-                  <input
-                    type="number"
-                    value={formData.maxFileSize}
-                    onChange={(e) => setFormData({ ...formData, maxFileSize: parseInt(e.target.value) || 100 })}
-                    className="w-full px-5 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">Passkey Access</label>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                    <input
-                      type="password"
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      placeholder="Secure with password..."
-                      className="w-full pl-10 pr-5 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
-                    />
-                  </div>
-                </div>
-              </div>
+    <div>
+      <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
+        Passkey Access
+      </label>
+      <div className="relative">
+        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+        <input
+          type="password"
+          value={formData.password}
+          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          placeholder="Secure with password..."
+          className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
+        />
+      </div>
+    </div>
+  </div>
 
-              <div className="space-y-4">
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest">Mandatory Metadata</label>
-                <div className="flex gap-4">
-                  {[
-                    { id: 'name', label: 'Client Name', key: 'requireClientName' },
-                    { id: 'email', label: 'Client Email', key: 'requireClientEmail' }
-                  ].map(req => (
-                    <button
-                      key={req.id}
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, [req.key]: !prev[req.key as keyof typeof prev] }))}
-                      className={`flex-1 p-4 rounded-2xl border-2 font-bold text-xs uppercase tracking-widest transition-all ${formData[req.key as keyof typeof formData]
-                        ? "border-slate-900 bg-slate-900 text-white"
-                        : "border-slate-100 bg-white text-slate-400 hover:border-slate-200"
-                        }`}
-                    >
-                      {req.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+<div className="space-y-3">
+  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
+    Mandatory Metadata
+  </label>
+  <div className="flex gap-2">
+    {[
+      { id: 'name', label: 'Client Name', key: 'requireClientName' },
+      { id: 'email', label: 'Client Email', key: 'requireClientEmail' }
+    ].map(req => (
+      <button
+        key={req.id}
+        type="button"
+        onClick={() => setFormData(prev => ({ ...prev, [req.key]: !prev[req.key as keyof typeof prev] }))}
+        className={`flex-1 px-3 py-2 rounded-xl border-2 font-semibold text-xs uppercase tracking-wide transition-all ${
+          formData[req.key as keyof typeof formData]
+            ? "border-slate-900 bg-slate-900 text-white"
+            : "border-slate-100 bg-white text-slate-400 hover:border-slate-200"
+        }`}
+      >
+        {req.label}
+      </button>
+    ))}
+  </div>
+</div>
 
-              <div className="relative space-y-2" ref={dropdownRef}>
-                   {/* Trigger Button */}
-                   <button
-                     type="button"
-                     onClick={() => setDropdownOpen((prev) => !prev)}
-                     className="w-full text-left bg-white border border-slate-100 rounded-2xl p-4 flex justify-between items-center text-sm font-semibold hover:border-slate-200 transition-colors"
-                   >
-                     {formData.allowedFileTypes.length === 0
-                       ? "Allowed File Types"
-                       : `${formData.allowedFileTypes.length} file categories enabled`}
-                     <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
-                   </button>
-                 
-                   {/* Dropdown List */}
-                   {dropdownOpen && (
-                     <div className="absolute z-50 mt-2 w-full bg-white border border-slate-200 rounded-2xl shadow-lg p-4 space-y-2 max-h-60 overflow-y-auto">
-                       {/* Select All Option */}
-                       <label className="flex items-center gap-2 cursor-pointer">
-                         <input
-                           type="checkbox"
-                           checked={formData.allowedFileTypes.length === FILE_TYPE_OPTIONS.length}
-                           onChange={(e) =>
-                             setFormData((prev) => ({
-                               ...prev,
-                               allowedFileTypes: e.target.checked ? FILE_TYPE_OPTIONS.map((f) => f.value) : [],
-                             }))
-                           }
-                           className="w-4 h-4 rounded border-slate-300"
-                         />
-                         <span className="text-sm font-semibold">Select All File Types</span>
-                       </label>
-                 
-                       <hr className="border-slate-100 my-2" />
-                 
-                       {/* Individual File Type Options */}
-                       {FILE_TYPE_OPTIONS.map((opt) => {
-                         const isSelected = formData.allowedFileTypes.includes(opt.value);
-                         return (
-                           <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
-                             <input
-                               type="checkbox"
-                               checked={isSelected}
-                               onChange={() =>
-                                 setFormData((prev) => ({
-                                   ...prev,
-                                   allowedFileTypes: isSelected
-                                     ? prev.allowedFileTypes.filter((v) => v !== opt.value)
-                                     : [...prev.allowedFileTypes, opt.value],
-                                 }))
-                               }
-                               className="w-4 h-4 rounded border-slate-300"
-                             />
-                             <span className={`text-sm font-medium ${isSelected ? "text-slate-900" : "text-slate-500"}`}>
-                               {opt.label}
-                             </span>
-                           </label>
-                         );
-                       })}
-                     </div>
-                   )}
-                 
-                   {/* Info Message */}
-                   <div className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                     {formData.allowedFileTypes.length === 0
-                       ? "All file types permitted"
-                       : `${formData.allowedFileTypes.length} file categories enabled`}
-                   </div>
-              </div>
-                 
-            </section>
+<div className="relative space-y-2" ref={dropdownRef}>
+  {/* Trigger Button */}
+  <button
+    type="button"
+    onClick={() => setDropdownOpen((prev) => !prev)}
+    className="w-full text-left bg-white border border-slate-100 rounded-xl px-3 py-2 flex justify-between items-center text-sm font-semibold hover:border-slate-200 transition-colors"
+  >
+    {formData.allowedFileTypes.length === 0
+      ? "Allowed File Types"
+      : `${formData.allowedFileTypes.length} file categories enabled`}
+    <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+  </button>
 
-            {/* Messaging & Experience */}
-            <section className="space-y-6">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                <Settings2 className="w-4 h-4" /> Message & Tone
-              </h3>
+  {/* Dropdown List */}
+  {dropdownOpen && (
+    <div className="absolute z-50 mt-1.5 w-full bg-white border border-slate-200 rounded-xl shadow-lg px-3 py-2 space-y-1.5 max-h-52 overflow-y-auto">
+      {/* Select All Option */}
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={formData.allowedFileTypes.length === FILE_TYPE_OPTIONS.length}
+          onChange={(e) =>
+            setFormData((prev) => ({
+              ...prev,
+              allowedFileTypes: e.target.checked ? FILE_TYPE_OPTIONS.map((f) => f.value) : [],
+            }))
+          }
+          className="w-4 h-4 rounded border-slate-300"
+        />
+        <span className="text-sm font-semibold">Select All File Types</span>
+      </label>
 
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">
-                    Welcome Message
-                  </label>
-                  <textarea
-                    value={formData.welcomeMessage}
-                    onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
-                    placeholder="Welcome to our secure upload portal. Please submit your files below."
-                    rows={2}
-                    className="w-full px-5 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300 resize-none"
-                  />
-                </div>
+      <hr className="border-slate-100 my-1.5" />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">
-                      Submit Button Label
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.submitButtonText}
-                      onChange={(e) => setFormData({ ...formData, submitButtonText: e.target.value })}
-                      placeholder="Initialize Transfer"
-                      className="w-full px-5 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2.5">
-                      Success Message
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.successMessage}
-                      onChange={(e) => setFormData({ ...formData, successMessage: e.target.value })}
-                      placeholder="Transmission Verified"
-                      className="w-full px-5 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
-                    />
-                  </div>
-                </div>
-              </div>
-            </section>
+      {/* Individual File Type Options */}
+      {FILE_TYPE_OPTIONS.map((opt) => {
+        const isSelected = formData.allowedFileTypes.includes(opt.value);
+        return (
+          <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() =>
+                setFormData((prev) => ({
+                  ...prev,
+                  allowedFileTypes: isSelected
+                    ? prev.allowedFileTypes.filter((v) => v !== opt.value)
+                    : [...prev.allowedFileTypes, opt.value],
+                }))
+              }
+              className="w-4 h-4 rounded border-slate-300"
+            />
+            <span className={`text-sm font-medium ${isSelected ? "text-slate-900" : "text-slate-500"}`}>
+              {opt.label}
+            </span>
+          </label>
+        );
+      })}
+    </div>
+  )}
+{/* Info Message */}
+<div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+  {formData.allowedFileTypes.length === 0
+    ? "All file types permitted"
+    : `${formData.allowedFileTypes.length} file categories enabled`}
+</div>
+</div>
+</section>
 
-            {/* Error UI */}
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3 text-red-600 text-sm font-bold"
-              >
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                {error}
-              </motion.div>
-            )}
+{/* Messaging & Tone Section */}
+<section className="space-y-4">
+  <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400 flex items-center gap-2">
+    <Settings2 className="w-4 h-4" /> Message & Tone
+  </h3>
 
-            {/* Action Buttons */}
-            <div className="flex gap-4 pt-4">
-              <Link
-                href="/dashboard"
-                className="px-8 py-4 border border-slate-200 rounded-2xl text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-all font-bold text-sm uppercase tracking-widest"
-              >
-                Cancel
-              </Link>
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex-1 flex items-center justify-center gap-2 px-8 py-4 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 disabled:opacity-50 font-bold text-sm uppercase tracking-widest active:scale-[0.98]"
-              >
-                {loading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <>Deploy Portal <ChevronRight className="w-4 h-4" /></>
-                )}
-              </button>
-            </div>
-          </form>
+  <div className="space-y-3">
+    <div>
+      <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
+        Welcome Message
+      </label>
+      <textarea
+        value={formData.welcomeMessage}
+        onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
+        placeholder="Welcome to our secure upload portal. Please submit your files below."
+        rows={2}
+        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300 resize-none"
+      />
+    </div>
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div>
+    <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
+      Submit Button Label
+    </label>
+    <input
+      type="text"
+      value={formData.submitButtonText}
+      onChange={(e) => setFormData({ ...formData, submitButtonText: e.target.value })}
+      placeholder="Initialize Transfer"
+      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
+    />
+  </div>
+  <div>
+    <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
+      Success Message
+    </label>
+    <input
+      type="text"
+      value={formData.successMessage}
+      onChange={(e) => setFormData({ ...formData, successMessage: e.target.value })}
+      placeholder="Transmission Verified"
+      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
+    />
+  </div>
+</div>
+  </div>
+</section>
+{/* Error UI */}
+{error && (
+  <motion.div
+    initial={{ opacity: 0, scale: 0.95 }}
+    animate={{ opacity: 1, scale: 1 }}
+    className="px-3 py-2 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-red-600 text-sm font-semibold"
+  >
+    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+    {error}
+  </motion.div>
+)}
+
+{/* Action Buttons */}
+<div className="flex gap-3 pt-3">
+  <Link
+    href="/dashboard"
+    className="px-6 py-2 border border-slate-200 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-all font-semibold text-sm uppercase tracking-wide"
+  >
+    Cancel
+  </Link>
+  <button
+    type="submit"
+    disabled={loading}
+    className="flex-1 flex items-center justify-center gap-2 px-6 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-md disabled:opacity-50 font-semibold text-sm uppercase tracking-wide active:scale-[0.98]"
+  >
+    {loading ? (
+      <Loader2 className="w-4 h-4 animate-spin" />
+    ) : (
+      <>Deploy Portal <ChevronRight className="w-4 h-4" /></>
+    )}
+  </button>
+</div>
+    </form>
         </motion.div>
 
         {/* Preview Section - Modern Mockup */}
