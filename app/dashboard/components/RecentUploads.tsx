@@ -128,6 +128,7 @@ export default function RecentUploads({ uploads }: RecentUploadsProps) {
                 <div className="flex items-center gap-1">
                   <a
                     href={`/api/uploads/${upload.id}/download`}
+                    download={upload.fileName}
                     className="p-2.5 text-slate-300 hover:text-slate-900 hover:bg-white rounded-xl border border-transparent hover:border-slate-200 transition-all shadow-none hover:shadow-sm"
                     title="Download"
                     aria-label={`Download ${upload.fileName}`}

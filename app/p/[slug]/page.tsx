@@ -156,30 +156,15 @@ export default function PublicUploadPage() {
         }
     }
 
-    const handleDragOver = useCallback((e: React.DragEvent) => {
-        e.preventDefault()
-        e.stopPropagation()
-        setIsDragging(true)
+    const formatFileSize = useCallback((bytes: number): string => {
+        if (bytes === 0) return "0 Bytes"
+        const k = 1024
+        const sizes = ["Bytes", "KB", "MB", "GB"]
+        const i = Math.floor(Math.log(bytes) / Math.log(k))
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
     }, [])
 
-    const handleDragLeave = useCallback((e: React.DragEvent) => {
-        e.preventDefault()
-        e.stopPropagation()
-        // Only set to false if leaving the drop zone entirely
-        if (e.currentTarget === e.target) {
-            setIsDragging(false)
-        }
-    }, [])
-
-    const handleDrop = useCallback((e: React.DragEvent) => {
-        e.preventDefault()
-        e.stopPropagation()
-        setIsDragging(false)
-        const droppedFiles = Array.from(e.dataTransfer.files)
-        addFiles(droppedFiles)
-    }, [])
-
-    function addFiles(newFiles: File[]) {
+    const addFiles = useCallback((newFiles: File[]) => {
         if (!portal) return
         const maxBytes = portal.maxFileSize
         const allowedTypes = portal.allowedFileTypes || []
@@ -222,18 +207,36 @@ export default function PublicUploadPage() {
                 submitButtonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
             }, 300)
         }
-    }
+    }, [portal, formatFileSize])
+
+    const handleDragOver = useCallback((e: React.DragEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setIsDragging(true)
+    }, [])
+
+    const handleDragLeave = useCallback((e: React.DragEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        // Only set to false if leaving the drop zone entirely
+        if (e.currentTarget === e.target) {
+            setIsDragging(false)
+        }
+    }, [])
+
+    const handleDrop = useCallback((e: React.DragEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setIsDragging(false)
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            const droppedFiles = Array.from(e.dataTransfer.files)
+            addFiles(droppedFiles)
+            e.dataTransfer.clearData()
+        }
+    }, [addFiles])
 
     function removeFile(id: string) {
         setFiles(prev => prev.filter(f => f.id !== id))
-    }
-
-    function formatFileSize(bytes: number): string {
-        if (bytes === 0) return "0 Bytes"
-        const k = 1024
-        const sizes = ["Bytes", "KB", "MB", "GB"]
-        const i = Math.floor(Math.log(bytes) / Math.log(k))
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
     }
 
     // Retry with exponential backoff
@@ -859,18 +862,22 @@ export default function PublicUploadPage() {
                                                 className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-100 rounded-[24px] p-5"
                                             >
                                                 <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-3">
-                                                        <motion.div
-                                                            animate={{ rotate: 360 }}
-                                                            transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                                                        >
-                                                            <Loader2 className="w-5 h-5 text-blue-600" />
-                                                        </motion.div>
-                                                        <div>
-                                                            <p className="text-sm font-black text-blue-900">Uploading Files</p>
-                                                            <p className="text-xs text-blue-600 font-medium">
-                                                                {files.filter(f => f.status === 'complete').length} of {files.length} complete
-                                                            </p>
+                                                    <div className="flex items-center gap-4 flex-1">
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <p className="text-sm font-black text-blue-900 uppercase tracking-wider">Transmission Progress</p>
+                                                                <p className="text-xs text-blue-600 font-bold">
+                                                                    {files.filter(f => f.status === 'complete').length} / {files.length} Files
+                                                                </p>
+                                                            </div>
+                                                            <div className="h-3 w-full bg-blue-100 rounded-full overflow-hidden shadow-inner">
+                                                                <motion.div
+                                                                    className="h-full bg-blue-600 rounded-full"
+                                                                    initial={{ width: 0 }}
+                                                                    animate={{ width: `${Math.round((files.filter(f => f.status === 'complete').length / files.length) * 100)}%` }}
+                                                                    transition={{ duration: 0.5 }}
+                                                                />
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
@@ -986,12 +993,9 @@ export default function PublicUploadPage() {
                                                     {/* Status Indicators */}
                                                     <div className="shrink-0 flex items-center self-end sm:self-center">
                                                         {uploadFile.status === "uploading" && (
-                                                            <motion.div
-                                                                animate={{ rotate: 360 }}
-                                                                transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                                                            >
-                                                                <Loader2 className="w-5 h-5 text-blue-500" />
-                                                            </motion.div>
+                                                            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 border border-blue-100 rounded-lg shadow-sm">
+                                                                <span className="text-[10px] font-black text-blue-600 uppercase tracking-tighter">Syncing</span>
+                                                            </div>
                                                         )}
                                                         {uploadFile.status === "error" && (
                                                             <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-100 rounded-lg">

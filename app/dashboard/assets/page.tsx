@@ -2,6 +2,12 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import prisma from "@/lib/prisma"
 import AssetsClient from "./AssetsClient"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Assets | SecureUploadHub",
+  description: "Manage and monitor your uploaded client documents.",
+}
 
 export default async function AssetsPage() {
   const session = await auth()

@@ -278,7 +278,7 @@ export default function CreatePortalPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-8">
       <Link
         href="/dashboard"
         className="group inline-flex items-center gap-2 text-slate-400 hover:text-slate-900 mb-8 transition-colors font-medium text-sm"
@@ -291,8 +291,8 @@ export default function CreatePortalPage() {
         {/* Navigation Sidebar */}
         <aside className="lg:w-64 flex-shrink-0">
           <div className="mb-6 px-2">
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">New Portal</h1>
-            <p className="text-slate-500 text-sm mt-1">Create a secure space.</p>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">New Portal</h1>
+            <p className="text-slate-600 text-sm mt-1">Create a secure space for your clients.</p>
           </div>
           <nav className="space-y-1">
             {[
@@ -311,7 +311,7 @@ export default function CreatePortalPage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
                     ? "bg-white shadow-sm border border-slate-200 text-slate-900"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                     }`}
                 >
                   <Icon className={`w-5 h-5 ${isActive ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
@@ -345,11 +345,11 @@ export default function CreatePortalPage() {
               >
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                   <div className="p-6 border-b border-slate-100 bg-slate-50/30">
-                    <h2 className="text-xl font-semibold text-slate-900">
-                      {activeTab} Configuration
+                    <h2 className="text-2xl font-black text-slate-900">
+                      {activeTab} Settings
                     </h2>
-                    <p className="text-sm text-slate-500 mt-1">
-                      Configure the {activeTab.toLowerCase()} settings for your new portal.
+                    <p className="text-sm text-slate-600 mt-1 font-medium">
+                      Configure the {activeTab.toLowerCase()} parameters for your new portal.
                     </p>
                   </div>
 
@@ -357,7 +357,7 @@ export default function CreatePortalPage() {
                     {activeTab === 'Identity' && (
                       <div className="space-y-6">
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">
+                          <label className="block text-sm font-bold text-slate-900 mb-2">
                             Workspace Name
                           </label>
                           <input
@@ -365,13 +365,13 @@ export default function CreatePortalPage() {
                             value={formData.name}
                             onChange={(e) => handleNameChange(e.target.value)}
                             placeholder="e.g. Project Delivery Materials"
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium text-slate-900 placeholder:text-slate-400"
+                            className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-bold text-slate-900 placeholder:text-slate-500"
                             required
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">
+                          <label className="block text-sm font-bold text-slate-900 mb-2">
                             Access Address
                           </label>
                           <div className="flex items-stretch shadow-sm rounded-xl">
@@ -385,7 +385,7 @@ export default function CreatePortalPage() {
                                 setFormData({ ...formData, slug: e.target.value.toLowerCase() })
                               }
                               placeholder="custom-address"
-                              className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-r-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium text-slate-900"
+                              className="flex-1 px-5 py-4 bg-white border border-slate-200 rounded-r-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-bold text-slate-900"
                               pattern="[a-z0-9-]+"
                               required
                             />
@@ -393,7 +393,7 @@ export default function CreatePortalPage() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">
+                          <label className="block text-sm font-bold text-slate-900 mb-2">
                             Description (Optional)
                           </label>
                           <textarea
@@ -401,7 +401,7 @@ export default function CreatePortalPage() {
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                             placeholder="Tell your clients what this portal is for..."
                             rows={4}
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium text-slate-900 placeholder:text-slate-400 resize-none"
+                            className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium text-slate-900 placeholder:text-slate-500 resize-none"
                           />
                         </div>
 

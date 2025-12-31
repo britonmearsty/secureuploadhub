@@ -29,6 +29,7 @@ export default function IntegrationsClient() {
     const [savingSettings, setSavingSettings] = useState(false)
     const [loadingSettings, setLoadingSettings] = useState(true)
     const [connectedAccounts, setConnectedAccounts] = useState<string[]>([])
+    const [syncError, setSyncError] = useState<string | null>(null)
 
     const tabs = [
         { id: "available", name: "Available", icon: LayoutGrid, description: "Browse and connect cloud storage providers" },
@@ -74,6 +75,14 @@ export default function IntegrationsClient() {
     }, [])
 
     async function saveSyncSettings() {
+        setSyncError(null)
+
+        const interval = syncSettings.syncInterval
+        if (isNaN(interval) || interval < 300 || interval > 86400) {
+            setSyncError("Sync interval must be between 300 (5 mins) and 86400 (24 hours)")
+            return
+        }
+
         setSavingSettings(true)
         try {
             const res = await fetch("/api/storage/sync-settings", {
@@ -86,10 +95,11 @@ export default function IntegrationsClient() {
                 // Success - could add a toast notification here
                 console.log("Sync settings saved")
             } else {
-                console.error("Failed to save sync settings")
+                setSyncError("Failed to save sync settings. Please try again.")
             }
         } catch (error) {
             console.error("Error saving sync settings:", error)
+            setSyncError("An unexpected error occurred.")
         } finally {
             setSavingSettings(false)
         }
@@ -240,29 +250,29 @@ export default function IntegrationsClient() {
                                                     </div>
                                                     <div>
                                                         <label className="block text-sm font-medium text-slate-900 mb-2">Sync interval (seconds)</label>
-                                                        <input
-                                                            type="number"
-                                                            min="300"
-                                                            max="86400"
-                                                            step="300"
-                                                            value={syncSettings.syncInterval}
-                                                            onChange={(e) => {
-                                                                const value = parseInt(e.target.value)
-                                                                if (value >= 300 && value <= 86400) {
-                                                                    setSyncSettings({ ...syncSettings, syncInterval: value })
-                                                                }
-                                                            }}
-                                                            onBlur={(e) => {
-                                                                const value = parseInt(e.target.value)
-                                                                if (value < 300) {
-                                                                    setSyncSettings({ ...syncSettings, syncInterval: 300 })
-                                                                } else if (value > 86400) {
-                                                                    setSyncSettings({ ...syncSettings, syncInterval: 86400 })
-                                                                }
-                                                            }}
-                                                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 outline-none"
-                                                        />
+                                                        <div className="relative">
+                                                            <input
+                                                                type="number"
+                                                                value={syncSettings.syncInterval}
+                                                                onChange={(e) => {
+                                                                    setSyncSettings({ ...syncSettings, syncInterval: parseInt(e.target.value) })
+                                                                    if (syncError) setSyncError(null)
+                                                                }}
+                                                                className={`w-full px-4 py-2.5 bg-white border rounded-xl focus:ring-2 focus:ring-slate-900 outline-none transition-all ${syncError ? "border-red-500 bg-red-50/10" : "border-slate-200"
+                                                                    }`}
+                                                            />
+                                                        </div>
                                                         <p className="text-xs text-slate-500 mt-1">Set between 5 minutes (300s) and 24 hours (86400s)</p>
+                                                        {syncError && (
+                                                            <motion.p
+                                                                initial={{ opacity: 0, y: -5 }}
+                                                                animate={{ opacity: 1, y: 0 }}
+                                                                className="text-xs font-medium text-red-500 mt-2 flex items-center gap-1.5"
+                                                            >
+                                                                <AlertCircle className="w-3.5 h-3.5" />
+                                                                {syncError}
+                                                            </motion.p>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
@@ -335,8 +345,8 @@ function IntegrationCard({ name, description, icon, category, status, provider, 
                 onClick={handleConfigure}
                 disabled={status === 'coming-soon' || configuringProvider === provider || isConnected}
                 className={`w-full py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${status === 'coming-soon' || isConnected
-                        ? "bg-slate-50 text-slate-400 cursor-not-allowed border border-slate-200"
-                        : "bg-slate-900 text-white hover:bg-slate-800 shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    ? "bg-slate-50 text-slate-400 cursor-not-allowed border border-slate-200"
+                    : "bg-slate-900 text-white hover:bg-slate-800 shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                     }`}
             >
                 {configuringProvider === provider ? (

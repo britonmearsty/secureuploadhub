@@ -22,7 +22,9 @@ import {
     FileImage,
     FileVideo,
     FileAudio,
-    File as FileIcon
+    File as FileIcon,
+    Copy,
+    Check
 } from "lucide-react"
 
 interface Client {
@@ -50,6 +52,7 @@ export default function ClientsClient({ clients: initialClients }: ClientsClient
     const [selectedClient, setSelectedClient] = useState<Client | null>(null)
     const [files, setFiles] = useState<any[]>([])
     const [isLoadingFiles, setIsLoadingFiles] = useState(false)
+    const [copiedEmail, setCopiedEmail] = useState(false)
 
     const tabs = [
         { id: "directory", name: "Directory", icon: Users, description: "All clients and their history" },
@@ -97,6 +100,12 @@ export default function ClientsClient({ clients: initialClients }: ClientsClient
         const body = encodeURIComponent(`Hi ${client.name || 'there'},\n\nI wanted to follow up regarding your recent uploads.\n\nBest regards`)
         const mailtoLink = `mailto:${client.email}?subject=${subject}&body=${body}`
         window.location.href = mailtoLink
+    }
+
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text)
+        setCopiedEmail(true)
+        setTimeout(() => setCopiedEmail(false), 2000)
     }
 
     const getFileIcon = (mimeType: string = "") => {
@@ -330,10 +339,24 @@ export default function ClientsClient({ clients: initialClients }: ClientsClient
                                         <h3 className="text-2xl font-bold text-slate-900 leading-tight">
                                             {selectedClient.name || "Unknown Client"}
                                         </h3>
-                                        <p className="text-slate-500 flex items-center gap-1.5 mt-1">
-                                            <Mail className="w-3.5 h-3.5" />
-                                            {selectedClient.email || "No email available"}
-                                        </p>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <p className="text-slate-500 flex items-center gap-1.5">
+                                                <Mail className="w-3.5 h-3.5" />
+                                                {selectedClient.email || "No email available"}
+                                            </p>
+                                            {selectedClient.email && (
+                                                <button
+                                                    onClick={() => copyToClipboard(selectedClient.email!)}
+                                                    className={`p-1.5 rounded-lg transition-all border ${copiedEmail
+                                                        ? "bg-emerald-50 text-emerald-600 border-emerald-200"
+                                                        : "bg-white text-slate-400 hover:text-slate-600 hover:border-slate-300 border-slate-100"
+                                                        }`}
+                                                    title="Copy email address"
+                                                >
+                                                    {copiedEmail ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                                 <button

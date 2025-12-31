@@ -14,9 +14,10 @@ interface Stats {
 interface StatsOverviewProps {
   initialStats?: Stats
   onStatsUpdate?: (stats: Stats) => void
+  disablePolling?: boolean
 }
 
-export default function StatsOverview({ initialStats, onStatsUpdate }: StatsOverviewProps) {
+export default function StatsOverview({ initialStats, onStatsUpdate, disablePolling = false }: StatsOverviewProps) {
   const [stats, setStats] = useState<Stats>(initialStats || {
     totalPortals: 0,
     activePortals: 0,
@@ -26,6 +27,8 @@ export default function StatsOverview({ initialStats, onStatsUpdate }: StatsOver
   const [loading, setLoading] = useState(!initialStats)
 
   useEffect(() => {
+    if (disablePolling) return;
+
     // Initial fetch if needed
     if (!initialStats) {
       fetchStats()
@@ -34,7 +37,7 @@ export default function StatsOverview({ initialStats, onStatsUpdate }: StatsOver
     // Poll for updates every 5 seconds
     const interval = setInterval(fetchStats, 5000)
     return () => clearInterval(interval)
-  }, []) // Remove dependency on initialStats to ensure polling always starts
+  }, [disablePolling, initialStats]) // Add dependencies
 
   useEffect(() => {
     if (initialStats) {

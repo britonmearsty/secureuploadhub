@@ -51,6 +51,7 @@ interface PortalListProps {
     emptyStateTab?: string
     activePortalsCount?: number
     archivedPortalsCount?: number
+    disablePolling?: boolean
 }
 
 export default function PortalList({
@@ -60,7 +61,8 @@ export default function PortalList({
     className,
     emptyStateTab = "all",
     activePortalsCount = 0,
-    archivedPortalsCount = 0
+    archivedPortalsCount = 0,
+    disablePolling = false
 }: PortalListProps) {
     const [portals, setPortals] = useState<Portal[]>(initialPortals || [])
     const [loading, setLoading] = useState(!initialPortals)
@@ -76,6 +78,8 @@ export default function PortalList({
     const [isLoadingFiles, setIsLoadingFiles] = useState(false)
 
     useEffect(() => {
+        if (disablePolling) return;
+
         // Initial fetch if needed (only if no initial data)
         if (!initialPortals) {
             fetchPortals()
@@ -84,7 +88,7 @@ export default function PortalList({
         // Poll for updates
         const interval = setInterval(fetchPortals, 5000)
         return () => clearInterval(interval)
-    }, [])
+    }, [disablePolling, initialPortals])
 
     useEffect(() => {
         if (initialPortals) {
@@ -319,9 +323,9 @@ Status: ${portal.isActive ? 'Active ✅' : 'Inactive ⏸️'}`
                     >
                         {/* Encrypted Badge */}
                         {portal.passwordHash && (
-                            <div className="absolute top-0 right-0 p-3 z-10">
-                                <div className="bg-indigo-100 text-indigo-600 p-1.5 rounded-lg mr-12 lg:mr-0" title="Password Protected Portal">
-                                    <Lock className="w-3.5 h-3.5" />
+                            <div className="absolute top-7 right-20 z-50 pointer-events-none">
+                                <div className="bg-indigo-100 text-indigo-600 p-1.5 rounded-lg shadow-sm border border-indigo-200/50" title="Password Protected Portal">
+                                    <Lock className="w-3 h-3" />
                                 </div>
                             </div>
                         )}
@@ -367,7 +371,7 @@ Status: ${portal.isActive ? 'Active ✅' : 'Inactive ⏸️'}`
                             <button
                                 onClick={() => togglePortalStatus(portal.id, portal.isActive)}
                                 disabled={togglingId === portal.id}
-                                className={`absolute top-6 right-6 p-2 rounded-xl transition-all duration-200 flex-shrink-0 ${togglingId === portal.id ? 'opacity-60 cursor-not-allowed animate-pulse' : ''
+                                className={`absolute top-6 right-6 z-20 p-2 rounded-xl transition-all duration-200 flex-shrink-0 ${togglingId === portal.id ? 'opacity-60 cursor-not-allowed animate-pulse' : ''
                                     } ${portal.isActive
                                         ? 'bg-emerald-50 text-emerald-500 hover:bg-emerald-100 shadow-sm hover:shadow-md'
                                         : 'bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600'
@@ -572,9 +576,8 @@ Status: ${portal.isActive ? 'Active ✅' : 'Inactive ⏸️'}`
                                                 </div>
                                                 <a
                                                     href={`/api/uploads/${file.id}/download`}
+                                                    download={file.fileName}
                                                     className="w-10 h-10 bg-white shadow-sm border border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-900 hover:border-slate-300 transition-all group-hover:scale-105"
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
                                                 >
                                                     <Download className="w-4 h-4" />
                                                 </a>

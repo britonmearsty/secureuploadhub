@@ -21,14 +21,36 @@ interface DashboardClientProps {
     uploads: any[]
 }
 
-export default function DashboardClient({ user, stats, portals, uploads }: DashboardClientProps) {
+export default function DashboardClient({ user, stats: initialStats, portals: initialPortals, uploads: initialUploads }: DashboardClientProps) {
     const [greeting, setGreeting] = useState("Good afternoon");
+    const [stats, setStats] = useState(initialStats);
+    const [portals, setPortals] = useState(initialPortals);
+    const [uploads, setUploads] = useState(initialUploads);
 
     useEffect(() => {
         const hour = new Date().getHours();
         if (hour < 12) setGreeting("Good morning");
         else if (hour < 18) setGreeting("Good afternoon");
         else setGreeting("Good evening");
+    }, []);
+
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                const res = await fetch("/api/dashboard");
+                if (res.ok) {
+                    const data = await res.json();
+                    setStats(data.stats);
+                    setPortals(data.portals);
+                    setUploads(data.uploads);
+                }
+            } catch (error) {
+                console.error("Error polling dashboard data:", error);
+            }
+        };
+
+        const interval = setInterval(fetchDashboardData, 5000);
+        return () => clearInterval(interval);
     }, []);
 
     return (
@@ -65,7 +87,7 @@ export default function DashboardClient({ user, stats, portals, uploads }: Dashb
 
             {/* Stats Grid */}
             <section aria-label="Dashboard Statistics">
-                <StatsOverview initialStats={stats} />
+                <StatsOverview initialStats={stats} disablePolling={true} />
             </section>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
@@ -88,6 +110,7 @@ export default function DashboardClient({ user, stats, portals, uploads }: Dashb
                     <PortalList
                         initialPortals={portals.slice(0, 4)}
                         className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                        disablePolling={true}
                     />
 
                     {portals.length > 4 && (

@@ -29,7 +29,9 @@ import {
     Music,
     Video,
     Archive,
-    Trash2
+    Trash2,
+    X,
+    RefreshCw
 } from "lucide-react"
 
 interface FileUpload {
@@ -179,9 +181,11 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
 
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Secure Asset Vault</h1>
-                <p className="text-slate-500 mt-1 text-lg">Centralized file management for all your client data and documents.</p>
+            <div className="mb-10">
+                <h1 className="text-4xl font-black text-slate-900 tracking-tight">Assets</h1>
+                <p className="text-slate-500 mt-2 text-lg max-w-2xl leading-relaxed">
+                    A centralized, secure command center for all client documents across your connected cloud storage ecosystems.
+                </p>
             </div>
 
             <div className="flex flex-col lg:flex-row gap-8">
@@ -343,33 +347,46 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                                     )}
 
                                     {activeTab === "stats" && (
-                                        <div className="p-12 text-center">
-                                            <div className="p-8 bg-slate-50 rounded-full inline-block mb-8 mb-6 border border-slate-100 relative">
-                                                <PieChart className="w-16 h-16 text-slate-200" />
-                                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
-                                                    <TrendingUp className="w-5 h-5 text-slate-900" />
+                                        <div className={`transition-all duration-300 ${viewMode === 'list' ? "p-8" : "p-12"} text-center`}>
+                                            <div className={`mx-auto transition-all duration-300 bg-slate-50 rounded-full border border-slate-100 relative flex items-center justify-center ${viewMode === 'list' ? "w-20 h-20 mb-6" : "w-32 h-32 mb-8"
+                                                }`}>
+                                                <PieChart className={`text-slate-200 transition-all ${viewMode === 'list' ? "w-10 h-10" : "w-16 h-16"}`} />
+                                                <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-full flex items-center justify-center shadow-sm transition-all ${viewMode === 'list' ? "w-7 h-7" : "w-10 h-10"
+                                                    }`}>
+                                                    <TrendingUp className={`text-slate-900 ${viewMode === 'list' ? "w-3.5 h-3.5" : "w-5 h-5"}`} />
                                                 </div>
                                             </div>
-                                            <h3 className="text-2xl font-black text-slate-900 mb-2">Storage Intelligence</h3>
-                                            <p className="text-slate-500 text-sm max-w-md mx-auto mb-10">
-                                                Monitor how your storage is distributed across your connected cloud ecosystems.
-                                            </p>
-                                            <div className={viewMode === 'list' ? "flex flex-col gap-4 max-w-2xl mx-auto" : "grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto"}>
-                                                <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                                                    <p className="text-3xl font-black text-slate-900">{stats.totalFiles}</p>
-                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Files Collected</p>
+
+                                            <div className={viewMode === 'list' ? "flex flex-col items-center" : ""}>
+                                                <h3 className={`font-black text-slate-900 mb-2 transition-all ${viewMode === 'list' ? "text-xl" : "text-2xl"}`}>Storage Intelligence</h3>
+                                                <p className={`text-slate-500 text-sm max-w-md mx-auto leading-relaxed transition-all ${viewMode === 'list' ? "mb-8" : "mb-10"}`}>
+                                                    Monitor how your storage is distributed across your connected cloud ecosystems.
+                                                </p>
+                                            </div>
+
+                                            <div className={`grid gap-4 mx-auto transition-all ${viewMode === 'list'
+                                                ? "grid-cols-2 md:grid-cols-4 max-w-4xl"
+                                                : "grid-cols-2 md:grid-cols-4 max-w-3xl"
+                                                }`}>
+                                                <div className={`bg-slate-50 rounded-3xl border border-slate-100 group hover:bg-white hover:border-slate-200 transition-all ${viewMode === 'list' ? "p-4" : "p-6"
+                                                    }`}>
+                                                    <p className={`font-black text-slate-900 transition-all ${viewMode === 'list' ? "text-2xl" : "text-3xl"}`}>{stats.totalFiles}</p>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">Files Collected</p>
                                                 </div>
-                                                <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                                                    <p className="text-3xl font-black text-slate-900">{Math.round(parseFloat(stats.totalSizeMB))}</p>
-                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">MB Utilized</p>
+                                                <div className={`bg-slate-50 rounded-3xl border border-slate-100 group hover:bg-white hover:border-slate-200 transition-all ${viewMode === 'list' ? "p-4" : "p-6"
+                                                    }`}>
+                                                    <p className={`font-black text-slate-900 transition-all ${viewMode === 'list' ? "text-2xl" : "text-3xl"}`}>{Math.round(parseFloat(stats.totalSizeMB))}</p>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">MB Utilized</p>
                                                 </div>
-                                                <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                                                    <p className="text-3xl font-black text-slate-900">{Object.keys(stats.byProvider).length}</p>
-                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Providers</p>
+                                                <div className={`bg-slate-50 rounded-3xl border border-slate-100 group hover:bg-white hover:border-slate-200 transition-all ${viewMode === 'list' ? "p-4" : "p-6"
+                                                    }`}>
+                                                    <p className={`font-black text-slate-900 transition-all ${viewMode === 'list' ? "text-2xl" : "text-3xl"}`}>{Object.keys(stats.byProvider).length}</p>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">Providers</p>
                                                 </div>
-                                                <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                                                    <p className="text-3xl font-black text-slate-900">{initialUploads.length > 0 ? 'Fine' : '-'}</p>
-                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Vault Health</p>
+                                                <div className={`bg-slate-50 rounded-3xl border border-slate-100 group hover:bg-white hover:border-slate-200 transition-all ${viewMode === 'list' ? "p-4" : "p-6"
+                                                    }`}>
+                                                    <p className={`font-black text-slate-900 transition-all ${viewMode === 'list' ? "text-2xl" : "text-3xl"}`}>{uploads.length > 0 ? 'Healthy' : '-'}</p>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">Vault Status</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -380,6 +397,73 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                     </AnimatePresence>
                 </main>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            <AnimatePresence>
+                {showDeleteModal && fileToDelete && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                            onClick={() => !isDeleting && setShowDeleteModal(false)}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative w-full max-w-sm bg-white rounded-[2.5rem] shadow-2xl overflow-hidden p-8 text-center border border-slate-100"
+                        >
+                            <button
+                                onClick={() => setShowDeleteModal(false)}
+                                disabled={isDeleting}
+                                className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+
+                            <div className="w-20 h-20 bg-red-50 rounded-3xl flex items-center justify-center mx-auto mb-6 relative">
+                                <Trash2 className="w-10 h-10 text-red-500" />
+                                {isDeleting && (
+                                    <div className="absolute inset-0 bg-red-50/80 rounded-3xl flex items-center justify-center">
+                                        <RefreshCw className="w-8 h-8 text-red-500 animate-spin" />
+                                    </div>
+                                )}
+                            </div>
+
+                            <h3 className="text-2xl font-black text-slate-900 mb-2">Delete Asset?</h3>
+                            <p className="text-slate-500 text-sm mb-8 leading-relaxed">
+                                Are you sure you want to permanently delete <span className="font-bold text-slate-900">"{fileToDelete.fileName}"</span>? This action cannot be undone.
+                            </p>
+
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={confirmDelete}
+                                    disabled={isDeleting}
+                                    className="w-full py-4 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 transition-all active:scale-95 shadow-lg shadow-red-200 disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
+                                >
+                                    {isDeleting ? (
+                                        <>
+                                            <RefreshCw className="w-5 h-5 animate-spin" />
+                                            Deleting...
+                                        </>
+                                    ) : (
+                                        "Delete Forever"
+                                    )}
+                                </button>
+                                <button
+                                    onClick={() => setShowDeleteModal(false)}
+                                    disabled={isDeleting}
+                                    className="w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-all disabled:opacity-50"
+                                >
+                                    Keep File
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     )
 }
