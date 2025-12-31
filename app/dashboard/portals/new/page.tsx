@@ -149,7 +149,7 @@ export default function CreatePortalPage() {
   })
   const [folderSectionOpen, setFolderSectionOpen] = useState(false)
   const [colorSectionOpen, setColorSectionOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState('identity')
+  const [activeTab, setActiveTab] = useState('Identity')
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
   
   const toggleFolder = (id: string) => {
@@ -345,459 +345,554 @@ export default function CreatePortalPage() {
 </p>
 </div>
 
-<form onSubmit={handleSubmit} className="space-y-4">
-  <div className="flex border-b border-slate-200 mb-6">
-    {['Identity', 'Branding', 'Storage', 'Security', 'Messaging'].map((tab) => (
-      <button
-        key={tab}
-        type="button"
-        onClick={() => setActiveTab(tab)}
-        className={`px-4 py-2 font-semibold text-sm uppercase tracking-wide transition-all hover:scale-105 ${activeTab === tab ? 'border-b-2 border-slate-900 text-slate-900' : 'text-slate-400 hover:text-slate-900'}`}
-      >
-        {tab}
-      </button>
-    ))}
-  </div>
-  {/* Identity Group */}
-  <section className="space-y-3">
-    <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
-      <Type className="w-4 h-4" /> Identity & Presentation
-    </h3>
-
-
-             <div className="grid gap-3">
-  <div>
-    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
-      Workspace Name
-    </label>
-    <input
-      type="text"
-      value={formData.name}
-      onChange={(e) => handleNameChange(e.target.value)}
-      placeholder="e.g. Project Delivery Materials"
-      className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300"
-      required
-    />
-  </div>
-
-  <div>
-    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
-      Access Address
-    </label>
-    <div className="flex items-stretch">
-      <div className="px-4 flex items-center bg-slate-50 border border-r-0 border-slate-200 rounded-l-2xl text-slate-400 text-sm font-medium">
-        /p/
-      </div>
-      <input
-        type="text"
-        value={formData.slug}
-        onChange={(e) =>
-          setFormData({ ...formData, slug: e.target.value.toLowerCase() })
-        }
-        placeholder="custom-address"
-        className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-r-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
-        pattern="[a-z0-9-]+"
-        required
-      />
-    </div>
-  </div>
-
-  <div className="space-y-2 pt-2 border-t border-slate-100">
-  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Brand Identity</h4>
-
-  {/* Logo URL */}
-  <div>
-    <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
-      Tag Logo
-    </label>
-    <input
-      type="url"
-      value={formData.logoUrl}
-      onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
-      placeholder="https://..."
-      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300 text-sm"
-    />
-  </div>
-
-  <button
-    type="button"
-    onClick={() => setColorSectionOpen(!colorSectionOpen)}
-    className="text-xs font-semibold text-slate-600 uppercase tracking-wide hover:text-slate-900 transition-colors cursor-pointer"
-  >
-    Manage Colors
-  </button>
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-  {/* Primary Brand Color */}
-  <div>
-    <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
-      Primary Color
-    </label>
-    <div className="flex items-center gap-2">
-      <select
-        onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-        className="px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
-      >
-        {COLOR_PRESETS.map((preset) => (
-          <option key={preset.value} value={preset.value}>{preset.name}</option>
-        ))}
-      </select>
-      <div className="relative group w-12 h-12">
-        <input
-          type="color"
-          value={formData.primaryColor}
-          onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-          className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
-        />
-      </div>
-      <input
-        type="text"
-        value={formData.primaryColor}
-        onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-        className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-mono text-sm uppercase"
-      />
-    </div>
-  </div>
-{/* Text Color */}
-<div>
-  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
-    Text Color
-  </label>
-  <div className="flex items-center gap-2">
-    <div className="relative group w-12 h-12">
-      <input
-        type="color"
-        value={formData.textColor}
-        onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
-        className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
-      />
-    </div>
-    <input
-      type="text"
-      value={formData.textColor}
-      onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
-      className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-mono text-sm uppercase"
-    />
-  </div>
-</div>
-{/* Background Color */}
-<div>
-  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
-    Background Color
-  </label>
-  <div className="flex items-center gap-2">
-    <div className="relative group w-12 h-12">
-      <input
-        type="color"
-        value={formData.backgroundColor || "#ffffff"}
-        onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
-        className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
-      />
-    </div>
-    <input
-      type="text"
-      value={formData.backgroundColor || ""}
-      onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
-      placeholder="#HEX"
-      className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-mono text-sm uppercase"
-    />
-  </div>
-</div>
-
-  {/* Card Background Color */}
-<div>
-  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
-    Card Background Color
-  </label>
-  <div className="flex items-center gap-2">
-    <div className="relative group w-12 h-12">
-      <input
-        type="color"
-        value={formData.cardBackgroundColor}
-        onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
-        className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
-      />
-    </div>
-    <input
-      type="text"
-      value={formData.cardBackgroundColor}
-      onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
-      className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-mono text-sm uppercase"
-    />
-  </div>
-</div>
-</div>
-   </div>
-   </div>
-  </section>
-                     
-
-{/* Storage Section */}
-<section className="space-y-3">
-  <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400 flex items-center gap-2">
-    <Cloud className="w-4 h-4" /> Storage Backbone
-  </h3>
-
-  {/* Storage Options */}
-  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-    {[
-      { id: "google_drive", name: "Google Drive", icon: Cloud, color: "emerald", disabled: !accounts.find(a => a.provider === "google") },
-      { id: "dropbox", name: "Dropbox", icon: Cloud, color: "blue", disabled: !accounts.find(a => a.provider === "dropbox") }
-    ].map((provider) => {
-      const Icon = provider.icon;
-      const isActive = formData.storageProvider === provider.id;
-      return (
+  <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="flex items-center gap-1 p-1 bg-slate-100/50 rounded-2xl border border-slate-200/50 overflow-x-auto no-scrollbar mb-4">
+      {['Identity', 'Branding', 'Storage', 'Security', 'Messaging'].map((tab) => (
         <button
-          key={provider.id}
+          key={tab}
           type="button"
-          disabled={provider.disabled}
-          onClick={() => selectStorageProvider(provider.id as any)}
-          className={`relative p-3 rounded-2xl border-2 transition-all flex flex-col items-center gap-1.5 overflow-hidden ${isActive
-            ? "border-slate-900 bg-slate-50/50"
-            : "border-slate-100 bg-white hover:border-slate-200"
-          } ${provider.disabled ? "opacity-40 grayscale cursor-not-allowed" : ""}`}
+          onClick={() => setActiveTab(tab)}
+          className={`flex-1 min-w-fit px-4 py-2 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all ${
+            activeTab === tab 
+              ? 'bg-slate-900 text-white shadow-md' 
+              : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'
+          }`}
         >
-          <div className={`p-2 rounded-xl ${isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-400 transition-colors group-hover:bg-slate-200"}`}>
-            <Icon className="w-4 h-4" />
-          </div>
-          <span className="font-semibold text-xs text-slate-900">{provider.name}</span>
-          {isActive && (
-            <motion.div layoutId="provider-check" className="absolute top-2 right-2">
-              <CheckCircle2 className="w-4 h-4 text-slate-900" />
-            </motion.div>
-          )}
+          {tab}
         </button>
-      );
-    })}
-  </div>
-            
-{/* Folder Selection Section */}
-<div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden">
-  {/* Current Folder / Toggle */}
-  <button
-    type="button"
-    onClick={() => setFolderSectionOpen(prev => !prev)}
-    className="w-full px-3 py-2 flex justify-between items-center text-sm font-semibold text-slate-900 uppercase tracking-wide bg-white border-b border-slate-100 rounded-t-2xl hover:bg-slate-50 transition-colors"
-  >
-    <span>Current Folder: {formData.storageFolderPath || "SecureUploadHub"}</span>
-    <ChevronRight className={`w-4 h-4 transition-transform ${folderSectionOpen ? "rotate-90" : ""}`} />
-  </button>
+      ))}
+    </div>
 
-  {/* Expandable Tree */}
-  <AnimatePresence>
-    {folderSectionOpen && (
-      <motion.div
-        initial={{ opacity: 0, height: 0 }}
-        animate={{ opacity: 1, height: "auto" }}
-        exit={{ opacity: 0, height: 0 }}
-        className="max-h-52 overflow-y-auto divide-y divide-slate-100"
-      >
-        {loadingFolders ? (
-          <div className="p-4 text-center">
-            <Loader2 className="w-5 h-5 animate-spin mx-auto text-slate-300" />
+    <AnimatePresence mode="wait">
+      {activeTab === 'Identity' && (
+        <motion.div
+          key="identity"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          className="space-y-6"
+        >
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+              <Type className="w-4 h-4" /> Identity & Presentation
+            </h3>
+            <div className="grid gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  Workspace Name
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => handleNameChange(e.target.value)}
+                  placeholder="e.g. Project Delivery Materials"
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  Access Address
+                </label>
+                <div className="flex items-stretch">
+                  <div className="px-4 flex items-center bg-slate-50 border border-r-0 border-slate-200 rounded-l-2xl text-slate-400 text-sm font-medium">
+                    /p/
+                  </div>
+                  <input
+                    type="text"
+                    value={formData.slug}
+                    onChange={(e) =>
+                      setFormData({ ...formData, slug: e.target.value.toLowerCase() })
+                    }
+                    placeholder="custom-address"
+                    className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-r-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
+                    pattern="[a-z0-9-]+"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  Description (Optional)
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Tell your clients what this portal is for..."
+                  rows={3}
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300 resize-none"
+                />
+              </div>
+            </div>
           </div>
-        ) : folders.length === 0 ? (
-          <div className="p-4 text-center text-slate-400 text-sm font-medium">No subdirectories found</div>
-        ) : (
-          folders.map((folder) => (
-            <FolderNode
-              key={folder.id}
-              folder={folder}
-              navigateToFolder={navigateToFolder}
-              expandedFolders={expandedFolders}
-              toggleFolder={toggleFolder}
-            />
-          ))
-        )}
-      </motion.div>
-    )}
-  </AnimatePresence>
+          <button 
+            type="button" 
+            onClick={() => setActiveTab('Branding')}
+            className="w-full py-3 bg-slate-50 text-slate-900 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-100 transition-colors"
+          >
+            Next: Branding & Style
+          </button>
+        </motion.div>
+      )}
 
-  {/* Footer */}
-  <div className="p-1.5 bg-slate-900/5 text-[10px] font-semibold text-slate-500 uppercase tracking-wide text-center">
-    Selected: <span className="text-slate-900">{formData.storageFolderPath || "SecureUploadHub"}</span>
-  </div>
-</div>
-</section>
+      {activeTab === 'Branding' && (
+        <motion.div
+          key="branding"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          className="space-y-6"
+        >
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+              <Palette className="w-4 h-4" /> Brand Identity
+            </h3>
             
-{/* Security & Parameters Section */}
-<section className="space-y-4">
-  <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400 flex items-center gap-2">
-    <Settings2 className="w-4 h-4" /> Parameters & Security
-  </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  Portal Logo URL
+                </label>
+                <input
+                  type="url"
+                  value={formData.logoUrl}
+                  onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                  placeholder="https://your-brand.com/logo.png"
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300"
+                />
+              </div>
 
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div>
-      <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
-        Maximum File Size (MB)
-      </label>
-      <input
-        type="text"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        value={formData.maxFileSize}
-        onChange={(e) => setFormData({ ...formData, maxFileSize: parseInt(e.target.value) || 100 })}
-        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
-      />
-    </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                    Primary Brand Color
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <div className="relative w-12 h-12">
+                      <input
+                        type="color"
+                        value={formData.primaryColor}
+                        onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+                        className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      value={formData.primaryColor}
+                      onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+                      className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-mono text-xs uppercase"
+                    />
+                  </div>
+                </div>
 
-    <div>
-      <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
-        Passkey Access
-      </label>
-      <div className="relative">
-        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-        <input
-          type="password"
-          value={formData.password}
-          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          placeholder="Secure with password..."
-          className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
-        />
-      </div>
-    </div>
-  </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                    Text Color
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <div className="relative w-12 h-12">
+                      <input
+                        type="color"
+                        value={formData.textColor}
+                        onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
+                        className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      value={formData.textColor}
+                      onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
+                      className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-mono text-xs uppercase"
+                    />
+                  </div>
+                </div>
 
-<div className="space-y-3">
-  <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
-    Mandatory Metadata
-  </label>
-  <div className="flex gap-2">
-    {[
-      { id: 'name', label: 'Client Name', key: 'requireClientName' },
-      { id: 'email', label: 'Client Email', key: 'requireClientEmail' }
-    ].map(req => (
-      <button
-        key={req.id}
-        type="button"
-        onClick={() => setFormData(prev => ({ ...prev, [req.key]: !prev[req.key as keyof typeof prev] }))}
-        className={`flex-1 px-3 py-2 rounded-xl border-2 font-semibold text-xs uppercase tracking-wide transition-all ${
-          formData[req.key as keyof typeof formData]
-            ? "border-slate-900 bg-slate-900 text-white"
-            : "border-slate-100 bg-white text-slate-400 hover:border-slate-200"
-        }`}
-      >
-        {req.label}
-      </button>
-    ))}
-  </div>
-</div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                    Background Color
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <div className="relative w-12 h-12">
+                      <input
+                        type="color"
+                        value={formData.backgroundColor || "#ffffff"}
+                        onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
+                        className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      value={formData.backgroundColor || ""}
+                      onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
+                      placeholder="#FFFFFF"
+                      className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-mono text-xs uppercase"
+                    />
+                  </div>
+                </div>
 
-<div className="relative space-y-2" ref={dropdownRef}>
-  {/* Trigger Button */}
-  <button
-    type="button"
-    onClick={() => setDropdownOpen((prev) => !prev)}
-    className="w-full text-left bg-white border border-slate-100 rounded-xl px-3 py-2 flex justify-between items-center text-sm font-semibold hover:border-slate-200 transition-colors"
-  >
-    {formData.allowedFileTypes.length === 0
-      ? "Allowed File Types"
-      : `${formData.allowedFileTypes.length} file categories enabled`}
-    <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
-  </button>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                    Card Background
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <div className="relative w-12 h-12">
+                      <input
+                        type="color"
+                        value={formData.cardBackgroundColor}
+                        onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
+                        className="w-full h-full rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      value={formData.cardBackgroundColor}
+                      onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
+                      className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl font-mono text-xs uppercase"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button 
+            type="button" 
+            onClick={() => setActiveTab('Storage')}
+            className="w-full py-3 bg-slate-50 text-slate-900 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-100 transition-colors"
+          >
+            Next: Storage Configuration
+          </button>
+        </motion.div>
+      )}
 
-  {/* Dropdown List */}
-  {dropdownOpen && (
-    <div className="absolute z-50 mt-1.5 w-full bg-white border border-slate-200 rounded-xl shadow-lg px-3 py-2 space-y-1.5 max-h-52 overflow-y-auto">
-      {/* Select All Option */}
-      <label className="flex items-center gap-2 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={formData.allowedFileTypes.length === FILE_TYPE_OPTIONS.length}
-          onChange={(e) =>
-            setFormData((prev) => ({
-              ...prev,
-              allowedFileTypes: e.target.checked ? FILE_TYPE_OPTIONS.map((f) => f.value) : [],
-            }))
-          }
-          className="w-4 h-4 rounded border-slate-300"
-        />
-        <span className="text-sm font-semibold">Select All File Types</span>
-      </label>
+      {activeTab === 'Storage' && (
+        <motion.div
+          key="storage"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          className="space-y-6"
+        >
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+              <Cloud className="w-4 h-4" /> Storage Backbone
+            </h3>
 
-      <hr className="border-slate-100 my-1.5" />
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { id: "google_drive", name: "Google Drive", icon: Cloud, disabled: !accounts.find(a => a.provider === "google") },
+                { id: "dropbox", name: "Dropbox", icon: Cloud, disabled: !accounts.find(a => a.provider === "dropbox") }
+              ].map((provider) => {
+                const Icon = provider.icon;
+                const isActive = formData.storageProvider === provider.id;
+                return (
+                  <button
+                    key={provider.id}
+                    type="button"
+                    disabled={provider.disabled}
+                    onClick={() => selectStorageProvider(provider.id as any)}
+                    className={`relative p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${
+                      isActive
+                        ? "border-slate-900 bg-slate-50/50"
+                        : "border-slate-100 bg-white hover:border-slate-200"
+                    } ${provider.disabled ? "opacity-40 grayscale cursor-not-allowed" : ""}`}
+                  >
+                    <div className={`p-2 rounded-xl ${isActive ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-400"}`}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <span className="font-bold text-xs uppercase tracking-tight text-slate-900">{provider.name}</span>
+                    {isActive && (
+                      <CheckCircle2 className="absolute top-2 right-2 w-4 h-4 text-slate-900" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
 
-      {/* Individual File Type Options */}
-      {FILE_TYPE_OPTIONS.map((opt) => {
-        const isSelected = formData.allowedFileTypes.includes(opt.value);
-        return (
-          <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={isSelected}
-              onChange={() =>
-                setFormData((prev) => ({
-                  ...prev,
-                  allowedFileTypes: isSelected
-                    ? prev.allowedFileTypes.filter((v) => v !== opt.value)
-                    : [...prev.allowedFileTypes, opt.value],
-                }))
-              }
-              className="w-4 h-4 rounded border-slate-300"
-            />
-            <span className={`text-sm font-medium ${isSelected ? "text-slate-900" : "text-slate-500"}`}>
-              {opt.label}
-            </span>
-          </label>
-        );
-      })}
-    </div>
-  )}
-{/* Info Message */}
-<div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-  {formData.allowedFileTypes.length === 0
-    ? "All file types permitted"
-    : `${formData.allowedFileTypes.length} file categories enabled`}
-</div>
-</div>
-</section>
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setFolderSectionOpen(prev => !prev)}
+                className="w-full px-4 py-3 flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-900 bg-white border-b border-slate-100 hover:bg-slate-50 transition-colors"
+              >
+                <div className="flex items-center gap-2 truncate pr-4">
+                  <FolderOpen className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span className="truncate">{formData.storageFolderPath || "Root Directory"}</span>
+                </div>
+                <ChevronRight className={`w-4 h-4 shrink-0 transition-transform ${folderSectionOpen ? "rotate-90" : ""}`} />
+              </button>
 
-{/* Messaging & Tone Section */}
-<section className="space-y-4">
-  <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400 flex items-center gap-2">
-    <Settings2 className="w-4 h-4" /> Message & Tone
-  </h3>
+              <AnimatePresence>
+                {folderSectionOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="max-h-64 overflow-y-auto divide-y divide-slate-100 bg-white"
+                  >
+                    {loadingFolders ? (
+                      <div className="p-8 text-center">
+                        <Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-300" />
+                      </div>
+                    ) : folders.length === 0 ? (
+                      <div className="p-8 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">No directories found</div>
+                    ) : (
+                      <div className="py-2">
+                        {folders.map((folder) => (
+                          <FolderNode
+                            key={folder.id}
+                            folder={folder}
+                            navigateToFolder={navigateToFolder}
+                            expandedFolders={expandedFolders}
+                            toggleFolder={toggleFolder}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              
+              <div className="p-2 bg-slate-900/5 text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] text-center">
+                Destination: <span className="text-slate-900">{formData.storageFolderPath || "Default Workspace"}</span>
+              </div>
+            </div>
+          </div>
+          <button 
+            type="button" 
+            onClick={() => setActiveTab('Security')}
+            className="w-full py-3 bg-slate-50 text-slate-900 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-100 transition-colors"
+          >
+            Next: Security & Limits
+          </button>
+        </motion.div>
+      )}
 
-  <div className="space-y-3">
-    <div>
-      <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
-        Welcome Message
-      </label>
-      <textarea
-        value={formData.welcomeMessage}
-        onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
-        placeholder="Welcome to our secure upload portal. Please submit your files below."
-        rows={2}
-        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300 resize-none"
-      />
-    </div>
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-  <div>
-    <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
-      Submit Button Label
-    </label>
-    <input
-      type="text"
-      value={formData.submitButtonText}
-      onChange={(e) => setFormData({ ...formData, submitButtonText: e.target.value })}
-      placeholder="Initialize Transfer"
-      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
-    />
-  </div>
-  <div>
-    <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
-      Success Message
-    </label>
-    <input
-      type="text"
-      value={formData.successMessage}
-      onChange={(e) => setFormData({ ...formData, successMessage: e.target.value })}
-      placeholder="Transmission Verified"
-      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
-    />
-  </div>
-</div>
-  </div>
-</section>
+      {activeTab === 'Security' && (
+        <motion.div
+          key="security"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          className="space-y-6"
+        >
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+              <Lock className="w-4 h-4" /> Parameters & Security
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  Max File Size (MB)
+                </label>
+                <div className="relative">
+                  <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                  <input
+                    type="number"
+                    value={formData.maxFileSize}
+                    onChange={(e) => setFormData({ ...formData, maxFileSize: parseInt(e.target.value) || 100 })}
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  Access Passkey
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                  <input
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="Optional protection"
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                Required Client Info
+              </label>
+              <div className="flex gap-2">
+                {[
+                  { id: 'name', label: 'Full Name', key: 'requireClientName' },
+                  { id: 'email', label: 'Email Address', key: 'requireClientEmail' }
+                ].map(req => (
+                  <button
+                    key={req.id}
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, [req.key]: !prev[req.key as keyof typeof prev] }))}
+                    className={`flex-1 px-4 py-3 rounded-2xl border-2 font-bold text-[10px] uppercase tracking-widest transition-all ${
+                      formData[req.key as keyof typeof formData]
+                        ? "border-slate-900 bg-slate-900 text-white shadow-md"
+                        : "border-slate-100 bg-white text-slate-400 hover:border-slate-200"
+                    }`}
+                  >
+                    {req.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="relative space-y-2" ref={dropdownRef}>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                Allowed File Categories
+              </label>
+              <button
+                type="button"
+                onClick={() => setDropdownOpen((prev) => !prev)}
+                className="w-full text-left bg-white border border-slate-200 rounded-2xl px-4 py-3 flex justify-between items-center text-xs font-bold hover:border-slate-400 transition-colors"
+              >
+                <span className="truncate">
+                  {formData.allowedFileTypes.length === 0
+                    ? "Universal Acceptance"
+                    : `${formData.allowedFileTypes.length} Categories Enabled`}
+                </span>
+                <ChevronDown className={`w-4 h-4 ml-2 shrink-0 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              <AnimatePresence>
+                {dropdownOpen && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute z-50 mt-2 w-full bg-white border border-slate-200 rounded-2xl shadow-xl px-2 py-2 space-y-1 max-h-64 overflow-y-auto"
+                  >
+                    <label className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={formData.allowedFileTypes.length === FILE_TYPE_OPTIONS.length}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            allowedFileTypes: e.target.checked ? FILE_TYPE_OPTIONS.map((f) => f.value) : [],
+                          }))
+                        }
+                        className="w-5 h-5 rounded-lg border-slate-300 text-slate-900 focus:ring-slate-900"
+                      />
+                      <span className="text-xs font-black uppercase tracking-widest">Select All Types</span>
+                    </label>
+
+                    <div className="h-px bg-slate-100 mx-2 my-1" />
+
+                    {FILE_TYPE_OPTIONS.map((opt) => {
+                      const isSelected = formData.allowedFileTypes.includes(opt.value);
+                      return (
+                        <label key={opt.value} className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                allowedFileTypes: isSelected
+                                  ? prev.allowedFileTypes.filter((v) => v !== opt.value)
+                                  : [...prev.allowedFileTypes, opt.value],
+                              }))
+                            }
+                            className="w-5 h-5 rounded-lg border-slate-300 text-slate-900 focus:ring-slate-900"
+                          />
+                          <span className={`text-xs font-bold ${isSelected ? "text-slate-900" : "text-slate-500"}`}>
+                            {opt.label}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+          <button 
+            type="button" 
+            onClick={() => setActiveTab('Messaging')}
+            className="w-full py-3 bg-slate-50 text-slate-900 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-slate-100 transition-colors"
+          >
+            Next: Messaging & Tone
+          </button>
+        </motion.div>
+      )}
+
+      {activeTab === 'Messaging' && (
+        <motion.div
+          key="messaging"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          className="space-y-6"
+        >
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+              <Settings2 className="w-4 h-4" /> Message & Tone
+            </h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                  Welcome Greeting
+                </label>
+                <textarea
+                  value={formData.welcomeMessage}
+                  onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
+                  placeholder="Welcome! Please upload your documents for review."
+                  rows={3}
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium placeholder:text-slate-300 resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                    Button Label
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.submitButtonText}
+                    onChange={(e) => setFormData({ ...formData, submitButtonText: e.target.value })}
+                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                    Completion Message
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.successMessage}
+                    onChange={(e) => setFormData({ ...formData, successMessage: e.target.value })}
+                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-slate-900 text-white p-6 rounded-[2rem] space-y-4 shadow-xl border border-slate-800">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/10 rounded-xl">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-bold text-sm">Ready for Launch?</h4>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Review your settings in the live preview</p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-300 leading-relaxed font-medium">
+              By deploying this portal, you'll create a dedicated workspace at 
+              <span className="text-white font-bold"> /p/{formData.slug || "..."} </span> 
+              connected to your <span className="text-white font-bold">{formData.storageProvider === 'google_drive' ? 'Google Drive' : 'Dropbox'}</span>.
+            </p>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
 {/* Error UI */}
 {error && (
   <motion.div
