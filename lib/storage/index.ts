@@ -183,6 +183,36 @@ export async function uploadToCloudStorage(
 }
 
 /**
+ * Get or create the root SecureUploadHub folder
+ */
+export async function getOrCreateRootFolder(
+  userId: string,
+  provider: StorageProvider
+): Promise<StorageFolder | null> {
+  const oauthProvider = provider === "google_drive" ? "google" : "dropbox"
+  const tokenResult = await getValidAccessToken(userId, oauthProvider)
+
+  if (!tokenResult) return null
+
+  const service = getStorageService(provider)
+  if (!service) return null
+
+  const ROOT_NAME = "SecureUploadHub"
+
+  try {
+    const folders = await service.listFolders(tokenResult.accessToken)
+    const existing = folders.find(f => f.name.toLowerCase() === ROOT_NAME.toLowerCase())
+
+    if (existing) return existing
+
+    return await service.createFolder(tokenResult.accessToken, ROOT_NAME)
+  } catch (error) {
+    console.error(`Failed to get/create root folder for ${provider}:`, error)
+    return null
+  }
+}
+
+/**
  * List folders in cloud storage
  */
 export async function listCloudFolders(
@@ -202,7 +232,16 @@ export async function listCloudFolders(
     return []
   }
 
-  return service.listFolders(tokenResult.accessToken, parentFolderId)
+  // If no parentFolderId is provided, we default to the SecureUploadHub root
+  let effectiveParentId = parentFolderId
+  if (!effectiveParentId) {
+    const root = await getOrCreateRootFolder(userId, provider)
+    if (root) {
+      effectiveParentId = root.id
+    }
+  }
+
+  return service.listFolders(tokenResult.accessToken, effectiveParentId)
 }
 
 /**

@@ -107,6 +107,7 @@ model UploadPortal {
   storageProvider     String          @default("local")
   storageFolderId     String?
   storageFolderPath   String?
+  useClientFolders    Boolean         @default(false)
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
   backgroundColor     String?

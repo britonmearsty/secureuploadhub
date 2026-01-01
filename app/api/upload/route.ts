@@ -111,13 +111,13 @@ export async function POST(request: NextRequest) {
 
     // Security Scan - Skip for safe file types, async scan for others
     const { scanFile } = await import("@/lib/scanner")
-    
+
     // Safe file types that don't need scanning (reduces latency by ~200-500ms)
     const SAFE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'text/plain', 'application/pdf']
     const isSafeType = SAFE_TYPES.includes(mimeType)
-    
+
     let scanResult: ScanResult = { status: "clean" }
-    
+
     if (!isSafeType) {
       // Scan potentially dangerous files before returning
       scanResult = await scanFile(buffer, file.name, mimeType)
@@ -151,12 +151,11 @@ export async function POST(request: NextRequest) {
     let uploadSuccess = false
 
     // Determine folder path (optionally organize by client name)
-    let targetFolderPath = portal.storageFolderPath || ""
-    if (clientName && targetFolderPath) {
-      // Create subfolder for client
-      targetFolderPath = `${targetFolderPath}/${clientName.replace(/[^a-zA-Z0-9\s-]/g, "_")}`
-    } else if (clientName) {
-      targetFolderPath = clientName.replace(/[^a-zA-Z0-9\s-]/g, "_")
+    let targetFolderPath: string | undefined = undefined
+
+    if (portal.useClientFolders && clientName) {
+      const shortTimestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '') // e.g. 20260101
+      targetFolderPath = `${clientName.replace(/[^a-zA-Z0-9\s-]/g, "_")} (${shortTimestamp})`
     }
 
     // Upload to cloud storage
@@ -167,7 +166,7 @@ export async function POST(request: NextRequest) {
       uniqueFileName,
       mimeType,
       portal.storageFolderId || undefined,
-      targetFolderPath || undefined
+      targetFolderPath
     )
 
     if (result.success) {

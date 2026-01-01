@@ -14,9 +14,16 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const provider = searchParams.get("provider") as StorageProvider
     const parentFolderId = searchParams.get("parentFolderId") || undefined
+    const rootOnly = searchParams.get("rootOnly") === "true"
 
     if (!provider || (provider !== "google_drive" && provider !== "dropbox")) {
       return NextResponse.json({ error: "Invalid provider" }, { status: 400 })
+    }
+
+    if (rootOnly) {
+      const { getOrCreateRootFolder } = await import("@/lib/storage")
+      const root = await getOrCreateRootFolder(session.user.id, provider)
+      return NextResponse.json(root)
     }
 
     const folders = await listCloudFolders(session.user.id, provider, parentFolderId)
@@ -25,21 +32,21 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error"
     console.error("Error listing folders:", message)
-    
+
     if (message.includes("missing_scope")) {
-      return NextResponse.json({ 
-        error: "Your cloud storage permissions are incomplete. Please reconnect your account in settings to grant the necessary permissions." 
+      return NextResponse.json({
+        error: "Your cloud storage permissions are incomplete. Please reconnect your account in settings to grant the necessary permissions."
       }, { status: 401 })
     }
-    
+
     if (message.includes("token") || message.includes("Unauthorized")) {
-      return NextResponse.json({ 
-        error: "Your cloud storage connection has expired. Please reconnect your account in settings." 
+      return NextResponse.json({
+        error: "Your cloud storage connection has expired. Please reconnect your account in settings."
       }, { status: 401 })
     }
-    
-    return NextResponse.json({ 
-      error: `Failed to list folders: ${message}` 
+
+    return NextResponse.json({
+      error: `Failed to list folders: ${message}`
     }, { status: 500 })
   }
 }

@@ -61,6 +61,7 @@ export async function POST(request: NextRequest) {
       welcomeMessage,
       submitButtonText,
       successMessage,
+      useClientFolders,
     } = await request.json()
 
     if (!name || !slug) {
@@ -142,6 +143,7 @@ export async function POST(request: NextRequest) {
         welcomeMessage: welcomeMessage || null,
         submitButtonText: submitButtonText || "Initialize Transfer",
         successMessage: successMessage || "Transmission Verified",
+        useClientFolders: useClientFolders || false,
       }
     })
 
