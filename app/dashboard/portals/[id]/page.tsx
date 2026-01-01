@@ -154,7 +154,7 @@ export default function EditPortalPage() {
     successMessage: "Transmission Verified",
     requireClientName: true,
     requireClientEmail: false,
-    maxFileSize: 500,
+    maxFileSize: 200 as number | string,
     storageProvider: "google_drive" as "google_drive" | "dropbox",
     storageFolderId: "",
     storageFolderPath: "",
@@ -310,7 +310,7 @@ export default function EditPortalPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          maxFileSize: formData.maxFileSize * 1024 * 1024,
+          maxFileSize: Number(formData.maxFileSize) * 1024 * 1024,
         }),
       })
 
@@ -726,10 +726,17 @@ export default function EditPortalPage() {
                               <input
                                 type="number"
                                 value={formData.maxFileSize}
-                                onChange={(e) => setFormData({ ...formData, maxFileSize: parseInt(e.target.value) || 100 })}
-                                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-semibold text-slate-900"
+                                onChange={(e) => setFormData({ ...formData, maxFileSize: e.target.value === '' ? '' : parseInt(e.target.value) })}
+                                placeholder="e.g. 200"
+                                className={`w-full pl-10 pr-4 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-semibold text-slate-900 ${!formData.maxFileSize ? 'border-amber-300' : 'border-slate-200'}`}
                               />
                             </div>
+                            {!formData.maxFileSize && (
+                              <p className="text-[10px] text-amber-600 font-bold uppercase tracking-wider mt-1.5 flex items-center gap-1">
+                                <AlertCircle className="w-3 h-3" />
+                                Please specify a capacity limit
+                              </p>
+                            )}
                           </div>
                           <div>
                             <label className="block text-sm font-semibold text-slate-700 mb-2">Access Passkey</label>
@@ -768,10 +775,47 @@ export default function EditPortalPage() {
                           </div>
                         </div>
 
+                        <div>
+                          <label className="block text-sm font-semibold text-slate-700 mb-2">
+                            Allowed File Types
+                          </label>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            {FILE_TYPE_OPTIONS.map((opt) => {
+                              const isSelected = formData.allowedFileTypes.includes(opt.value);
+                              return (
+                                <label key={opt.value} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white cursor-pointer transition-colors">
+                                  <input
+                                    type="checkbox"
+                                    checked={isSelected}
+                                    onChange={() =>
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        allowedFileTypes: isSelected
+                                          ? prev.allowedFileTypes.filter((v) => v !== opt.value)
+                                          : [...prev.allowedFileTypes, opt.value],
+                                      }))
+                                    }
+                                    className="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                  />
+                                  <span className={`text-sm font-medium ${isSelected ? "text-slate-900" : "text-slate-500"}`}>
+                                    {opt.label.split(' (')[0]}
+                                  </span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+
                         <div className="pt-4 flex justify-end">
                           <button
                             type="button"
-                            onClick={() => setActiveTab('Messages')}
+                            onClick={() => {
+                              if (!formData.maxFileSize) {
+                                setError("Please provide a valid payload limit before proceeding.");
+                                return;
+                              }
+                              setActiveTab('Messages');
+                            }}
                             className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
                           >
                             Next: Messages

@@ -136,12 +136,19 @@ export default function CreatePortalPage() {
     successMessage: "Transmission Verified",
     requireClientName: true,
     requireClientEmail: false,
-    maxFileSize: 500,
+    maxFileSize: 200 as number | string,
     storageProvider: "google_drive" as "google_drive" | "dropbox",
     storageFolderId: "",
     storageFolderPath: "",
     password: "",
-    allowedFileTypes: [] as string[],
+    allowedFileTypes: [
+      "image/*",
+      "application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv",
+      "application/zip,application/x-rar-compressed,application/x-7z-compressed",
+      "video/*",
+      "audio/*"
+    ] as string[],
   })
 
   const [activeTab, setActiveTab] = useState('Identity')
@@ -249,7 +256,7 @@ export default function CreatePortalPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          maxFileSize: formData.maxFileSize * 1024 * 1024,
+          maxFileSize: Number(formData.maxFileSize) * 1024 * 1024,
         }),
       })
 
@@ -627,10 +634,17 @@ export default function CreatePortalPage() {
                               <input
                                 type="number"
                                 value={formData.maxFileSize}
-                                onChange={(e) => setFormData({ ...formData, maxFileSize: parseInt(e.target.value) || 100 })}
-                                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-semibold text-slate-900"
+                                onChange={(e) => setFormData({ ...formData, maxFileSize: e.target.value === '' ? '' : parseInt(e.target.value) })}
+                                placeholder="e.g. 200"
+                                className={`w-full pl-10 pr-4 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-semibold text-slate-900 ${!formData.maxFileSize ? 'border-amber-300' : 'border-slate-200'}`}
                               />
                             </div>
+                            {!formData.maxFileSize && (
+                              <p className="text-[10px] text-amber-600 font-bold uppercase tracking-wider mt-1.5 flex items-center gap-1">
+                                <AlertCircle className="w-3 h-3" />
+                                Please specify a capacity limit
+                              </p>
+                            )}
                           </div>
 
                           <div>
@@ -708,7 +722,13 @@ export default function CreatePortalPage() {
                         <div className="pt-4 flex justify-end">
                           <button
                             type="button"
-                            onClick={() => setActiveTab('Messaging')}
+                            onClick={() => {
+                              if (!formData.maxFileSize) {
+                                setError("Please provide a valid file size limit before proceeding.");
+                                return;
+                              }
+                              setActiveTab('Messaging');
+                            }}
                             className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
                           >
                             Next: Messaging
