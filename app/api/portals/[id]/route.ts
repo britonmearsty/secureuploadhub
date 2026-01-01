@@ -89,6 +89,7 @@ export async function PATCH(
       "storageFolderId",
       "storageFolderPath",
       "allowedFileTypes",
+      "useClientFolders",
     ]
 
     const safeUpdates: Record<string, unknown> = {}
