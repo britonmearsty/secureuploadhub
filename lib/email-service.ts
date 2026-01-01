@@ -39,7 +39,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ success: b
 
   try {
     const response = await resend.emails.send({
-      from: options.from || (process.env.EMAIL_FROM || 'SecureUploadHub <noreply@secureuploadhub.com>'),
+      from: options.from || (process.env.EMAIL_FROM || 'SecureUploadHub <onboarding@resend.dev>'),
       to: Array.isArray(options.to) ? options.to : options.to,
       subject: options.subject,
       react: options.react,

@@ -183,33 +183,63 @@ export async function uploadToCloudStorage(
 }
 
 /**
+ * In-memory locks to prevent concurrent root folder creation for the same user/provider
+ */
+const creationLocks = new Map<string, Promise<StorageFolder | null>>()
+
+/**
  * Get or create the root SecureUploadHub folder
  */
 export async function getOrCreateRootFolder(
   userId: string,
   provider: StorageProvider
 ): Promise<StorageFolder | null> {
-  const oauthProvider = provider === "google_drive" ? "google" : "dropbox"
-  const tokenResult = await getValidAccessToken(userId, oauthProvider)
+  const lockKey = `${userId}:${provider}`
 
-  if (!tokenResult) return null
-
-  const service = getStorageService(provider)
-  if (!service) return null
-
-  const ROOT_NAME = "SecureUploadHub"
-
-  try {
-    const folders = await service.listFolders(tokenResult.accessToken)
-    const existing = folders.find(f => f.name.toLowerCase() === ROOT_NAME.toLowerCase())
-
-    if (existing) return existing
-
-    return await service.createFolder(tokenResult.accessToken, ROOT_NAME)
-  } catch (error) {
-    console.error(`Failed to get/create root folder for ${provider}:`, error)
-    return null
+  // If a creation is already in progress, wait for it
+  if (creationLocks.has(lockKey)) {
+    return creationLocks.get(lockKey)!
   }
+
+  const creationPromise = (async () => {
+    try {
+      const oauthProvider = provider === "google_drive" ? "google" : "dropbox"
+      const tokenResult = await getValidAccessToken(userId, oauthProvider)
+
+      if (!tokenResult) return null
+
+      const service = getStorageService(provider)
+      if (!service) return null
+
+      const ROOT_NAME = "SecureUploadHub"
+
+      // 1. Double check existence
+      const folders = await service.listFolders(tokenResult.accessToken)
+      const existing = folders.find(f => f.name.toLowerCase() === ROOT_NAME.toLowerCase())
+      if (existing) return existing
+
+      // 2. Attempt creation
+      try {
+        return await service.createFolder(tokenResult.accessToken, ROOT_NAME)
+      } catch (createError: any) {
+        // If creation failed but it might be because it was just created by another process, check again
+        const refreshFolders = await service.listFolders(tokenResult.accessToken)
+        const checkAgain = refreshFolders.find(f => f.name.toLowerCase() === ROOT_NAME.toLowerCase())
+        if (checkAgain) return checkAgain
+
+        throw createError
+      }
+    } catch (error) {
+      console.error(`Failed to get/create root folder for ${provider}:`, error)
+      return null
+    } finally {
+      // Clean up the lock after a short delay to ensure consistency
+      setTimeout(() => creationLocks.delete(lockKey), 5000)
+    }
+  })()
+
+  creationLocks.set(lockKey, creationPromise)
+  return creationPromise
 }
 
 /**
