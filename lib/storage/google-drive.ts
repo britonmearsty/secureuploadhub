@@ -373,26 +373,33 @@ export class GoogleDriveService implements CloudStorageService {
   async deleteFile(
     accessToken: string,
     fileId: string
-  ): Promise<void> {
-    if (!fileId || fileId.startsWith("http")) {
-      throw new Error(`Invalid Google Drive file ID: "${fileId}"`)
-    }
-
-    const response = await fetch(
-      `${GOOGLE_DRIVE_API}/files/${fileId}`,
-      {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      if (!fileId || fileId.startsWith("http")) {
+        return { success: false, error: `Invalid Google Drive file ID: "${fileId}"` }
       }
-    )
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(
-        errorData.error?.message || `Failed to delete file: ${response.statusText}`
+      const response = await fetch(
+        `${GOOGLE_DRIVE_API}/files/${fileId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
       )
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        return { 
+          success: false, 
+          error: errorData.error?.message || `Failed to delete file: ${response.statusText}` 
+        }
+      }
+
+      return { success: true }
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : "Unknown error occurred" }
     }
   }
 

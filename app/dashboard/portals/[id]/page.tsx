@@ -27,6 +27,11 @@ import {
   Copy,
   Info
 } from "lucide-react"
+import ColorPicker from "@/components/ui/ColorPicker"
+import StorageSelector from "@/components/ui/StorageSelector"
+import FolderTree from "@/components/ui/FolderTree"
+import Breadcrumb from "@/components/ui/Breadcrumb"
+import FileConstraints from "@/components/ui/FileConstraints"
 
 interface Portal {
   id: string

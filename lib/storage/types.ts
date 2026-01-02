@@ -51,7 +51,7 @@ export interface CloudStorageService {
   ): Promise<{ uploadUrl: string; fileId?: string }>
 
   /**
-   * Upload a file to the cloud storage
+   * Upload a file directly (non-resumable)
    */
   uploadFile(
     accessToken: string,
@@ -63,7 +63,7 @@ export interface CloudStorageService {
   ): Promise<UploadResult>
 
   /**
-   * List folders in the storage
+   * List folders in a directory
    */
   listFolders(
     accessToken: string,
@@ -71,7 +71,7 @@ export interface CloudStorageService {
   ): Promise<StorageFolder[]>
 
   /**
-   * Create a folder in the storage
+   * Create a new folder
    */
   createFolder(
     accessToken: string,
@@ -80,33 +80,51 @@ export interface CloudStorageService {
   ): Promise<StorageFolder>
 
   /**
-   * Refresh the access token
+   * Rename a folder
    */
-  refreshAccessToken(
-    refreshToken: string
-  ): Promise<{ accessToken: string; expiresAt?: number }>
+  renameFolder?(
+    accessToken: string,
+    folderId: string,
+    newName: string
+  ): Promise<{ success: boolean; folder?: StorageFolder; error?: string }>
 
   /**
-   * Get account info (email, name)
+   * Delete a folder
    */
-  getAccountInfo(
-    accessToken: string
-  ): Promise<{ email?: string; name?: string }>
+  deleteFolder?(
+    accessToken: string,
+    folderId: string
+  ): Promise<{ success: boolean; error?: string }>
 
   /**
-   * Download a file from the storage
+   * Download a file from storage
    */
-  downloadFile(
+  downloadFile?(
     accessToken: string,
     fileId: string
   ): Promise<{ data: ReadableStream | Buffer; mimeType: string; fileName: string }>
 
   /**
-   * Delete a file from the storage
+   * Delete a file from storage
    */
-  deleteFile(
+  deleteFile?(
     accessToken: string,
     fileId: string
-  ): Promise<void>
-}
+  ): Promise<{ success: boolean; error?: string }>
 
+  /**
+   * Get account information
+   */
+  getAccountInfo?(accessToken: string): Promise<{
+    email?: string
+    name?: string
+  }>
+
+  /**
+   * Refresh an expired access token
+   */
+  refreshAccessToken(refreshToken: string): Promise<{
+    accessToken: string
+    expiresAt?: number
+  }>
+}

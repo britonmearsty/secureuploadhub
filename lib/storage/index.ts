@@ -125,9 +125,11 @@ export async function getConnectedAccounts(userId: string) {
       try {
         const tokenResult = await getValidAccessToken(userId, account.provider as "google" | "dropbox")
         if (tokenResult) {
-          const info = await service.getAccountInfo(tokenResult.accessToken)
-          email = info.email
-          name = info.name
+          if (service.getAccountInfo) {
+            const info = await service.getAccountInfo(tokenResult.accessToken)
+            email = info.email
+            name = info.name
+          }
         } else {
           isConnected = false
         }
@@ -310,7 +312,7 @@ export async function downloadFromCloudStorage(
   userId: string,
   provider: StorageProvider,
   fileId: string
-): Promise<{ data: ReadableStream | Buffer; mimeType: string; fileName: string } | null> {
+): Promise<{ success?: boolean; error?: string; data?: ReadableStream | Buffer; mimeType?: string; fileName?: string } | null> {
   const oauthProvider = provider === "google_drive" ? "google" : "dropbox"
   const tokenResult = await getValidAccessToken(userId, oauthProvider)
 
@@ -335,7 +337,12 @@ export async function downloadFromCloudStorage(
   }
 
   try {
-    return await service.downloadFile(tokenResult.accessToken, fileId)
+    if (service.downloadFile) {
+      const result = await service.downloadFile(tokenResult.accessToken, fileId)
+      return { success: true, data: result.data as Buffer, mimeType: result.mimeType, fileName: result.fileName }
+    } else {
+      return { success: false, error: "Download not supported for this provider" }
+    }
   } catch (error) {
     console.error(`Failed to download from ${provider}:`, {
       error: error instanceof Error ? error.message : error,
@@ -366,6 +373,13 @@ export async function deleteFromCloudStorage(
     throw new Error(`Unknown storage provider: ${provider}`)
   }
 
-  return service.deleteFile(tokenResult.accessToken, fileId)
+  if (!service.deleteFile) {
+    throw new Error(`Delete not supported for this provider`)
+  }
+
+  const result = await service.deleteFile(tokenResult.accessToken, fileId)
+  if (!result.success) {
+    throw new Error(result.error || "Failed to delete file")
+  }
 }
 

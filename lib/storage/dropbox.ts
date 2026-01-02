@@ -306,28 +306,34 @@ export class DropboxService implements CloudStorageService {
   async deleteFile(
     accessToken: string,
     fileId: string
-  ): Promise<void> {
-    const response = await fetch(`${DROPBOX_API}/files/delete_v2`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        path: fileId,
-      }),
-    })
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await fetch(`${DROPBOX_API}/files/delete_v2`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          path: fileId,
+        }),
+      })
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      let errorMessage = errorData.error_summary ||
-        `Failed to delete file: ${response.status} ${response.statusText}`
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        let errorMessage = errorData.error_summary ||
+          `Failed to delete file: ${response.status} ${response.statusText}`
 
-      if (errorMessage.includes("missing_scope")) {
-        errorMessage = "Your Dropbox connection is missing required permissions. Please reconnect your account."
+        if (errorMessage.includes("missing_scope")) {
+          errorMessage = "Your Dropbox connection is missing required permissions. Please reconnect your account."
+        }
+
+        return { success: false, error: errorMessage }
       }
 
-      throw new Error(errorMessage)
+      return { success: true }
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : "Unknown error occurred" }
     }
   }
 }
