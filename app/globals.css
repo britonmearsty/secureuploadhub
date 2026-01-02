@@ -3,35 +3,75 @@
 
 
 :root {
-  /* Premium Palette */
+  /* Light Theme */
   --background: #ffffff;
   --foreground: #0f172a;
-  /* Slate 900 */
 
   --primary: #0f172a;
-  /* Slate 900 */
   --primary-foreground: #ffffff;
 
   --secondary: #f8fafc;
-  /* Slate 50 */
   --secondary-foreground: #0f172a;
 
   --muted: #f1f5f9;
-  /* Slate 100 */
   --muted-foreground: #64748b;
-  /* Slate 500 */
 
   --accent: #f8fafc;
-  /* Slate 50 */
   --accent-foreground: #0f172a;
 
   --border: #e2e8f0;
-  /* Slate 200 */
   --input: #e2e8f0;
+
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  --ring: #0f172a;
 
   /* Glass Effects */
   --glass-border: rgba(255, 255, 255, 0.2);
   --glass-bg: rgba(255, 255, 255, 0.7);
+}
+
+.dark {
+  /* Dark Theme */
+  --background: #0f172a;
+  --foreground: #f8fafc;
+
+  --primary: #f8fafc;
+  --primary-foreground: #0f172a;
+
+  --secondary: #1e293b;
+  --secondary-foreground: #f8fafc;
+
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+
+  --accent: #1e293b;
+  --accent-foreground: #f8fafc;
+
+  --border: #334155;
+  --input: #334155;
+
+  --card: #1e293b;
+  --card-foreground: #f8fafc;
+
+  --popover: #1e293b;
+  --popover-foreground: #f8fafc;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  --ring: #f8fafc;
+
+  /* Glass Effects */
+  --glass-border: rgba(0, 0, 0, 0.2);
+  --glass-bg: rgba(0, 0, 0, 0.7);
 }
 
 @theme inline {
@@ -48,6 +88,22 @@
   --color-muted-foreground: var(--muted-foreground);
 
   --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-ring: var(--ring);
+}
   --color-accent-foreground: var(--accent-foreground);
 
   --color-border: var(--border);

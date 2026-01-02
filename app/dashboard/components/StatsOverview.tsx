@@ -66,29 +66,29 @@ export default function StatsOverview({ initialStats, onStatsUpdate, disablePoll
       title: "Total Portals",
       value: stats.totalPortals,
       icon: FolderOpen,
-      color: "text-blue-500",
-      bg: "bg-blue-50",
+      color: "text-blue-500 dark:text-blue-400",
+      bg: "bg-blue-50 dark:bg-blue-950/30",
     },
     {
       title: "Active Portals",
       value: stats.activePortals,
       icon: Activity,
-      color: "text-emerald-500",
-      bg: "bg-emerald-50",
+      color: "text-emerald-500 dark:text-emerald-400",
+      bg: "bg-emerald-50 dark:bg-emerald-950/30",
     },
     {
       title: "Files Received",
       value: stats.totalUploads,
       icon: Inbox,
-      color: "text-purple-500",
-      bg: "bg-purple-50",
+      color: "text-purple-500 dark:text-purple-400",
+      bg: "bg-purple-50 dark:bg-purple-950/30",
     },
     {
       title: "Recent Activity",
       value: stats.recentUploads,
       icon: TrendingUp,
-      color: "text-amber-500",
-      bg: "bg-amber-50",
+      color: "text-amber-500 dark:text-amber-400",
+      bg: "bg-amber-50 dark:bg-amber-950/30",
     }
   ]
 
@@ -96,7 +96,7 @@ export default function StatsOverview({ initialStats, onStatsUpdate, disablePoll
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8" aria-label="Loading statistics">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-32 bg-slate-50 border border-slate-100 rounded-3xl animate-pulse" role="status" />
+          <div key={i} className="h-32 bg-muted border border-border rounded-3xl animate-pulse" role="status" />
         ))}
       </div>
     )
@@ -112,7 +112,7 @@ export default function StatsOverview({ initialStats, onStatsUpdate, disablePoll
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1, duration: 0.4 }}
-            className="group relative bg-white rounded-2xl border border-slate-100 p-6 hover:border-slate-200 hover:shadow-xl hover:shadow-slate-200/40 transition-all duration-300"
+            className="group relative bg-card rounded-2xl border border-border p-6 hover:border-muted-foreground hover:shadow-xl hover:shadow-primary/5 transition-all duration-300"
           >
             <div className="flex flex-col gap-4 relative z-10">
               <div className="flex items-center justify-between">
@@ -122,10 +122,10 @@ export default function StatsOverview({ initialStats, onStatsUpdate, disablePoll
               </div>
 
               <div>
-                <dt className="text-sm font-medium text-slate-500 mt-1 order-2">
+                <dt className="text-sm font-medium text-muted-foreground mt-1 order-2">
                   {card.title}
                 </dt>
-                <dd className="text-3xl font-bold text-slate-900 tracking-tighter tabular-nums order-1">
+                <dd className="text-3xl font-bold text-foreground tracking-tighter tabular-nums order-1">
                   {card.value}
                 </dd>
               </div>

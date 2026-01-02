@@ -108,8 +108,8 @@ export default function IntegrationsClient() {
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Cloud Storage Integrations</h1>
-                <p className="text-slate-500 mt-1 text-lg">Seamlessly connect your cloud storage providers to automatically sync and backup uploaded files.</p>
+                <h1 className="text-3xl font-bold text-foreground tracking-tight">Cloud Storage Integrations</h1>
+                <p className="text-muted-foreground mt-1 text-lg">Seamlessly connect your cloud storage providers to automatically sync and backup uploaded files.</p>
             </div>
 
             <div className="flex flex-col lg:flex-row gap-8">
@@ -124,15 +124,15 @@ export default function IntegrationsClient() {
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
-                                        ? "bg-white shadow-sm border border-slate-200 text-slate-900"
-                                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                                        ? "bg-card shadow-sm border border-border text-foreground"
+                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                         }`}
                                 >
-                                    <Icon className={`w-5 h-5 ${isActive ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
+                                    <Icon className={`w-5 h-5 ${isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`} />
                                     <span className="font-medium text-sm">{tab.name}</span>
                                     {isActive && (
                                         <motion.div layoutId="integrations-active" className="ml-auto">
-                                            <ChevronRight className="w-4 h-4 text-slate-400" />
+                                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
                                         </motion.div>
                                     )}
                                 </button>
@@ -151,12 +151,12 @@ export default function IntegrationsClient() {
                             exit={{ opacity: 0, y: -10 }}
                             transition={{ duration: 0.2 }}
                         >
-                            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                                <div className="p-6 border-b border-slate-100 bg-slate-50/30">
-                                    <h2 className="text-xl font-semibold text-slate-900">
+                            <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+                                <div className="p-6 border-b border-border bg-muted/30">
+                                    <h2 className="text-xl font-semibold text-foreground">
                                         {tabs.find(t => t.id === activeTab)?.name}
                                     </h2>
-                                    <p className="text-sm text-slate-500 mt-1">
+                                    <p className="text-sm text-muted-foreground mt-1">
                                         {tabs.find(t => t.id === activeTab)?.description}
                                     </p>
                                 </div>
@@ -165,20 +165,20 @@ export default function IntegrationsClient() {
                                     {activeTab === "available" && (
                                         <div className="space-y-8">
                                             <div className="relative">
-                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                                 <input
                                                     type="text"
                                                     placeholder="Search integrations..."
                                                     value={searchQuery}
                                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all outline-none"
+                                                    className="w-full pl-10 pr-4 py-2.5 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-ring focus:bg-card transition-all outline-none text-foreground"
                                                 />
                                             </div>
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                 {/* Featured section in available */}
                                                 <div className="col-span-1 md:col-span-2">
-                                                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">Cloud Storage</h3>
+                                                    <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">Cloud Storage</h3>
                                                 </div>
 
                                                 <IntegrationCard
@@ -225,13 +225,13 @@ export default function IntegrationsClient() {
 
                                     {activeTab === "settings" && (
                                         <div className="space-y-8">
-                                            <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100">
-                                                <h3 className="font-semibold text-slate-900 mb-6">Automatic Synchronization Settings</h3>
+                                            <div className="p-6 rounded-2xl bg-muted border border-border">
+                                                <h3 className="font-semibold text-foreground mb-6">Automatic Synchronization Settings</h3>
                                                 <div className="space-y-5">
                                                     <div className="flex items-center justify-between">
                                                         <div>
-                                                            <p className="text-sm font-medium text-slate-900">Enable auto-sync for new uploads</p>
-                                                            <p className="text-xs text-slate-500">Automatically upload files to connected cloud storage when received.</p>
+                                                            <p className="text-sm font-medium text-foreground">Enable auto-sync for new uploads</p>
+                                                            <p className="text-xs text-muted-foreground">Automatically upload files to connected cloud storage when received.</p>
                                                         </div>
                                                         <Switch
                                                             checked={syncSettings.autoSync}
@@ -240,8 +240,8 @@ export default function IntegrationsClient() {
                                                     </div>
                                                     <div className="flex items-center justify-between">
                                                         <div>
-                                                            <p className="text-sm font-medium text-slate-900">Delete local files after successful sync</p>
-                                                            <p className="text-xs text-slate-500">Automatically remove files from SecureUpload storage after cloud backup.</p>
+                                                            <p className="text-sm font-medium text-foreground">Delete local files after successful sync</p>
+                                                            <p className="text-xs text-muted-foreground">Automatically remove files from SecureUpload storage after cloud backup.</p>
                                                         </div>
                                                         <Switch
                                                             checked={syncSettings.deleteAfterSync}
@@ -249,7 +249,7 @@ export default function IntegrationsClient() {
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-sm font-medium text-slate-900 mb-2">Sync interval (seconds)</label>
+                                                        <label className="block text-sm font-medium text-foreground mb-2">Sync interval (seconds)</label>
                                                         <div className="relative">
                                                             <input
                                                                 type="number"
@@ -258,11 +258,11 @@ export default function IntegrationsClient() {
                                                                     setSyncSettings({ ...syncSettings, syncInterval: parseInt(e.target.value) })
                                                                     if (syncError) setSyncError(null)
                                                                 }}
-                                                                className={`w-full px-4 py-2.5 bg-white border rounded-xl focus:ring-2 focus:ring-slate-900 outline-none transition-all ${syncError ? "border-red-500 bg-red-50/10" : "border-slate-200"
+                                                                className={`w-full px-4 py-2.5 bg-card border rounded-xl focus:ring-2 focus:ring-ring outline-none transition-all text-foreground ${syncError ? "border-red-500 bg-red-50/10" : "border-border"
                                                                     }`}
                                                             />
                                                         </div>
-                                                        <p className="text-xs text-slate-500 mt-1">Set between 5 minutes (300s) and 24 hours (86400s)</p>
+                                                        <p className="text-xs text-muted-foreground mt-1">Set between 5 minutes (300s) and 24 hours (86400s)</p>
                                                         {syncError && (
                                                             <motion.p
                                                                 initial={{ opacity: 0, y: -5 }}
@@ -277,11 +277,11 @@ export default function IntegrationsClient() {
                                                 </div>
                                             </div>
 
-                                            <div className="p-6 rounded-2xl bg-amber-50 border border-amber-100 flex gap-4">
-                                                <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
+                                            <div className="p-6 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/50 flex gap-4">
+                                                <AlertCircle className="w-5 h-5 text-amber-500 dark:text-amber-400 shrink-0" />
                                                 <div>
-                                                    <p className="text-sm font-semibold text-amber-900">Storage Optimization Tip</p>
-                                                    <p className="text-xs text-amber-700 mt-1">
+                                                    <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">Storage Optimization Tip</p>
+                                                    <p className="text-xs text-amber-700 dark:text-amber-200 mt-1">
                                                         Enable auto-sync with automatic deletion to maximize your storage capacity and ensure files are safely backed up to the cloud.
                                                     </p>
                                                 </div>
@@ -290,7 +290,7 @@ export default function IntegrationsClient() {
                                             <button
                                                 onClick={saveSyncSettings}
                                                 disabled={savingSettings}
-                                                className="w-full px-6 py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                                                className="w-full px-6 py-3 bg-foreground text-primary-foreground rounded-xl font-semibold hover:bg-primary active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                                             >
                                                 {savingSettings ? (
                                                     <>
@@ -326,27 +326,27 @@ function IntegrationCard({ name, description, icon, category, status, provider, 
     }
 
     return (
-        <div className="group p-6 rounded-2xl border border-slate-100 bg-white hover:border-slate-200 hover:shadow-sm transition-all flex flex-col">
+        <div className="group p-6 rounded-2xl border border-border bg-card hover:border-muted-foreground hover:shadow-sm transition-all flex flex-col">
             <div className="flex justify-between items-start mb-4">
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 group-hover:bg-white transition-colors">
+                <div className="p-3 bg-muted rounded-xl border border-border group-hover:bg-card transition-colors">
                     {icon}
                 </div>
                 {status === 'coming-soon' ? (
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-400 px-2 py-1 rounded">Coming Soon</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-muted text-muted-foreground px-2 py-1 rounded">Coming Soon</span>
                 ) : isConnected ? (
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-600 px-2 py-1 rounded">Connected</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 px-2 py-1 rounded">Connected</span>
                 ) : (
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-600 px-2 py-1 rounded">Available</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-100 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 px-2 py-1 rounded">Available</span>
                 )}
             </div>
-            <h4 className="font-bold text-slate-900">{name}</h4>
-            <p className="text-xs text-slate-500 mt-1 mb-6 flex-1">{description}</p>
+            <h4 className="font-bold text-foreground">{name}</h4>
+            <p className="text-xs text-muted-foreground mt-1 mb-6 flex-1">{description}</p>
             <button
                 onClick={handleConfigure}
                 disabled={status === 'coming-soon' || configuringProvider === provider || isConnected}
                 className={`w-full py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${status === 'coming-soon' || isConnected
-                    ? "bg-slate-50 text-slate-400 cursor-not-allowed border border-slate-200"
-                    : "bg-slate-900 text-white hover:bg-slate-800 shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    ? "bg-muted text-muted-foreground cursor-not-allowed border border-border"
+                    : "bg-foreground text-primary-foreground hover:bg-primary shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                     }`}
             >
                 {configuringProvider === provider ? (
@@ -369,13 +369,13 @@ function Switch({ checked, onChange }: { checked: boolean; onChange?: (value: bo
     return (
         <button
             onClick={() => onChange?.(!checked)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${checked ? 'bg-slate-900' : 'bg-slate-200'
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${checked ? 'bg-foreground' : 'bg-border'
                 }`}
             type="button"
             role="switch"
             aria-checked={checked}
         >
-            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-card transition-transform ${checked ? 'translate-x-6' : 'translate-x-1'
                 }`} />
         </button>
     )

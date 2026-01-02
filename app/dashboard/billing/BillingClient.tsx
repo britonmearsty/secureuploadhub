@@ -166,16 +166,16 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Billing</h1>
-                <p className="text-slate-500 mt-1 text-lg">Manage your subscription, invoices, and usage.</p>
+                <h1 className="text-3xl font-bold text-foreground tracking-tight">Billing</h1>
+                <p className="text-muted-foreground mt-1 text-lg">Manage your subscription, invoices, and usage.</p>
             </div>
 
             {banner && (
                 <div className={`mb-6 rounded-xl border px-4 py-3 text-sm ${banner.type === "success"
-                    ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                    ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200"
                     : banner.type === "error"
-                        ? "bg-red-50 border-red-200 text-red-800"
-                        : "bg-slate-50 border-slate-200 text-slate-700"
+                        ? "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200"
+                        : "bg-muted border-border text-muted-foreground"
                     }`}>
                     {banner.message}
                 </div>
@@ -193,15 +193,15 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
-                                        ? "bg-white shadow-sm border border-slate-200 text-slate-900"
-                                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                                        ? "bg-card shadow-sm border border-border text-foreground"
+                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                         }`}
                                 >
-                                    <Icon className={`w-5 h-5 ${isActive ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
+                                    <Icon className={`w-5 h-5 ${isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`} />
                                     <span className="font-medium text-sm">{tab.name}</span>
                                     {isActive && (
                                         <motion.div layoutId="billing-active" className="ml-auto">
-                                            <ChevronRight className="w-4 h-4 text-slate-400" />
+                                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
                                         </motion.div>
                                     )}
                                 </button>
@@ -220,12 +220,12 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                             exit={{ opacity: 0, y: -10 }}
                             transition={{ duration: 0.2 }}
                         >
-                            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                                <div className="p-6 border-b border-slate-100 bg-slate-50/30">
-                                    <h2 className="text-xl font-semibold text-slate-900">
+                            <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+                                <div className="p-6 border-b border-border bg-muted/30">
+                                    <h2 className="text-xl font-semibold text-foreground">
                                         {tabs.find(t => t.id === activeTab)?.name}
                                     </h2>
-                                    <p className="text-sm text-slate-500 mt-1">
+                                    <p className="text-sm text-muted-foreground mt-1">
                                         {tabs.find(t => t.id === activeTab)?.description}
                                     </p>
                                 </div>
@@ -235,27 +235,27 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                     {activeTab === "overview" && (
                                         <div className="space-y-8">
                                             {/* Subscription Info */}
-                                            <div className="relative overflow-hidden rounded-2xl bg-slate-900 p-8 text-white">
+                                            <div className="relative overflow-hidden rounded-2xl bg-foreground p-8 text-primary-foreground">
                                                 <div className="relative z-10">
                                                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                                         <div>
-                                                            <p className="text-slate-400 text-sm font-medium uppercase tracking-wider mb-2">Current Plan</p>
+                                                            <p className="text-muted-foreground text-sm font-medium uppercase tracking-wider mb-2">Current Plan</p>
                                                             <h3 className="text-3xl font-bold mb-2">
                                                                 {currentPlan.name}
                                                             </h3>
-                                                            <p className="text-slate-300 text-lg">
+                                                            <p className="text-muted-foreground text-lg">
                                                                 {`${currentPlan.currency} ${currentPlan.price}/month`}
                                                             </p>
                                                         </div>
 
                                                         {subscription && (
                                                             <div className="flex flex-col items-start md:items-end gap-2">
-                                                                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${subscription.status === 'active' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
+                                                                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${subscription.status === 'active' ? 'bg-emerald-500/20 dark:bg-emerald-500/10 text-emerald-400 dark:text-emerald-300' : 'bg-red-500/20 dark:bg-red-500/10 text-red-400 dark:text-red-300'
                                                                     }`}>
                                                                     <ShieldCheck className="w-3.5 h-3.5" />
                                                                     {subscription.status}
                                                                 </div>
-                                                                <div className="flex items-center gap-2 text-slate-400 text-sm">
+                                                                <div className="flex items-center gap-2 text-muted-foreground text-sm">
                                                                     <Clock className="w-4 h-4" />
                                                                     Next billing: {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
                                                                 </div>
@@ -268,7 +268,7 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                             <button
                                                                 onClick={handleCancelSubscription}
                                                                 disabled={canceling}
-                                                                className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
+                                                                className="px-6 py-2 bg-red-500 dark:bg-red-600 hover:bg-red-600 dark:hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
                                                             >
                                                                 {canceling ? "Processing..." : "Cancel Subscription"}
                                                             </button>
@@ -276,7 +276,7 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                     )}
 
                                                     {subscription?.cancelAtPeriodEnd && (
-                                                        <div className="mt-6 p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center gap-3">
+                                                        <div className="mt-6 p-4 rounded-xl bg-orange-500/10 dark:bg-orange-500/5 border border-orange-500/20 dark:border-orange-500/10 flex items-center gap-3">
                                                             <AlertCircle className="w-5 h-5 text-orange-400" />
                                                             <p className="text-sm text-orange-200">
                                                                 Your plan will be downgraded on {new Date(subscription.currentPeriodEnd).toLocaleDateString()}.
@@ -285,14 +285,14 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                     )}
                                                 </div>
                                                 {/* Decorative Gradient */}
-                                                <div className="absolute top-0 right-0 w-64 h-64 bg-slate-800 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 opacity-50" />
+                                                <div className="absolute top-0 right-0 w-64 h-64 bg-muted rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 opacity-50" />
                                             </div>
 
                                             {/* Usage Section */}
                                             <div>
                                                 <div className="flex items-center gap-2 mb-4">
-                                                    <TrendingUp className="w-5 h-5 text-slate-900" />
-                                                    <h3 className="text-lg font-semibold text-slate-900">Current Usage</h3>
+                                                    <TrendingUp className="w-5 h-5 text-foreground" />
+                                                    <h3 className="text-lg font-semibold text-foreground">Current Usage</h3>
                                                 </div>
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                                     {[
@@ -302,18 +302,18 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                     ].map((stat) => {
                                                         const percent = Math.min((stat.used / stat.max) * 100, 100)
                                                         return (
-                                                            <div key={stat.label} className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                                                            <div key={stat.label} className="p-4 rounded-2xl bg-muted border border-border">
                                                                 <div className="flex justify-between items-end mb-2">
-                                                                    <span className="text-sm font-medium text-slate-500">{stat.label}</span>
-                                                                    <span className="text-sm font-bold text-slate-900">
+                                                                    <span className="text-sm font-medium text-muted-foreground">{stat.label}</span>
+                                                                    <span className="text-sm font-bold text-foreground">
                                                                         {stat.used}{stat.unit} / {stat.max}{stat.unit}
                                                                     </span>
                                                                 </div>
-                                                                <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+                                                                <div className="h-2 w-full bg-border rounded-full overflow-hidden">
                                                                     <motion.div
                                                                         initial={{ width: 0 }}
                                                                         animate={{ width: `${percent}%` }}
-                                                                        className={`h-full ${percent > 90 ? 'bg-red-500' : 'bg-slate-900'}`}
+                                                                        className={`h-full ${percent > 90 ? 'bg-red-500 dark:bg-red-400' : 'bg-foreground'}`}
                                                                     />
                                                                 </div>
                                                             </div>
@@ -334,26 +334,26 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                     <div
                                                         key={plan.id}
                                                         className={`flex flex-col p-6 rounded-2xl border-2 transition-all duration-200 ${isCurrent
-                                                            ? "border-slate-900 bg-slate-50 ring-4 ring-slate-900/5 relative"
-                                                            : "border-slate-100 bg-white hover:border-slate-200"
+                                                            ? "border-foreground bg-muted ring-4 ring-primary/5 relative"
+                                                            : "border-border bg-card hover:border-muted-foreground"
                                                             }`}
                                                     >
                                                         {isCurrent && (
-                                                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
+                                                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-foreground text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
                                                                 Current Plan
                                                             </div>
                                                         )}
                                                         <div className="mb-6">
-                                                            <h3 className="text-xl font-bold text-slate-900">{plan.name}</h3>
-                                                            <p className="text-slate-500 text-sm mt-1">{plan.description}</p>
+                                                            <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
+                                                            <p className="text-muted-foreground text-sm mt-1">{plan.description}</p>
                                                         </div>
                                                         <div className="mb-8">
-                                                            <span className="text-4xl font-extrabold text-slate-900">${plan.price}</span>
-                                                            <span className="text-slate-500 text-sm ml-1">/mo</span>
+                                                            <span className="text-4xl font-extrabold text-foreground">${plan.price}</span>
+                                                            <span className="text-muted-foreground text-sm ml-1">/mo</span>
                                                         </div>
                                                         <ul className="space-y-4 mb-8 flex-1">
                                                             {plan.features.map((feature, i) => (
-                                                                <li key={i} className="flex items-start gap-3 text-sm text-slate-600">
+                                                                <li key={i} className="flex items-start gap-3 text-sm text-muted-foreground">
                                                                     <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
                                                                     {feature}
                                                                 </li>
@@ -363,8 +363,8 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                             onClick={() => handleSubscribe(plan.id)}
                                                             disabled={isCurrent || subscribing === plan.id || isFreePlan}
                                                             className={`w-full py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${isCurrent || isFreePlan
-                                                                ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-                                                                : "bg-slate-900 hover:bg-slate-800 text-white shadow-sm active:scale-95"
+                                                                ? "bg-muted text-muted-foreground cursor-not-allowed"
+                                                                : "bg-foreground hover:bg-primary text-primary-foreground shadow-sm active:scale-95"
                                                                 }`}
                                                         >
                                                             {subscribing === plan.id ? (
@@ -389,26 +389,26 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                             {subscription && subscription.payments.length > 0 ? (
                                                 <table className="w-full text-left">
                                                     <thead>
-                                                        <tr className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100">
+                                                        <tr className="text-xs font-bold uppercase tracking-wider text-muted-foreground border-b border-border">
                                                             <th className="pb-4 pt-1">Date</th>
                                                             <th className="pb-4 pt-1">Amount</th>
                                                             <th className="pb-4 pt-1">Status</th>
                                                             <th className="pb-4 pt-1 text-right">Action</th>
                                                         </tr>
                                                     </thead>
-                                                    <tbody className="divide-y divide-slate-50">
+                                                    <tbody className="divide-y divide-border">
                                                         {subscription.payments.map((p) => (
-                                                            <tr key={p.id} className="group hover:bg-slate-50/50 transition-colors">
-                                                                <td className="py-4 text-sm text-slate-600">
+                                                            <tr key={p.id} className="group hover:bg-muted/50 transition-colors">
+                                                                <td className="py-4 text-sm text-muted-foreground">
                                                                     {new Date(p.createdAt).toLocaleDateString()}
                                                                 </td>
-                                                                <td className="py-4 text-sm font-semibold text-slate-900">
+                                                                <td className="py-4 text-sm font-semibold text-foreground">
                                                                     {p.currency} {p.amount.toFixed(2)}
                                                                 </td>
                                                                 <td className="py-4">
-                                                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${p.status === 'succeeded' ? 'bg-emerald-100 text-emerald-700' :
-                                                                        p.status === 'pending' ? 'bg-orange-100 text-orange-700' :
-                                                                            'bg-red-100 text-red-700'
+                                                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${p.status === 'succeeded' ? 'bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400' :
+                                                                        p.status === 'pending' ? 'bg-orange-100 dark:bg-orange-950/30 text-orange-700 dark:text-orange-400' :
+                                                                            'bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400'
                                                                         }`}>
                                                                         {p.status}
                                                                     </span>
@@ -417,7 +417,7 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                                     <button
                                                                         onClick={() => handleDownloadInvoice(p.id)}
                                                                         disabled={downloadingInvoice === p.id}
-                                                                        className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors disabled:opacity-50"
+                                                                        className="text-xs font-bold text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
                                                                     >
                                                                         {downloadingInvoice === p.id ? "Downloading..." : "Download PDF"}
                                                                     </button>
@@ -428,11 +428,11 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                 </table>
                                             ) : (
                                                 <div className="flex flex-col items-center justify-center py-20 text-center">
-                                                    <div className="p-4 bg-slate-50 rounded-full mb-4">
-                                                        <History className="w-8 h-8 text-slate-200" />
+                                                    <div className="p-4 bg-muted rounded-full mb-4">
+                                                        <History className="w-8 h-8 text-muted-foreground" />
                                                     </div>
-                                                    <h4 className="text-slate-900 font-semibold">No billing history</h4>
-                                                    <p className="text-slate-500 text-sm mt-1">Your past payments will appear here.</p>
+                                                    <h4 className="text-foreground font-semibold">No billing history</h4>
+                                                    <p className="text-muted-foreground text-sm mt-1">Your past payments will appear here.</p>
                                                 </div>
                                             )}
                                         </div>

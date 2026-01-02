@@ -64,7 +64,7 @@ export default function ConnectedAccounts() {
         return (
             <div className="space-y-4">
                 {[...Array(2)].map((_, i) => (
-                    <div key={i} className="h-24 bg-slate-50 border border-slate-100 rounded-2xl animate-pulse" />
+                    <div key={i} className="h-24 bg-muted border border-border rounded-2xl animate-pulse" />
                 ))}
             </div>
         )
@@ -91,11 +91,11 @@ export default function ConnectedAccounts() {
         <div className="space-y-4">
             {connectedAccounts.length === 0 && !loading && (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <div className="p-4 bg-slate-50 rounded-full mb-4">
-                        <Cloud className="w-8 h-8 text-slate-200" />
+                    <div className="p-4 bg-muted rounded-full mb-4">
+                        <Cloud className="w-8 h-8 text-muted-foreground" />
                     </div>
-                    <h4 className="text-slate-900 font-semibold">No active connections</h4>
-                    <p className="text-slate-500 text-sm mt-1 max-w-xs">
+                    <h4 className="text-foreground font-semibold">No active connections</h4>
+                    <p className="text-muted-foreground text-sm mt-1 max-w-xs">
                         Connect your storage providers in the Available tab to automatically sync your files.
                     </p>
                 </div>
@@ -110,17 +110,17 @@ export default function ConnectedAccounts() {
                         key={account.provider}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center justify-between p-5 rounded-2xl bg-emerald-50 border border-emerald-100 transition-all hover:bg-emerald-100/50"
+                        className="flex items-center justify-between p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 transition-all hover:bg-emerald-100/50 dark:hover:bg-emerald-900/30"
                     >
                         <div className="flex gap-5">
-                            <div className="p-3 bg-white rounded-xl shadow-sm border border-emerald-200 h-fit">
+                            <div className="p-3 bg-card rounded-xl shadow-sm border border-emerald-200 h-fit">
                                 {provider.icon}
                             </div>
                             <div>
-                                <h4 className="font-semibold text-slate-900">{provider.name}</h4>
+                                <h4 className="font-semibold text-foreground">{provider.name}</h4>
                                 <div className="flex items-center gap-2 mt-1">
                                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                                    <span className="text-sm text-slate-600 font-medium">{account.email}</span>
+                                    <span className="text-sm text-muted-foreground font-medium">{account.email}</span>
                                 </div>
                             </div>
                         </div>
@@ -128,7 +128,7 @@ export default function ConnectedAccounts() {
                         <button
                             onClick={() => handleDisconnect(account.provider)}
                             disabled={disconnecting === account.provider}
-                            className="px-5 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all active:scale-95 bg-white border border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-5 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all active:scale-95 bg-card border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {disconnecting === account.provider ? (
                                 <>
@@ -147,8 +147,8 @@ export default function ConnectedAccounts() {
             })}
 
             {connectedAccounts.length > 0 && (
-                <div className="mt-8 p-4 rounded-xl bg-slate-900 text-white flex items-center gap-3">
-                    <div className="p-2 bg-white/10 rounded-lg">
+                <div className="mt-8 p-4 rounded-xl bg-primary text-primary-foreground flex items-center gap-3">
+                    <div className="p-2 bg-primary-foreground/10 rounded-lg">
                         <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                     </div>
                     <p className="text-sm font-medium">Automatic sync is active for {connectedAccounts.length} account{connectedAccounts.length > 1 ? 's' : ''}</p>

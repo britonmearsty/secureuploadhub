@@ -92,12 +92,12 @@ export default function PortalsClient({ initialPortals }: PortalsClientProps) {
         <div className="max-w-6xl mx-auto px-4 py-8">
             <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Secure Portals</h1>
-                    <p className="text-slate-500 mt-1 text-lg">Manage and monitor your secure file collection endpoints.</p>
+                    <h1 className="text-3xl font-bold text-foreground tracking-tight">Secure Portals</h1>
+                    <p className="text-muted-foreground mt-1 text-lg">Manage and monitor your secure file collection endpoints.</p>
                 </div>
                 <Link
                     href="/dashboard/portals/new"
-                    className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all shadow-sm hover:shadow-md active:scale-95 font-bold text-sm w-fit"
+                    className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-2xl hover:bg-primary/90 transition-all shadow-sm hover:shadow-md active:scale-95 font-bold text-sm w-fit"
                 >
                     <Plus className="w-5 h-5" />
                     Create New Portal
@@ -116,15 +116,15 @@ export default function PortalsClient({ initialPortals }: PortalsClientProps) {
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
-                                        ? "bg-white shadow-sm border border-slate-200 text-slate-900"
-                                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                                        ? "bg-card shadow-sm border border-border text-foreground"
+                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
                                         }`}
                                 >
-                                    <Icon className={`w-5 h-5 ${isActive ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
+                                    <Icon className={`w-5 h-5 ${isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`} />
                                     <span className="font-medium text-sm">{tab.name}</span>
                                     {isActive && (
                                         <motion.div layoutId="portals-active-indicator" className="ml-auto">
-                                            <ChevronRight className="w-4 h-4 text-slate-400" />
+                                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
                                         </motion.div>
                                     )}
                                 </button>
@@ -133,13 +133,13 @@ export default function PortalsClient({ initialPortals }: PortalsClientProps) {
                     </nav>
 
                     {/* Dynamic Pro Tips Banner */}
-                    <div className="w-full p-6 rounded-2xl bg-slate-900 text-white relative overflow-hidden group">
+                    <div className="w-full p-6 rounded-2xl bg-primary text-primary-foreground relative overflow-hidden group">
                         <div className="relative z-10">
                             <div className="flex items-center gap-2 mb-3">
-                                <div className="p-1.5 bg-white/10 rounded-lg">
+                                <div className="p-1.5 bg-primary-foreground/10 rounded-lg">
                                     <Lightbulb className="w-4 h-4 text-amber-400" />
                                 </div>
-                                <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400">Pro Tip</h4>
+                                <h4 className="text-xs font-bold uppercase tracking-widest text-primary-foreground/60">Pro Tip</h4>
                             </div>
 
                             <div className="h-24">
@@ -155,7 +155,7 @@ export default function PortalsClient({ initialPortals }: PortalsClientProps) {
                                             <CurrentTipIcon className="w-4 h-4" />
                                             {proTips[activeTipIndex].title}
                                         </div>
-                                        <p className="text-sm text-slate-300 leading-relaxed">
+                                        <p className="text-sm text-primary-foreground/80 leading-relaxed">
                                             {proTips[activeTipIndex].description}
                                         </p>
                                     </motion.div>
@@ -167,15 +167,15 @@ export default function PortalsClient({ initialPortals }: PortalsClientProps) {
                                     <button
                                         key={i}
                                         onClick={() => setActiveTipIndex(i)}
-                                        className={`h-1 rounded-full transition-all duration-300 ${i === activeTipIndex ? "w-6 bg-amber-400" : "w-1.5 bg-slate-700 hover:bg-slate-600"
+                                        className={`h-1 rounded-full transition-all duration-300 ${i === activeTipIndex ? "w-6 bg-amber-400 dark:bg-amber-500" : "w-1.5 bg-primary-foreground/20 hover:bg-primary-foreground/40"
                                             }`}
                                         aria-label={`Show tip ${i + 1}`}
                                     />
                                 ))}
                             </div>
                         </div>
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary-foreground/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-500/10 dark:bg-amber-500/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
                     </div>
                 </aside>
 
@@ -183,26 +183,26 @@ export default function PortalsClient({ initialPortals }: PortalsClientProps) {
                 <main className="flex-1 min-w-0">
                     <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="relative flex-1 max-w-md">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <input
                                 type="text"
                                 placeholder="Search by name or slug..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none text-sm"
+                                className="w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-2xl focus:ring-2 focus:ring-primary transition-all outline-none text-sm"
                             />
                         </div>
-                        <div className="flex items-center gap-2 p-1 bg-slate-100/50 border border-slate-200 rounded-xl w-fit">
+                        <div className="flex items-center gap-2 p-1 bg-muted/50 border border-border rounded-xl w-fit">
                             <button
                                 onClick={() => setViewMode("grid")}
-                                className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+                                className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                                 aria-label="Grid view"
                             >
                                 <LayoutGrid className="w-4 h-4" />
                             </button>
                             <button
                                 onClick={() => setViewMode("list")}
-                                className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+                                className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                                 aria-label="List view"
                             >
                                 <ListIcon className="w-4 h-4" />

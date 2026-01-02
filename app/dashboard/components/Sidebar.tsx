@@ -102,16 +102,16 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
   const sidebarContent = (
     <motion.div
       layout
-      className="flex flex-col h-full bg-white text-slate-900 border-r border-slate-200 shadow-sm"
+      className="flex flex-col h-full bg-card text-card-foreground border-r border-border shadow-sm"
     >
       {/* Brand / Logo Section */}
       <div className="flex items-center justify-between p-6 mb-2">
         <Link href="/dashboard" className="flex items-center gap-3">
           <motion.div
             layout="position"
-            className="bg-slate-900 p-2 rounded-lg flex-shrink-0"
+            className="bg-primary p-2 rounded-lg flex-shrink-0"
           >
-            <ShieldCheck className="w-5 h-5 text-white" />
+            <ShieldCheck className="w-5 h-5 text-primary-foreground" />
           </motion.div>
           <AnimatePresence mode="wait">
             {!isCollapsed && (
@@ -120,7 +120,7 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.2 }}
-                className="text-xl font-bold tracking-tight text-slate-900 whitespace-nowrap"
+                className="text-xl font-bold tracking-tight text-foreground whitespace-nowrap"
               >
                 SecureUpload
               </motion.span>
@@ -129,7 +129,7 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
         </Link>
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="hidden lg:flex items-center justify-center w-6 h-6 rounded-md border border-slate-200 text-slate-400 hover:text-slate-600 transition-all hover:bg-slate-50"
+          className="hidden lg:flex items-center justify-center w-6 h-6 rounded-md border border-border text-muted-foreground hover:text-foreground transition-all hover:bg-muted"
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           <motion.div
@@ -153,12 +153,12 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
               href={item.href}
               onClick={() => setIsMobileMenuOpen(false)}
               className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors duration-200 ${active
-                ? "bg-slate-100 text-slate-900"
-                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                ? "bg-muted text-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
             >
               <motion.div layout="position" className="flex-shrink-0">
-                <Icon className={`w-5 h-5 ${active ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
+                <Icon className={`w-5 h-5 ${active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`} />
               </motion.div>
 
               <AnimatePresence>
@@ -178,13 +178,13 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
               {active && (
                 <motion.div
                   layoutId="sidebar-active-indicator"
-                  className="absolute left-0 w-1 h-5 bg-slate-900 rounded-r-full"
+                  className="absolute left-0 w-1 h-5 bg-primary rounded-r-full"
                   transition={SPRING_TRANSITION}
                 />
               )}
 
               {isCollapsed && (
-                <div className="absolute left-full ml-4 px-2 py-1 bg-slate-900 text-white text-xs font-medium rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
+                <div className="absolute left-full ml-4 px-2 py-1 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-border shadow-md">
                   {item.name}
                 </div>
               )}
@@ -202,13 +202,13 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
             exit={{ opacity: 0, y: 10 }}
             className="px-4 mb-6"
           >
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+            <div className="p-4 bg-muted border border-border rounded-xl">
               <div className="flex items-center gap-2 mb-2">
-                <Zap className="w-3.5 h-3.5 text-slate-600" />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Pro Plan</span>
+                <Zap className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pro Plan</span>
               </div>
-              <p className="text-xs text-slate-500 mb-3">Higher limits and faster sharing.</p>
-              <button className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg transition-all">
+              <p className="text-xs text-muted-foreground mb-3">Higher limits and faster sharing.</p>
+              <button className="w-full py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold rounded-lg transition-all">
                 Upgrade
               </button>
             </div>
@@ -217,17 +217,17 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
       </AnimatePresence>
 
       {/* User Section */}
-      <motion.div layout className="p-4 border-t border-slate-200 bg-slate-50/50">
-        <div className={`flex items-center gap-3 p-2 rounded-xl transition-colors hover:bg-slate-100 ${isCollapsed ? "justify-center" : ""}`}>
+      <motion.div layout className="p-4 border-t border-border bg-muted/50">
+        <div className={`flex items-center gap-3 p-2 rounded-xl transition-colors hover:bg-muted ${isCollapsed ? "justify-center" : ""}`}>
           <motion.div layout="position" className="relative flex-shrink-0">
             {userImage ? (
               <img
                 src={userImage}
                 alt={userName || "User"}
-                className="w-10 h-10 rounded-xl object-cover border border-slate-200"
+                className="w-10 h-10 rounded-xl object-cover border border-border"
               />
             ) : (
-              <div className="w-10 h-10 rounded-xl bg-slate-200 flex items-center justify-center text-slate-600 text-sm font-bold">
+              <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground text-sm font-bold">
                 {userName?.charAt(0).toUpperCase() || "U"}
               </div>
             )}
@@ -241,17 +241,17 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
                 exit={{ opacity: 0, x: -10 }}
                 className="flex-1 min-w-0"
               >
-                <p className="text-sm font-semibold text-slate-900 truncate">{userName}</p>
-                <p className="text-[11px] text-slate-500">Personal</p>
+                <p className="text-sm font-semibold text-foreground truncate">{userName}</p>
+                <p className="text-[11px] text-muted-foreground">Personal</p>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        <form action={signOutAction} className="mt-2 text-slate-500">
+        <form action={signOutAction} className="mt-2 text-muted-foreground">
           <button
             type="submit"
-            className={`flex items-center gap-2.5 w-full px-4 py-2 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all group ${isCollapsed ? "justify-center" : ""
+            className={`flex items-center gap-2.5 w-full px-4 py-2 hover:text-foreground hover:bg-muted rounded-xl transition-all group ${isCollapsed ? "justify-center" : ""
               }`}
           >
             <motion.div layout="position">
@@ -280,7 +280,7 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsMobileMenuOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-40 p-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl shadow-sm active:scale-95 transition-transform"
+        className="lg:hidden fixed top-4 left-4 z-40 p-2.5 bg-card border border-border text-muted-foreground rounded-xl shadow-sm active:scale-95 transition-transform"
       >
         <Menu className="w-5 h-5" />
       </button>
@@ -294,7 +294,7 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsMobileMenuOpen(false)}
-              className="fixed inset-0 bg-slate-900/20 backdrop-blur-[2px] z-40 lg:hidden"
+              className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden"
             />
             <motion.aside
               initial={{ x: "-100%" }}
@@ -306,7 +306,7 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
               <div className="h-full relative shadow-2xl">
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 z-50 transition-colors"
+                  className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground z-50 transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>

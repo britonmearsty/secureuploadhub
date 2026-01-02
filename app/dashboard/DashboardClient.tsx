@@ -65,10 +65,10 @@ export default function DashboardClient({ user, stats: initialStats, portals: in
             {/* Header Section */}
             <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2">
+                    <h1 className="text-3xl font-black text-foreground tracking-tight mb-2">
                         {greeting}, {user.name?.split(" ")[0]}
                     </h1>
-                    <p className="text-slate-500 font-medium text-lg">
+                    <p className="text-muted-foreground font-medium text-lg">
                         Manage your secure file collection and track client uploads in real-time.
                     </p>
                 </div>
@@ -76,7 +76,7 @@ export default function DashboardClient({ user, stats: initialStats, portals: in
                 <nav className="flex items-center gap-3" aria-label="Primary Actions">
                     <Link
                         href="/dashboard/portals/new"
-                        className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-200/50 active:scale-95 font-bold text-sm"
+                        className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/20 active:scale-95 font-bold text-sm"
                         aria-label="Create a new secure portal"
                     >
                         <Plus className="w-4 h-4" aria-hidden="true" />
@@ -95,11 +95,11 @@ export default function DashboardClient({ user, stats: initialStats, portals: in
                 <section className="lg:col-span-2 flex flex-col gap-6" aria-labelledby="active-portals-heading">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <h2 id="active-portals-heading" className="text-lg font-bold text-slate-900">Active Client Portals</h2>
+                            <h2 id="active-portals-heading" className="text-lg font-bold text-foreground">Active Client Portals</h2>
                         </div>
                         <Link
                             href="/dashboard/portals"
-                            className="group flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors"
+                            className="group flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors"
                             aria-label="View all portals"
                         >
                             View All Portals
@@ -116,7 +116,7 @@ export default function DashboardClient({ user, stats: initialStats, portals: in
                     {portals.length > 4 && (
                         <Link
                             href="/dashboard/portals"
-                            className="flex items-center justify-center py-4 bg-white rounded-2xl border border-dashed border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-all text-sm font-bold"
+                            className="flex items-center justify-center py-4 bg-card rounded-2xl border border-dashed border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-all text-sm font-bold"
                             aria-label={`View ${portals.length - 4} more active portals`}
                         >
                             View {portals.length - 4} more portals
@@ -127,16 +127,16 @@ export default function DashboardClient({ user, stats: initialStats, portals: in
                 {/* Right Column: Quick Actions & Activity */}
                 <aside className="lg:col-span-1 flex flex-col gap-8">
                     <nav className="space-y-4" aria-labelledby="quick-actions-heading">
-                        <h2 id="quick-actions-heading" className="text-sm font-bold text-slate-900 px-1">Quick Actions</h2>
+                        <h2 id="quick-actions-heading" className="text-sm font-bold text-foreground px-1">Quick Actions</h2>
                         <QuickActions />
                     </nav>
 
                     <section className="space-y-4" aria-labelledby="recent-activity-heading">
                         <div className="flex items-center justify-between px-1">
-                            <h2 id="recent-activity-heading" className="text-sm font-bold text-slate-900">Recent Activity</h2>
+                            <h2 id="recent-activity-heading" className="text-sm font-bold text-foreground">Recent Activity</h2>
                             <Link
                                 href="/dashboard/assets"
-                                className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-colors"
+                                className="text-xs font-bold text-muted-foreground hover:text-foreground transition-colors"
                                 aria-label="View all file activity"
                             >
                                 View All

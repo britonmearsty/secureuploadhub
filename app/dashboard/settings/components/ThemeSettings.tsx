@@ -4,6 +4,7 @@ import { useState } from "react"
 import { updateSettings } from "../actions"
 import { Loader2, Monitor, Moon, Sun, CheckCircle2 } from "lucide-react"
 import { motion } from "framer-motion"
+import { useTheme } from "@/lib/theme-provider"
 
 interface ThemeSettingsProps {
   theme: string
@@ -13,6 +14,7 @@ export default function ThemeSettings({ theme: initialTheme }: ThemeSettingsProp
   const [theme, setTheme] = useState(initialTheme)
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null)
+  const { setTheme: setGlobalTheme } = useTheme()
 
   async function handleSave(newTheme: string) {
     if (newTheme === theme) return
@@ -22,10 +24,16 @@ export default function ThemeSettings({ theme: initialTheme }: ThemeSettingsProp
     setMessage(null)
 
     try {
+      // Update the global theme immediately for instant feedback
+      setGlobalTheme(newTheme as "light" | "dark" | "system")
+      
+      // Save to database
       await updateSettings({ theme: newTheme })
       setMessage({ text: "Appearance updated successfully", type: 'success' })
     } catch (_) {
       setMessage({ text: "Failed to update appearance", type: 'error' })
+      // Revert theme on error
+      setGlobalTheme(theme as "light" | "dark" | "system")
     } finally {
       setIsLoading(false)
     }
@@ -50,34 +58,34 @@ export default function ThemeSettings({ theme: initialTheme }: ThemeSettingsProp
               onClick={() => handleSave(t.id)}
               disabled={isLoading}
               className={`relative group flex flex-col p-4 rounded-2xl border-2 transition-all duration-200 text-left ${isActive
-                  ? "border-slate-900 bg-slate-50 ring-4 ring-slate-900/5"
-                  : "border-slate-200 hover:border-slate-300 bg-white"
+                  ? "border-primary bg-muted ring-4 ring-primary/5"
+                  : "border-border hover:border-muted-foreground bg-card"
                 } ${isLoading && theme !== t.id ? "opacity-50" : ""}`}
             >
               <div className="flex justify-between items-start mb-4">
-                <div className={`p-2 rounded-xl border ${isActive ? "bg-white border-slate-200" : "bg-slate-50 border-slate-100"
+                <div className={`p-2 rounded-xl border ${isActive ? "bg-card border-border" : "bg-muted border-border"
                   }`}>
-                  <Icon className={`w-6 h-6 ${isActive ? "text-slate-900" : "text-slate-400"}`} />
+                  <Icon className={`w-6 h-6 ${isActive ? "text-foreground" : "text-muted-foreground"}`} />
                 </div>
                 {isActive && (
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="text-slate-900"
+                    className="text-foreground"
                   >
                     {isLoading ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
                     ) : (
-                      <CheckCircle2 className="w-5 h-5 fill-slate-900 text-white" />
+                      <CheckCircle2 className="w-5 h-5 fill-primary text-primary-foreground" />
                     )}
                   </motion.div>
                 )}
               </div>
               <div className="mt-auto">
-                <p className={`font-semibold text-sm ${isActive ? "text-slate-900" : "text-slate-600"}`}>
+                <p className={`font-semibold text-sm ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
                   {t.name}
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {t.description}
                 </p>
               </div>
@@ -87,15 +95,15 @@ export default function ThemeSettings({ theme: initialTheme }: ThemeSettingsProp
       </div>
 
       <div className="pt-4">
-        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+        <div className="p-4 rounded-2xl bg-muted border border-border flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Monitor className="w-5 h-5 text-slate-400" />
+            <Monitor className="w-5 h-5 text-muted-foreground" />
             <div>
-              <p className="text-sm font-medium text-slate-900">Reduced Motion</p>
-              <p className="text-xs text-slate-500">Minimize animations and transitions across the app.</p>
+              <p className="text-sm font-medium text-foreground">Reduced Motion</p>
+              <p className="text-xs text-muted-foreground">Minimize animations and transitions across the app.</p>
             </div>
           </div>
-          <p className="text-[10px] font-bold uppercase tracking-wider bg-slate-200 text-slate-600 px-2 py-1 rounded">Coming Soon</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider bg-muted text-muted-foreground px-2 py-1 rounded">Coming Soon</p>
         </div>
       </div>
 

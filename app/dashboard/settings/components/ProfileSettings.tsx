@@ -39,30 +39,30 @@ export default function ProfileSettings({ user }: ProfileSettingsProps) {
         {/* Profile Picture Section */}
         <div className="flex items-center gap-6">
           <div className="relative group">
-            <div className="w-24 h-24 rounded-2xl bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden transition-colors group-hover:bg-slate-200 group-hover:border-slate-400">
+            <div className="w-24 h-24 rounded-2xl bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden transition-colors group-hover:bg-muted/80 group-hover:border-muted-foreground">
               {user.image ? (
                 <img src={user.image} alt={name} className="w-full h-full object-cover" />
               ) : (
-                <UserIcon className="w-10 h-10 text-slate-400" />
+                <UserIcon className="w-10 h-10 text-muted-foreground" />
               )}
             </div>
             <button
               type="button"
-              className="absolute -bottom-2 -right-2 p-2 bg-white rounded-lg shadow-md border border-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
+              className="absolute -bottom-2 -right-2 p-2 bg-card rounded-lg shadow-md border border-border text-muted-foreground hover:text-foreground transition-colors"
             >
               <Camera className="w-4 h-4" />
             </button>
           </div>
           <div>
-            <h4 className="font-medium text-slate-900">Profile Picture</h4>
-            <p className="text-sm text-slate-500 mt-1">PNG, JPG or GIF up to 10MB.</p>
+            <h4 className="font-medium text-foreground">Profile Picture</h4>
+            <p className="text-sm text-muted-foreground mt-1">PNG, JPG or GIF up to 10MB.</p>
           </div>
         </div>
 
         <div className="grid gap-6">
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-              <UserIcon className="w-4 h-4 text-slate-400" />
+            <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <UserIcon className="w-4 h-4 text-muted-foreground" />
               Full Name
             </label>
             <input
@@ -70,13 +70,13 @@ export default function ProfileSettings({ user }: ProfileSettingsProps) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Your name"
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all outline-none"
+              className="w-full px-4 py-2.5 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-primary focus:bg-card transition-all outline-none"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-              <Mail className="w-4 h-4 text-slate-400" />
+            <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Mail className="w-4 h-4 text-muted-foreground" />
               Email Address
             </label>
             <div className="relative">
@@ -84,13 +84,13 @@ export default function ProfileSettings({ user }: ProfileSettingsProps) {
                 type="email"
                 value={user.email || ""}
                 disabled
-                className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 cursor-not-allowed italic"
+                className="w-full px-4 py-2.5 bg-muted/50 border border-border rounded-xl text-muted-foreground cursor-not-allowed italic"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-slate-200 text-slate-600 px-2 py-1 rounded">Locked</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-muted text-muted-foreground px-2 py-1 rounded">Locked</span>
               </div>
             </div>
-            <p className="text-xs text-slate-400">Email addresses are managed via your authentication provider.</p>
+            <p className="text-xs text-muted-foreground">Email addresses are managed via your authentication provider.</p>
           </div>
         </div>
 
@@ -98,7 +98,7 @@ export default function ProfileSettings({ user }: ProfileSettingsProps) {
           <button
             type="submit"
             disabled={isLoading}
-            className="px-6 py-2.5 bg-slate-900 text-white font-medium rounded-xl hover:bg-slate-800 disabled:opacity-50 flex items-center gap-2 transition-all shadow-sm active:scale-95"
+            className="px-6 py-2.5 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 disabled:opacity-50 flex items-center gap-2 transition-all shadow-sm active:scale-95"
           >
             {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
             Update Profile
@@ -107,7 +107,7 @@ export default function ProfileSettings({ user }: ProfileSettingsProps) {
             <motion.p
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              className={`text-sm font-medium ${message.type === 'error' ? "text-red-600" : "text-emerald-600"}`}
+              className={`text-sm font-medium ${message.type === 'error' ? "text-destructive" : "text-emerald-600"}`}
             >
               {message.text}
             </motion.p>

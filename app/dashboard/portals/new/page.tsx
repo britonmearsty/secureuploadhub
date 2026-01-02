@@ -48,30 +48,30 @@ const FolderNode: React.FC<FolderNodeProps> = ({ folder, navigateToFolder, expan
   const isExpanded = expandedFolders.has(folder.id)
   return (
     <div className="pl-4">
-      <div className="flex items-center justify-between py-2 hover:bg-slate-50 transition-colors group rounded-lg pr-2">
+      <div className="flex items-center justify-between py-2 hover:bg-muted transition-colors group rounded-lg pr-2">
         <button
           type="button"
           onClick={() => navigateToFolder(folder)}
           className="flex items-center gap-2 text-left flex-1"
         >
           <FolderOpen className="w-4 h-4 text-amber-500 flex-shrink-0" />
-          <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900 truncate">{folder.name}</span>
+          <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground truncate">{folder.name}</span>
         </button>
 
         {folder.subfolders?.length > 0 && (
           <button
             type="button"
             onClick={() => toggleFolder(folder.id)}
-            className="p-1 hover:bg-slate-200 rounded-md transition-colors"
+            className="p-1 hover:bg-muted rounded-md transition-colors"
           >
-            <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+            <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${isExpanded ? "rotate-90" : ""}`} />
           </button>
         )}
       </div>
 
       {/* Recursively render subfolders */}
       {isExpanded && folder.subfolders?.length > 0 && (
-        <div className="pl-4 border-l border-slate-100 ml-2">
+        <div className="pl-4 border-l border-border ml-2">
           {folder.subfolders.map((sub: any) => (
             <FolderNode
               key={sub.id}
@@ -353,7 +353,7 @@ export default function CreatePortalPage() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <Link
         href="/dashboard"
-        className="group inline-flex items-center gap-2 text-slate-400 hover:text-slate-900 mb-8 transition-colors font-medium text-sm"
+        className="group inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 transition-colors font-medium text-sm"
       >
         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
         Back to Dashboard
@@ -363,8 +363,8 @@ export default function CreatePortalPage() {
         {/* Navigation Sidebar */}
         <aside className="lg:w-64 flex-shrink-0">
           <div className="mb-6 px-2">
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">New Portal</h1>
-            <p className="text-slate-600 text-sm mt-1">Create a secure space for your clients.</p>
+            <h1 className="text-3xl font-black text-foreground tracking-tight">New Portal</h1>
+            <p className="text-muted-foreground text-sm mt-1">Create a secure space for your clients.</p>
           </div>
           <nav className="space-y-1">
             {[
@@ -382,11 +382,11 @@ export default function CreatePortalPage() {
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
-                    ? "bg-white shadow-sm border border-slate-200 text-slate-900"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    ? "bg-card shadow-sm border border-border text-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     }`}
                 >
-                  <Icon className={`w-5 h-5 ${isActive ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
+                  <Icon className={`w-5 h-5 ${isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`} />
                   <span className="font-medium text-sm">{tab.label}</span>
                   {isActive && (
                     <motion.div
@@ -395,7 +395,7 @@ export default function CreatePortalPage() {
                       initial={{ opacity: 0, x: -5 }}
                       animate={{ opacity: 1, x: 0 }}
                     >
-                      <ChevronRight className="w-4 h-4 text-slate-400" />
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
                     </motion.div>
                   )}
                 </button>
@@ -415,12 +415,12 @@ export default function CreatePortalPage() {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                  <div className="p-6 border-b border-slate-100 bg-slate-50/30">
-                    <h2 className="text-2xl font-black text-slate-900">
+                <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+                  <div className="p-6 border-b border-border bg-muted/30">
+                    <h2 className="text-2xl font-black text-foreground">
                       {activeTab} Settings
                     </h2>
-                    <p className="text-sm text-slate-600 mt-1 font-medium">
+                    <p className="text-sm text-muted-foreground mt-1 font-medium">
                       Configure the {activeTab.toLowerCase()} parameters for your new portal.
                     </p>
                   </div>
@@ -429,7 +429,7 @@ export default function CreatePortalPage() {
                     {activeTab === 'Identity' && (
                       <div className="space-y-6">
                         <div>
-                          <label className="block text-sm font-bold text-slate-900 mb-2">
+                          <label className="block text-sm font-bold text-foreground mb-2">
                             Workspace Name
                           </label>
                           <input
@@ -437,17 +437,17 @@ export default function CreatePortalPage() {
                             value={formData.name}
                             onChange={(e) => handleNameChange(e.target.value)}
                             placeholder="e.g. Project Delivery Materials"
-                            className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-bold text-slate-900 placeholder:text-slate-500"
+                            className="w-full px-5 py-4 bg-muted border border-border rounded-2xl focus:bg-card focus:ring-2 focus:ring-ring transition-all outline-none font-bold text-foreground placeholder:text-muted-foreground"
                             required
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-bold text-slate-900 mb-2">
+                          <label className="block text-sm font-bold text-foreground mb-2">
                             Access Address
                           </label>
                           <div className="flex items-stretch shadow-sm rounded-xl">
-                            <div className="px-4 flex items-center bg-slate-100 border border-r-0 border-slate-200 rounded-l-xl text-slate-500 text-sm font-medium">
+                            <div className="px-4 flex items-center bg-muted border border-r-0 border-border rounded-l-xl text-muted-foreground text-sm font-medium">
                               /p/
                             </div>
                             <input
@@ -457,7 +457,7 @@ export default function CreatePortalPage() {
                                 setFormData({ ...formData, slug: e.target.value.toLowerCase() })
                               }
                               placeholder="custom-address"
-                              className="flex-1 px-5 py-4 bg-white border border-slate-200 rounded-r-2xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-bold text-slate-900"
+                              className="flex-1 px-5 py-4 bg-card border border-border rounded-r-2xl focus:ring-2 focus:ring-ring transition-all outline-none font-bold text-foreground"
                               pattern="[a-z0-9-]+"
                               required
                             />
@@ -465,7 +465,7 @@ export default function CreatePortalPage() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-bold text-slate-900 mb-2">
+                          <label className="block text-sm font-bold text-foreground mb-2">
                             Description (Optional)
                           </label>
                           <textarea
@@ -473,7 +473,7 @@ export default function CreatePortalPage() {
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                             placeholder="Tell your clients what this portal is for..."
                             rows={4}
-                            className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium text-slate-900 placeholder:text-slate-500 resize-none"
+                            className="w-full px-5 py-4 bg-muted border border-border rounded-2xl focus:bg-card focus:ring-2 focus:ring-ring transition-all outline-none font-medium text-foreground placeholder:text-muted-foreground resize-none"
                           />
                         </div>
 
@@ -481,7 +481,7 @@ export default function CreatePortalPage() {
                           <button
                             type="button"
                             onClick={() => setActiveTab('Branding')}
-                            className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
+                            className="px-6 py-2.5 bg-foreground text-primary-foreground rounded-xl font-bold text-sm hover:bg-primary transition-colors"
                           >
                             Next: Branding
                           </button>
