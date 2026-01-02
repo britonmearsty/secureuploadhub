@@ -1,13 +1,22 @@
-import { PrismaClient } from '../app/generated/prisma/client'
+import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 
 const globalForPrisma = globalThis as unknown as {
-    prisma: PrismaClient | undefined
+  prisma: PrismaClient | undefined
 }
 
 function createPrismaClient() {
+  const connectionString = process.env.DATABASE_URL;
+
+  // During build time (especially on Vercel), DATABASE_URL might be missing.
+  // We return a client without an adapter if no URL is present to avoid crashing
+  // during the build process for pages that don't actually need the DB at build time.
+  if (!connectionString) {
+    return new PrismaClient({} as any);
+  }
+
   const adapter = new PrismaPg({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: connectionString,
   })
   return new PrismaClient({ adapter })
 }
