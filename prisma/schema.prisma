@@ -296,3 +296,44 @@ model EmailTemplate {
   @@index([category])
   @@index([isActive])
 }
+
+model AnalyticsData {
+  id         String   @id @default(cuid())
+  metric     String
+  value      Float
+  metadata   Json?
+  period     String   // 'hourly', 'daily', 'weekly', 'monthly'
+  recordedAt DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([metric, period])
+  @@index([recordedAt])
+}
+
+model PerformanceMetric {
+  id           String   @id @default(cuid())
+  endpoint     String
+  method       String
+  responseTime Int      // milliseconds
+  statusCode   Int
+  errorMessage String?
+  userId       String?
+  ipAddress    String?
+  recordedAt   DateTime @default(now())
+
+  @@index([endpoint])
+  @@index([recordedAt])
+  @@index([statusCode])
+}
+
+model SystemHealth {
+  id        String   @id @default(cuid())
+  component String   // 'database', 'storage', 'email', 'api'
+  status    String   // 'healthy', 'warning', 'critical'
+  metrics   Json?
+  checkedAt DateTime @default(now())
+
+  @@index([component])
+  @@index([status])
+  @@index([checkedAt])
+}

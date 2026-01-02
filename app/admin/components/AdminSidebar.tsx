@@ -18,6 +18,7 @@ import {
     Zap,
     Mail,
     FileText,
+    BarChart3,
 } from "lucide-react"
 
 interface AdminSidebarProps {
@@ -31,6 +32,11 @@ const navItems = [
         name: "Overview",
         href: "/admin",
         icon: LayoutDashboard,
+    },
+    {
+        name: "Analytics",
+        href: "/admin/analytics",
+        icon: BarChart3,
     },
     {
         name: "Users",
