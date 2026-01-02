@@ -103,11 +103,6 @@
   --color-destructive-foreground: var(--destructive-foreground);
 
   --color-ring: var(--ring);
-}
-  --color-accent-foreground: var(--accent-foreground);
-
-  --color-border: var(--border);
-  --color-input: var(--input);
 
   --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
