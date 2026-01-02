@@ -261,3 +261,38 @@ model AuditLog {
   @@index([resource])
   @@index([createdAt])
 }
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String?
+  type        String   @default("string") // 'string', 'number', 'boolean', 'json'
+  description String?
+  category    String   @default("general")
+  isPublic    Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+  updatedBy   String?
+  createdAt   DateTime @default(now())
+
+  @@index([category])
+  @@index([isPublic])
+}
+
+model EmailTemplate {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  subject      String
+  htmlContent  String
+  textContent  String?
+  variables    Json?
+  isActive     Boolean  @default(true)
+  category     String   @default("general")
+  description  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  createdBy    String?
+  updatedBy    String?
+
+  @@index([category])
+  @@index([isActive])
+}

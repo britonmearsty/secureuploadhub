@@ -16,6 +16,8 @@ import {
     FolderOpen,
     CreditCard,
     Zap,
+    Mail,
+    FileText,
 } from "lucide-react"
 
 interface AdminSidebarProps {
@@ -48,12 +50,17 @@ const navItems = [
     {
         name: "Audit Logs",
         href: "/admin/audit",
-        icon: Zap,
+        icon: FileText,
     },
     {
         name: "Settings",
         href: "/admin/settings",
         icon: Settings,
+    },
+    {
+        name: "Email Templates",
+        href: "/admin/email-templates",
+        icon: Mail,
     },
 ]
 
