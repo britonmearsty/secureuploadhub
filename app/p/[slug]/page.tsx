@@ -662,82 +662,73 @@ export default function PublicUploadPage() {
             }}
         >
             <div className="max-w-xl w-full mx-auto relative z-10">
-                {/* Modern Header */}
+                {/* Simplified Header */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-center mb-12"
+                    className="text-center mb-8"
                 >
                     {portal.logoUrl ? (
-                        <div className="w-auto h-24 mx-auto mb-8 flex items-center justify-center">
+                        <div className="w-auto h-16 mx-auto mb-6 flex items-center justify-center">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={portal.logoUrl} alt={portal.name} className="max-h-full max-w-full object-contain drop-shadow-lg" />
                         </div>
                     ) : (
                         <motion.div
                             animate={{ backgroundColor: portal.primaryColor }}
-                            className="w-24 h-24 rounded-[36px] flex items-center justify-center mx-auto mb-8 text-white text-4xl font-black shadow-2xl shadow-current/20 border-4 border-white"
+                            className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold shadow-lg"
                         >
                             {portal.name.charAt(0).toUpperCase()}
                         </motion.div>
                     )}
 
-                    <h1 className="text-4xl font-black tracking-tight leading-tight mb-4 px-4 drop-shadow-sm">{portal.name}</h1>
+                    <h1 className="text-3xl font-bold tracking-tight leading-tight mb-3 px-4">{portal.name}</h1>
 
                     {portal.welcomeMessage ? (
-                        <p className="font-medium leading-relaxed max-w-sm mx-auto text-lg opacity-90">{portal.welcomeMessage}</p>
+                        <p className="text-lg text-slate-600 max-w-sm mx-auto">{portal.welcomeMessage}</p>
                     ) : portal.description ? (
-                        <p className="font-medium leading-relaxed max-w-sm mx-auto opacity-75">{portal.description}</p>
+                        <p className="text-slate-600 max-w-sm mx-auto">{portal.description}</p>
                     ) : (
-                        <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60">Secure File Upload Portal</p>
+                        <p className="text-sm text-slate-500">Upload your files securely</p>
                     )}
                 </motion.div>
 
-                {/* Core Frame */}
+                {/* Simplified Card */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="rounded-[48px] shadow-2xl border p-6 sm:p-10 relative overflow-hidden backdrop-blur-sm"
+                    className="rounded-3xl shadow-lg border p-8 relative overflow-hidden backdrop-blur-sm"
                     style={{
                         backgroundColor: portal.cardBackgroundColor || '#ffffff',
-                        borderColor: portal.cardBackgroundColor ? 'transparent' : 'rgba(248,250,252,1)',
-                        color: portal.textColor || '#0f172a' // Ensure card text inherits or overrides if needed. 
-                        // Ideally text color is global, but if card is dark and page is light, user should set text color accordingly.
-                        // For now, we inherit the global textColor set on the container.
+                        borderColor: portal.cardBackgroundColor ? 'transparent' : 'rgba(226,232,240,1)',
+                        color: portal.textColor || '#0f172a'
                     }}
                 >
                     {/* Form */}
-                    <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
-                        {/* Metadata Section */}
+                    <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+                        {/* Simplified Contact Info */}
                         {(portal.requireClientName || portal.requireClientEmail) && (
-                            <section className="space-y-5">
-                                <div className="flex items-center gap-2 pb-3 border-b border-slate-50">
-                                    <User className="w-4 h-4 text-slate-300" />
-                                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Your Information</h3>
-                                </div>
-
+                            <section className="space-y-4">
                                 <div className="grid sm:grid-cols-2 gap-4">
                                     {portal.requireClientName && (
-                                        <div className="relative group">
-                                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-slate-900 transition-colors" />
+                                        <div className="relative">
                                             <input
                                                 type="text"
                                                 value={clientName}
                                                 onChange={(e) => setClientName(e.target.value)}
-                                                className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-bold text-slate-900 placeholder:text-slate-300 text-sm"
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-slate-400 transition-all outline-none text-slate-900 placeholder:text-slate-500"
                                                 placeholder="Your name"
                                                 required
                                             />
                                         </div>
                                     )}
                                     {portal.requireClientEmail && (
-                                        <div className="relative group">
-                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-slate-900 transition-colors" />
+                                        <div className="relative">
                                             <input
                                                 type="email"
                                                 value={clientEmail}
                                                 onChange={(e) => setClientEmail(e.target.value)}
-                                                className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-bold text-slate-900 placeholder:text-slate-300 text-sm"
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-slate-400 transition-all outline-none text-slate-900 placeholder:text-slate-500"
                                                 placeholder="your@email.com"
                                                 required
                                             />
@@ -747,76 +738,48 @@ export default function PublicUploadPage() {
                             </section>
                         )}
 
-                        {/* Message section */}
-                        <section className="space-y-4">
-                            <div className="flex items-center gap-2 pb-3 border-b border-slate-50">
-                                <MessageSquare className="w-4 h-4 text-slate-300" />
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Message (Optional)</h3>
-                            </div>
+                        {/* Optional Message */}
+                        <section>
                             <textarea
                                 value={clientMessage}
                                 onChange={(e) => setClientMessage(e.target.value)}
                                 rows={3}
-                                className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-[28px] focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium text-slate-700 placeholder:text-slate-300 leading-relaxed text-sm"
-                                placeholder="Add a note or instructions for the recipient..."
+                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-slate-400 transition-all outline-none text-slate-900 placeholder:text-slate-500"
+                                placeholder="Add a message (optional)"
                             />
                         </section>
 
-                        {/* File Upload Zone */}
-                        <section className="space-y-5">
-                            <div className="flex items-center gap-2 pb-3 border-b border-slate-50">
-                                <FileText className="w-4 h-4 text-slate-300" />
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Upload Files</h3>
-                            </div>
-
+                        {/* Simplified File Upload Zone */}
+                        <section className="space-y-4">
                             <div
                                 onDragOver={handleDragOver}
                                 onDragLeave={handleDragLeave}
                                 onDrop={handleDrop}
                                 onClick={() => document.getElementById("file-input")?.click()}
-                                className={`relative border-4 border-dashed rounded-[40px] p-10 text-center transition-all cursor-pointer group overflow-hidden ${isDragging ? "border-slate-900 bg-slate-100 scale-[0.98] shadow-lg" : "border-slate-200 bg-gradient-to-br from-slate-50/50 to-slate-50 hover:bg-slate-50 hover:border-slate-300 hover:shadow-md"
+                                className={`relative border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer ${isDragging ? "border-blue-400 bg-blue-50" : "border-slate-300 bg-slate-50 hover:bg-slate-100 hover:border-slate-400"
                                     }`}
                             >
-                                {/* Animated drag overlay */}
-                                <AnimatePresence>
-                                    {isDragging && (
-                                        <motion.div
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                            className="absolute inset-0 bg-gradient-to-br from-slate-900/5 to-slate-900/0 pointer-events-none"
-                                        />
-                                    )}
-                                </AnimatePresence>
-
                                 <motion.div
-                                    animate={{ scale: isDragging ? 1.15 : 1 }}
+                                    animate={{ scale: isDragging ? 1.05 : 1 }}
                                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                                    className="p-5 bg-white rounded-full inline-block shadow-inner mb-5 group-hover:shadow-md transition-shadow relative z-10"
+                                    className="space-y-3"
                                 >
-                                    <motion.div
-                                        animate={{ y: isDragging ? -4 : 0 }}
-                                        transition={{ duration: 0.3 }}
-                                    >
-                                        <Upload className={`w-9 h-9 transition-colors ${isDragging ? "text-slate-900" : "text-slate-300 group-hover:text-slate-400"}`} />
-                                    </motion.div>
-                                </motion.div>
-
-                                <motion.div
-                                    animate={{ opacity: isDragging ? 1 : 0.8 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="relative z-10"
-                                >
-                                    <p className="text-sm font-black text-slate-900 tracking-tight uppercase mb-1">
-                                        {isDragging ? "Drop files to upload" : "Drag & drop files here"}
-                                    </p>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
-                                        {isDragging ? (
-                                            <span className="text-slate-600 font-semibold">Release to begin upload</span>
-                                        ) : (
-                                            <>or click to browse • Max size: <span className="text-slate-900">{formatFileSize(portal.maxFileSize)}</span></>
-                                        )}
-                                    </p>
+                                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center mx-auto shadow-sm">
+                                        <Upload className={`w-6 h-6 ${isDragging ? "text-blue-500" : "text-slate-400"}`} />
+                                    </div>
+                                    
+                                    <div>
+                                        <p className="text-lg font-semibold text-slate-900 mb-1">
+                                            {isDragging ? "Drop your files here" : "Choose files to upload"}
+                                        </p>
+                                        <p className="text-sm text-slate-500">
+                                            {isDragging ? (
+                                                "Release to add files"
+                                            ) : (
+                                                <>Drag and drop or click to browse • Max {formatFileSize(portal.maxFileSize)}</>
+                                            )}
+                                        </p>
+                                    </div>
                                 </motion.div>
 
                                 <input
@@ -827,69 +790,59 @@ export default function PublicUploadPage() {
                                     onChange={(e) => e.target.files && addFiles(Array.from(e.target.files))}
                                 />
                             </div>
-                            <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                                <span>Accepted:</span>
-                                {portal.allowedFileTypes && portal.allowedFileTypes.length > 0 ? (
-                                    portal.allowedFileTypes.map((type) => (
-                                        <span key={type} className="px-2 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 text-[10px]">
-                                            {type}
-                                        </span>
-                                    ))
-                                ) : (
-                                    <span className="text-slate-500">Any file type</span>
-                                )}
-                            </div>
-                            {uploadError && (
-                                <div className="flex items-center gap-2 text-xs font-bold text-red-500 bg-red-50 border border-red-100 rounded-2xl px-4 py-3">
-                                    <AlertCircle className="w-4 h-4" />
-                                    {uploadError}
+
+                            {/* Improved File Type Display */}
+                            {portal.allowedFileTypes && portal.allowedFileTypes.length > 0 && (
+                                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center mt-0.5">
+                                            <FileText className="w-3 h-3 text-blue-600" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-sm font-medium text-blue-900 mb-2">Accepted file types:</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {portal.allowedFileTypes.map((type) => {
+                                                    // Convert MIME types to user-friendly names
+                                                    const getTypeName = (mimeType: string) => {
+                                                        if (mimeType.startsWith('image/')) return 'Images'
+                                                        if (mimeType.startsWith('video/')) return 'Videos'
+                                                        if (mimeType.startsWith('audio/')) return 'Audio'
+                                                        if (mimeType === 'application/pdf') return 'PDF'
+                                                        if (mimeType.includes('document') || mimeType.includes('word')) return 'Documents'
+                                                        if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return 'Spreadsheets'
+                                                        if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'Presentations'
+                                                        if (mimeType.includes('zip') || mimeType.includes('archive')) return 'Archives'
+                                                        if (mimeType === 'text/plain') return 'Text files'
+                                                        return mimeType.split('/')[1]?.toUpperCase() || mimeType
+                                                    }
+                                                    
+                                                    return (
+                                                        <span key={type} className="px-3 py-1 bg-white border border-blue-200 rounded-lg text-sm font-medium text-blue-800">
+                                                            {getTypeName(type)}
+                                                        </span>
+                                                    )
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
-                            {/* Enhanced File List */}
+                            {uploadError && (
+                                <div className="flex items-center gap-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                                    <span>{uploadError}</span>
+                                </div>
+                            )}
+
+                            {/* Simplified File List */}
                             <AnimatePresence>
                                 {files.length > 0 && (
                                     <motion.div
                                         initial={{ opacity: 0, height: 0 }}
                                         animate={{ opacity: 1, height: "auto" }}
-                                        className="space-y-3 pt-6"
+                                        className="space-y-3 pt-4"
                                     >
-                                        {/* Upload Progress Summary (during upload) */}
-                                        {isUploading && (
-                                            <motion.div
-                                                initial={{ opacity: 0, y: -10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-100 rounded-[24px] p-5"
-                                            >
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-4 flex-1">
-                                                        <div className="flex-1">
-                                                            <div className="flex items-center justify-between mb-2">
-                                                                <p className="text-sm font-black text-blue-900 uppercase tracking-wider">Transmission Progress</p>
-                                                                <p className="text-xs text-blue-600 font-bold">
-                                                                    {files.filter(f => f.status === 'complete').length} / {files.length} Files
-                                                                </p>
-                                                            </div>
-                                                            <div className="h-3 w-full bg-blue-100 rounded-full overflow-hidden shadow-inner">
-                                                                <motion.div
-                                                                    className="h-full bg-blue-600 rounded-full"
-                                                                    initial={{ width: 0 }}
-                                                                    animate={{ width: `${Math.round((files.filter(f => f.status === 'complete').length / files.length) * 100)}%` }}
-                                                                    transition={{ duration: 0.5 }}
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <p className="text-2xl font-black text-blue-900">
-                                                            {Math.round((files.filter(f => f.status === 'complete').length / files.length) * 100)}%
-                                                        </p>
-                                                        <p className="text-[9px] font-bold text-blue-600 uppercase tracking-wider">Progress</p>
-                                                    </div>
-                                                </div>
-                                            </motion.div>
-                                        )}
-
                                         {files.map((uploadFile) => {
                                             const FileIconComponent = getFileIcon(uploadFile.file.type, uploadFile.file.name)
                                             const iconColor = getFileIconColor(uploadFile.file.type)
@@ -900,127 +853,94 @@ export default function PublicUploadPage() {
                                                     initial={{ opacity: 0, x: -20 }}
                                                     animate={{ opacity: 1, x: 0 }}
                                                     exit={{ opacity: 0, x: 20 }}
-                                                    className={`flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 sm:p-5 border rounded-3xl transition-all group ${uploadFile.status === 'complete'
-                                                        ? 'bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-100'
+                                                    className={`flex items-center gap-4 p-4 border rounded-xl transition-all ${uploadFile.status === 'complete'
+                                                        ? 'bg-green-50 border-green-200'
                                                         : uploadFile.status === 'error'
-                                                            ? 'bg-gradient-to-r from-red-50 to-orange-50 border-red-100'
-                                                            : 'bg-white border-slate-100 hover:shadow-md'
-                                                        } shadow-sm`}
+                                                            ? 'bg-red-50 border-red-200'
+                                                            : 'bg-white border-slate-200'
+                                                        }`}
                                                 >
-                                                    {/* File Icon */}
-                                                    <motion.div
-                                                        animate={{
-                                                            scale: uploadFile.status === 'uploading' ? [1, 1.05, 1] : 1
-                                                        }}
-                                                        transition={{
-                                                            repeat: uploadFile.status === 'uploading' ? Infinity : 0,
-                                                            duration: 0.5
-                                                        }}
-                                                        className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${uploadFile.status === 'complete'
-                                                            ? 'bg-emerald-100'
-                                                            : uploadFile.status === 'error'
-                                                                ? 'bg-red-100'
-                                                                : 'bg-slate-50'
-                                                            }`}
-                                                    >
+                                                    {/* File Icon with Status */}
+                                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${uploadFile.status === 'complete'
+                                                        ? 'bg-green-100'
+                                                        : uploadFile.status === 'error'
+                                                            ? 'bg-red-100'
+                                                            : 'bg-slate-100'
+                                                        }`}>
                                                         {uploadFile.status === 'complete' && (
-                                                            <motion.div
-                                                                initial={{ scale: 0 }}
-                                                                animate={{ scale: 1 }}
-                                                                className="relative"
-                                                            >
-                                                                <CheckCircle2 className="w-6 h-6 text-emerald-500" />
-                                                            </motion.div>
+                                                            <CheckCircle className="w-5 h-5 text-green-600" />
                                                         )}
                                                         {uploadFile.status === 'error' && (
-                                                            <AlertCircle className="w-6 h-6 text-red-500" />
+                                                            <AlertCircle className="w-5 h-5 text-red-600" />
                                                         )}
                                                         {(uploadFile.status === 'uploading' || uploadFile.status === 'pending') && (
-                                                            <FileIconComponent className={`w-6 h-6 ${iconColor}`} />
+                                                            <FileIconComponent className={`w-5 h-5 ${iconColor}`} />
                                                         )}
-                                                    </motion.div>
+                                                    </div>
 
-                                                    <div className="flex-1 min-w-0 w-full">
-                                                        <div className="flex items-start sm:items-center justify-between gap-3 mb-2">
-                                                            <div className="min-w-0 flex-1">
-                                                                <p className={`text-sm font-bold truncate ${uploadFile.status === 'complete'
-                                                                    ? 'text-emerald-900'
-                                                                    : uploadFile.status === 'error'
-                                                                        ? 'text-red-900'
-                                                                        : 'text-slate-900'
-                                                                    }`} title={uploadFile.file.name}>
-                                                                    {uploadFile.file.name}
-                                                                </p>
-                                                                {uploadFile.status === 'error' && uploadFile.error && (
-                                                                    <p className="text-[10px] text-red-600 font-medium mt-0.5">{uploadFile.error}</p>
-                                                                )}
-                                                            </div>
-                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex-shrink-0">
+                                                    {/* File Info */}
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center justify-between gap-3 mb-1">
+                                                            <p className="text-sm font-medium text-slate-900 truncate" title={uploadFile.file.name}>
+                                                                {uploadFile.file.name}
+                                                            </p>
+                                                            <span className="text-xs text-slate-500 flex-shrink-0">
                                                                 {formatFileSize(uploadFile.file.size)}
                                                             </span>
                                                         </div>
 
-                                                        {/* Progress bar - only show when uploading, hide when pending */}
+                                                        {/* Enhanced Progress Bar */}
                                                         {uploadFile.status === 'uploading' && (
-                                                            <motion.div
-                                                                initial={{ opacity: 0, height: 0 }}
-                                                                animate={{ opacity: 1, height: 'auto' }}
-                                                                exit={{ opacity: 0, height: 0 }}
-                                                                className="space-y-1"
-                                                            >
-                                                                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                                                            <div className="space-y-1">
+                                                                <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
                                                                     <motion.div
-                                                                        className="h-full rounded-full transition-all"
-                                                                        style={{
-                                                                            backgroundColor: portal.primaryColor,
-                                                                            width: `${uploadFile.progress}%`
-                                                                        }}
+                                                                        className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
                                                                         initial={{ width: 0 }}
                                                                         animate={{ width: `${uploadFile.progress}%` }}
-                                                                        transition={{ duration: 0.3 }}
+                                                                        transition={{ 
+                                                                            duration: 0.3,
+                                                                            ease: "easeOut"
+                                                                        }}
                                                                     />
                                                                 </div>
                                                                 <div className="flex justify-between items-center">
-                                                                    <span className="text-[9px] font-bold text-slate-400">
-                                                                        Uploading...
-                                                                    </span>
-                                                                    <span className="text-[9px] font-black text-slate-500">{uploadFile.progress}%</span>
+                                                                    <span className="text-xs text-slate-500">Uploading...</span>
+                                                                    <span className="text-xs font-medium text-slate-700">{uploadFile.progress}%</span>
                                                                 </div>
-                                                            </motion.div>
+                                                            </div>
+                                                        )}
+
+                                                        {uploadFile.status === 'error' && uploadFile.error && (
+                                                            <p className="text-xs text-red-600 mt-1">{uploadFile.error}</p>
                                                         )}
                                                     </div>
 
-                                                    {/* Status Indicators */}
-                                                    <div className="shrink-0 flex items-center self-end sm:self-center">
-                                                        {uploadFile.status === "uploading" && (
-                                                            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 border border-blue-100 rounded-lg shadow-sm">
-                                                                <span className="text-[10px] font-black text-blue-600 uppercase tracking-tighter">Syncing</span>
-                                                            </div>
-                                                        )}
-                                                        {uploadFile.status === "error" && (
-                                                            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-red-100 rounded-lg">
-                                                                <AlertCircle className="w-3.5 h-3.5 text-red-600" />
-                                                                <span className="text-[10px] font-black text-red-700 uppercase tracking-tighter">Failed</span>
-                                                            </div>
-                                                        )}
-                                                        {uploadFile.status === "complete" && (
-                                                            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-100 rounded-lg">
-                                                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                                                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-tighter">Done</span>
-                                                            </div>
-                                                        )}
+                                                    {/* Action Button */}
+                                                    <div className="flex-shrink-0">
                                                         {uploadFile.status === "pending" && !isUploading && (
                                                             <button
                                                                 type="button"
                                                                 onClick={() => removeFile(uploadFile.id)}
-                                                                className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+                                                                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
                                                                 aria-label="Remove file"
                                                             >
-                                                                <X className="w-4 h-4 text-slate-300 hover:text-red-500 transition-colors" />
+                                                                <X className="w-4 h-4 text-slate-400 hover:text-red-500" />
                                                             </button>
                                                         )}
-                                                        {uploadFile.status === "pending" && isUploading && (
-                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter px-2.5 py-1">Queued</span>
+                                                        {uploadFile.status === "uploading" && (
+                                                            <div className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-lg">
+                                                                Uploading
+                                                            </div>
+                                                        )}
+                                                        {uploadFile.status === "complete" && (
+                                                            <div className="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-lg">
+                                                                Complete
+                                                            </div>
+                                                        )}
+                                                        {uploadFile.status === "error" && (
+                                                            <div className="px-3 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-lg">
+                                                                Failed
+                                                            </div>
                                                         )}
                                                     </div>
                                                 </motion.div>
@@ -1031,42 +951,57 @@ export default function PublicUploadPage() {
                             </AnimatePresence>
                         </section>
 
-                        {/* Submit Button */}
+                        {/* Enhanced Submit Button with Progress */}
                         <div className="pt-4" ref={submitButtonRef}>
                             <button
                                 type="submit"
                                 disabled={isUploading || files.length === 0}
-                                className="group relative w-full py-5 rounded-[32px] font-black text-sm text-white uppercase tracking-[0.3em] shadow-2xl transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed overflow-hidden"
+                                className="group relative w-full py-4 rounded-xl font-semibold text-white transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
                                 style={{ backgroundColor: portal.primaryColor }}
                             >
+                                {/* Progress Bar Background */}
+                                {isUploading && (
+                                    <motion.div
+                                        className="absolute inset-0 bg-white/20 rounded-xl"
+                                        initial={{ width: 0 }}
+                                        animate={{ 
+                                            width: `${Math.round((files.filter(f => f.status === 'complete').length / files.length) * 100)}%` 
+                                        }}
+                                        transition={{ duration: 0.5, ease: "easeOut" }}
+                                    />
+                                )}
+                                
                                 <div className="relative z-10 flex items-center justify-center gap-3">
                                     {isUploading ? (
                                         <>
                                             <Loader2 className="w-5 h-5 animate-spin" />
-                                            Uploading...
+                                            <span>
+                                                Uploading {files.filter(f => f.status === 'complete').length} of {files.length} files...
+                                            </span>
+                                            <span className="font-bold">
+                                                {Math.round((files.filter(f => f.status === 'complete').length / files.length) * 100)}%
+                                            </span>
                                         </>
                                     ) : (
                                         <>
-                                            {portal.submitButtonText || "Upload Files"}
+                                            <span>{portal.submitButtonText || "Upload Files"}</span>
                                             <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                         </>
                                     )}
                                 </div>
-                                {/* Subtle shine effect */}
-                                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                             </button>
                         </div>
                     </form>
 
-                    {/* Background decoration */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full blur-[100px] -z-10 opacity-50" />
+                    {/* Simplified background decoration */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-slate-100 rounded-full blur-3xl -z-10 opacity-30" />
                 </motion.div>
 
-                {/* Brand Footer */}
-                <div className="mt-12 text-center pb-12">
-                    <div className="inline-flex items-center gap-3 px-6 py-3 bg-slate-50 rounded-full text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 border border-slate-100/50">
-                        <ShieldCheck className="w-3.5 h-3.5 text-slate-300" />
-                        Powered By SecureUploadHub
+                {/* Simplified Brand Footer */}
+                <div className="mt-8 text-center pb-8">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-full text-xs text-slate-500">
+                        <ShieldCheck className="w-3 h-3" />
+                        Powered by SecureUploadHub
                     </div>
                 </div>
             </div>
