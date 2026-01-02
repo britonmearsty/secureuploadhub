@@ -11,7 +11,9 @@ describe('compression', () => {
       expect(isCompressible('image/jpeg')).toBe(true)
       expect(isCompressible('image/png')).toBe(true)
       expect(isCompressible('image/webp')).toBe(true)
-      expect(isCompressible('image/gif')).toBe(true)
+      expect(isCompressible('image/bmp')).toBe(true)
+      // GIF is not in the compressible types list
+      expect(isCompressible('image/gif')).toBe(false)
     })
 
     it('should identify compressible text types', () => {

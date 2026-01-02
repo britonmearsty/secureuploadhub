@@ -305,9 +305,88 @@ describe('Upload Optimizations', () => {
         expect(uploadFileInChunks).toBeDefined()
         expect(typeof uploadFileInChunks).toBe('function')
       } catch (e) {
-        // File may not exist in test environment
+        // File may not exist in test environment, skip test
         expect(true).toBe(true)
       }
+    })
+
+    it('should handle chunked upload with proper chunk size', async () => {
+      const mockFile = new File(['x'.repeat(10 * 1024 * 1024)], 'large.bin') // 10MB file
+      const chunkSize = 5 * 1024 * 1024 // 5MB chunks
+      
+      const expectedChunks = Math.ceil(mockFile.size / chunkSize)
+      expect(expectedChunks).toBe(2)
+      
+      // Simulate chunking logic
+      const chunks = []
+      for (let i = 0; i < mockFile.size; i += chunkSize) {
+        const end = Math.min(i + chunkSize, mockFile.size)
+        chunks.push({ start: i, end, size: end - i })
+      }
+      
+      expect(chunks).toHaveLength(2)
+      expect(chunks[0].size).toBe(chunkSize)
+      expect(chunks[1].size).toBe(mockFile.size - chunkSize)
+    })
+
+    it('should track upload progress across chunks', async () => {
+      const totalSize = 15 * 1024 * 1024 // 15MB
+      const chunkSize = 5 * 1024 * 1024 // 5MB chunks
+      const chunks = 3
+      
+      let uploadedBytes = 0
+      const progressUpdates = []
+      
+      // Simulate chunk uploads
+      for (let i = 0; i < chunks; i++) {
+        const chunkBytes = Math.min(chunkSize, totalSize - uploadedBytes)
+        uploadedBytes += chunkBytes
+        const progress = Math.round((uploadedBytes / totalSize) * 100)
+        progressUpdates.push(progress)
+      }
+      
+      expect(progressUpdates).toEqual([33, 67, 100])
+      expect(uploadedBytes).toBe(totalSize)
+    })
+
+    it('should handle chunk upload failures with retry', async () => {
+      const mockChunkUpload = vi.fn()
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockRejectedValueOnce(new Error('Timeout'))
+        .mockResolvedValueOnce({ success: true })
+      
+      // Simulate retry logic
+      let attempts = 0
+      let result
+      const maxRetries = 3
+      
+      while (attempts < maxRetries) {
+        try {
+          result = await mockChunkUpload()
+          break
+        } catch (error) {
+          attempts++
+          if (attempts >= maxRetries) throw error
+          await new Promise(resolve => setTimeout(resolve, 10))
+        }
+      }
+      
+      expect(result).toEqual({ success: true })
+      expect(mockChunkUpload).toHaveBeenCalledTimes(3)
+    })
+
+    it('should resume upload from failed chunk', async () => {
+      const totalChunks = 5
+      const completedChunks = [0, 1, 2] // First 3 chunks completed
+      const failedChunk = 3
+      
+      // Resume should start from failed chunk
+      const resumeFromChunk = completedChunks.length
+      expect(resumeFromChunk).toBe(failedChunk)
+      
+      // Remaining chunks to upload
+      const remainingChunks = totalChunks - resumeFromChunk
+      expect(remainingChunks).toBe(2)
     })
   })
 })

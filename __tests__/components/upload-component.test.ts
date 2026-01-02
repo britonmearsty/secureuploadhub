@@ -188,7 +188,7 @@ describe('Upload Component Behavior', () => {
     })
 
     it('should return JWT token after password verification', () => {
-      const token = 'eyJhbGciOiJIUzI1NiIs...'
+      const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwb3J0YWxJZCI6InBvcnRhbC0xIn0.signature'
 
       expect(token).toBeDefined()
       expect(token.split('.').length).toBe(3) // JWT has 3 parts

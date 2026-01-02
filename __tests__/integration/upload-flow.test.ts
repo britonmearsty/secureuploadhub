@@ -194,7 +194,7 @@ describe('Upload Flow Integration', () => {
       }
 
       // 4. Server verifies and returns token
-      const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+      const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwb3J0YWxJZCI6InBvcnRhbC1zZWN1cmUifQ.signature'
       expect(token.split('.').length).toBe(3)
 
       // 5. Component stores token
