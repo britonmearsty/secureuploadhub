@@ -37,9 +37,19 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ success: b
     };
   }
 
+  const fromAddress = options.from || process.env.EMAIL_FROM;
+
+  if (!fromAddress) {
+    console.warn('Email not sent - From address (EMAIL_FROM) not configured');
+    return {
+      success: false,
+      error: 'From address not configured',
+    };
+  }
+
   try {
     const response = await resend.emails.send({
-      from: options.from || (process.env.EMAIL_FROM || 'SecureUploadHub <noreply@secureuploadhub.com>'),
+      from: fromAddress,
       to: Array.isArray(options.to) ? options.to : options.to,
       subject: options.subject,
       react: options.react,
