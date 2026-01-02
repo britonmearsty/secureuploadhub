@@ -18,6 +18,7 @@ model User {
   notificationEmail Boolean         @default(true)
   theme             String          @default("system")
   role              String          @default("user")
+  status            String          @default("active")
   accounts          Account[]
   Authenticator     Authenticator[]
   payments          Payment[]
@@ -25,6 +26,8 @@ model User {
   subscriptions     Subscription[]
   uploadPortals     UploadPortal[]
   syncSettings      SyncSettings?
+  fileUploads       FileUpload[]
+  auditLogs         AuditLog[]
 }
 
 model SyncSettings {
@@ -126,6 +129,7 @@ model UploadPortal {
 model FileUpload {
   id              String       @id @default(cuid())
   portalId        String
+  userId          String?
   fileName        String
   fileSize        Int
   mimeType        String
@@ -142,8 +146,10 @@ model FileUpload {
   createdAt       DateTime     @default(now())
   uploadedAt      DateTime?
   portal          UploadPortal @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  user            User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([portalId, createdAt])
+  @@index([userId])
   @@index([clientEmail])
   @@index([clientName])
 }
@@ -236,4 +242,22 @@ model Payment {
   @@index([userId])
   @@index([status])
   @@index([providerPaymentRef])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String
+  resource   String
+  resourceId String
+  details    Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@index([createdAt])
 }

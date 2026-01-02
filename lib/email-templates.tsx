@@ -51,6 +51,43 @@ export interface SendSignInNotificationOptions {
   signInLocation?: string;
 }
 
+export interface SendPasswordResetEmailOptions {
+  to: string;
+  name: string;
+  resetToken: string;
+  adminInitiated?: boolean;
+}
+
+export interface SendPortalTransferNotificationOptions {
+  to: string;
+  name: string;
+  portalName: string;
+  newOwnerName?: string;
+  oldOwnerName?: string;
+  isOldOwner: boolean;
+}
+
+export interface SendRefundNotificationOptions {
+  to: string;
+  name: string;
+  refundAmount: number;
+  currency: string;
+  reason: string;
+  originalPaymentDate: Date;
+  planName: string;
+}
+
+export interface SendPlanMigrationNotificationOptions {
+  to: string;
+  name: string;
+  oldPlanName: string;
+  newPlanName: string;
+  effectiveDate: Date;
+  prorationAmount?: number;
+  currency: string;
+  reason?: string;
+}
+
 /**
  * Send email verification email
  */
@@ -264,4 +301,110 @@ export async function sendSignInNotificationSafe(
     console.error('Error sending sign-in notification:', error);
     return false;
   }
+}
+
+/**
+ * Send password reset email (admin initiated)
+ */
+export async function sendPasswordResetEmail(options: SendPasswordResetEmailOptions) {
+  const resetLink = `${process.env.NEXTAUTH_URL}/auth/reset-password?token=${options.resetToken}`;
+  
+  return sendEmail({
+    to: options.to,
+    subject: options.adminInitiated 
+      ? 'Password reset requested by administrator' 
+      : 'Reset your SecureUploadHub password',
+    react: (
+      <ResetPasswordEmail
+        userFirstname={options.name}
+        resetLink={resetLink}
+        expiresIn="24 hours"
+      />
+    ),
+  });
+}
+
+/**
+ * Send portal transfer notification
+ */
+export async function sendPortalTransferNotification(options: SendPortalTransferNotificationOptions) {
+  const subject = options.isOldOwner 
+    ? `Portal "${options.portalName}" has been transferred`
+    : `You now own portal "${options.portalName}"`;
+
+  // Create a simple React component for the email
+  const EmailContent = () => (
+    <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: '0 auto' }}>
+      <h2>Portal Transfer Notification</h2>
+      <p>Hello {options.name},</p>
+      {options.isOldOwner 
+        ? <p>Your portal "<strong>{options.portalName}</strong>" has been transferred to {options.newOwnerName}.</p>
+        : <p>You are now the owner of portal "<strong>{options.portalName}</strong>", transferred from {options.oldOwnerName}.</p>
+      }
+      <p>If you have any questions, please contact our support team.</p>
+      <p>Best regards,<br />SecureUploadHub Team</p>
+    </div>
+  );
+
+  return sendEmail({
+    to: options.to,
+    subject,
+    react: <EmailContent />,
+  });
+}
+
+/**
+ * Send refund notification
+ */
+export async function sendRefundNotification(options: SendRefundNotificationOptions) {
+  const EmailContent = () => (
+    <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: '0 auto' }}>
+      <h2>Refund Processed</h2>
+      <p>Hello {options.name},</p>
+      <p>We have processed a refund for your {options.planName} subscription.</p>
+      <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '8px', margin: '20px 0' }}>
+        <p><strong>Refund Amount:</strong> {options.refundAmount} {options.currency}</p>
+        <p><strong>Reason:</strong> {options.reason}</p>
+        <p><strong>Original Payment Date:</strong> {options.originalPaymentDate.toLocaleDateString()}</p>
+      </div>
+      <p>The refund will appear in your account within 5-10 business days.</p>
+      <p>If you have any questions, please contact our support team.</p>
+      <p>Best regards,<br />SecureUploadHub Team</p>
+    </div>
+  );
+
+  return sendEmail({
+    to: options.to,
+    subject: `Refund processed for your ${options.planName} subscription`,
+    react: <EmailContent />,
+  });
+}
+
+/**
+ * Send plan migration notification
+ */
+export async function sendPlanMigrationNotification(options: SendPlanMigrationNotificationOptions) {
+  const EmailContent = () => (
+    <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: '0 auto' }}>
+      <h2>Subscription Updated</h2>
+      <p>Hello {options.name},</p>
+      <p>Your subscription has been updated by our team.</p>
+      <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '8px', margin: '20px 0' }}>
+        <p><strong>Previous Plan:</strong> {options.oldPlanName}</p>
+        <p><strong>New Plan:</strong> {options.newPlanName}</p>
+        <p><strong>Effective Date:</strong> {options.effectiveDate.toLocaleDateString()}</p>
+        {options.prorationAmount && <p><strong>Proration Amount:</strong> {options.prorationAmount} {options.currency}</p>}
+        {options.reason && <p><strong>Reason:</strong> {options.reason}</p>}
+      </div>
+      <p>Your new plan features are now active. You can view your updated subscription details in your dashboard.</p>
+      <p>If you have any questions, please contact our support team.</p>
+      <p>Best regards,<br />SecureUploadHub Team</p>
+    </div>
+  );
+
+  return sendEmail({
+    to: options.to,
+    subject: `Your subscription has been updated to ${options.newPlanName}`,
+    react: <EmailContent />,
+  });
 }

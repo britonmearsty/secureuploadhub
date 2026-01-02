@@ -83,6 +83,9 @@ importers:
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@4.1.18)
+      zod:
+        specifier: ^4.3.4
+        version: 4.3.4
     devDependencies:
       '@react-email/preview-server':
         specifier: 5.1.0

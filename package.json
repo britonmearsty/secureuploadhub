@@ -37,7 +37,8 @@
     "react-email": "^5.1.0",
     "redis": "^4.6.0",
     "resend": "^6.6.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^4.3.4"
   },
   "devDependencies": {
     "@react-email/preview-server": "5.1.0",

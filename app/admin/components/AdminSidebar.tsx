@@ -46,6 +46,11 @@ const navItems = [
         icon: CreditCard,
     },
     {
+        name: "Audit Logs",
+        href: "/admin/audit",
+        icon: Zap,
+    },
+    {
         name: "Settings",
         href: "/admin/settings",
         icon: Settings,

@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import prisma from "@/lib/prisma"
-import UsersManagementClient from "./UsersManagementClient"
+import EnhancedUsersManagementClient from "./EnhancedUsersManagementClient"
 
 export default async function AdminUsersPage() {
     const session = await auth()
@@ -10,18 +10,59 @@ export default async function AdminUsersPage() {
         redirect("/auth/signin")
     }
 
-    // Fetch all users
+    // Fetch users with additional data for enhanced management
     const users = await prisma.user.findMany({
-        orderBy: { createdAt: "desc" },
-        include: {
+        select: {
+            id: true,
+            email: true,
+            name: true,
+            image: true,
+            role: true,
+            status: true,
+            createdAt: true,
             _count: {
                 select: {
                     uploadPortals: true,
-                    subscriptions: true,
+                    fileUploads: true,
+                    subscriptions: true
                 }
+            },
+            subscriptions: {
+                select: {
+                    id: true,
+                    status: true,
+                    plan: {
+                        select: {
+                            name: true,
+                            price: true
+                        }
+                    }
+                },
+                orderBy: {
+                    createdAt: 'desc'
+                },
+                take: 1
             }
+        },
+        orderBy: {
+            createdAt: 'desc'
         }
-    })
+    });
 
-    return <UsersManagementClient users={users as any} />
+    // Convert dates to strings for client component
+    const serializedUsers = users.map(user => ({
+        ...user,
+        createdAt: user.createdAt.toISOString()
+    }));
+
+    const totalUsers = await prisma.user.count();
+
+    return (
+        <div className="p-6">
+            <EnhancedUsersManagementClient 
+                initialUsers={serializedUsers} 
+                totalUsers={totalUsers}
+            />
+        </div>
+    );
 }
