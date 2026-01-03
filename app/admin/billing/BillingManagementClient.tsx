@@ -24,6 +24,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import { CreatePlanModal } from '@/components/admin/CreatePlanModal';
+import { DeletePlanModal } from '@/components/admin/DeletePlanModal';
 import { ToastContainer, Toast } from '@/components/ui/Toast';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 
@@ -121,6 +122,8 @@ export default function BillingManagementClient() {
   const [paymentHistory, setPaymentHistory] = useState<any[]>([]);
   const [actionLoading, setActionLoading] = useState(false);
   const [openActionMenu, setOpenActionMenu] = useState<string | null>(null);
+  const [showDeletePlan, setShowDeletePlan] = useState(false);
+  const [planToDelete, setPlanToDelete] = useState<BillingPlan | null>(null);
 
   // Confirmation modal
   const [confirmModal, setConfirmModal] = useState<{
@@ -319,36 +322,48 @@ export default function BillingManagementClient() {
   };
 
   const handleDeletePlan = (plan: BillingPlan) => {
-    showConfirmation(
-      'Delete Plan',
-      `Are you sure you want to delete "${plan.name}"? This action cannot be undone. ${plan._count.subscriptions > 0 ? `Warning: This plan has ${plan._count.subscriptions} active subscription(s).` : ''}`,
-      () => deletePlan(plan.id),
-      plan._count.subscriptions > 0 ? 'warning' : 'danger'
-    );
+    // Use new modal for plans with subscriptions, old confirmation for empty plans
+    if (plan._count.subscriptions > 0) {
+      setPlanToDelete(plan);
+      setShowDeletePlan(true);
+    } else {
+      showConfirmation(
+        'Delete Plan',
+        `Are you sure you want to delete "${plan.name}"? This action cannot be undone.`,
+        () => deletePlan(plan.id),
+        'danger'
+      );
+    }
   };
 
-  const deletePlan = async (planId: string) => {
+  const deletePlan = async (planId: string, force?: boolean, migrateTo?: string) => {
     setActionLoading(true);
     try {
-      const response = await fetch(`/api/admin/billing/plans/${planId}`, {
+      const url = new URL(`/api/admin/billing/plans/${planId}`, window.location.origin);
+      if (force) url.searchParams.set('force', 'true');
+      if (migrateTo) url.searchParams.set('migrateTo', migrateTo);
+
+      const response = await fetch(url.toString(), {
         method: 'DELETE'
       });
 
+      const data = await response.json();
+
       if (response.ok) {
         setPlans(prev => prev.filter(p => p.id !== planId));
-        closeConfirmation();
+        setShowDeletePlan(false);
+        setPlanToDelete(null);
         addToast({
           type: 'success',
           title: 'Plan Deleted',
-          message: 'Billing plan deleted successfully'
+          message: data.message || 'Billing plan deleted successfully'
         });
         fetchData();
       } else {
-        const error = await response.json();
         addToast({
           type: 'error',
           title: 'Delete Failed',
-          message: error.error || 'Failed to delete plan. Make sure there are no active subscriptions.'
+          message: data.error || 'Failed to delete plan'
         });
       }
     } catch (error) {
@@ -428,6 +443,18 @@ export default function BillingManagementClient() {
         onSuccess={handlePlanCreated}
         onError={handlePlanError}
         editPlan={editingPlan}
+      />
+
+      {/* Delete Plan Modal */}
+      <DeletePlanModal
+        isOpen={showDeletePlan}
+        onClose={() => {
+          setShowDeletePlan(false);
+          setPlanToDelete(null);
+        }}
+        plan={planToDelete}
+        availablePlans={plans}
+        onDelete={deletePlan}
       />
 
       {/* Header */}
