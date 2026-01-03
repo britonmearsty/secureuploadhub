@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { sendRefundNotification } from '@/lib/email-templates';
+import { createAuditLog, AUDIT_ACTIONS } from '@/lib/audit-log';
 
 const refundSchema = z.object({
   paymentId: z.string().min(1, 'Payment ID is required'),
@@ -52,9 +53,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Payment not found' }, { status: 404 });
     }
 
-    if (payment.status !== 'completed') {
+    if (payment.status !== 'succeeded') {
       return NextResponse.json(
-        { error: 'Can only refund completed payments' },
+        { error: 'Can only refund succeeded payments' },
         { status: 400 }
       );
     }
@@ -88,20 +89,25 @@ export async function POST(request: NextRequest) {
     // Process refund with payment provider (Paystack in this case)
     let providerRefundId: string | null = null;
     try {
-      // TODO: Implement actual Paystack refund API call
-      // const paystackRefund = await processPaystackRefund({
-      //   paymentReference: payment.providerPaymentRef,
-      //   amount: amount * 100, // Convert to kobo for Paystack
-      //   reason
-      // });
-      // providerRefundId = paystackRefund.id;
+      const { processPaystackRefund } = await import("@/lib/paystack-subscription");
       
-      // For now, simulate successful refund
-      providerRefundId = `refund_${Date.now()}`;
-    } catch (providerError) {
+      if (payment.providerPaymentRef) {
+        const paystackRefund = await processPaystackRefund({
+          transaction: payment.providerPaymentRef,
+          amount: amount * 100, // Convert to kobo for Paystack
+          currency: payment.currency,
+          customer_note: reason,
+          merchant_note: `Refund for payment ${payment.id}`,
+        });
+        providerRefundId = paystackRefund.id.toString();
+      } else {
+        // If no provider reference, create local refund record only
+        providerRefundId = `local_refund_${Date.now()}`;
+      }
+    } catch (providerError: any) {
       console.error('Payment provider refund failed:', providerError);
       return NextResponse.json(
-        { error: 'Failed to process refund with payment provider' },
+        { error: 'Failed to process refund with payment provider', details: providerError.message },
         { status: 500 }
       );
     }
@@ -113,7 +119,7 @@ export async function POST(request: NextRequest) {
         subscriptionId: payment.subscriptionId,
         amount: -amount, // Negative amount for refund
         currency: payment.currency,
-        status: 'completed',
+        status: 'refunded',
         description: `Refund: ${reason}`,
         providerPaymentId: providerRefundId,
         providerPaymentRef: payment.id, // Reference to original payment
@@ -159,22 +165,24 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // TODO: Add audit log entry
-    // await createAuditLog({
-    //   userId: session.user.id,
-    //   action: 'REFUND_PROCESSED',
-    //   resource: 'payment',
-    //   resourceId: paymentId,
-    //   details: {
-    //     refundId: refund.id,
-    //     refundAmount: amount,
-    //     originalAmount: payment.amount,
-    //     reason,
-    //     customerEmail: payment.user?.email,
-    //     providerRefundId,
-    //     partialRefund
-    //   }
-    // });
+    // Add audit log entry
+    if (session.user.id) {
+      await createAuditLog({
+        userId: session.user.id,
+        action: AUDIT_ACTIONS.REFUND_PROCESSED,
+        resource: 'payment',
+        resourceId: paymentId,
+        details: {
+          refundId: refund.id,
+          refundAmount: amount,
+          originalAmount: payment.amount,
+          reason,
+          customerEmail: payment.user?.email,
+          providerRefundId,
+        partialRefund
+        }
+      });
+    }
 
     return NextResponse.json({
       success: true,

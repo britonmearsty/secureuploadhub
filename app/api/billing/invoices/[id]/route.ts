@@ -34,11 +34,31 @@ export async function GET(
 
     const doc = new PDFDocument({ size: "A4", margin: 50 });
 
-    const buffers: any[] = [];
-    doc.on("data", buffers.push.bind(buffers));
-    doc.on("end", () => {
-      // The PDF generation is complete
-    });
+    const buffers: Buffer[] = [];
+    doc.on("data", (chunk: Buffer) => buffers.push(chunk));
+    
+    // Return a promise that resolves when PDF is complete
+    return new Promise<NextResponse>((resolve, reject) => {
+      doc.on("end", () => {
+        try {
+          const pdfBuffer = Buffer.concat(buffers);
+          resolve(
+            new NextResponse(pdfBuffer, {
+              status: 200,
+              headers: {
+                "Content-Type": "application/pdf",
+                "Content-Disposition": `attachment; filename="invoice-${payment.id}.pdf"`,
+              },
+            })
+          );
+        } catch (error) {
+          reject(error);
+        }
+      });
+
+      doc.on("error", (error) => {
+        reject(error);
+      });
 
     // --- PDF Content ---
     // Header
@@ -55,8 +75,13 @@ export async function GET(
 
     // Billed to
     doc.text("Billed To:");
-    doc.text(payment.subscription.user.name || "N/A");
-    doc.text(payment.subscription.user.email || "N/A");
+    if (payment.subscription?.user) {
+      doc.text(payment.subscription.user.name || "N/A");
+      doc.text(payment.subscription.user.email || "N/A");
+    } else {
+      doc.text("N/A");
+      doc.text("N/A");
+    }
     doc.moveDown();
 
     // Table Header
@@ -70,7 +95,7 @@ export async function GET(
 
 
     // Table Row
-    const item = payment.subscription.plan.name;
+    const item = payment.subscription?.plan?.name || "N/A";
     const amount = payment.amount;
     const rowY = doc.y;
     doc.fontSize(10);
@@ -84,19 +109,11 @@ export async function GET(
     doc.fontSize(12).text(`Total: $${amount.toFixed(2)}`, { align: "right" });
     doc.moveDown();
 
-    // Footer
-    doc.fontSize(8).text("Thank you for your business!", { align: "center" });
+      // Footer
+      doc.fontSize(8).text("Thank you for your business!", { align: "center" });
 
-    doc.end();
-
-    const pdfBuffer = Buffer.concat(buffers);
-
-    return new NextResponse(pdfBuffer, {
-      status: 200,
-      headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="invoice-${payment.id}.pdf"`,
-      },
+      // Finalize PDF
+      doc.end();
     });
   } catch (error) {
     console.error("Error generating invoice:", error);

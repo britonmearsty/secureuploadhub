@@ -205,23 +205,31 @@ model BillingPlan {
 }
 
 model Subscription {
-  id                     String      @id @default(cuid())
+  id                     String              @id @default(cuid())
   userId                 String
   planId                 String
-  status                 String      @default("active")
+  status                 String              @default("active")
   currentPeriodStart     DateTime
   currentPeriodEnd       DateTime
-  cancelAtPeriodEnd      Boolean     @default(false)
+  cancelAtPeriodEnd      Boolean             @default(false)
   providerSubscriptionId String?
   providerCustomerId     String?
-  createdAt              DateTime    @default(now())
-  updatedAt              DateTime    @updatedAt
+  billingInterval        String              @default("monthly") // "monthly" | "yearly"
+  nextBillingDate        DateTime?
+  gracePeriodEnd         DateTime?
+  retryCount             Int                 @default(0)
+  lastPaymentAttempt     DateTime?
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
   payments               Payment[]
-  plan                   BillingPlan @relation(fields: [planId], references: [id])
-  user                   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  history                SubscriptionHistory[]
+  plan                   BillingPlan          @relation(fields: [planId], references: [id])
+  user                   User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
+  @@index([nextBillingDate])
+  @@index([gracePeriodEnd])
 }
 
 model Payment {
@@ -230,7 +238,7 @@ model Payment {
   userId             String
   amount             Float
   currency           String        @default("USD")
-  status             String        @default("pending")
+  status             String        @default("pending") // "pending" | "processing" | "succeeded" | "failed" | "refunded"
   description        String?
   providerPaymentId  String?
   providerPaymentRef String?
@@ -242,6 +250,21 @@ model Payment {
   @@index([userId])
   @@index([status])
   @@index([providerPaymentRef])
+}
+
+model SubscriptionHistory {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  action         String       // "plan_changed" | "status_changed" | "cancelled" | "reactivated" | "renewed"
+  oldValue       String?      // JSON string of old value
+  newValue       String?      // JSON string of new value
+  reason         String?
+  createdAt      DateTime     @default(now())
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId])
+  @@index([action])
+  @@index([createdAt])
 }
 
 model AuditLog {

@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
       // Total revenue (all time)
       prisma.payment.aggregate({
         where: {
-          status: 'completed'
+          status: 'succeeded'
         },
         _sum: {
           amount: true
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       // Recent revenue (last 30 days)
       prisma.payment.aggregate({
         where: {
-          status: 'completed',
+          status: 'succeeded',
           createdAt: {
             gte: startDate
           }
@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
           COUNT(*) as payments,
           SUM(amount) as revenue
         FROM "Payment"
-        WHERE status = 'completed' AND created_at >= ${startDate}
+        WHERE status = 'succeeded' AND created_at >= ${startDate}
         GROUP BY DATE(created_at)
         ORDER BY date ASC
       `,

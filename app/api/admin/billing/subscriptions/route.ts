@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
       }
       
       acc[stat.subscriptionId].totalPayments += stat._count.status;
-      if (stat.status === 'completed') {
+      if (stat.status === 'succeeded') {
         acc[stat.subscriptionId].successfulPayments += stat._count.status;
         acc[stat.subscriptionId].totalRevenue += stat._sum.amount || 0;
       }

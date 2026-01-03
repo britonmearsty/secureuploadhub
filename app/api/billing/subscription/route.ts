@@ -1,10 +1,23 @@
 import { auth } from "@/auth"
 import { NextRequest, NextResponse } from "next/server"
-import { getPaystack } from "@/lib/billing"
 import { PAYSTACK_CONFIG } from "@/lib/paystack-config"
 import prisma from "@/lib/prisma"
+import {
+  getOrCreatePaystackCustomer,
+  getOrCreatePaystackPlan,
+  createPaystackSubscription,
+} from "@/lib/paystack-subscription"
+import { PAYSTACK_CONFIG as CONFIG } from "@/lib/paystack-config"
+import { createAuditLog, AUDIT_ACTIONS } from "@/lib/audit-log"
+import { BILLING_INTERVAL, PAYMENT_STATUS } from "@/lib/billing-constants"
 
 export const dynamic = 'force-dynamic'
+
+const addMonths = (date: Date, months: number) => {
+  const copy = new Date(date)
+  copy.setMonth(copy.getMonth() + months)
+  return copy
+}
 
 export async function GET() {
   try {
@@ -85,55 +98,106 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    // Create Paystack transaction
-    const reference = `sub_${session.user.id}_${Date.now()}`
-    const paystack = await getPaystack()
-    const response = await paystack.transaction.initialize({
-      amount: Math.round(plan.price * 100), // amount in kobo
-      email: user.email,
-      reference,
-      callback_url: `${PAYSTACK_CONFIG.baseUrl}/dashboard/billing?status=processing&reference=${reference}`,
-      metadata: {
-        planId: plan.id,
-        userId: session.user.id,
-        planName: plan.name
-      }
-    })
+    try {
+      // Step 1: Get or create Paystack customer
+      const paystackCustomer = await getOrCreatePaystackCustomer({
+        email: user.email,
+        first_name: user.name?.split(' ')[0] || undefined,
+        last_name: user.name?.split(' ').slice(1).join(' ') || undefined,
+      })
 
-    if (response.status) {
-      // Create pending subscription
+      // Step 2: Get or create Paystack plan
+      const paystackPlan = await getOrCreatePaystackPlan({
+        name: plan.name,
+        amount: Math.round(plan.price * 100), // Convert to kobo
+        interval: "monthly", // Default to monthly, can be made configurable
+        currency: plan.currency === "USD" ? "NGN" : plan.currency, // Paystack uses NGN by default
+        description: plan.description || undefined,
+      })
+
+      // Step 3: Create Paystack subscription
+      // Note: For initial subscription, user needs to authorize payment
+      // We'll create the subscription and redirect to authorization
+      const now = new Date()
+      const periodEnd = addMonths(now, 1)
+      const nextBillingDate = addMonths(now, 1)
+
+      // Create subscription in database first (incomplete status)
       const subscription = await prisma.subscription.create({
         data: {
           userId: session.user.id,
           planId: plan.id,
           status: "incomplete",
-          currentPeriodStart: new Date(),
-          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+          currentPeriodStart: now,
+          currentPeriodEnd: periodEnd,
+          billingInterval: BILLING_INTERVAL.MONTHLY,
+          nextBillingDate: nextBillingDate,
+          providerCustomerId: paystackCustomer.customer_code,
         },
         include: { plan: true }
       })
 
-      // Create pending payment record
-      await prisma.payment.create({
+      // Create Paystack subscription
+      // This will require user authorization, so we'll get an authorization URL
+      const paystackSubscription = await createPaystackSubscription({
+        customer: paystackCustomer.customer_code,
+        plan: paystackPlan.plan_code,
+      })
+
+      // Update subscription with Paystack subscription ID
+      await prisma.subscription.update({
+        where: { id: subscription.id },
         data: {
-          subscriptionId: subscription.id,
-          userId: session.user.id,
-          amount: plan.price,
-          currency: plan.currency,
-          status: "pending",
-          providerPaymentRef: reference,
-          description: `Payment for ${plan.name} plan`
+          providerSubscriptionId: paystackSubscription.subscription_code,
         }
       })
 
-      return NextResponse.json({
-        subscription,
-        paymentLink: response.data.authorization_url,
-        reference
+      // Create subscription history entry
+      await prisma.subscriptionHistory.create({
+        data: {
+          subscriptionId: subscription.id,
+          action: "plan_changed",
+          newValue: JSON.stringify({
+            planId: plan.id,
+            planName: plan.name,
+            status: "incomplete",
+          }),
+          reason: "New subscription created",
+        }
       })
-    } else {
+
+      // Create audit log
+      if (session.user.id) {
+        await createAuditLog({
+          userId: session.user.id,
+          action: AUDIT_ACTIONS.SUBSCRIPTION_CREATED,
+          resource: "subscription",
+          resourceId: subscription.id,
+          details: {
+            planId: plan.id,
+            planName: plan.name,
+            providerSubscriptionId: paystackSubscription.subscription_code,
+          }
+        });
+      }
+
+      // Return subscription with authorization info if needed
+      // Paystack subscription creation may require user to authorize payment
+      return NextResponse.json({
+        subscription: {
+          ...subscription,
+          providerSubscriptionId: paystackSubscription.subscription_code,
+        },
+        authorizationCode: paystackSubscription.authorization?.authorization_code || null,
+        message: "Subscription created. Please authorize payment to activate.",
+      })
+    } catch (error: any) {
+      console.error("Error creating Paystack subscription:", error)
       return NextResponse.json(
-        { error: "Failed to initialize payment" },
+        {
+          error: "Failed to create subscription",
+          details: error.message || String(error)
+        },
         { status: 500 }
       )
     }
@@ -156,28 +220,72 @@ export async function DELETE() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-
     const subscription = await prisma.subscription.findFirst({
       where: {
         userId: session.user.id,
         status: { in: ["active", "past_due"] }
-      }
+      },
+      include: { plan: true }
     })
 
     if (!subscription) {
       return NextResponse.json({ error: "No active subscription found" }, { status: 404 })
     }
 
-    // Cancel at period end
-    await prisma.subscription.update({
-      where: { id: subscription.id },
-      data: {
-        cancelAtPeriodEnd: true,
-        status: "active" // Keep active until period ends
+    // Cancel Paystack subscription if providerSubscriptionId exists
+    if (subscription.providerSubscriptionId) {
+      try {
+        const { cancelPaystackSubscription } = await import("@/lib/paystack-subscription")
+        await cancelPaystackSubscription(subscription.providerSubscriptionId)
+      } catch (error) {
+        console.error("Error canceling Paystack subscription:", error)
+        // Continue with local cancellation even if Paystack fails
       }
+    }
+
+    // Update subscription
+    const updatedSubscription = await prisma.$transaction(async (tx) => {
+      // Cancel at period end
+      const updated = await tx.subscription.update({
+        where: { id: subscription.id },
+        data: {
+          cancelAtPeriodEnd: true,
+          status: "active" // Keep active until period ends
+        }
+      })
+
+      // Create subscription history entry
+      await tx.subscriptionHistory.create({
+        data: {
+          subscriptionId: subscription.id,
+          action: "cancelled",
+          oldValue: JSON.stringify({ status: subscription.status }),
+          newValue: JSON.stringify({ status: "active", cancelAtPeriodEnd: true }),
+          reason: "User requested cancellation",
+        }
+      })
+
+      return updated
     })
 
-    return NextResponse.json({ message: "Subscription will be canceled at the end of the billing period" })
+    // Create audit log
+    if (session.user.id) {
+      await createAuditLog({
+        userId: session.user.id,
+        action: AUDIT_ACTIONS.SUBSCRIPTION_UPDATED,
+        resource: "subscription",
+        resourceId: subscription.id,
+        details: {
+          action: "cancelled",
+          cancelAtPeriodEnd: true,
+        }
+      });
+    }
+
+    return NextResponse.json({ 
+      message: "Subscription will be canceled at the end of the billing period",
+      subscription: updatedSubscription
+    })
   } catch (error) {
     console.error("Error canceling subscription:", error)
     return NextResponse.json(

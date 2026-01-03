@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { sendPlanMigrationNotification } from '@/lib/email-templates';
+import { createAuditLog, AUDIT_ACTIONS } from '@/lib/audit-log';
 
 const migrationSchema = z.object({
   subscriptionId: z.string().min(1, 'Subscription ID is required'),
@@ -151,17 +152,26 @@ export async function POST(request: NextRequest) {
     // Process payment provider changes if needed
     if (subscription.providerSubscriptionId) {
       try {
-        // TODO: Update subscription with payment provider (Paystack)
-        // await updatePaystackSubscription({
-        //   subscriptionId: subscription.providerSubscriptionId,
-        //   newPlanCode: newPlan.providerPlanId,
-        //   effectiveDate
-        // });
-      } catch (providerError) {
+        const { updatePaystackSubscription, getOrCreatePaystackPlan } = await import("@/lib/paystack-subscription");
+        
+        // Get or create Paystack plan
+        const paystackPlan = await getOrCreatePaystackPlan({
+          name: newPlan.name,
+          amount: Math.round(newPlan.price * 100), // Convert to kobo
+          interval: subscription.billingInterval === "yearly" ? "annually" : "monthly",
+          currency: newPlan.currency === "USD" ? "NGN" : newPlan.currency,
+          description: newPlan.description || undefined,
+        });
+
+        // Update Paystack subscription
+        await updatePaystackSubscription(subscription.providerSubscriptionId, {
+          plan: paystackPlan.plan_code,
+        });
+      } catch (providerError: any) {
         console.error('Payment provider update failed:', providerError);
         // You might want to rollback the database changes here
         return NextResponse.json(
-          { error: 'Failed to update subscription with payment provider' },
+          { error: 'Failed to update subscription with payment provider', details: providerError.message },
           { status: 500 }
         );
       }
@@ -186,23 +196,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // TODO: Add audit log entry
-    // await createAuditLog({
-    //   userId: session.user.id,
-    //   action: 'SUBSCRIPTION_MIGRATED',
-    //   resource: 'subscription',
-    //   resourceId: subscriptionId,
-    //   details: {
-    //     oldPlanId: subscription.planId,
-    //     oldPlanName: subscription.plan.name,
-    //     newPlanId,
-    //     newPlanName: newPlan.name,
-    //     effectiveDate,
-    //     prorationAmount,
-    //     customerEmail: subscription.user?.email,
-    //     reason
-    //   }
-    // });
+    // Add audit log entry
+    if (session.user.id) {
+      await createAuditLog({
+        userId: session.user.id,
+        action: AUDIT_ACTIONS.SUBSCRIPTION_MIGRATED,
+        resource: 'subscription',
+        resourceId: subscriptionId,
+        details: {
+          oldPlanId: subscription.planId,
+          oldPlanName: subscription.plan.name,
+          newPlanId,
+          newPlanName: newPlan.name,
+          effectiveDate,
+          prorationAmount,
+          customerEmail: subscription.user?.email,
+          reason
+        }
+      });
+    }
 
     return NextResponse.json({
       success: true,
