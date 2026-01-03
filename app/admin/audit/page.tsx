@@ -1,13 +1,8 @@
-import { auth } from "@/auth"
-import { redirect } from "next/navigation"
 import AuditLogClient from "./AuditLogClient"
 
 export default async function AuditLogPage() {
-    const session = await auth()
-
-    if (!session?.user?.id || session.user.role !== "admin") {
-        redirect("/auth/signin")
-    }
+    // Authentication and authorization handled by AdminLayout
+    // If this component renders, user is guaranteed to be an authenticated admin
 
     return <AuditLogClient />
 }

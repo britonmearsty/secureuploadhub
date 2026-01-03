@@ -1,13 +1,8 @@
-import { auth } from "@/auth"
-import { redirect } from "next/navigation"
 import PortalManagementClient from "./PortalManagementClient"
 
 export default async function AdminPortalsPage() {
-    const session = await auth()
-
-    if (!session?.user?.id || session.user.role !== "admin") {
-        redirect("/auth/signin")
-    }
+    // Authentication and authorization handled by AdminLayout
+    // If this component renders, user is guaranteed to be an authenticated admin
 
     return (
         <div className="p-6">

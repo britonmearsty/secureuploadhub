@@ -1,14 +1,9 @@
-import { auth } from "@/auth"
-import { redirect } from "next/navigation"
 import prisma from "@/lib/prisma"
 import EnhancedUsersManagementClient from "./EnhancedUsersManagementClient"
 
 export default async function AdminUsersPage() {
-    const session = await auth()
-
-    if (!session?.user?.id || session.user.role !== "admin") {
-        redirect("/auth/signin")
-    }
+    // Authentication and authorization handled by AdminLayout
+    // If this component renders, user is guaranteed to be an authenticated admin
 
     // Fetch users with additional data for enhanced management
     const users = await prisma.user.findMany({
