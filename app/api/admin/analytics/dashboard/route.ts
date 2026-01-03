@@ -98,15 +98,26 @@ export async function GET(request: NextRequest) {
           _sum: { fileSize: true },
         }),
         
-        // Active users (logged in within period)
+        // Active users (users with recent activity)
         prisma.user.count({
           where: {
-            sessions: {
-              some: {
-                createdAt: { gte: startDate },
+            OR: [
+              {
+                uploadPortals: {
+                  some: {
+                    createdAt: { gte: startDate }
+                  }
+                }
               },
-            },
-          },
+              {
+                fileUploads: {
+                  some: {
+                    createdAt: { gte: startDate }
+                  }
+                }
+              }
+            ]
+          }
         }),
         
         // New users in period

@@ -117,15 +117,38 @@ export async function GET(request: NextRequest) {
 
       // Get registration trends
       try {
-        const registrationTrends = await prisma.$queryRaw`
-          SELECT 
-            DATE_TRUNC(${groupBy}, "createdAt") as period,
-            COUNT(*)::int as registrations
-          FROM "User"
-          WHERE "createdAt" >= ${startDate}
-          GROUP BY DATE_TRUNC(${groupBy}, "createdAt")
-          ORDER BY period ASC
-        `;
+        let registrationTrends;
+        if (groupBy === 'day') {
+          registrationTrends = await prisma.$queryRaw`
+            SELECT 
+              DATE_TRUNC('day', "createdAt") as period,
+              COUNT(*)::int as registrations
+            FROM "User"
+            WHERE "createdAt" >= ${startDate}
+            GROUP BY DATE_TRUNC('day', "createdAt")
+            ORDER BY period ASC
+          `;
+        } else if (groupBy === 'week') {
+          registrationTrends = await prisma.$queryRaw`
+            SELECT 
+              DATE_TRUNC('week', "createdAt") as period,
+              COUNT(*)::int as registrations
+            FROM "User"
+            WHERE "createdAt" >= ${startDate}
+            GROUP BY DATE_TRUNC('week', "createdAt")
+            ORDER BY period ASC
+          `;
+        } else {
+          registrationTrends = await prisma.$queryRaw`
+            SELECT 
+              DATE_TRUNC('month', "createdAt") as period,
+              COUNT(*)::int as registrations
+            FROM "User"
+            WHERE "createdAt" >= ${startDate}
+            GROUP BY DATE_TRUNC('month', "createdAt")
+            ORDER BY period ASC
+          `;
+        }
         userAnalytics.trends.registrations = registrationTrends as any[];
       } catch (trendsError) {
         console.log('Registration trends not available:', trendsError);
@@ -136,11 +159,10 @@ export async function GET(request: NextRequest) {
         const activityStats = await prisma.$queryRaw`
           SELECT 
             COUNT(DISTINCT u.id)::int as total_users,
-            COUNT(DISTINCT CASE WHEN s."createdAt" >= ${startDate} THEN u.id END)::int as active_users,
+            0::int as active_users,
             COUNT(DISTINCT CASE WHEN up.id IS NOT NULL THEN u.id END)::int as users_with_portals,
             COUNT(DISTINCT CASE WHEN fu.id IS NOT NULL THEN u.id END)::int as users_with_uploads
           FROM "User" u
-          LEFT JOIN "Session" s ON u.id = s."userId"
           LEFT JOIN "UploadPortal" up ON u.id = up."userId"
           LEFT JOIN "FileUpload" fu ON u.id = fu."userId"
         `;
@@ -155,6 +177,33 @@ export async function GET(request: NextRequest) {
         }
       } catch (activityError) {
         console.log('Activity statistics not available:', activityError);
+        // Try a simpler approach
+        try {
+          const totalUsers = await prisma.user.count();
+          const usersWithPortals = await prisma.user.count({
+            where: {
+              uploadPortals: {
+                some: {}
+              }
+            }
+          });
+          const usersWithUploads = await prisma.user.count({
+            where: {
+              fileUploads: {
+                some: {}
+              }
+            }
+          });
+          
+          userAnalytics.activity = {
+            total_users: totalUsers,
+            active_users: 0,
+            users_with_portals: usersWithPortals,
+            users_with_uploads: usersWithUploads,
+          };
+        } catch (fallbackError) {
+          console.log('Fallback activity stats failed:', fallbackError);
+        }
       }
 
       // Get top users

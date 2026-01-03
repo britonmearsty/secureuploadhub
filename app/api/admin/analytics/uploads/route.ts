@@ -113,17 +113,44 @@ export async function GET(request: NextRequest) {
 
       // Get upload trends
       try {
-        const uploadTrends = await prisma.$queryRaw`
-          SELECT 
-            DATE_TRUNC(${groupBy}, "createdAt") as period,
-            COUNT(*)::int as upload_count,
-            COALESCE(SUM("fileSize"), 0)::bigint as total_size,
-            COALESCE(AVG("fileSize"), 0)::bigint as avg_size
-          FROM "FileUpload"
-          WHERE "createdAt" >= ${startDate}
-          GROUP BY DATE_TRUNC(${groupBy}, "createdAt")
-          ORDER BY period ASC
-        `;
+        let uploadTrends;
+        if (groupBy === 'day') {
+          uploadTrends = await prisma.$queryRaw`
+            SELECT 
+              DATE_TRUNC('day', "createdAt") as period,
+              COUNT(*)::int as upload_count,
+              COALESCE(SUM("fileSize"), 0)::bigint as total_size,
+              COALESCE(AVG("fileSize"), 0)::bigint as avg_size
+            FROM "FileUpload"
+            WHERE "createdAt" >= ${startDate}
+            GROUP BY DATE_TRUNC('day', "createdAt")
+            ORDER BY period ASC
+          `;
+        } else if (groupBy === 'week') {
+          uploadTrends = await prisma.$queryRaw`
+            SELECT 
+              DATE_TRUNC('week', "createdAt") as period,
+              COUNT(*)::int as upload_count,
+              COALESCE(SUM("fileSize"), 0)::bigint as total_size,
+              COALESCE(AVG("fileSize"), 0)::bigint as avg_size
+            FROM "FileUpload"
+            WHERE "createdAt" >= ${startDate}
+            GROUP BY DATE_TRUNC('week', "createdAt")
+            ORDER BY period ASC
+          `;
+        } else {
+          uploadTrends = await prisma.$queryRaw`
+            SELECT 
+              DATE_TRUNC('month', "createdAt") as period,
+              COUNT(*)::int as upload_count,
+              COALESCE(SUM("fileSize"), 0)::bigint as total_size,
+              COALESCE(AVG("fileSize"), 0)::bigint as avg_size
+            FROM "FileUpload"
+            WHERE "createdAt" >= ${startDate}
+            GROUP BY DATE_TRUNC('month', "createdAt")
+            ORDER BY period ASC
+          `;
+        }
 
         uploadAnalytics.trends.uploads = (uploadTrends as any[]).map((trend: any) => ({
           period: trend.period,
