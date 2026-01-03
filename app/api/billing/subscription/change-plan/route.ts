@@ -7,6 +7,7 @@ import { PAYMENT_STATUS, SUBSCRIPTION_STATUS, SUBSCRIPTION_HISTORY_ACTION } from
 import { createAuditLog, AUDIT_ACTIONS } from "@/lib/audit-log"
 import { addMonths } from "date-fns"
 import { z } from "zod"
+import { getPaystackCurrency, convertToPaystackSubunit } from "@/lib/paystack-currency"
 
 export const dynamic = 'force-dynamic'
 
@@ -80,11 +81,12 @@ export async function POST(request: NextRequest) {
     if (subscription.providerSubscriptionId) {
       try {
         // Get or create Paystack plan
+        const paystackCurrency = getPaystackCurrency(newPlan.currency);
         const paystackPlan = await getOrCreatePaystackPlan({
           name: newPlan.name,
-          amount: Math.round(newPlan.price * 100), // Convert to kobo
+          amount: convertToPaystackSubunit(newPlan.price, paystackCurrency),
           interval: subscription.billingInterval === "yearly" ? "annually" : "monthly",
-          currency: newPlan.currency === "USD" ? "NGN" : newPlan.currency,
+          currency: paystackCurrency,
           description: newPlan.description || undefined,
         })
 

@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma';
 import { z } from 'zod';
 import { sendPlanMigrationNotification } from '@/lib/email-templates';
 import { createAuditLog, AUDIT_ACTIONS } from '@/lib/audit-log';
+import { getPaystackCurrency, convertToPaystackSubunit } from '@/lib/paystack-currency';
 
 const migrationSchema = z.object({
   subscriptionId: z.string().min(1, 'Subscription ID is required'),
@@ -155,11 +156,12 @@ export async function POST(request: NextRequest) {
         const { updatePaystackSubscription, getOrCreatePaystackPlan } = await import("@/lib/paystack-subscription");
         
         // Get or create Paystack plan
+        const paystackCurrency = getPaystackCurrency(newPlan.currency);
         const paystackPlan = await getOrCreatePaystackPlan({
           name: newPlan.name,
-          amount: Math.round(newPlan.price * 100), // Convert to kobo
+          amount: convertToPaystackSubunit(newPlan.price, paystackCurrency),
           interval: subscription.billingInterval === "yearly" ? "annually" : "monthly",
-          currency: newPlan.currency === "USD" ? "NGN" : newPlan.currency,
+          currency: paystackCurrency,
           description: newPlan.description || undefined,
         });
 

@@ -10,6 +10,7 @@ import {
 import { PAYSTACK_CONFIG as CONFIG } from "@/lib/paystack-config"
 import { createAuditLog, AUDIT_ACTIONS } from "@/lib/audit-log"
 import { BILLING_INTERVAL, PAYMENT_STATUS } from "@/lib/billing-constants"
+import { getPaystackCurrency, convertToPaystackSubunit } from "@/lib/paystack-currency"
 
 export const dynamic = 'force-dynamic'
 
@@ -107,11 +108,12 @@ export async function POST(request: NextRequest) {
       })
 
       // Step 2: Get or create Paystack plan
+      const paystackCurrency = getPaystackCurrency(plan.currency);
       const paystackPlan = await getOrCreatePaystackPlan({
         name: plan.name,
-        amount: Math.round(plan.price * 100), // Convert to kobo
+        amount: convertToPaystackSubunit(plan.price, paystackCurrency),
         interval: "monthly", // Default to monthly, can be made configurable
-        currency: plan.currency === "USD" ? "NGN" : plan.currency, // Paystack uses NGN by default
+        currency: paystackCurrency,
         description: plan.description || undefined,
       })
 
