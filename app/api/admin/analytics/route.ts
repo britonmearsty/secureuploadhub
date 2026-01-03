@@ -151,26 +151,65 @@ export async function GET(request: NextRequest) {
         console.log('Billing data not available:', billingError);
       }
 
-      // Try to get trend data (simplified approach)
+      // Generate all dates in the period for complete trend data
+      const generateDateRange = (start: Date, end: Date) => {
+        const dates: Date[] = [];
+        const current = new Date(start);
+        current.setHours(0, 0, 0, 0);
+        const endDate = new Date(end);
+        endDate.setHours(23, 59, 59, 999);
+        
+        while (current <= endDate) {
+          dates.push(new Date(current));
+          current.setDate(current.getDate() + 1);
+        }
+        return dates;
+      };
+
+      const endDate = new Date();
+      const allDates = generateDateRange(startDate, endDate);
+
+      // Helper function to format date as ISO string
+      const formatDate = (date: Date) => {
+        return date.toISOString().split('T')[0];
+      };
+
+      // Get user growth trend data
       try {
-        const userGrowthTrend = await prisma.$queryRaw`
+        const userGrowthTrend = await prisma.$queryRaw<Array<{ date: Date; count: number }>>`
           SELECT 
-            DATE_TRUNC('day', "createdAt") as date,
+            DATE_TRUNC('day', "createdAt")::date as date,
             COUNT(*)::int as count
           FROM "User"
           WHERE "createdAt" >= ${startDate}
           GROUP BY DATE_TRUNC('day', "createdAt")
           ORDER BY date ASC
         `;
-        analytics.trends.userGrowth = userGrowthTrend as any[];
+
+        // Create a map of existing data
+        const userGrowthMap = new Map(
+          userGrowthTrend.map(item => [formatDate(item.date), item.count])
+        );
+
+        // Fill in all dates with actual data or 0
+        analytics.trends.userGrowth = allDates.map(date => ({
+          date: formatDate(date),
+          count: userGrowthMap.get(formatDate(date)) || 0
+        }));
       } catch (trendError) {
         console.log('User growth trend not available:', trendError);
+        // Fill with zeros if query fails
+        analytics.trends.userGrowth = allDates.map(date => ({
+          date: formatDate(date),
+          count: 0
+        }));
       }
 
+      // Get upload trend data
       try {
-        const uploadTrend = await prisma.$queryRaw`
+        const uploadTrend = await prisma.$queryRaw<Array<{ date: Date; uploads: number; storage: bigint }>>`
           SELECT 
-            DATE_TRUNC('day', "createdAt") as date,
+            DATE_TRUNC('day', "createdAt")::date as date,
             COUNT(*)::int as uploads,
             COALESCE(SUM("fileSize"), 0)::bigint as storage
           FROM "FileUpload"
@@ -178,14 +217,84 @@ export async function GET(request: NextRequest) {
           GROUP BY DATE_TRUNC('day', "createdAt")
           ORDER BY date ASC
         `;
-        analytics.trends.uploads = uploadTrend as any[];
+
+        // Create a map of existing data
+        const uploadTrendMap = new Map(
+          uploadTrend.map(item => [
+            formatDate(item.date),
+            {
+              uploads: item.uploads,
+              storage: Number(item.storage)
+            }
+          ])
+        );
+
+        // Fill in all dates with actual data or 0
+        analytics.trends.uploads = allDates.map(date => {
+          const data = uploadTrendMap.get(formatDate(date));
+          return {
+            date: formatDate(date),
+            uploads: data?.uploads || 0,
+            storage: data?.storage || 0
+          };
+        });
       } catch (uploadTrendError) {
         console.log('Upload trend not available:', uploadTrendError);
+        // Fill with zeros if query fails
+        analytics.trends.uploads = allDates.map(date => ({
+          date: formatDate(date),
+          uploads: 0,
+          storage: 0
+        }));
+      }
+
+      // Get revenue trend data
+      try {
+        const revenueTrend = await prisma.$queryRaw<Array<{ date: Date; payments: number; revenue: number }>>`
+          SELECT 
+            DATE_TRUNC('day', "createdAt")::date as date,
+            COUNT(*)::int as payments,
+            COALESCE(SUM("amount"), 0)::float as revenue
+          FROM "Payment"
+          WHERE "createdAt" >= ${startDate} AND status = 'completed'
+          GROUP BY DATE_TRUNC('day', "createdAt")
+          ORDER BY date ASC
+        `;
+
+        // Create a map of existing data
+        const revenueTrendMap = new Map(
+          revenueTrend.map(item => [
+            formatDate(item.date),
+            {
+              payments: item.payments,
+              revenue: Number(item.revenue) || 0
+            }
+          ])
+        );
+
+        // Fill in all dates with actual data or 0
+        analytics.trends.revenue = allDates.map(date => {
+          const data = revenueTrendMap.get(formatDate(date));
+          return {
+            date: formatDate(date),
+            payments: data?.payments || 0,
+            revenue: data?.revenue || 0
+          };
+        });
+      } catch (revenueTrendError) {
+        console.log('Revenue trend not available:', revenueTrendError);
+        // Fill with zeros if query fails
+        analytics.trends.revenue = allDates.map(date => ({
+          date: formatDate(date),
+          payments: 0,
+          revenue: 0
+        }));
       }
 
       // Try to get top users
       try {
-        const topUsers = await prisma.user.findMany({
+        // Get all users with their counts
+        const allUsers = await prisma.user.findMany({
           select: {
             id: true,
             email: true,
@@ -197,14 +306,17 @@ export async function GET(request: NextRequest) {
                 fileUploads: true
               }
             }
-          },
-          orderBy: [
-            { uploadPortals: { _count: 'desc' } },
-            { fileUploads: { _count: 'desc' } }
-          ],
-          take: 10
+          }
         });
-        analytics.topUsers = topUsers;
+
+        // Sort by portal count first, then upload count
+        const sortedUsers = allUsers.sort((a, b) => {
+          const portalDiff = b._count.uploadPortals - a._count.uploadPortals;
+          if (portalDiff !== 0) return portalDiff;
+          return b._count.fileUploads - a._count.fileUploads;
+        });
+
+        analytics.topUsers = sortedUsers.slice(0, 10);
       } catch (topUsersError) {
         console.log('Top users not available:', topUsersError);
       }

@@ -103,7 +103,7 @@ export default function AuditLogClient() {
     }
   };
 
-  const exportLogs = async (format: 'csv' | 'json' = 'csv') => {
+  const exportLogs = async (format: 'csv' | 'pdf' = 'csv') => {
     setExporting(true);
     try {
       const params = new URLSearchParams();
@@ -121,7 +121,7 @@ export default function AuditLogClient() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        const extension = format === 'json' ? 'json' : 'csv';
+        const extension = format === 'pdf' ? 'pdf' : 'csv';
         a.download = `audit-logs-${new Date().toISOString().split('T')[0]}.${extension}`;
         document.body.appendChild(a);
         a.click();
@@ -209,12 +209,12 @@ export default function AuditLogClient() {
             </button>
           </div>
           <button
-            onClick={() => exportLogs('json')}
+            onClick={() => exportLogs('pdf')}
             disabled={exporting}
             className="flex items-center space-x-2 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download className={`w-4 h-4 ${exporting ? 'animate-pulse' : ''}`} />
-            <span>{exporting ? 'Exporting...' : 'Export JSON'}</span>
+            <span>{exporting ? 'Exporting...' : 'Export PDF'}</span>
           </button>
         </div>
       </div>

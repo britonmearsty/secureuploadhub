@@ -466,62 +466,64 @@ export default function EnhancedUsersManagementClient({
             exit={{ opacity: 0, y: 100 }}
             className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg p-4 z-40"
           >
-            <div className="max-w-7xl mx-auto flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-slate-900">
-                  {selectedUsers.size} users selected
-                </span>
-                <button
-                  onClick={() => {
-                    setSelectedUsers(new Set());
-                    setShowBulkActions(false);
-                  }}
-                  className="text-sm text-slate-500 hover:text-slate-700"
-                >
-                  Clear selection
-                </button>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => performBulkAction('changeRole', { role: 'admin' })}
-                  className="px-3 py-2 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
-                  disabled={loading}
-                >
-                  <Shield className="w-4 h-4 mr-1 inline" />
-                  Make Admin
-                </button>
-                <button
-                  onClick={() => performBulkAction('changeRole', { role: 'user' })}
-                  className="px-3 py-2 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors"
-                  disabled={loading}
-                >
-                  <Users className="w-4 h-4 mr-1 inline" />
-                  Make User
-                </button>
-                <button
-                  onClick={() => performBulkAction('changeStatus', { status: 'disabled' })}
-                  className="px-3 py-2 text-sm bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors"
-                  disabled={loading}
-                >
-                  <UserX className="w-4 h-4 mr-1 inline" />
-                  Disable
-                </button>
-                <button
-                  onClick={() => performBulkAction('changeStatus', { status: 'active' })}
-                  className="px-3 py-2 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
-                  disabled={loading}
-                >
-                  <UserCheck className="w-4 h-4 mr-1 inline" />
-                  Enable
-                </button>
-                <button
-                  onClick={() => performBulkAction('delete')}
-                  className="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
-                  disabled={loading}
-                >
-                  <Trash2 className="w-4 h-4 mr-1 inline" />
-                  Delete
-                </button>
+            <div className="flex items-center justify-center">
+              <div className="flex items-center gap-4 max-w-4xl w-full justify-between">
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-medium text-slate-900">
+                    {selectedUsers.size} users selected
+                  </span>
+                  <button
+                    onClick={() => {
+                      setSelectedUsers(new Set());
+                      setShowBulkActions(false);
+                    }}
+                    className="text-sm text-slate-500 hover:text-slate-700"
+                  >
+                    Clear selection
+                  </button>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => performBulkAction('changeRole', { role: 'admin' })}
+                    className="px-3 py-2 text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+                    disabled={loading}
+                  >
+                    <Shield className="w-4 h-4 mr-1 inline" />
+                    Make Admin
+                  </button>
+                  <button
+                    onClick={() => performBulkAction('changeRole', { role: 'user' })}
+                    className="px-3 py-2 text-sm bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors"
+                    disabled={loading}
+                  >
+                    <Users className="w-4 h-4 mr-1 inline" />
+                    Make User
+                  </button>
+                  <button
+                    onClick={() => performBulkAction('changeStatus', { status: 'disabled' })}
+                    className="px-3 py-2 text-sm bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors"
+                    disabled={loading}
+                  >
+                    <UserX className="w-4 h-4 mr-1 inline" />
+                    Disable
+                  </button>
+                  <button
+                    onClick={() => performBulkAction('changeStatus', { status: 'active' })}
+                    className="px-3 py-2 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+                    disabled={loading}
+                  >
+                    <UserCheck className="w-4 h-4 mr-1 inline" />
+                    Enable
+                  </button>
+                  <button
+                    onClick={() => performBulkAction('delete')}
+                    className="px-3 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                    disabled={loading}
+                  >
+                    <Trash2 className="w-4 h-4 mr-1 inline" />
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -529,10 +531,10 @@ export default function EnhancedUsersManagementClient({
       </AnimatePresence>
 
       {/* Users Table */}
-      <div className={`bg-white rounded-lg border border-slate-200 overflow-hidden ${showBulkActions ? 'mb-20' : ''}`}>
-        <div className="overflow-x-auto">
+      <div className={`bg-white rounded-lg border border-slate-200 ${showBulkActions ? 'mb-20' : ''} min-h-[600px] flex flex-col`}>
+        <div className="overflow-x-auto overflow-y-visible flex-1">
           <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
               <tr>
                 <th className="px-4 py-3 text-left">
                   <button
@@ -664,7 +666,11 @@ export default function EnhancedUsersManagementClient({
                               initial={{ opacity: 0, scale: 0.95 }}
                               animate={{ opacity: 1, scale: 1 }}
                               exit={{ opacity: 0, scale: 0.95 }}
-                              className="absolute right-0 top-8 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50"
+                              className="absolute right-0 bottom-full mb-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50"
+                              style={{ 
+                                position: 'absolute',
+                                zIndex: 50
+                              }}
                             >
                               <div className="py-1">
                                 {user.role === 'admin' ? (
@@ -764,17 +770,20 @@ export default function EnhancedUsersManagementClient({
                   </td>
                 </tr>
               ))}
+              {filteredUsers.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-12">
+                    <div className="text-center">
+                      <Users className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-slate-900 mb-2">No users found</h3>
+                      <p className="text-slate-500">Try adjusting your search or filter criteria.</p>
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
-
-        {filteredUsers.length === 0 && (
-          <div className="text-center py-12">
-            <Users className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-slate-900 mb-2">No users found</h3>
-            <p className="text-slate-500">Try adjusting your search or filter criteria.</p>
-          </div>
-        )}
       </div>
 
       {/* User Details Modal */}

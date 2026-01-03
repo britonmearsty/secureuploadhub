@@ -152,12 +152,22 @@ export async function GET(request: NextRequest) {
           `;
         }
 
-        uploadAnalytics.trends.uploads = (uploadTrends as any[]).map((trend: any) => ({
-          period: trend.period,
-          uploadCount: Number(trend.upload_count),
-          totalSize: Number(trend.total_size),
-          averageSize: Math.round(Number(trend.avg_size) / 1024), // in KB
-        }));
+        uploadAnalytics.trends.uploads = (uploadTrends as any[]).map((trend: any) => {
+          // Format period date as ISO string if it's a Date object
+          let periodValue = trend.period;
+          if (trend.period instanceof Date) {
+            periodValue = trend.period.toISOString().split('T')[0];
+          } else if (typeof trend.period === 'string' && trend.period.includes('T')) {
+            periodValue = trend.period.split('T')[0];
+          }
+          
+          return {
+            period: periodValue,
+            uploadCount: Number(trend.upload_count),
+            totalSize: Number(trend.total_size),
+            averageSize: Math.round(Number(trend.avg_size) / 1024), // in KB
+          };
+        });
       } catch (trendsError) {
         console.log('Upload trends not available:', trendsError);
       }

@@ -161,19 +161,31 @@ function AnalyticsPageContent() {
       if (dashboardRes.ok) {
         const data = await dashboardRes.json();
         setDashboardData(data);
+      } else {
+        console.error('Failed to fetch dashboard data:', dashboardRes.status);
+        setDashboardData(null);
       }
 
       if (usersRes.ok) {
         const data = await usersRes.json();
         setUserAnalytics(data);
+      } else {
+        console.error('Failed to fetch user analytics:', usersRes.status);
+        setUserAnalytics(null);
       }
 
       if (uploadsRes.ok) {
         const data = await uploadsRes.json();
         setUploadAnalytics(data);
+      } else {
+        console.error('Failed to fetch upload analytics:', uploadsRes.status);
+        setUploadAnalytics(null);
       }
     } catch (error) {
       console.error('Failed to fetch analytics:', error);
+      setDashboardData(null);
+      setUserAnalytics(null);
+      setUploadAnalytics(null);
     } finally {
       setLoading(false);
     }
@@ -185,7 +197,7 @@ function AnalyticsPageContent() {
 
   const exportData = async () => {
     try {
-      const response = await fetch(`/api/admin/analytics/export?period=${period}`);
+      const response = await fetch(`/api/admin/analytics/export?period=${period}&format=csv&type=all`);
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -196,9 +208,14 @@ function AnalyticsPageContent() {
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to export data:', errorData);
+        alert('Failed to export analytics data. Please try again.');
       }
     } catch (error) {
       console.error('Failed to export data:', error);
+      alert('Failed to export analytics data. Please try again.');
     }
   };
 
@@ -254,7 +271,7 @@ function AnalyticsPageContent() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          {dashboardData && (
+          {dashboardData ? (
             <>
               {/* Overview Metrics */}
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -296,13 +313,22 @@ function AnalyticsPageContent() {
                     <CardDescription>New user registrations over time</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <AnalyticsChart
-                      data={dashboardData.trends.userGrowth}
-                      xKey="date"
-                      yKey="count"
-                      type="line"
-                      color="#4F46E5"
-                    />
+                    {dashboardData.trends.userGrowth && dashboardData.trends.userGrowth.length > 0 ? (
+                      <AnalyticsChart
+                        data={dashboardData.trends.userGrowth}
+                        xKey="date"
+                        yKey="count"
+                        type="line"
+                        color="#4F46E5"
+                      />
+                    ) : (
+                      <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                        <div className="text-center">
+                          <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                          <p>No user growth data available</p>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -312,13 +338,22 @@ function AnalyticsPageContent() {
                     <CardDescription>File uploads over time</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <AnalyticsChart
-                      data={dashboardData.trends.uploadTrends}
-                      xKey="date"
-                      yKey="count"
-                      type="bar"
-                      color="#10B981"
-                    />
+                    {dashboardData.trends.uploadTrends && dashboardData.trends.uploadTrends.length > 0 ? (
+                      <AnalyticsChart
+                        data={dashboardData.trends.uploadTrends}
+                        xKey="date"
+                        yKey="count"
+                        type="bar"
+                        color="#10B981"
+                      />
+                    ) : (
+                      <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                        <div className="text-center">
+                          <Upload className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                          <p>No upload trend data available</p>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -329,11 +364,27 @@ function AnalyticsPageContent() {
                 <TopPortals portals={dashboardData.topPortals} />
               </div>
             </>
+          ) : (
+            <Card>
+              <CardContent className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-semibold mb-2">No Data Available</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Unable to load dashboard analytics. Please try refreshing.
+                  </p>
+                  <Button onClick={fetchAnalytics} variant="outline">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Retry
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           )}
         </TabsContent>
 
         <TabsContent value="users" className="space-y-6">
-          {userAnalytics && (
+          {userAnalytics ? (
             <>
               {/* User Metrics */}
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -367,13 +418,22 @@ function AnalyticsPageContent() {
                     <CardDescription>New user registrations over time</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <AnalyticsChart
-                      data={userAnalytics.trends.registrations}
-                      xKey="period"
-                      yKey="registrations"
-                      type="line"
-                      color="#4F46E5"
-                    />
+                    {userAnalytics.trends.registrations && userAnalytics.trends.registrations.length > 0 ? (
+                      <AnalyticsChart
+                        data={userAnalytics.trends.registrations}
+                        xKey="period"
+                        yKey="registrations"
+                        type="line"
+                        color="#4F46E5"
+                      />
+                    ) : (
+                      <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                        <div className="text-center">
+                          <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                          <p>No registration data available</p>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -383,14 +443,23 @@ function AnalyticsPageContent() {
                     <CardDescription>User roles breakdown</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
-                      {userAnalytics.distribution.roles.map((role) => (
-                        <div key={role.role} className="flex items-center justify-between">
-                          <span className="capitalize">{role.role}</span>
-                          <Badge variant="secondary">{role.count}</Badge>
+                    {userAnalytics.distribution.roles && userAnalytics.distribution.roles.length > 0 ? (
+                      <div className="space-y-2">
+                        {userAnalytics.distribution.roles.map((role) => (
+                          <div key={role.role} className="flex items-center justify-between">
+                            <span className="capitalize">{role.role}</span>
+                            <Badge variant="secondary">{role.count}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                        <div className="text-center">
+                          <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                          <p>No role distribution data available</p>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -402,31 +471,56 @@ function AnalyticsPageContent() {
                   <CardDescription>Users with the most portals and uploads</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {userAnalytics.topUsers.slice(0, 10).map((user) => (
-                      <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium">{user.name || 'Anonymous'}</p>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
+                  {userAnalytics.topUsers && userAnalytics.topUsers.length > 0 ? (
+                    <div className="space-y-4">
+                      {userAnalytics.topUsers.slice(0, 10).map((user) => (
+                        <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
+                          <div>
+                            <p className="font-medium">{user.name || 'Anonymous'}</p>
+                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                          </div>
+                          <div className="flex space-x-4 text-sm">
+                            <span>{user.stats.portals} portals</span>
+                            <span>{user.stats.uploads} uploads</span>
+                            <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                              {user.role}
+                            </Badge>
+                          </div>
                         </div>
-                        <div className="flex space-x-4 text-sm">
-                          <span>{user.stats.portals} portals</span>
-                          <span>{user.stats.uploads} uploads</span>
-                          <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                            {user.role}
-                          </Badge>
-                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="h-64 flex items-center justify-center text-muted-foreground">
+                      <div className="text-center">
+                        <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <p>No user data available</p>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </>
+          ) : (
+            <Card>
+              <CardContent className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-semibold mb-2">No Data Available</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Unable to load user analytics. Please try refreshing.
+                  </p>
+                  <Button onClick={fetchAnalytics} variant="outline">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Retry
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           )}
         </TabsContent>
 
         <TabsContent value="uploads" className="space-y-6">
-          {uploadAnalytics && (
+          {uploadAnalytics ? (
             <>
               {/* Upload Metrics */}
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -460,13 +554,22 @@ function AnalyticsPageContent() {
                     <CardDescription>File uploads over time</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <AnalyticsChart
-                      data={uploadAnalytics.trends.uploads}
-                      xKey="period"
-                      yKey="uploadCount"
-                      type="bar"
-                      color="#10B981"
-                    />
+                    {uploadAnalytics.trends.uploads && uploadAnalytics.trends.uploads.length > 0 ? (
+                      <AnalyticsChart
+                        data={uploadAnalytics.trends.uploads}
+                        xKey="period"
+                        yKey="uploadCount"
+                        type="bar"
+                        color="#10B981"
+                      />
+                    ) : (
+                      <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                        <div className="text-center">
+                          <Upload className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                          <p>No upload trend data available</p>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -476,14 +579,23 @@ function AnalyticsPageContent() {
                     <CardDescription>Distribution of file sizes</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
-                      {uploadAnalytics.distribution.fileSizes.map((size) => (
-                        <div key={size.range} className="flex items-center justify-between">
-                          <span>{size.range}</span>
-                          <Badge variant="secondary">{size.count}</Badge>
+                    {uploadAnalytics.distribution.fileSizes && uploadAnalytics.distribution.fileSizes.length > 0 ? (
+                      <div className="space-y-2">
+                        {uploadAnalytics.distribution.fileSizes.map((size) => (
+                          <div key={size.range} className="flex items-center justify-between">
+                            <span>{size.range}</span>
+                            <Badge variant="secondary">{size.count}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                        <div className="text-center">
+                          <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                          <p>No file size distribution data available</p>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -495,22 +607,47 @@ function AnalyticsPageContent() {
                   <CardDescription>Most uploaded file types</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {uploadAnalytics.distribution.fileTypes.slice(0, 9).map((type) => (
-                      <div key={type.mimeType} className="p-3 border rounded-lg">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium">{type.mimeType}</span>
-                          <Badge variant="secondary">{type.percentage}%</Badge>
+                  {uploadAnalytics.distribution.fileTypes && uploadAnalytics.distribution.fileTypes.length > 0 ? (
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {uploadAnalytics.distribution.fileTypes.slice(0, 9).map((type) => (
+                        <div key={type.mimeType} className="p-3 border rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium">{type.mimeType}</span>
+                            <Badge variant="secondary">{type.percentage}%</Badge>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {type.count} files • {formatBytes(type.totalSize)}
+                          </div>
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {type.count} files • {formatBytes(type.totalSize)}
-                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="h-64 flex items-center justify-center text-muted-foreground">
+                      <div className="text-center">
+                        <Upload className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <p>No file type data available</p>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </>
+          ) : (
+            <Card>
+              <CardContent className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-semibold mb-2">No Data Available</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Unable to load upload analytics. Please try refreshing.
+                  </p>
+                  <Button onClick={fetchAnalytics} variant="outline">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Retry
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           )}
         </TabsContent>
 

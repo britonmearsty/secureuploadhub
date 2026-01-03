@@ -54,6 +54,9 @@ export function AnalyticsChart({
   formatTooltip,
 }: AnalyticsChartProps) {
   const formattedData = useMemo(() => {
+    if (!data || data.length === 0) {
+      return [];
+    }
     return data.map((item) => ({
       ...item,
       [xKey]: formatXAxis ? formatXAxis(item[xKey]) : item[xKey],
@@ -87,6 +90,11 @@ export function AnalyticsChart({
     const formattedValue = formatYAxis ? formatYAxis(value) : defaultFormatYAxis(value);
     return [formattedValue, name || ''];
   };
+
+  // Handle empty data
+  if (!formattedData || formattedData.length === 0) {
+    return null; // Let parent component handle empty state
+  }
 
   if (type === 'pie') {
     return (

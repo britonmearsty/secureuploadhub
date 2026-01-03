@@ -149,7 +149,20 @@ export async function GET(request: NextRequest) {
             ORDER BY period ASC
           `;
         }
-        userAnalytics.trends.registrations = registrationTrends as any[];
+        // Format periods as ISO date strings
+        userAnalytics.trends.registrations = (registrationTrends as any[]).map((trend: any) => {
+          let periodValue = trend.period;
+          if (trend.period instanceof Date) {
+            periodValue = trend.period.toISOString().split('T')[0];
+          } else if (typeof trend.period === 'string' && trend.period.includes('T')) {
+            periodValue = trend.period.split('T')[0];
+          }
+          
+          return {
+            period: periodValue,
+            registrations: Number(trend.registrations) || 0
+          };
+        });
       } catch (trendsError) {
         console.log('Registration trends not available:', trendsError);
       }
@@ -208,8 +221,8 @@ export async function GET(request: NextRequest) {
 
       // Get top users
       try {
-        const topUsers = await prisma.user.findMany({
-          take: 10,
+        // Get all users with their counts
+        const allUsers = await prisma.user.findMany({
           include: {
             _count: {
               select: {
@@ -219,13 +232,16 @@ export async function GET(request: NextRequest) {
               },
             },
           },
-          orderBy: [
-            { uploadPortals: { _count: 'desc' } },
-            { fileUploads: { _count: 'desc' } },
-          ],
         });
 
-        userAnalytics.topUsers = topUsers.map(user => ({
+        // Sort by portal count first, then upload count
+        const sortedUsers = allUsers.sort((a, b) => {
+          const portalDiff = b._count.uploadPortals - a._count.uploadPortals;
+          if (portalDiff !== 0) return portalDiff;
+          return b._count.fileUploads - a._count.fileUploads;
+        });
+
+        userAnalytics.topUsers = sortedUsers.slice(0, 10).map(user => ({
           id: user.id,
           name: user.name,
           email: user.email,

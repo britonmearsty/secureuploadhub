@@ -491,10 +491,10 @@ export default function BillingManagementClient() {
           </div>
 
           {/* Subscriptions Table */}
-          <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-            <div className="overflow-x-auto">
+          <div className="bg-white rounded-lg border border-slate-200 overflow-hidden min-h-[600px] flex flex-col">
+            <div className="overflow-x-auto overflow-y-visible flex-1">
               <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
                   <tr>
                     <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">Customer</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">Plan</th>
@@ -580,64 +580,74 @@ export default function BillingManagementClient() {
                               <MoreHorizontal className="w-4 h-4" />
                             </button>
                             
-                            {openActionMenu === subscription.id && (
-                              <div className="absolute right-0 top-8 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-10">
-                                <div className="py-1">
-                                  <button 
-                                    onClick={() => {
-                                      viewSubscriptionDetails(subscription);
-                                      setOpenActionMenu(null);
-                                    }}
-                                    className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                  >
-                                    <Eye className="w-4 h-4" />
-                                    View Details
-                                  </button>
-                                  <button 
-                                    onClick={() => {
-                                      fetchPaymentHistory(subscription.id);
-                                      setOpenActionMenu(null);
-                                    }}
-                                    className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                  >
-                                    <CreditCard className="w-4 h-4" />
-                                    Payment History
-                                  </button>
-                                  {subscription.status === 'active' && !subscription.cancelAtPeriodEnd && (
-                                    <>
-                                      <hr className="my-1" />
-                                      <button 
-                                        onClick={() => {
-                                          handleCancelSubscription(subscription);
-                                          setOpenActionMenu(null);
-                                        }}
-                                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                                        disabled={actionLoading}
-                                      >
-                                        <XCircle className="w-4 h-4" />
-                                        Cancel Subscription
-                                      </button>
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-                            )}
+                            <AnimatePresence>
+                              {openActionMenu === subscription.id && (
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.95 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  exit={{ opacity: 0, scale: 0.95 }}
+                                  className="absolute right-0 bottom-full mb-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50"
+                                >
+                                  <div className="py-1">
+                                    <button 
+                                      onClick={() => {
+                                        viewSubscriptionDetails(subscription);
+                                        setOpenActionMenu(null);
+                                      }}
+                                      className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                    >
+                                      <Eye className="w-4 h-4" />
+                                      View Details
+                                    </button>
+                                    <button 
+                                      onClick={() => {
+                                        fetchPaymentHistory(subscription.id);
+                                        setOpenActionMenu(null);
+                                      }}
+                                      className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                    >
+                                      <CreditCard className="w-4 h-4" />
+                                      Payment History
+                                    </button>
+                                    {subscription.status === 'active' && !subscription.cancelAtPeriodEnd && (
+                                      <>
+                                        <hr className="my-1" />
+                                        <button 
+                                          onClick={() => {
+                                            handleCancelSubscription(subscription);
+                                            setOpenActionMenu(null);
+                                          }}
+                                          className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                          disabled={actionLoading}
+                                        >
+                                          <XCircle className="w-4 h-4" />
+                                          Cancel Subscription
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </div>
                         </div>
                       </td>
                     </tr>
                   ))}
+                  {filteredSubscriptions.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-12">
+                        <div className="text-center">
+                          <CreditCard className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                          <h3 className="text-lg font-medium text-slate-900 mb-2">No subscriptions found</h3>
+                          <p className="text-slate-500">Try adjusting your search or filter criteria.</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
-            
-            {filteredSubscriptions.length === 0 && (
-              <div className="text-center py-12">
-                <CreditCard className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-900 mb-2">No subscriptions found</h3>
-                <p className="text-slate-500">Try adjusting your search or filter criteria.</p>
-              </div>
-            )}
           </div>
         </div>
       )}
@@ -861,6 +871,19 @@ export default function BillingManagementClient() {
         )}
       </AnimatePresence>
 
+      {/* Plan Preview Modal */}
+      <AnimatePresence>
+        {showPlanDetails && selectedPlan && (
+          <PlanPreviewModal
+            plan={selectedPlan}
+            onClose={() => {
+              setShowPlanDetails(false);
+              setSelectedPlan(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Confirmation Modal */}
       <ConfirmationModal
         isOpen={confirmModal.isOpen}
@@ -1032,6 +1055,123 @@ function SubscriptionDetailsModal({
           {/* Created Date */}
           <div className="text-sm text-slate-600">
             Created: {new Date(subscription.createdAt).toLocaleString()}
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// Plan Preview Modal Component
+function PlanPreviewModal({ 
+  plan, 
+  onClose 
+}: { 
+  plan: BillingPlan; 
+  onClose: () => void;
+}) {
+  const formatCurrency = (amount: number, currency: string = 'USD') => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency
+    }).format(amount);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-slate-900">Plan Preview</h2>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          {/* Plan Header */}
+          <div className="text-center pb-6 border-b border-slate-200">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <h3 className="text-2xl font-bold text-slate-900">{plan.name}</h3>
+              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                plan.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+              }`}>
+                {plan.isActive ? 'Active' : 'Inactive'}
+              </span>
+            </div>
+            {plan.description && (
+              <p className="text-slate-600 mt-2">{plan.description}</p>
+            )}
+            <div className="mt-4">
+              <span className="text-4xl font-bold text-slate-900">
+                {formatCurrency(plan.price, plan.currency)}
+              </span>
+              <span className="text-slate-500 ml-1">/month</span>
+            </div>
+          </div>
+
+          {/* Plan Limits */}
+          <div>
+            <h4 className="font-medium text-slate-900 mb-3">Plan Limits</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-slate-50 rounded-lg p-4">
+                <div className="text-sm text-slate-600 mb-1">Max Portals</div>
+                <div className="text-2xl font-bold text-slate-900">
+                  {plan.maxPortals === -1 ? 'Unlimited' : plan.maxPortals}
+                </div>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-4">
+                <div className="text-sm text-slate-600 mb-1">Max Storage</div>
+                <div className="text-2xl font-bold text-slate-900">
+                  {plan.maxStorageGB === -1 ? 'Unlimited' : `${plan.maxStorageGB} GB`}
+                </div>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-4">
+                <div className="text-sm text-slate-600 mb-1">Max Uploads/Month</div>
+                <div className="text-2xl font-bold text-slate-900">
+                  {plan.maxUploadsMonth === -1 ? 'Unlimited' : plan.maxUploadsMonth.toLocaleString()}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Features */}
+          {plan.features && plan.features.length > 0 && (
+            <div>
+              <h4 className="font-medium text-slate-900 mb-3">Features</h4>
+              <ul className="space-y-2">
+                {plan.features.map((feature, index) => (
+                  <li key={index} className="flex items-start gap-2 text-sm text-slate-700">
+                    <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Statistics */}
+          <div className="border-t border-slate-200 pt-4">
+            <div className="text-sm text-slate-600">
+              <span className="font-medium">Subscribers:</span> {plan._count.subscriptions}
+            </div>
+            <div className="text-sm text-slate-600 mt-1">
+              <span className="font-medium">Currency:</span> {plan.currency}
+            </div>
           </div>
         </div>
       </motion.div>

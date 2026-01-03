@@ -208,26 +208,64 @@ export async function GET(request: NextRequest) {
         console.log('Top portals not available:', portalsError);
       }
 
+      // Generate all dates in the period for complete trend data
+      const generateDateRange = (start: Date, end: Date) => {
+        const dates: Date[] = [];
+        const current = new Date(start);
+        current.setHours(0, 0, 0, 0);
+        const endDate = new Date(end);
+        endDate.setHours(23, 59, 59, 999);
+        
+        while (current <= endDate) {
+          dates.push(new Date(current));
+          current.setDate(current.getDate() + 1);
+        }
+        return dates;
+      };
+
+      const endDate = new Date();
+      const allDates = generateDateRange(startDate, endDate);
+
+      // Helper function to format date as ISO string
+      const formatDate = (date: Date) => {
+        return date.toISOString().split('T')[0];
+      };
+
       // Try to get trends
       try {
-        const userGrowth = await prisma.$queryRaw`
+        const userGrowth = await prisma.$queryRaw<Array<{ date: Date; count: number }>>`
           SELECT 
-            DATE_TRUNC('day', "createdAt") as date,
+            DATE_TRUNC('day', "createdAt")::date as date,
             COUNT(*)::int as count
           FROM "User"
           WHERE "createdAt" >= ${startDate}
           GROUP BY DATE_TRUNC('day', "createdAt")
           ORDER BY date ASC
         `;
-        dashboardData.trends.userGrowth = userGrowth as any[];
+
+        // Create a map of existing data
+        const userGrowthMap = new Map(
+          userGrowth.map(item => [formatDate(item.date), item.count])
+        );
+
+        // Fill in all dates with actual data or 0
+        dashboardData.trends.userGrowth = allDates.map(date => ({
+          date: formatDate(date),
+          count: userGrowthMap.get(formatDate(date)) || 0
+        }));
       } catch (userGrowthError) {
         console.log('User growth trend not available:', userGrowthError);
+        // Fill with zeros if query fails
+        dashboardData.trends.userGrowth = allDates.map(date => ({
+          date: formatDate(date),
+          count: 0
+        }));
       }
 
       try {
-        const uploadTrends = await prisma.$queryRaw`
+        const uploadTrends = await prisma.$queryRaw<Array<{ date: Date; count: number; total_size: bigint }>>`
           SELECT 
-            DATE_TRUNC('day', "createdAt") as date,
+            DATE_TRUNC('day', "createdAt")::date as date,
             COUNT(*)::int as count,
             COALESCE(SUM("fileSize"), 0)::bigint as total_size
           FROM "FileUpload"
@@ -235,9 +273,35 @@ export async function GET(request: NextRequest) {
           GROUP BY DATE_TRUNC('day', "createdAt")
           ORDER BY date ASC
         `;
-        dashboardData.trends.uploadTrends = uploadTrends as any[];
+
+        // Create a map of existing data
+        const uploadTrendsMap = new Map(
+          uploadTrends.map(item => [
+            formatDate(item.date),
+            {
+              count: item.count,
+              total_size: Number(item.total_size)
+            }
+          ])
+        );
+
+        // Fill in all dates with actual data or 0
+        dashboardData.trends.uploadTrends = allDates.map(date => {
+          const data = uploadTrendsMap.get(formatDate(date));
+          return {
+            date: formatDate(date),
+            count: data?.count || 0,
+            total_size: data?.total_size || 0
+          };
+        });
       } catch (uploadTrendsError) {
         console.log('Upload trends not available:', uploadTrendsError);
+        // Fill with zeros if query fails
+        dashboardData.trends.uploadTrends = allDates.map(date => ({
+          date: formatDate(date),
+          count: 0,
+          total_size: 0
+        }));
       }
 
     } catch (error) {

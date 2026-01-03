@@ -4,23 +4,14 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, 
-  Filter, 
   MoreHorizontal, 
   Globe, 
   Globe as GlobeOff, 
   Trash2, 
   Eye,
-  Users,
-  Upload,
-  Calendar,
-  HardDrive,
   TrendingUp,
-  UserCheck,
-  Settings,
-  ArrowUpDown,
   ExternalLink,
   AlertTriangle,
-  BarChart3,
   UserPlus
 } from 'lucide-react';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
@@ -88,7 +79,6 @@ export default function PortalManagementClient() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedPortal, setSelectedPortal] = useState<Portal | null>(null);
   const [showPortalDetails, setShowPortalDetails] = useState(false);
-  const [showAnalytics, setShowAnalytics] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [transferUsers, setTransferUsers] = useState<any[]>([]);
   const [transferLoading, setTransferLoading] = useState(false);
@@ -416,18 +406,9 @@ export default function PortalManagementClient() {
           <h1 className="text-2xl font-bold text-slate-900">Portal Management</h1>
           <p className="text-slate-600">Manage upload portals and monitor activity</p>
         </div>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setShowAnalytics(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors"
-          >
-            <BarChart3 className="w-4 h-4" />
-            Analytics
-          </button>
-          <div className="flex items-center gap-2 text-sm text-slate-600">
-            <Globe className="w-4 h-4" />
-            <span>{portals.length} total portals</span>
-          </div>
+        <div className="flex items-center gap-2 text-sm text-slate-600">
+          <Globe className="w-4 h-4" />
+          <span>{portals.length} total portals</span>
         </div>
       </div>
 
@@ -516,194 +497,194 @@ export default function PortalManagementClient() {
         </select>
       </div>
 
-      {/* Portals Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {filteredPortals.map((portal) => (
-          <motion.div
-            key={portal.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-lg border border-slate-200 p-6 hover:shadow-lg transition-shadow"
-          >
-            {/* Portal Header */}
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-semibold text-slate-900 truncate">
-                    {portal.name}
-                  </h3>
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                    portal.isActive 
-                      ? 'bg-green-100 text-green-700' 
-                      : 'bg-red-100 text-red-700'
-                  }`}>
-                    {portal.isActive ? (
-                      <Globe className="w-3 h-3 mr-1" />
-                    ) : (
-                      <GlobeOff className="w-3 h-3 mr-1" />
-                    )}
-                    {portal.isActive ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
-                <p className="text-sm text-slate-600 mb-2">/{portal.slug}</p>
-                {portal.description && (
-                  <p className="text-sm text-slate-500 line-clamp-2">
-                    {portal.description}
-                  </p>
-                )}
-              </div>
-              
-              <div className="relative">
-                <button 
-                  className="p-1 text-slate-400 hover:text-slate-600 rounded"
-                  disabled={actionLoading}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setOpenActionMenu(openActionMenu === portal.id ? null : portal.id);
-                  }}
-                >
-                  <MoreHorizontal className="w-4 h-4" />
-                </button>
-                
-                {openActionMenu === portal.id && (
-                  <div className="absolute right-0 top-8 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-10">
-                    <div className="py-1">
+      {/* Portals Table */}
+      <div className="bg-white rounded-lg border border-slate-200 overflow-hidden min-h-[600px] flex flex-col">
+        <div className="overflow-x-auto overflow-y-visible flex-1">
+          <table className="w-full">
+            <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">Portal</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">Owner</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">Status</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">Uploads</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">Storage</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">Created</th>
+                <th className="px-4 py-3 text-right text-sm font-medium text-slate-700">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {filteredPortals.map((portal) => (
+                <tr key={portal.id} className="hover:bg-slate-50">
+                  <td className="px-4 py-3">
+                    <div>
+                      <div className="font-medium text-slate-900">{portal.name}</div>
+                      <div className="text-sm text-slate-500">/{portal.slug}</div>
+                      {portal.description && (
+                        <div className="text-xs text-slate-500 mt-1 line-clamp-1">
+                          {portal.description}
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      {portal.user.image ? (
+                        <img
+                          src={portal.user.image}
+                          alt={portal.user.name || portal.user.email}
+                          className="w-6 h-6 rounded-full"
+                        />
+                      ) : (
+                        <div className="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center">
+                          <span className="text-xs font-medium text-slate-600">
+                            {(portal.user.name || portal.user.email).charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                      <div>
+                        <div className="text-sm font-medium text-slate-900">
+                          {portal.user.name || 'No name'}
+                        </div>
+                        <div className="text-xs text-slate-500">{portal.user.email}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      portal.isActive 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-red-100 text-red-700'
+                    }`}>
+                      {portal.isActive ? (
+                        <Globe className="w-3 h-3 mr-1" />
+                      ) : (
+                        <GlobeOff className="w-3 h-3 mr-1" />
+                      )}
+                      {portal.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="text-sm text-slate-900">
+                      <div>{portal.stats.totalUploads} total</div>
+                      <div className="text-xs text-slate-500">{portal.stats.completedUploads} completed</div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="text-sm text-slate-900">
+                      {formatFileSize(portal.stats.totalSize)}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="text-sm text-slate-600">
+                      {new Date(portal.createdAt).toLocaleDateString()}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-2">
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          viewPortalDetails(portal);
-                          setOpenActionMenu(null);
-                        }}
-                        className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                        onClick={() => viewPortalDetails(portal)}
+                        className="p-1 text-slate-400 hover:text-slate-600 rounded"
+                        title="View Details"
                       >
                         <Eye className="w-4 h-4" />
-                        View Details
                       </button>
-                      
                       <a
                         href={`/p/${portal.slug}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                        onClick={() => setOpenActionMenu(null)}
+                        className="p-1 text-slate-400 hover:text-slate-600 rounded"
+                        title="Open Portal"
                       >
                         <ExternalLink className="w-4 h-4" />
-                        Open Portal
                       </a>
-                      
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleTogglePortalStatus(portal);
-                        }}
-                        className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                        disabled={actionLoading}
-                      >
-                        {portal.isActive ? (
-                          <>
-                            <GlobeOff className="w-4 h-4" />
-                            Disable Portal
-                          </>
-                        ) : (
-                          <>
-                            <Globe className="w-4 h-4" />
-                            Enable Portal
-                          </>
-                        )}
-                      </button>
-                      
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleTransferPortal(portal);
-                          setOpenActionMenu(null);
-                        }}
-                        className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                        disabled={actionLoading}
-                      >
-                        <UserPlus className="w-4 h-4" />
-                        Transfer Ownership
-                      </button>
-                      
-                      <hr className="my-1" />
-                      
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeletePortal(portal);
-                        }}
-                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                        disabled={actionLoading}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        Delete Portal
-                      </button>
+                      <div className="relative">
+                        <button 
+                          onClick={() => setOpenActionMenu(openActionMenu === portal.id ? null : portal.id)}
+                          className="p-1 text-slate-400 hover:text-slate-600 rounded"
+                          disabled={actionLoading}
+                        >
+                          <MoreHorizontal className="w-4 h-4" />
+                        </button>
+
+                        <AnimatePresence>
+                          {openActionMenu === portal.id && (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.95 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              className="absolute right-0 bottom-full mb-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50"
+                            >
+                              <div className="py-1">
+                                <button
+                                  onClick={() => {
+                                    handleTogglePortalStatus(portal);
+                                    setOpenActionMenu(null);
+                                  }}
+                                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                  disabled={actionLoading}
+                                >
+                                  {portal.isActive ? (
+                                    <>
+                                      <GlobeOff className="w-4 h-4" />
+                                      Disable Portal
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Globe className="w-4 h-4" />
+                                      Enable Portal
+                                    </>
+                                  )}
+                                </button>
+                                
+                                <button
+                                  onClick={() => {
+                                    handleTransferPortal(portal);
+                                    setOpenActionMenu(null);
+                                  }}
+                                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                  disabled={actionLoading}
+                                >
+                                  <UserPlus className="w-4 h-4" />
+                                  Transfer Ownership
+                                </button>
+                                
+                                <hr className="my-1" />
+                                
+                                <button
+                                  onClick={() => {
+                                    handleDeletePortal(portal);
+                                    setOpenActionMenu(null);
+                                  }}
+                                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                  disabled={actionLoading}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Delete Portal
+                                </button>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Owner Info */}
-            <div className="flex items-center gap-2 mb-4">
-              {portal.user.image ? (
-                <img
-                  src={portal.user.image}
-                  alt={portal.user.name || portal.user.email}
-                  className="w-6 h-6 rounded-full"
-                />
-              ) : (
-                <div className="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center">
-                  <span className="text-xs font-medium text-slate-600">
-                    {(portal.user.name || portal.user.email).charAt(0).toUpperCase()}
-                  </span>
-                </div>
+                  </td>
+                </tr>
+              ))}
+              {filteredPortals.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-12">
+                    <div className="text-center">
+                      <Globe className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-slate-900 mb-2">No portals found</h3>
+                      <p className="text-slate-500">Try adjusting your search or filter criteria.</p>
+                    </div>
+                  </td>
+                </tr>
               )}
-              <div>
-                <div className="text-sm font-medium text-slate-900">
-                  {portal.user.name || 'No name'}
-                </div>
-                <div className="text-xs text-slate-500">{portal.user.email}</div>
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="text-center">
-                <div className="text-lg font-semibold text-slate-900">
-                  {portal.stats.totalUploads}
-                </div>
-                <div className="text-xs text-slate-600">Uploads</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-semibold text-slate-900">
-                  {portal.stats.completedUploads}
-                </div>
-                <div className="text-xs text-slate-600">Completed</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-semibold text-slate-900">
-                  {formatFileSize(portal.stats.totalSize)}
-                </div>
-                <div className="text-xs text-slate-600">Storage</div>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="text-xs text-slate-500 border-t border-slate-100 pt-3">
-              Created {new Date(portal.createdAt).toLocaleDateString()}
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      {filteredPortals.length === 0 && (
-        <div className="text-center py-12">
-          <Globe className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-slate-900 mb-2">No portals found</h3>
-          <p className="text-slate-500">Try adjusting your search or filter criteria.</p>
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
 
       {/* Portal Details Modal */}
       <AnimatePresence>
@@ -715,15 +696,6 @@ export default function PortalManagementClient() {
         )}
       </AnimatePresence>
 
-      {/* Analytics Modal */}
-      <AnimatePresence>
-        {showAnalytics && analytics && (
-          <AnalyticsModal
-            analytics={analytics}
-            onClose={() => setShowAnalytics(false)}
-          />
-        )}
-      </AnimatePresence>
 
       {/* Transfer Modal */}
       <AnimatePresence>
@@ -1032,82 +1004,6 @@ function PortalDetailsModal({ portal, onClose }: { portal: Portal; onClose: () =
               <p className="text-slate-600">Failed to load portal details</p>
             </div>
           )}
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-// Analytics Modal Component
-function AnalyticsModal({ analytics, onClose }: { analytics: Analytics; onClose: () => void }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-slate-900">Portal Analytics</h2>
-            <button
-              onClick={onClose}
-              className="text-slate-400 hover:text-slate-600"
-            >
-              ×
-            </button>
-          </div>
-
-          <div className="space-y-6">
-            {/* Top Portals */}
-            <div>
-              <h3 className="font-medium text-slate-900 mb-3">Top Portals by Uploads</h3>
-              <div className="space-y-2">
-                {analytics.topPortals.slice(0, 10).map((portal, index) => (
-                  <div key={portal.id} className="flex items-center justify-between py-2 px-3 bg-slate-50 rounded">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-slate-500">#{index + 1}</span>
-                      <div>
-                        <div className="font-medium text-sm">{portal.name}</div>
-                        <div className="text-xs text-slate-600">
-                          Owner: {portal.user.name || portal.user.email}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-medium text-sm">{portal.uploadCount} uploads</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Upload Trends */}
-            {analytics.trends.uploadTrends.length > 0 && (
-              <div>
-                <h3 className="font-medium text-slate-900 mb-3">Upload Trends ({analytics.trends.period})</h3>
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600 mb-2">Daily upload activity</div>
-                  <div className="space-y-1">
-                    {analytics.trends.uploadTrends.slice(-7).map((trend: any) => (
-                      <div key={trend.date} className="flex items-center justify-between text-sm">
-                        <span>{new Date(trend.date).toLocaleDateString()}</span>
-                        <span>{trend.uploads} uploads from {trend.active_portals} portals</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
       </motion.div>
     </motion.div>
