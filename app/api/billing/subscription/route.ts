@@ -7,7 +7,6 @@ import {
   getOrCreatePaystackPlan,
   createPaystackSubscription,
 } from "@/lib/paystack-subscription"
-import { PAYSTACK_CONFIG as CONFIG } from "@/lib/paystack-config"
 import { createAuditLog, AUDIT_ACTIONS } from "@/lib/audit-log"
 import { BILLING_INTERVAL, PAYMENT_STATUS } from "@/lib/billing-constants"
 import { getPaystackCurrency, convertToPaystackSubunit } from "@/lib/paystack-currency"
@@ -139,32 +138,85 @@ export async function POST(request: NextRequest) {
         include: { plan: true }
       })
 
-      // Create Paystack subscription
-      // This will require user authorization, so we'll get an authorization URL
-      const paystackSubscription = await createPaystackSubscription({
-        customer: paystackCustomer.customer_code,
-        plan: paystackPlan.plan_code,
-      })
+      // For initial subscription, we need to get authorization from user first
+      // Instead of creating subscription immediately, return checkout URL
+      
+      // Check if user has existing authorization (saved card)
+      let authorizationCode = null;
+      
+      // Try to get existing authorization from previous payments
+      const existingPayment = await prisma.payment.findFirst({
+        where: {
+          userId: session.user.id,
+          status: PAYMENT_STATUS.SUCCEEDED,
+        },
+        orderBy: { createdAt: 'desc' }
+      });
 
-      // Update subscription with Paystack subscription ID
-      await prisma.subscription.update({
-        where: { id: subscription.id },
-        data: {
-          providerSubscriptionId: paystackSubscription.subscription_code,
+      if (existingPayment) {
+        // Check if payment has authorization code (will be available after Prisma regeneration)
+        authorizationCode = (existingPayment as any).authorizationCode;
+      }
+
+      let paystackSubscription;
+      
+      if (authorizationCode) {
+        // Create subscription with existing authorization
+        paystackSubscription = await createPaystackSubscription({
+          customer: paystackCustomer.customer_code,
+          plan: paystackPlan.plan_code,
+          authorization: authorizationCode,
+        });
+
+        // Update subscription with Paystack subscription ID
+        await prisma.subscription.update({
+          where: { id: subscription.id },
+          data: {
+            providerSubscriptionId: paystackSubscription.subscription_code,
+            status: "active", // Can be active since we have authorization
+          }
+        });
+      } else {
+        // No existing authorization - need to redirect user to payment
+        // Create a payment initialization for the first payment
+        const paystack = await import('@/lib/billing').then(m => m.getPaystack());
+        
+        const initializeResponse = await (paystack as any).transaction.initialize({
+          email: user.email,
+          amount: convertToPaystackSubunit(plan.price, paystackCurrency),
+          currency: paystackCurrency,
+          callback_url: `${PAYSTACK_CONFIG.baseUrl}/dashboard?subscription_setup=success`,
+          metadata: {
+            subscription_id: subscription.id,
+            plan_id: plan.id,
+            user_id: session.user.id,
+            type: 'subscription_setup'
+          }
+        });
+
+        if (!initializeResponse.status) {
+          throw new Error(`Failed to initialize payment: ${initializeResponse.message}`);
         }
-      })
+
+        return NextResponse.json({
+          subscription: subscription,
+          requiresAuthorization: true,
+          paymentLink: initializeResponse.data.authorization_url,
+          message: "Please complete payment to activate your subscription.",
+        });
+      }
 
       // Create subscription history entry
       await prisma.subscriptionHistory.create({
         data: {
           subscriptionId: subscription.id,
-          action: "plan_changed",
+          action: authorizationCode ? "activated" : "plan_changed",
           newValue: JSON.stringify({
             planId: plan.id,
             planName: plan.name,
-            status: "incomplete",
+            status: authorizationCode ? "active" : "incomplete",
           }),
-          reason: "New subscription created",
+          reason: authorizationCode ? "Subscription created and activated" : "New subscription created",
         }
       })
 
@@ -178,21 +230,23 @@ export async function POST(request: NextRequest) {
           details: {
             planId: plan.id,
             planName: plan.name,
-            providerSubscriptionId: paystackSubscription.subscription_code,
+            providerSubscriptionId: paystackSubscription?.subscription_code,
+            hasAuthorization: !!authorizationCode,
           }
         });
       }
 
-      // Return subscription with authorization info if needed
-      // Paystack subscription creation may require user to authorize payment
-      return NextResponse.json({
-        subscription: {
-          ...subscription,
-          providerSubscriptionId: paystackSubscription.subscription_code,
-        },
-        authorizationCode: paystackSubscription.authorization?.authorization_code || null,
-        message: "Subscription created. Please authorize payment to activate.",
-      })
+      // Return success response for subscriptions with existing authorization
+      if (authorizationCode && paystackSubscription) {
+        return NextResponse.json({
+          subscription: {
+            ...subscription,
+            providerSubscriptionId: paystackSubscription.subscription_code,
+            status: "active",
+          },
+          message: "Subscription created and activated successfully.",
+        })
+      }
     } catch (error: any) {
       console.error("Error creating Paystack subscription:", error)
       return NextResponse.json(

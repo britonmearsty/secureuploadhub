@@ -374,9 +374,15 @@ async function handleInvoicePaymentSucceeded(data: any) {
 }
 
 async function handleChargeSuccess(data: any) {
-  const { reference, id: paymentId, amount, currency, status } = data
+  const { reference, id: paymentId, amount, currency, status, metadata, authorization } = data
 
   if (status !== "success") {
+    return
+  }
+
+  // Check if this is a subscription setup payment
+  if (metadata?.type === 'subscription_setup') {
+    await handleSubscriptionSetupPayment(data)
     return
   }
 
@@ -408,7 +414,8 @@ async function handleChargeSuccess(data: any) {
         providerPaymentId: paymentId.toString(),
         amount: (amount || 0) / 100,
         currency: currency || existingPayment.currency,
-        description: existingPayment.description ?? `Payment for ${subscription?.plan?.name ?? "plan"}`
+        description: existingPayment.description ?? `Payment for ${subscription?.plan?.name ?? "plan"}`,
+        ...(authorization?.authorization_code && { authorizationCode: authorization.authorization_code })
       }
     })
 
@@ -437,6 +444,128 @@ async function handleChargeSuccess(data: any) {
       details: { action: "payment_succeeded", reference }
     })
   }
+}
+
+async function handleSubscriptionSetupPayment(data: any) {
+  const { reference, id: paymentId, amount, currency, status, metadata, authorization } = data
+
+  if (status !== "success") {
+    return
+  }
+
+  const subscriptionId = metadata?.subscription_id
+  const userId = metadata?.user_id
+  const planId = metadata?.plan_id
+
+  if (!subscriptionId || !userId || !planId) {
+    console.error("Missing metadata for subscription setup payment:", metadata)
+    return
+  }
+
+  const subscription = await prisma.subscription.findUnique({
+    where: { id: subscriptionId },
+    include: { plan: true, user: true }
+  })
+
+  if (!subscription) {
+    console.error("Subscription not found for setup payment:", subscriptionId)
+    return
+  }
+
+  const now = new Date()
+  const periodEnd = addMonthsLocal(now, 1)
+
+  await prisma.$transaction(async (tx) => {
+    // Create payment record
+    await tx.payment.create({
+      data: {
+        subscriptionId: subscription.id,
+        userId: subscription.userId,
+        amount: (amount || 0) / 100,
+        currency: currency || subscription.plan.currency,
+        status: PAYMENT_STATUS.SUCCEEDED,
+        providerPaymentId: paymentId.toString(),
+        providerPaymentRef: reference,
+        description: `Initial payment for ${subscription.plan.name}`,
+        ...(authorization?.authorization_code && { authorizationCode: authorization.authorization_code }),
+      }
+    })
+
+    // Now create the Paystack subscription with the authorization
+    if (authorization?.authorization_code) {
+      try {
+        const { createPaystackSubscription, getOrCreatePaystackPlan } = await import('@/lib/paystack-subscription')
+        const { getPaystackCurrency, convertToPaystackSubunit } = await import('@/lib/paystack-currency')
+        
+        const paystackCurrency = getPaystackCurrency(subscription.plan.currency)
+        const paystackPlan = await getOrCreatePaystackPlan({
+          name: subscription.plan.name,
+          amount: convertToPaystackSubunit(subscription.plan.price, paystackCurrency),
+          interval: "monthly",
+          currency: paystackCurrency,
+          description: subscription.plan.description || undefined,
+        })
+
+        const paystackSubscription = await createPaystackSubscription({
+          customer: subscription.providerCustomerId!,
+          plan: paystackPlan.plan_code,
+          authorization: authorization.authorization_code,
+        })
+
+        // Update subscription with Paystack subscription ID and activate it
+        await tx.subscription.update({
+          where: { id: subscription.id },
+          data: {
+            status: SUBSCRIPTION_STATUS.ACTIVE,
+            providerSubscriptionId: paystackSubscription.subscription_code,
+            currentPeriodStart: now,
+            currentPeriodEnd: periodEnd,
+            nextBillingDate: periodEnd,
+            cancelAtPeriodEnd: false,
+          }
+        })
+
+        // Create subscription history entry
+        await tx.subscriptionHistory.create({
+          data: {
+            subscriptionId: subscription.id,
+            action: "activated",
+            newValue: JSON.stringify({
+              status: SUBSCRIPTION_STATUS.ACTIVE,
+              providerSubscriptionId: paystackSubscription.subscription_code,
+            }),
+            reason: "Subscription activated after initial payment",
+          }
+        })
+
+      } catch (error) {
+        console.error("Error creating Paystack subscription after payment:", error)
+        // Still update subscription to active since payment succeeded
+        await tx.subscription.update({
+          where: { id: subscription.id },
+          data: {
+            status: SUBSCRIPTION_STATUS.ACTIVE,
+            currentPeriodStart: now,
+            currentPeriodEnd: periodEnd,
+            nextBillingDate: periodEnd,
+            cancelAtPeriodEnd: false,
+          }
+        })
+      }
+    }
+  })
+
+  await createAuditLog({
+    userId: subscription.userId,
+    action: AUDIT_ACTIONS.SUBSCRIPTION_CREATED,
+    resource: "subscription",
+    resourceId: subscription.id,
+    details: { 
+      action: "subscription_setup_completed", 
+      reference,
+      authorizationCode: authorization?.authorization_code 
+    }
+  })
 }
 
 async function handleChargeFailed(data: any) {

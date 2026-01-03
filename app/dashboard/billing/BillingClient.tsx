@@ -102,8 +102,14 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
 
             const data = await response.json()
 
-            if (response.ok && data.paymentLink) {
-                window.location.href = data.paymentLink
+            if (response.ok) {
+                if (data.paymentLink) {
+                    // Redirect to payment page
+                    window.location.href = data.paymentLink
+                } else {
+                    // Subscription activated immediately, reload page
+                    window.location.reload()
+                }
             } else {
                 const errorMessage = data.details ? `${data.error}: ${data.details}` : (data.error || "Failed to create subscription")
                 alert(errorMessage)
