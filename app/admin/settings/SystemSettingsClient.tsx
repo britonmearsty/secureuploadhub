@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Settings, Plus, Edit, Trash2, Save, X } from 'lucide-react';
+import { ToastContainer, Toast } from '@/components/ui/Toast';
+import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 
 interface SystemSetting {
   id: string;
@@ -39,6 +41,33 @@ export function SystemSettingsClient() {
     isPublic: false,
   });
 
+  // Toast notifications
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  // Confirmation modal
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    variant?: 'danger' | 'warning' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    variant: 'danger'
+  });
+
+  const addToast = (toast: Omit<Toast, 'id'>) => {
+    const id = Date.now().toString();
+    setToasts(prev => [...prev, { ...toast, id }]);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  };
+
   const categories = ['general', 'security', 'email', 'storage', 'billing', 'ui'];
 
   useEffect(() => {
@@ -46,6 +75,7 @@ export function SystemSettingsClient() {
   }, [selectedCategory]);
 
   const fetchSettings = async () => {
+    setLoading(true);
     try {
       const params = new URLSearchParams();
       if (selectedCategory !== 'all') {
@@ -53,19 +83,35 @@ export function SystemSettingsClient() {
       }
 
       const response = await fetch(`/api/admin/settings?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch settings');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
       
       const data = await response.json();
-      setSettings(data.settings);
+      setSettings(data.settings || []);
     } catch (error) {
-      alert('Failed to fetch system settings');
       console.error('Error fetching settings:', error);
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to fetch system settings. Please try again.'
+      });
+      setSettings([]); // Set empty array as fallback
     } finally {
       setLoading(false);
     }
   };
 
   const handleCreateSetting = async () => {
+    if (!newSetting.key.trim()) {
+      addToast({
+        type: 'error',
+        title: 'Validation Error',
+        message: 'Setting key is required.'
+      });
+      return;
+    }
+
     try {
       const response = await fetch('/api/admin/settings', {
         method: 'POST',
@@ -73,9 +119,18 @@ export function SystemSettingsClient() {
         body: JSON.stringify(newSetting),
       });
 
-      if (!response.ok) throw new Error('Failed to create setting');
+      const data = await response.json();
 
-      alert('System setting created successfully');
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create setting');
+      }
+
+      addToast({
+        type: 'success',
+        title: 'Success',
+        message: `Setting "${newSetting.key}" created successfully.`
+      });
+      
       setIsCreateDialogOpen(false);
       setNewSetting({
         key: '',
@@ -87,8 +142,12 @@ export function SystemSettingsClient() {
       });
       fetchSettings();
     } catch (error) {
-      alert('Failed to create system setting');
       console.error('Error creating setting:', error);
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: error instanceof Error ? error.message : 'Failed to create system setting'
+      });
     }
   };
 
@@ -105,33 +164,70 @@ export function SystemSettingsClient() {
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to update setting');
+      const data = await response.json();
 
-      alert('System setting updated successfully');
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update setting');
+      }
+
+      addToast({
+        type: 'success',
+        title: 'Success',
+        message: `Setting "${setting.key}" updated successfully.`
+      });
+      
       setEditingSetting(null);
       fetchSettings();
     } catch (error) {
-      alert('Failed to update system setting');
       console.error('Error updating setting:', error);
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: error instanceof Error ? error.message : 'Failed to update system setting'
+      });
     }
   };
 
-  const handleDeleteSetting = async (settingId: string) => {
-    if (!confirm('Are you sure you want to delete this setting?')) return;
-
+  const handleDeleteSetting = async (settingId: string, settingKey: string) => {
     try {
       const response = await fetch(`/api/admin/settings/${settingId}`, {
         method: 'DELETE',
       });
 
-      if (!response.ok) throw new Error('Failed to delete setting');
+      const data = await response.json();
 
-      alert('System setting deleted successfully');
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete setting');
+      }
+
+      addToast({
+        type: 'success',
+        title: 'Success',
+        message: `Setting "${settingKey}" deleted successfully.`
+      });
+      
       fetchSettings();
     } catch (error) {
-      alert('Failed to delete system setting');
       console.error('Error deleting setting:', error);
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: error instanceof Error ? error.message : 'Failed to delete system setting'
+      });
     }
+  };
+
+  const confirmDeleteSetting = (setting: SystemSetting) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete System Setting',
+      message: `Are you sure you want to delete the setting "${setting.key}"? This action cannot be undone.`,
+      variant: 'danger',
+      onConfirm: () => {
+        handleDeleteSetting(setting.id, setting.key);
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+      }
+    });
   };
 
   const formatValue = (value: string | null, type: string) => {
@@ -160,26 +256,39 @@ export function SystemSettingsClient() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
       </div>
     );
   }
 
   return (
     <div className="p-6 space-y-6">
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant}
+      />
+
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
             <Settings className="h-6 w-6" />
             System Settings
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-slate-600 mt-1">
             Manage system-wide configuration and settings
           </p>
         </div>
         <button
           onClick={() => setIsCreateDialogOpen(true)}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center gap-2"
+          className="bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 flex items-center gap-2 transition-colors"
         >
           <Plus className="h-4 w-4" />
           Add Setting
@@ -187,14 +296,14 @@ export function SystemSettingsClient() {
       </div>
 
       {/* Category Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-slate-200">
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setSelectedCategory('all')}
             className={`py-2 px-1 border-b-2 font-medium text-sm ${
               selectedCategory === 'all'
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-slate-900 text-slate-900'
+                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
             }`}
           >
             All Settings
@@ -205,8 +314,8 @@ export function SystemSettingsClient() {
               onClick={() => setSelectedCategory(category)}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 selectedCategory === category
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-slate-900 text-slate-900'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
               }`}
             >
               {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -218,20 +327,32 @@ export function SystemSettingsClient() {
       {/* Settings List */}
       <div className="space-y-4">
         {settings.length === 0 ? (
-          <div className="bg-white rounded-lg border p-8 text-center">
-            <p className="text-gray-500">No settings found for this category.</p>
+          <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
+            <Settings className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-slate-900 mb-2">No settings found</h3>
+            <p className="text-slate-500 mb-4">
+              {selectedCategory === 'all' 
+                ? 'No system settings have been configured yet.' 
+                : `No settings found in the "${selectedCategory}" category.`}
+            </p>
+            <button
+              onClick={() => setIsCreateDialogOpen(true)}
+              className="bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors"
+            >
+              Create First Setting
+            </button>
           </div>
         ) : (
           settings.map((setting) => (
-            <div key={setting.id} className="bg-white rounded-lg border p-6">
+            <div key={setting.id} className="bg-white rounded-lg border border-slate-200 p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <h3 className="text-lg font-semibold">{setting.key}</h3>
+                  <h3 className="text-lg font-semibold text-slate-900">{setting.key}</h3>
                   <span className={`px-2 py-1 rounded text-xs font-medium ${getTypeColor(setting.type)}`}>
                     {setting.type}
                   </span>
                   {setting.isPublic && (
-                    <span className="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                    <span className="px-2 py-1 rounded text-xs font-medium bg-slate-100 text-slate-800">
                       Public
                     </span>
                   )}
@@ -239,29 +360,29 @@ export function SystemSettingsClient() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setEditingSetting(setting)}
-                    className="p-2 text-gray-400 hover:text-gray-600"
+                    className="p-2 text-slate-400 hover:text-slate-600 rounded transition-colors"
                   >
                     <Edit className="h-4 w-4" />
                   </button>
                   <button
-                    onClick={() => handleDeleteSetting(setting.id)}
-                    className="p-2 text-gray-400 hover:text-red-600"
+                    onClick={() => confirmDeleteSetting(setting)}
+                    className="p-2 text-slate-400 hover:text-red-600 rounded transition-colors"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>
               {setting.description && (
-                <p className="text-gray-600 mb-3">{setting.description}</p>
+                <p className="text-slate-600 mb-3">{setting.description}</p>
               )}
               <div className="space-y-2">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Value:</label>
-                  <div className="mt-1 p-2 bg-gray-50 rounded border">
-                    <code className="text-sm">{formatValue(setting.value, setting.type)}</code>
+                  <label className="text-sm font-medium text-slate-700">Value:</label>
+                  <div className="mt-1 p-2 bg-slate-50 rounded border border-slate-200">
+                    <code className="text-sm text-slate-900">{formatValue(setting.value, setting.type)}</code>
                   </div>
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-slate-500">
                   Category: {setting.category} • Updated: {new Date(setting.updatedAt).toLocaleString()}
                 </div>
               </div>
@@ -273,35 +394,35 @@ export function SystemSettingsClient() {
       {/* Create Setting Modal */}
       {isCreateDialogOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-lg font-semibold mb-4">Create System Setting</h2>
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-semibold text-slate-900 mb-4">Create System Setting</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Setting Key</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Setting Key *</label>
                 <input
                   type="text"
                   value={newSetting.key}
                   onChange={(e) => setNewSetting({ ...newSetting, key: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                   placeholder="e.g., max_upload_size"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Value</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Value</label>
                 <input
                   type="text"
                   value={newSetting.value}
                   onChange={(e) => setNewSetting({ ...newSetting, value: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                   placeholder="Setting value"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Type</label>
                 <select
                   value={newSetting.type}
                   onChange={(e) => setNewSetting({ ...newSetting, type: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                 >
                   <option value="string">String</option>
                   <option value="number">Number</option>
@@ -310,11 +431,11 @@ export function SystemSettingsClient() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Category</label>
                 <select
                   value={newSetting.category}
                   onChange={(e) => setNewSetting({ ...newSetting, category: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                 >
                   {categories.map((category) => (
                     <option key={category} value={category}>
@@ -324,11 +445,11 @@ export function SystemSettingsClient() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Description</label>
                 <textarea
                   value={newSetting.description}
                   onChange={(e) => setNewSetting({ ...newSetting, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                   rows={3}
                   placeholder="Describe what this setting controls"
                 />
@@ -339,9 +460,9 @@ export function SystemSettingsClient() {
                   id="isPublic"
                   checked={newSetting.isPublic}
                   onChange={(e) => setNewSetting({ ...newSetting, isPublic: e.target.checked })}
-                  className="mr-2"
+                  className="mr-2 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                 />
-                <label htmlFor="isPublic" className="text-sm font-medium text-gray-700">
+                <label htmlFor="isPublic" className="text-sm font-medium text-slate-700">
                   Public Setting
                 </label>
               </div>
@@ -349,13 +470,13 @@ export function SystemSettingsClient() {
             <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={() => setIsCreateDialogOpen(false)}
-                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+                className="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateSetting}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 font-medium transition-colors"
               >
                 Create Setting
               </button>
@@ -367,16 +488,26 @@ export function SystemSettingsClient() {
       {/* Edit Setting Modal */}
       {editingSetting && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-lg font-semibold mb-4">Edit System Setting</h2>
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-semibold text-slate-900 mb-4">Edit System Setting</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Value</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Setting Key</label>
+                <input
+                  type="text"
+                  value={editingSetting.key}
+                  disabled
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-500"
+                />
+                <p className="text-xs text-slate-500 mt-1">Setting key cannot be changed</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Value</label>
                 {editingSetting.type === 'boolean' ? (
                   <select
                     value={editingSetting.value || 'false'}
                     onChange={(e) => setEditingSetting({ ...editingSetting, value: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                   >
                     <option value="true">True</option>
                     <option value="false">False</option>
@@ -385,33 +516,34 @@ export function SystemSettingsClient() {
                   <textarea
                     value={editingSetting.value || ''}
                     onChange={(e) => setEditingSetting({ ...editingSetting, value: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                     rows={6}
+                    placeholder="Enter valid JSON"
                   />
                 ) : (
                   <input
                     type={editingSetting.type === 'number' ? 'number' : 'text'}
                     value={editingSetting.value || ''}
                     onChange={(e) => setEditingSetting({ ...editingSetting, value: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                   />
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Description</label>
                 <textarea
                   value={editingSetting.description || ''}
                   onChange={(e) => setEditingSetting({ ...editingSetting, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                   rows={3}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Category</label>
                 <select
                   value={editingSetting.category}
                   onChange={(e) => setEditingSetting({ ...editingSetting, category: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                 >
                   {categories.map((category) => (
                     <option key={category} value={category}>
@@ -426,9 +558,9 @@ export function SystemSettingsClient() {
                   id="edit-isPublic"
                   checked={editingSetting.isPublic}
                   onChange={(e) => setEditingSetting({ ...editingSetting, isPublic: e.target.checked })}
-                  className="mr-2"
+                  className="mr-2 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                 />
-                <label htmlFor="edit-isPublic" className="text-sm font-medium text-gray-700">
+                <label htmlFor="edit-isPublic" className="text-sm font-medium text-slate-700">
                   Public Setting
                 </label>
               </div>
@@ -436,14 +568,14 @@ export function SystemSettingsClient() {
             <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={() => setEditingSetting(null)}
-                className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 flex items-center gap-2"
+                className="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium flex items-center gap-2"
               >
                 <X className="h-4 w-4" />
                 Cancel
               </button>
               <button
                 onClick={() => handleUpdateSetting(editingSetting)}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 flex items-center gap-2"
+                className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 font-medium flex items-center gap-2 transition-colors"
               >
                 <Save className="h-4 w-4" />
                 Save Changes

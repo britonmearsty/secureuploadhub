@@ -16,7 +16,8 @@
     "lint": "eslint",
     "email": "email dev",
     "create-admin": "tsx scripts/create-admin.ts",
-    "seed-audit-logs": "tsx scripts/seed-audit-logs.ts"
+    "seed-audit-logs": "tsx scripts/seed-audit-logs.ts",
+    "seed-system-settings": "tsx scripts/seed-system-settings.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "2.7.4",
