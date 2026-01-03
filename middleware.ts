@@ -31,7 +31,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Redirect authenticated users away from auth pages
-  // Role-specific redirect happens in layout components
+  // Default to dashboard, admin users can navigate to /admin manually
   if (isAuth && isOnAuthPage) {
     return NextResponse.redirect(new URL("/dashboard", request.url))
   }

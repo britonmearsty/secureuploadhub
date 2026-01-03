@@ -39,7 +39,7 @@ export default async function AdminLayout({
 
         // Double-check admin role using fresh data
         if (freshUser.role !== "admin") {
-            console.log(`User ${freshUser.email} no longer has admin role, redirecting to dashboard`)
+            console.log(`User ${freshUser.email} (role: ${freshUser.role}) is not admin, redirecting to dashboard`)
             redirect("/dashboard")
         }
 

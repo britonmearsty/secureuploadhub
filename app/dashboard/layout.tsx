@@ -40,6 +40,7 @@ export default async function DashboardLayout({
     }
 
     // Redirect admin users to admin panel (using fresh role data)
+    // This is safe because admin layout won't redirect back to dashboard
     if (freshUser.role === 'admin') {
       redirect("/admin")
     }

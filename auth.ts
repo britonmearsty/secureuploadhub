@@ -67,10 +67,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session
     },
     async redirect({ url, baseUrl }) {
-      // After sign in, redirect to dashboard by default
-      // Role-based redirect will be handled by server components
+      // Handle explicit URLs first
       if (url.startsWith("/")) return `${baseUrl}${url}`
       if (url.startsWith(baseUrl)) return url
+      
+      // Default redirect after sign-in
       return `${baseUrl}/dashboard`
     },
     async signIn({ user, account }) {
