@@ -4,6 +4,7 @@ import Sidebar from "./components/Sidebar"
 import { ThemeProvider } from "@/lib/theme-provider"
 import { ThemeSync } from "@/lib/theme-sync"
 import { getFreshUserData } from "@/lib/session-validation"
+import AdminRedirect from "@/components/AdminRedirect"
 
 async function handleSignOut() {
   "use server"
@@ -51,10 +52,11 @@ export default async function DashboardLayout({
     }
 
     // Redirect admin users to admin panel (using fresh role data)
-    // TEMPORARY FIX: Comment out the redirect to prevent loops
-    if (freshUser.role === 'admin') {
-      console.log(`🏠 DASHBOARD LAYOUT: Admin user ${freshUser.email} detected - allowing dashboard access`)
-      // redirect("/admin") // Commented out to prevent redirect loop
+    // Use client-side redirect to avoid server-side redirect loops
+    const isAdminUser = freshUser.role === 'admin'
+    
+    if (isAdminUser) {
+      console.log(`🏠 DASHBOARD LAYOUT: Admin user ${freshUser.email} detected, will redirect client-side`)
     }
 
     console.log(`🏠 DASHBOARD LAYOUT: Regular user ${freshUser.email}, rendering dashboard`)
@@ -63,16 +65,22 @@ export default async function DashboardLayout({
     return (
       <ThemeProvider defaultTheme={userTheme as "light" | "dark" | "system"}>
         <ThemeSync userTheme={userTheme} />
-        <div className="min-h-screen bg-background flex">
-          <Sidebar
-            userName={session.user.name || freshUser.name}
-            userImage={session.user.image}
-            signOutAction={handleSignOut}
-          />
-          <main className="flex-1 min-w-0 overflow-y-auto">
-            {children}
-          </main>
-        </div>
+        {isAdminUser ? (
+          // Admin user - show redirect message and redirect client-side
+          <AdminRedirect />
+        ) : (
+          // Regular user - show dashboard
+          <div className="min-h-screen bg-background flex">
+            <Sidebar
+              userName={session.user.name || freshUser.name}
+              userImage={session.user.image}
+              signOutAction={handleSignOut}
+            />
+            <main className="flex-1 min-w-0 overflow-y-auto">
+              {children}
+            </main>
+          </div>
+        )}
       </ThemeProvider>
     )
   } catch (error) {
