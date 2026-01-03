@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth"
+import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import IntegrationsClient from "./IntegrationsClient"
 import type { Metadata } from "next"

@@ -40,7 +40,7 @@ vi.mock('@/lib/storage', () => ({
   validateStorageConnection: vi.fn(),
 }))
 
-import { auth } from '@/lib/auth'
+import { auth } from '@/auth'
 import prisma from '@/lib/prisma'
 import { hashPassword } from '@/lib/password'
 import { invalidateCache } from '@/lib/cache'

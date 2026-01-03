@@ -14,7 +14,8 @@
     "test:api:coverage": "vitest __tests__/api --coverage",
     "test:all": "vitest --run",
     "lint": "eslint",
-    "email": "email dev"
+    "email": "email dev",
+    "create-admin": "tsx scripts/create-admin.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "2.7.4",

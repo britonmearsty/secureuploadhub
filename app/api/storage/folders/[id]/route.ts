@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { auth } from "@/auth"
 import { getStorageService, getValidAccessToken } from "@/lib/storage"
 
 // PATCH /api/storage/folders/[id] - Rename a folder

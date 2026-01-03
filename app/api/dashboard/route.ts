@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { getAuthenticatedUser } from "@/lib/api-auth"
 import prisma from "@/lib/prisma"
 import { getCachedData, getUserDashboardKey, invalidateCache } from "@/lib/cache"
 
 // GET /api/dashboard - Get all dashboard data in single optimized request
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth()
+    // Enhanced authentication with fresh user data validation
+    const user = await getAuthenticatedUser();
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const userId = session.user.id
+    const userId = user.id
     const cacheKey = getUserDashboardKey(userId)
 
     const dashboardData = await getCachedData(
@@ -78,6 +75,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(dashboardData)
   } catch (error) {
+    // If error is already a NextResponse (from authentication), return it
+    if (error instanceof NextResponse) {
+      return error;
+    }
+    
     console.error("Error fetching dashboard data:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
@@ -86,19 +88,21 @@ export async function GET(request: NextRequest) {
 // POST /api/dashboard/invalidate - Invalidate dashboard cache (for when data changes)
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth()
+    // Enhanced authentication with fresh user data validation
+    const user = await getAuthenticatedUser();
 
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const userId = session.user.id
+    const userId = user.id
     const cacheKey = getUserDashboardKey(userId)
 
     await invalidateCache(cacheKey)
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    // If error is already a NextResponse (from authentication), return it
+    if (error instanceof NextResponse) {
+      return error;
+    }
+    
     console.error("Error invalidating dashboard cache:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { auth } from "@/auth"
 import { getConnectedAccounts } from "@/lib/storage"
 
 // GET /api/storage/accounts - Get connected storage accounts

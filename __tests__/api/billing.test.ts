@@ -34,7 +34,7 @@ vi.mock('@/lib/paystack-config', () => ({
   },
 }))
 
-import { auth } from '@/lib/auth'
+import { auth } from '@/auth'
 import prisma from '@/lib/prisma'
 import { getPaystack } from '@/lib/billing'
 

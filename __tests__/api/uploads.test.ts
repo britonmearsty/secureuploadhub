@@ -33,7 +33,7 @@ vi.mock('@/lib/cache', () => ({
   getUserStatsKey: vi.fn(),
 }))
 
-import { auth } from '@/lib/auth'
+import { auth } from '@/auth'
 import prisma from '@/lib/prisma'
 import { downloadFromCloudStorage, deleteFromCloudStorage, recoverGoogleDriveFileId } from '@/lib/storage'
 import { invalidateCache } from '@/lib/cache'

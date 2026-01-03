@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
 
 // POST /api/storage/disconnect - Disconnect a storage account

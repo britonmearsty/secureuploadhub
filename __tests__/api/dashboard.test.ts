@@ -24,7 +24,7 @@ vi.mock('@/lib/cache', () => ({
   invalidateCache: vi.fn(),
 }))
 
-import { auth } from '@/lib/auth'
+import { auth } from '@/auth'
 import prisma from '@/lib/prisma'
 import { getCachedData, getUserDashboardKey, invalidateCache } from '@/lib/cache'
 

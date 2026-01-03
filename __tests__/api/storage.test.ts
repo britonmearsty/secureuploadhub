@@ -25,7 +25,7 @@ vi.mock('@/lib/prisma', () => ({
   },
 }))
 
-import { auth } from '@/lib/auth'
+import { auth } from '@/auth'
 import { 
   getConnectedAccounts, 
   disconnectStorageAccount,

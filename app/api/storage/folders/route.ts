@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { auth } from "@/auth"
 import { listCloudFolders, createCloudFolder, StorageProvider } from "@/lib/storage"
 
 // GET /api/storage/folders - List folders in cloud storage

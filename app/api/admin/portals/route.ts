@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { getAuthenticatedUser } from '@/lib/api-auth';
 import prisma from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    
-    if (!session?.user || session.user.role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Enhanced authentication with fresh user data validation
+    const user = await getAuthenticatedUser('admin');
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
@@ -125,6 +122,11 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
+    // If error is already a NextResponse (from authentication), return it
+    if (error instanceof NextResponse) {
+      return error;
+    }
+    
     console.error('Error fetching portals:', error);
     return NextResponse.json(
       { error: 'Failed to fetch portals' },
