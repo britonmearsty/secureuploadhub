@@ -54,8 +54,8 @@ export const authConfig: NextAuthConfig = {
   },
   callbacks: {
     async jwt({ token, user }) {
-      if (user) {
-        token.role = user.role
+      if (user?.role) {
+        token.role = user.role as string
       }
       return token
     },
@@ -72,6 +72,7 @@ export const authConfig: NextAuthConfig = {
       const isOnAuthPage = nextUrl.pathname.startsWith("/auth")
       const role = auth?.user?.role
 
+      // Redirect authenticated users away from auth pages
       if (isLoggedIn && isOnAuthPage) {
         if (role === 'admin') {
           return Response.redirect(new URL("/admin", nextUrl))
@@ -79,15 +80,18 @@ export const authConfig: NextAuthConfig = {
         return Response.redirect(new URL("/dashboard", nextUrl))
       }
 
+      // Protect admin routes - only admins allowed
       if (isOnAdmin) {
-        if (isLoggedIn && role === 'admin') return true
-        if (isLoggedIn) return Response.redirect(new URL("/dashboard", nextUrl)) // Redirect non-admins
-        return false // Redirect uninit requests
+        if (!isLoggedIn) return false // Redirect to login
+        if (role !== 'admin') {
+          return Response.redirect(new URL("/dashboard", nextUrl)) // Redirect non-admins
+        }
+        return true // Allow admin access
       }
 
+      // Protect dashboard routes - any authenticated user allowed
       if (isOnDashboard) {
-        if (isLoggedIn) return true
-        return false // Redirect to login
+        return isLoggedIn
       }
 
       return true

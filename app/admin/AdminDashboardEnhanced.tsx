@@ -19,6 +19,7 @@ import {
   UserCheck,
   CreditCard
 } from 'lucide-react';
+import { AnalyticsChart } from '@/components/admin/analytics/AnalyticsChart';
 
 interface Analytics {
   overview: {
@@ -91,13 +92,18 @@ export default function AdminDashboardEnhanced() {
 
   const fetchAnalytics = async () => {
     try {
+      setLoading(true);
       const response = await fetch(`/api/admin/analytics?days=${selectedPeriod}`);
       if (response.ok) {
         const data = await response.json();
         setAnalytics(data.analytics);
+      } else {
+        console.error('Failed to fetch analytics:', response.status, response.statusText);
+        setAnalytics(null);
       }
     } catch (error) {
       console.error('Error fetching analytics:', error);
+      setAnalytics(null);
     } finally {
       setLoading(false);
     }
@@ -222,32 +228,32 @@ export default function AdminDashboardEnhanced() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Users"
-          value={analytics.overview.users.total.toLocaleString()}
-          change={`+${analytics.overview.users.new} new`}
+          value={analytics.overview.users?.total?.toLocaleString() || '0'}
+          change={`+${analytics.overview.users?.new || 0} new`}
           icon={Users}
           trend="up"
           color="blue"
         />
         <StatCard
           title="Active Portals"
-          value={analytics.overview.portals.active.toLocaleString()}
-          change={`${analytics.overview.portals.total} total`}
+          value={analytics.overview.portals?.active?.toLocaleString() || '0'}
+          change={`${analytics.overview.portals?.total || 0} total`}
           icon={FolderOpen}
           trend="neutral"
           color="green"
         />
         <StatCard
           title="Total Uploads"
-          value={analytics.overview.uploads.completed.toLocaleString()}
-          change={`+${analytics.overview.uploads.recent} recent`}
+          value={analytics.overview.uploads?.completed?.toLocaleString() || '0'}
+          change={`+${analytics.overview.uploads?.recent || 0} recent`}
           icon={Upload}
           trend="up"
           color="purple"
         />
         <StatCard
           title="Total Revenue"
-          value={formatCurrency(analytics.overview.billing.totalRevenue)}
-          change={`+${formatCurrency(analytics.overview.billing.recentRevenue)} recent`}
+          value={formatCurrency(analytics.overview.billing?.totalRevenue || 0)}
+          change={`+${formatCurrency(analytics.overview.billing?.recentRevenue || 0)} recent`}
           icon={DollarSign}
           trend="up"
           color="orange"
@@ -258,26 +264,26 @@ export default function AdminDashboardEnhanced() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Admin Users"
-          value={analytics.overview.users.admins}
+          value={analytics.overview.users?.admins || 0}
           icon={Shield}
           color="red"
         />
         <StatCard
           title="Storage Used"
-          value={formatBytes(analytics.overview.uploads.totalStorage)}
+          value={formatBytes(analytics.overview.uploads?.totalStorage || 0)}
           icon={BarChart3}
           color="blue"
         />
         <StatCard
           title="Active Subscriptions"
-          value={analytics.overview.billing.activeSubscriptions}
-          change={`${analytics.overview.users.conversionRate}% conversion`}
+          value={analytics.overview.billing?.activeSubscriptions || 0}
+          change={`${analytics.overview.users?.conversionRate || 0}% conversion`}
           icon={CreditCard}
           color="green"
         />
         <StatCard
           title="Avg Revenue/User"
-          value={formatCurrency(analytics.overview.billing.averageRevenuePerUser)}
+          value={formatCurrency(analytics.overview.billing?.averageRevenuePerUser || 0)}
           icon={TrendingUp}
           color="purple"
         />
@@ -296,7 +302,7 @@ export default function AdminDashboardEnhanced() {
             <UserCheck className="w-5 h-5 text-slate-400" />
           </div>
           <div className="space-y-4">
-            {analytics.topUsers.slice(0, 5).map((user, index) => (
+            {(analytics.topUsers || []).slice(0, 5).map((user, index) => (
               <div key={user.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold text-sm">
@@ -309,14 +315,19 @@ export default function AdminDashboardEnhanced() {
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-medium text-slate-900">
-                    {user._count.uploadPortals} portals
+                    {user._count?.uploadPortals || 0} portals
                   </p>
                   <p className="text-sm text-slate-600">
-                    {user._count.fileUploads} uploads
+                    {user._count?.fileUploads || 0} uploads
                   </p>
                 </div>
               </div>
             ))}
+            {(!analytics.topUsers || analytics.topUsers.length === 0) && (
+              <div className="text-center text-slate-500 py-4">
+                No user data available
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -331,24 +342,110 @@ export default function AdminDashboardEnhanced() {
             <Activity className="w-5 h-5 text-slate-400" />
           </div>
           <div className="space-y-4 max-h-80 overflow-y-auto">
-            {analytics.recentActivity.slice(0, 10).map((activity) => (
+            {(analytics.recentActivity || []).slice(0, 10).map((activity) => (
               <div key={activity.id} className="flex items-start space-x-3 p-3 hover:bg-slate-50 rounded-lg">
                 <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-slate-900">
-                    <span className="font-medium">{activity.user.name || activity.user.email}</span>
+                    <span className="font-medium">{activity.user?.name || activity.user?.email || 'Unknown user'}</span>
                     {' '}performed{' '}
-                    <span className="font-medium">{activity.action.toLowerCase().replace(/_/g, ' ')}</span>
+                    <span className="font-medium">{activity.action?.toLowerCase().replace(/_/g, ' ') || 'unknown action'}</span>
                     {' '}on{' '}
-                    <span className="font-medium">{activity.resource}</span>
+                    <span className="font-medium">{activity.resource || 'unknown resource'}</span>
                   </p>
                   <p className="text-xs text-slate-500 mt-1">
-                    {new Date(activity.createdAt).toLocaleString()}
+                    {activity.createdAt ? new Date(activity.createdAt).toLocaleString() : 'Unknown time'}
                   </p>
                 </div>
               </div>
             ))}
+            {(!analytics.recentActivity || analytics.recentActivity.length === 0) && (
+              <div className="text-center text-slate-500 py-4">
+                No recent activity
+              </div>
+            )}
           </div>
+        </motion.div>
+      </div>
+
+      {/* Analytics Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* User Growth Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-xl p-6 border border-slate-200"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-slate-900">User Growth</h3>
+            <Users className="w-5 h-5 text-slate-400" />
+          </div>
+          {analytics.trends?.userGrowth && analytics.trends.userGrowth.length > 0 ? (
+            <AnalyticsChart
+              data={analytics.trends.userGrowth}
+              xKey="date"
+              yKey="count"
+              type="line"
+              color="#4F46E5"
+              height={250}
+            />
+          ) : (
+            <div className="h-[250px] flex items-center justify-center text-slate-500">
+              No growth data available
+            </div>
+          )}
+        </motion.div>
+
+        {/* Upload Trends Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-xl p-6 border border-slate-200"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-slate-900">Upload Trends</h3>
+            <Upload className="w-5 h-5 text-slate-400" />
+          </div>
+          {analytics.trends?.uploads && analytics.trends.uploads.length > 0 ? (
+            <AnalyticsChart
+              data={analytics.trends.uploads}
+              xKey="date"
+              yKey="uploads"
+              type="bar"
+              color="#10B981"
+              height={250}
+            />
+          ) : (
+            <div className="h-[250px] flex items-center justify-center text-slate-500">
+              No upload data available
+            </div>
+          )}
+        </motion.div>
+
+        {/* Revenue Trends Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-xl p-6 border border-slate-200"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-slate-900">Revenue Trends</h3>
+            <DollarSign className="w-5 h-5 text-slate-400" />
+          </div>
+          {analytics.trends?.revenue && analytics.trends.revenue.length > 0 ? (
+            <AnalyticsChart
+              data={analytics.trends.revenue}
+              xKey="date"
+              yKey="revenue"
+              type="bar"
+              color="#F59E0B"
+              height={250}
+            />
+          ) : (
+            <div className="h-[250px] flex items-center justify-center text-slate-500">
+              No revenue data available
+            </div>
+          )}
         </motion.div>
       </div>
 

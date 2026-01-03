@@ -1,4 +1,4 @@
-import { auth, signOut } from "@/lib/auth"
+import { auth, signOut } from "@/auth"
 import { redirect } from "next/navigation"
 import AdminSidebar from "./components/AdminSidebar"
 
