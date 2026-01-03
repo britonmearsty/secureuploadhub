@@ -94,11 +94,13 @@ export default function AdminDashboardEnhanced() {
     try {
       setLoading(true);
       const response = await fetch(`/api/admin/analytics?days=${selectedPeriod}`);
+      
       if (response.ok) {
         const data = await response.json();
         setAnalytics(data.analytics);
       } else {
-        console.error('Failed to fetch analytics:', response.status, response.statusText);
+        const errorData = await response.text();
+        console.error('Failed to fetch analytics:', response.status, response.statusText, errorData);
         setAnalytics(null);
       }
     } catch (error) {
@@ -145,7 +147,19 @@ export default function AdminDashboardEnhanced() {
     return (
       <div className="p-8">
         <div className="text-center text-slate-600">
-          Failed to load analytics data
+          <div className="mb-4">
+            <AlertTriangle className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-slate-900 mb-2">Unable to load analytics data</h3>
+            <p className="text-slate-500 mb-4">
+              There was an issue loading the analytics data. Please check the console for more details.
+            </p>
+            <button
+              onClick={fetchAnalytics}
+              className="bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -228,32 +242,32 @@ export default function AdminDashboardEnhanced() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Users"
-          value={analytics.overview.users?.total?.toLocaleString() || '0'}
-          change={`+${analytics.overview.users?.new || 0} new`}
+          value={analytics.overview?.users?.total?.toLocaleString() || '0'}
+          change={`+${analytics.overview?.users?.new || 0} new`}
           icon={Users}
           trend="up"
           color="blue"
         />
         <StatCard
           title="Active Portals"
-          value={analytics.overview.portals?.active?.toLocaleString() || '0'}
-          change={`${analytics.overview.portals?.total || 0} total`}
+          value={analytics.overview?.portals?.active?.toLocaleString() || '0'}
+          change={`${analytics.overview?.portals?.total || 0} total`}
           icon={FolderOpen}
           trend="neutral"
           color="green"
         />
         <StatCard
           title="Total Uploads"
-          value={analytics.overview.uploads?.completed?.toLocaleString() || '0'}
-          change={`+${analytics.overview.uploads?.recent || 0} recent`}
+          value={analytics.overview?.uploads?.completed?.toLocaleString() || '0'}
+          change={`+${analytics.overview?.uploads?.recent || 0} recent`}
           icon={Upload}
           trend="up"
           color="purple"
         />
         <StatCard
           title="Total Revenue"
-          value={formatCurrency(analytics.overview.billing?.totalRevenue || 0)}
-          change={`+${formatCurrency(analytics.overview.billing?.recentRevenue || 0)} recent`}
+          value={formatCurrency(analytics.overview?.billing?.totalRevenue || 0)}
+          change={`+${formatCurrency(analytics.overview?.billing?.recentRevenue || 0)} recent`}
           icon={DollarSign}
           trend="up"
           color="orange"
@@ -264,26 +278,26 @@ export default function AdminDashboardEnhanced() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Admin Users"
-          value={analytics.overview.users?.admins || 0}
+          value={analytics.overview?.users?.admins || 0}
           icon={Shield}
           color="red"
         />
         <StatCard
           title="Storage Used"
-          value={formatBytes(analytics.overview.uploads?.totalStorage || 0)}
+          value={formatBytes(analytics.overview?.uploads?.totalStorage || 0)}
           icon={BarChart3}
           color="blue"
         />
         <StatCard
           title="Active Subscriptions"
-          value={analytics.overview.billing?.activeSubscriptions || 0}
-          change={`${analytics.overview.users?.conversionRate || 0}% conversion`}
+          value={analytics.overview?.billing?.activeSubscriptions || 0}
+          change={`${analytics.overview?.users?.conversionRate || 0}% conversion`}
           icon={CreditCard}
           color="green"
         />
         <StatCard
           title="Avg Revenue/User"
-          value={formatCurrency(analytics.overview.billing?.averageRevenuePerUser || 0)}
+          value={formatCurrency(analytics.overview?.billing?.averageRevenuePerUser || 0)}
           icon={TrendingUp}
           color="purple"
         />

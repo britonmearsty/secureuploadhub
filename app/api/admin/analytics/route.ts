@@ -97,33 +97,33 @@ export async function GET(request: NextRequest) {
       // Growth trends
       prisma.$queryRaw`
         SELECT 
-          DATE(created_at) as date,
+          DATE_TRUNC('day', "createdAt") as date,
           COUNT(*) as count
         FROM "User"
-        WHERE created_at >= ${startDate}
-        GROUP BY DATE(created_at)
+        WHERE "createdAt" >= ${startDate}
+        GROUP BY DATE_TRUNC('day', "createdAt")
         ORDER BY date ASC
       `,
       
       prisma.$queryRaw`
         SELECT 
-          DATE(created_at) as date,
+          DATE_TRUNC('day', "createdAt") as date,
           COUNT(*) as uploads,
-          SUM(file_size) as storage
+          SUM("fileSize") as storage
         FROM "FileUpload"
-        WHERE created_at >= ${startDate} AND status = 'completed'
-        GROUP BY DATE(created_at)
+        WHERE "createdAt" >= ${startDate} AND status = 'completed'
+        GROUP BY DATE_TRUNC('day', "createdAt")
         ORDER BY date ASC
       `,
       
       prisma.$queryRaw`
         SELECT 
-          DATE(created_at) as date,
+          DATE_TRUNC('day', "createdAt") as date,
           COUNT(*) as payments,
           SUM(amount) as revenue
         FROM "Payment"
-        WHERE created_at >= ${startDate} AND status = 'completed'
-        GROUP BY DATE(created_at)
+        WHERE "createdAt" >= ${startDate} AND status = 'completed'
+        GROUP BY DATE_TRUNC('day', "createdAt")
         ORDER BY date ASC
       `
     ]);
