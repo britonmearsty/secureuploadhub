@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
+import { createAuditLog, AUDIT_ACTIONS } from '@/lib/audit-log';
 
 export async function GET(
   request: NextRequest,
@@ -106,6 +107,12 @@ export async function DELETE(
     const portal = await prisma.uploadPortal.findUnique({
       where: { id },
       include: {
+        user: {
+          select: {
+            email: true,
+            name: true
+          }
+        },
         _count: {
           select: {
             uploads: true,
@@ -137,18 +144,21 @@ export async function DELETE(
       });
     });
 
-    // TODO: Add audit log entry
-    // await createAuditLog({
-    //   userId: session.user.id,
-    //   action: 'PORTAL_DELETED',
-    //   resource: 'portal',
-    //   resourceId: id,
-    //   details: {
-    //     name: portal.name,
-    //     slug: portal.slug,
-    //     uploadsDeleted: portal._count.uploads
-    //   }
-    // });
+    // Add audit log entry
+    if (session.user.id) {
+      await createAuditLog({
+        userId: session.user.id,
+        action: AUDIT_ACTIONS.PORTAL_DELETED,
+        resource: 'portal',
+        resourceId: id,
+        details: {
+          portalName: portal.name,
+          portalSlug: portal.slug,
+          uploadsDeleted: portal._count.uploads,
+          ownerEmail: portal.user.email
+        }
+      });
+    }
 
     return NextResponse.json({
       success: true,

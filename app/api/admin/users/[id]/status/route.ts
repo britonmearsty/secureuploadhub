@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
+import { createAuditLog, AUDIT_ACTIONS } from '@/lib/audit-log';
 
 const statusChangeSchema = z.object({
   status: z.enum(['active', 'disabled']),
@@ -63,14 +64,21 @@ export async function POST(
       }
     });
 
-    // TODO: Add audit log entry
-    // await createAuditLog({
-    //   userId: session.user.id,
-    //   action: 'USER_STATUS_CHANGED',
-    //   resource: 'user',
-    //   resourceId: id,
-    //   details: { oldStatus: user.status, newStatus: status }
-    // });
+    // Add audit log entry
+    if (session.user.id) {
+      await createAuditLog({
+        userId: session.user.id,
+        action: AUDIT_ACTIONS.USER_STATUS_CHANGED,
+        resource: 'user',
+        resourceId: id,
+        details: { 
+          oldStatus: user.status, 
+          newStatus: status,
+          targetUserEmail: user.email,
+          targetUserName: user.name
+        }
+      });
+    }
 
     return NextResponse.json({
       success: true,

@@ -23,6 +23,8 @@ import {
   Clock,
   BarChart3
 } from 'lucide-react';
+import { CreatePlanModal } from '@/components/admin/CreatePlanModal';
+import { ToastContainer, Toast } from '@/components/ui/Toast';
 
 interface Subscription {
   id: string;
@@ -112,6 +114,18 @@ export default function BillingManagementClient() {
   const [selectedPlan, setSelectedPlan] = useState<BillingPlan | null>(null);
   const [showPlanDetails, setShowPlanDetails] = useState(false);
 
+  // Toast notifications
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const addToast = (toast: Omit<Toast, 'id'>) => {
+    const id = Date.now().toString();
+    setToasts(prev => [...prev, { ...toast, id }]);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  };
+
   useEffect(() => {
     fetchData();
   }, [activeTab]);
@@ -140,9 +154,31 @@ export default function BillingManagementClient() {
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to fetch data. Please try again.'
+      });
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePlanCreated = (newPlan: BillingPlan) => {
+    setPlans(prev => [...prev, newPlan]);
+    addToast({
+      type: 'success',
+      title: 'Plan Created',
+      message: `${newPlan.name} has been created successfully.`
+    });
+  };
+
+  const handlePlanError = (message: string) => {
+    addToast({
+      type: 'error',
+      title: 'Error',
+      message
+    });
   };
 
   const formatCurrency = (amount: number, currency: string = 'USD') => {
@@ -198,6 +234,17 @@ export default function BillingManagementClient() {
 
   return (
     <div className="space-y-6">
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+
+      {/* Create Plan Modal */}
+      <CreatePlanModal
+        isOpen={showCreatePlan}
+        onClose={() => setShowCreatePlan(false)}
+        onSuccess={handlePlanCreated}
+        onError={handlePlanError}
+      />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

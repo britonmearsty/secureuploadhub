@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
+import { createAuditLog, AUDIT_ACTIONS } from '@/lib/audit-log';
 
 const planSchema = z.object({
   name: z.string().min(1),
@@ -79,14 +80,23 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // TODO: Add audit log entry
-    // await createAuditLog({
-    //   userId: session.user.id,
-    //   action: 'BILLING_PLAN_CREATED',
-    //   resource: 'billing_plan',
-    //   resourceId: plan.id,
-    //   details: { planName: plan.name, price: plan.price }
-    // });
+    // Add audit log entry
+    if (session.user.id) {
+      await createAuditLog({
+        userId: session.user.id,
+        action: AUDIT_ACTIONS.BILLING_PLAN_CREATED,
+        resource: 'billing_plan',
+        resourceId: plan.id,
+        details: { 
+          planName: plan.name, 
+          price: plan.price,
+          currency: plan.currency,
+          maxPortals: plan.maxPortals,
+          maxStorageGB: plan.maxStorageGB,
+          maxUploadsMonth: plan.maxUploadsMonth
+        }
+      });
+    }
 
     return NextResponse.json({
       success: true,

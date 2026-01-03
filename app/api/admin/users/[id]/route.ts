@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
+import { createAuditLog, AUDIT_ACTIONS } from '@/lib/audit-log';
 
 export async function DELETE(
   request: NextRequest,
@@ -95,18 +96,21 @@ export async function DELETE(
       });
     });
 
-    // TODO: Add audit log entry
-    // await createAuditLog({
-    //   userId: session.user.id,
-    //   action: 'USER_DELETED',
-    //   resource: 'user',
-    //   resourceId: id,
-    //   details: { 
-    //     email: user.email,
-    //     portalsDeleted: user._count.uploadPortals,
-    //     uploadsDeleted: user._count.fileUploads
-    //   }
-    // });
+    // Add audit log entry
+    if (session.user.id) {
+      await createAuditLog({
+        userId: session.user.id,
+        action: AUDIT_ACTIONS.USER_DELETED,
+        resource: 'user',
+        resourceId: id,
+        details: { 
+          deletedUserEmail: user.email,
+          deletedUserName: user.name,
+          portalsDeleted: user._count.uploadPortals,
+          uploadsDeleted: user._count.fileUploads
+        }
+      });
+    }
 
     return NextResponse.json({
       success: true,

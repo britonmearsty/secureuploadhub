@@ -15,7 +15,8 @@
     "test:all": "vitest --run",
     "lint": "eslint",
     "email": "email dev",
-    "create-admin": "tsx scripts/create-admin.ts"
+    "create-admin": "tsx scripts/create-admin.ts",
+    "seed-audit-logs": "tsx scripts/seed-audit-logs.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "2.7.4",
