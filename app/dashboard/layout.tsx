@@ -15,36 +15,49 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
+  console.log(`🏠 DASHBOARD LAYOUT: Starting execution`)
+  
   try {
     const session = await auth()
+    console.log(`🏠 DASHBOARD LAYOUT: Session check - User ID: ${session?.user?.id || 'none'}`)
 
     if (!session?.user?.id) {
+      console.log(`🏠 DASHBOARD LAYOUT: No session, redirecting to /auth/signin`)
       redirect("/auth/signin")
     }
 
     // Get fresh user data to ensure status and role are current
+    console.log(`🏠 DASHBOARD LAYOUT: Fetching fresh user data for ${session.user.id}`)
     const freshUser = await getFreshUserData(session.user.id)
+    console.log(`🏠 DASHBOARD LAYOUT: Fresh user data:`, {
+      found: !!freshUser,
+      email: freshUser?.email,
+      role: freshUser?.role,
+      status: freshUser?.status
+    })
     
     if (!freshUser) {
       // User not found in database, sign out
-      console.error(`User ${session.user.id} not found in database`)
+      console.error(`🏠 DASHBOARD LAYOUT: User ${session.user.id} not found in database, signing out`)
       await signOut({ redirectTo: "/auth/signin" })
       return null
     }
 
     // Check if user account is active
     if (freshUser.status !== 'active') {
-      console.log(`User ${freshUser.email} account is ${freshUser.status}, signing out`)
+      console.log(`🏠 DASHBOARD LAYOUT: User ${freshUser.email} account is ${freshUser.status}, signing out`)
       await signOut({ redirectTo: "/auth/signin" })
       return null
     }
 
     // Redirect admin users to admin panel (using fresh role data)
-    // This is safe because admin layout won't redirect back to dashboard
+    // TEMPORARY FIX: Comment out the redirect to prevent loops
     if (freshUser.role === 'admin') {
-      redirect("/admin")
+      console.log(`🏠 DASHBOARD LAYOUT: Admin user ${freshUser.email} detected - allowing dashboard access`)
+      // redirect("/admin") // Commented out to prevent redirect loop
     }
 
+    console.log(`🏠 DASHBOARD LAYOUT: Regular user ${freshUser.email}, rendering dashboard`)
     const userTheme = freshUser.theme || "system"
 
     return (
@@ -63,7 +76,7 @@ export default async function DashboardLayout({
       </ThemeProvider>
     )
   } catch (error) {
-    console.error('Dashboard layout error:', error)
+    console.error('🏠 DASHBOARD LAYOUT: Error occurred:', error)
     // On any error, redirect to signin for safety
     redirect("/auth/signin")
   }

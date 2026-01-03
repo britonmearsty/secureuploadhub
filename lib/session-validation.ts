@@ -38,6 +38,8 @@ export async function validateSessionToken(sessionToken: string): Promise<boolea
  * Used by layouts to ensure user status and role are current
  */
 export async function getFreshUserData(userId: string) {
+  console.log(`🔍 SESSION VALIDATION: Fetching fresh user data for ${userId}`)
+  
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -51,9 +53,17 @@ export async function getFreshUserData(userId: string) {
       }
     })
     
+    console.log(`🔍 SESSION VALIDATION: User data result:`, {
+      found: !!user,
+      email: user?.email,
+      role: user?.role,
+      status: user?.status,
+      userId: userId
+    })
+    
     return user
   } catch (error) {
-    console.error('Error fetching fresh user data:', error)
+    console.error('🔍 SESSION VALIDATION: Error fetching fresh user data:', error)
     return null
   }
 }

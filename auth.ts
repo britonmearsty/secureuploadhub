@@ -67,11 +67,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session
     },
     async redirect({ url, baseUrl }) {
+      console.log(`🔄 AUTH REDIRECT: url=${url}, baseUrl=${baseUrl}`)
+      
       // Handle explicit URLs first
-      if (url.startsWith("/")) return `${baseUrl}${url}`
-      if (url.startsWith(baseUrl)) return url
+      if (url.startsWith("/")) {
+        console.log(`🔄 AUTH REDIRECT: Relative URL, redirecting to ${baseUrl}${url}`)
+        return `${baseUrl}${url}`
+      }
+      if (url.startsWith(baseUrl)) {
+        console.log(`🔄 AUTH REDIRECT: Full URL with baseUrl, redirecting to ${url}`)
+        return url
+      }
       
       // Default redirect after sign-in
+      console.log(`🔄 AUTH REDIRECT: Default redirect to ${baseUrl}/dashboard`)
       return `${baseUrl}/dashboard`
     },
     async signIn({ user, account }) {
