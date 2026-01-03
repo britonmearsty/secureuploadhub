@@ -16,11 +16,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, user }) {
       if (session.user) {
         session.user.id = user.id
+        session.user.role = user.role || 'user' // Add role from database user
       }
       return session
     },
     async redirect({ url, baseUrl }) {
-      // After sign in, redirect to dashboard
+      // After sign in, redirect based on user role
       if (url.startsWith("/")) return `${baseUrl}${url}`
       if (url.startsWith(baseUrl)) return url
       return `${baseUrl}/dashboard`

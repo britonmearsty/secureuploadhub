@@ -22,6 +22,8 @@ import {
   AlertTriangle,
   BarChart3
 } from 'lucide-react';
+import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
+import { ToastContainer, Toast } from '@/components/ui/Toast';
 
 interface Portal {
   id: string;
@@ -88,11 +90,53 @@ export default function PortalManagementClient() {
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Actions menu state
+  const [openActionMenu, setOpenActionMenu] = useState<string | null>(null);
+
+  // Modal states
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    variant?: 'danger' | 'warning' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    variant: 'danger'
+  });
+
+  // Toast notifications
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const addToast = (toast: Omit<Toast, 'id'>) => {
+    const id = Date.now().toString();
+    setToasts(prev => [...prev, { ...toast, id }]);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  };
+
   // Fetch portals and analytics
   useEffect(() => {
     fetchPortals();
     fetchAnalytics();
   }, []);
+
+  // Close action menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setOpenActionMenu(null);
+    };
+
+    if (openActionMenu) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [openActionMenu]);
 
   const fetchPortals = async () => {
     try {
@@ -100,9 +144,20 @@ export default function PortalManagementClient() {
       if (response.ok) {
         const data = await response.json();
         setPortals(data.portals);
+      } else {
+        addToast({
+          type: 'error',
+          title: 'Failed to load portals',
+          message: 'Please try refreshing the page'
+        });
       }
     } catch (error) {
       console.error('Failed to fetch portals:', error);
+      addToast({
+        type: 'error',
+        title: 'Failed to load portals',
+        message: 'Please check your connection and try again'
+      });
     } finally {
       setLoading(false);
     }
@@ -133,56 +188,125 @@ export default function PortalManagementClient() {
     return matchesSearch && matchesStatus;
   });
 
-  // Portal actions
+  // Portal actions with retry mechanism
+  const retryOperation = async (operation: () => Promise<any>, maxRetries = 3) => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await operation();
+      } catch (error) {
+        if (attempt === maxRetries) throw error;
+        
+        // Exponential backoff
+        const delay = Math.pow(2, attempt) * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  };
+
   const togglePortalStatus = async (portalId: string, isActive: boolean) => {
     setActionLoading(true);
+    setOpenActionMenu(null);
+    
     try {
-      const response = await fetch(`/api/admin/portals/${portalId}/status`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive })
-      });
+      await retryOperation(async () => {
+        const response = await fetch(`/api/admin/portals/${portalId}/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isActive })
+        });
 
-      if (response.ok) {
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to change portal status');
+        }
+
         const { portal } = await response.json();
         setPortals(prev => prev.map(p => p.id === portalId ? { ...p, isActive: portal.isActive } : p));
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to change portal status');
-      }
-    } catch (error) {
-      alert('Failed to change portal status');
+        
+        addToast({
+          type: 'success',
+          title: `Portal ${isActive ? 'enabled' : 'disabled'}`,
+          message: `${portal.name} has been ${isActive ? 'enabled' : 'disabled'} successfully`
+        });
+      });
+    } catch (error: any) {
+      addToast({
+        type: 'error',
+        title: 'Failed to change portal status',
+        message: error.message || 'Please try again'
+      });
     } finally {
       setActionLoading(false);
     }
   };
 
   const deletePortal = async (portalId: string) => {
-    if (!confirm('Are you sure you want to delete this portal? This action cannot be undone and will delete all associated files.')) {
-      return;
-    }
-
     setActionLoading(true);
+    setOpenActionMenu(null);
+    
     try {
-      const response = await fetch(`/api/admin/portals/${portalId}`, {
-        method: 'DELETE'
-      });
+      await retryOperation(async () => {
+        const response = await fetch(`/api/admin/portals/${portalId}`, {
+          method: 'DELETE'
+        });
 
-      if (response.ok) {
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to delete portal');
+        }
+
+        const data = await response.json();
         setPortals(prev => prev.filter(p => p.id !== portalId));
+        
         if (selectedPortal?.id === portalId) {
           setShowPortalDetails(false);
           setSelectedPortal(null);
         }
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to delete portal');
-      }
-    } catch (error) {
-      alert('Failed to delete portal');
+
+        addToast({
+          type: 'success',
+          title: 'Portal deleted',
+          message: `Portal and ${data.deletedData?.uploads || 0} associated files deleted successfully`
+        });
+      });
+    } catch (error: any) {
+      addToast({
+        type: 'error',
+        title: 'Failed to delete portal',
+        message: error.message || 'Please try again'
+      });
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const handleTogglePortalStatus = (portal: Portal) => {
+    const newStatus = !portal.isActive;
+    setConfirmModal({
+      isOpen: true,
+      title: `${newStatus ? 'Enable' : 'Disable'} Portal`,
+      message: `Are you sure you want to ${newStatus ? 'enable' : 'disable'} "${portal.name}"? ${
+        newStatus ? 'Users will be able to upload files to this portal.' : 'Users will not be able to upload files to this portal.'
+      }`,
+      variant: 'warning',
+      onConfirm: () => {
+        togglePortalStatus(portal.id, newStatus);
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
+  const handleDeletePortal = (portal: Portal) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Portal',
+      message: `Are you sure you want to delete "${portal.name}"? This action cannot be undone and will delete all associated files (${portal.stats.totalUploads} uploads).`,
+      variant: 'danger',
+      onConfirm: () => {
+        deletePortal(portal.id);
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+      }
+    });
   };
 
   const viewPortalDetails = async (portal: Portal) => {
@@ -351,64 +475,81 @@ export default function PortalManagementClient() {
                 )}
               </div>
               
-              <div className="relative group">
+              <div className="relative">
                 <button 
                   className="p-1 text-slate-400 hover:text-slate-600 rounded"
                   disabled={actionLoading}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenActionMenu(openActionMenu === portal.id ? null : portal.id);
+                  }}
                 >
                   <MoreHorizontal className="w-4 h-4" />
                 </button>
                 
-                <div className="absolute right-0 top-8 w-48 bg-white border border-slate-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                  <div className="py-1">
-                    <button
-                      onClick={() => viewPortalDetails(portal)}
-                      className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                    >
-                      <Eye className="w-4 h-4" />
-                      View Details
-                    </button>
-                    
-                    <a
-                      href={`/p/${portal.slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                      Open Portal
-                    </a>
-                    
-                    <button
-                      onClick={() => togglePortalStatus(portal.id, !portal.isActive)}
-                      className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                      disabled={actionLoading}
-                    >
-                      {portal.isActive ? (
-                        <>
-                          <GlobeOff className="w-4 h-4" />
-                          Disable Portal
-                        </>
-                      ) : (
-                        <>
-                          <Globe className="w-4 h-4" />
-                          Enable Portal
-                        </>
-                      )}
-                    </button>
-                    
-                    <hr className="my-1" />
-                    
-                    <button
-                      onClick={() => deletePortal(portal.id)}
-                      className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                      disabled={actionLoading}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Delete Portal
-                    </button>
+                {openActionMenu === portal.id && (
+                  <div className="absolute right-0 top-8 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-10">
+                    <div className="py-1">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          viewPortalDetails(portal);
+                          setOpenActionMenu(null);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                      >
+                        <Eye className="w-4 h-4" />
+                        View Details
+                      </button>
+                      
+                      <a
+                        href={`/p/${portal.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                        onClick={() => setOpenActionMenu(null)}
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        Open Portal
+                      </a>
+                      
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleTogglePortalStatus(portal);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                        disabled={actionLoading}
+                      >
+                        {portal.isActive ? (
+                          <>
+                            <GlobeOff className="w-4 h-4" />
+                            Disable Portal
+                          </>
+                        ) : (
+                          <>
+                            <Globe className="w-4 h-4" />
+                            Enable Portal
+                          </>
+                        )}
+                      </button>
+                      
+                      <hr className="my-1" />
+                      
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeletePortal(portal);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                        disabled={actionLoading}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete Portal
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
@@ -492,6 +633,20 @@ export default function PortalManagementClient() {
           />
         )}
       </AnimatePresence>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant}
+        loading={actionLoading}
+      />
+
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 }

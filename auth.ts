@@ -65,37 +65,6 @@ export const authConfig: NextAuthConfig = {
       }
       return session
     },
-    authorized({ auth, request: { nextUrl } }) {
-      const isLoggedIn = !!auth?.user
-      const isOnDashboard = nextUrl.pathname.startsWith("/dashboard")
-      const isOnAdmin = nextUrl.pathname.startsWith("/admin")
-      const isOnAuthPage = nextUrl.pathname.startsWith("/auth")
-      const role = auth?.user?.role
-
-      // Redirect authenticated users away from auth pages
-      if (isLoggedIn && isOnAuthPage) {
-        if (role === 'admin') {
-          return Response.redirect(new URL("/admin", nextUrl))
-        }
-        return Response.redirect(new URL("/dashboard", nextUrl))
-      }
-
-      // Protect admin routes - only admins allowed
-      if (isOnAdmin) {
-        if (!isLoggedIn) return false // Redirect to login
-        if (role !== 'admin') {
-          return Response.redirect(new URL("/dashboard", nextUrl)) // Redirect non-admins
-        }
-        return true // Allow admin access
-      }
-
-      // Protect dashboard routes - any authenticated user allowed
-      if (isOnDashboard) {
-        return isLoggedIn
-      }
-
-      return true
-    },
   },
 }
 

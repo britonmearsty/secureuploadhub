@@ -1,27 +1,27 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+import { auth } from "@/auth"
 
-/**
- * Check if user is authenticated based on session cookie
- */
-function isAuthenticated(request: NextRequest): boolean {
-  const sessionToken = request.cookies.get("authjs.session-token")?.value
-    || request.cookies.get("__Secure-authjs.session-token")?.value
-  
-  return !!sessionToken
-}
-
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  const isAuth = isAuthenticated(request)
+  // Get session with user data
+  const session = await auth()
+  const isAuth = !!session?.user
+  const userRole = session?.user?.role
+
   const isOnAdmin = pathname.startsWith("/admin")
   const isOnDashboard = pathname.startsWith("/dashboard")
   const isOnAuthPage = pathname.startsWith("/auth")
 
-  // Protect admin routes - require authentication (role check happens server-side)
-  if (isOnAdmin && !isAuth) {
-    return NextResponse.redirect(new URL("/auth/signin", request.url))
+  // Protect admin routes - require authentication and admin role
+  if (isOnAdmin) {
+    if (!isAuth) {
+      return NextResponse.redirect(new URL("/auth/signin", request.url))
+    }
+    if (userRole !== 'admin') {
+      return NextResponse.redirect(new URL("/dashboard", request.url))
+    }
   }
 
   // Protect dashboard routes
@@ -29,9 +29,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/auth/signin", request.url))
   }
 
-  // Redirect authenticated users away from auth pages to dashboard
-  // Role-specific redirect (admin -> /admin) happens in auth.ts authorized callback
+  // Redirect authenticated users away from auth pages
   if (isAuth && isOnAuthPage) {
+    if (userRole === 'admin') {
+      return NextResponse.redirect(new URL("/admin", request.url))
+    }
     return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 
