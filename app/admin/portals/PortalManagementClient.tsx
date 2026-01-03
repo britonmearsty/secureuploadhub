@@ -20,7 +20,8 @@ import {
   ArrowUpDown,
   ExternalLink,
   AlertTriangle,
-  BarChart3
+  BarChart3,
+  UserPlus
 } from 'lucide-react';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 import { ToastContainer, Toast } from '@/components/ui/Toast';
@@ -88,6 +89,9 @@ export default function PortalManagementClient() {
   const [selectedPortal, setSelectedPortal] = useState<Portal | null>(null);
   const [showPortalDetails, setShowPortalDetails] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [transferUsers, setTransferUsers] = useState<any[]>([]);
+  const [transferLoading, setTransferLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
   // Actions menu state
@@ -307,6 +311,80 @@ export default function PortalManagementClient() {
         setConfirmModal(prev => ({ ...prev, isOpen: false }));
       }
     });
+  };
+
+  const handleTransferPortal = async (portal: Portal) => {
+    setSelectedPortal(portal);
+    setTransferLoading(true);
+    try {
+      // Fetch available users for transfer
+      const response = await fetch('/api/admin/users?limit=100&role=user&status=active');
+      if (response.ok) {
+        const data = await response.json();
+        // Filter out current owner
+        const availableUsers = (data.users || []).filter((u: any) => u.id !== portal.user.id);
+        setTransferUsers(availableUsers);
+        setShowTransferModal(true);
+      } else {
+        addToast({
+          type: 'error',
+          title: 'Error',
+          message: 'Failed to load users for transfer'
+        });
+      }
+    } catch (error) {
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to load users for transfer'
+      });
+    } finally {
+      setTransferLoading(false);
+    }
+  };
+
+  const transferPortal = async (newOwnerId: string) => {
+    if (!selectedPortal) return;
+    
+    setTransferLoading(true);
+    try {
+      const response = await fetch(`/api/admin/portals/${selectedPortal.id}/transfer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newOwnerId, notifyUsers: true })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPortals(prev => prev.map(p => 
+          p.id === selectedPortal.id 
+            ? { ...p, user: data.portal.user }
+            : p
+        ));
+        setShowTransferModal(false);
+        setSelectedPortal(null);
+        addToast({
+          type: 'success',
+          title: 'Portal Transferred',
+          message: data.message || 'Portal ownership transferred successfully'
+        });
+      } else {
+        const error = await response.json();
+        addToast({
+          type: 'error',
+          title: 'Transfer Failed',
+          message: error.error || 'Failed to transfer portal'
+        });
+      }
+    } catch (error) {
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to transfer portal'
+      });
+    } finally {
+      setTransferLoading(false);
+    }
   };
 
   const viewPortalDetails = async (portal: Portal) => {
@@ -534,6 +612,19 @@ export default function PortalManagementClient() {
                         )}
                       </button>
                       
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleTransferPortal(portal);
+                          setOpenActionMenu(null);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                        disabled={actionLoading}
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        Transfer Ownership
+                      </button>
+                      
                       <hr className="my-1" />
                       
                       <button
@@ -634,6 +725,23 @@ export default function PortalManagementClient() {
         )}
       </AnimatePresence>
 
+      {/* Transfer Modal */}
+      <AnimatePresence>
+        {showTransferModal && selectedPortal && (
+          <TransferPortalModal
+            portal={selectedPortal}
+            users={transferUsers}
+            onClose={() => {
+              setShowTransferModal(false);
+              setSelectedPortal(null);
+              setTransferUsers([]);
+            }}
+            onTransfer={transferPortal}
+            loading={transferLoading}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Confirmation Modal */}
       <ConfirmationModal
         isOpen={confirmModal.isOpen}
@@ -648,6 +756,106 @@ export default function PortalManagementClient() {
       {/* Toast Notifications */}
       <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
+  );
+}
+
+// Transfer Portal Modal Component
+function TransferPortalModal({ 
+  portal, 
+  users, 
+  onClose, 
+  onTransfer,
+  loading 
+}: { 
+  portal: Portal; 
+  users: any[];
+  onClose: () => void;
+  onTransfer: (userId: string) => void;
+  loading: boolean;
+}) {
+  const [selectedUserId, setSelectedUserId] = useState('');
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        className="bg-white rounded-xl p-6 max-w-md w-full"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-slate-900">Transfer Portal Ownership</h2>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600"
+            disabled={loading}
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm text-slate-600 mb-2">
+              Transfer <span className="font-medium">{portal.name}</span> to a new owner.
+            </p>
+            <p className="text-sm text-slate-500">
+              Current owner: {portal.user.name || portal.user.email}
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-900 mb-2">
+              Select New Owner
+            </label>
+            <select
+              value={selectedUserId}
+              onChange={(e) => setSelectedUserId(e.target.value)}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={loading}
+            >
+              <option value="">Select a user...</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name || user.email} ({user.email})
+                </option>
+              ))}
+            </select>
+            {users.length === 0 && (
+              <p className="text-sm text-slate-500 mt-2">No available users found</p>
+            )}
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <button
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                if (selectedUserId) {
+                  onTransfer(selectedUserId);
+                }
+              }}
+              disabled={!selectedUserId || loading}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Transferring...' : 'Transfer Portal'}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
 

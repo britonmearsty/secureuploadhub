@@ -11,8 +11,11 @@ import {
   Shield,
   Eye,
   Download,
-  RefreshCw
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
+import { ToastContainer, Toast } from '@/components/ui/Toast';
 
 interface AuditLog {
   id: string;
@@ -34,6 +37,7 @@ interface AuditLog {
 export default function AuditLogClient() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [actionFilter, setActionFilter] = useState('all');
   const [resourceFilter, setResourceFilter] = useState('all');
@@ -42,17 +46,30 @@ export default function AuditLogClient() {
   const [endDate, setEndDate] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+
+  // Toast notifications
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const addToast = (toast: Omit<Toast, 'id'>) => {
+    const id = Date.now().toString();
+    setToasts(prev => [...prev, { ...toast, id }]);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  };
 
   useEffect(() => {
     fetchLogs();
-  }, [page, actionFilter, resourceFilter, userFilter, startDate, endDate]);
+  }, [page, pageSize, actionFilter, resourceFilter, userFilter, startDate, endDate]);
 
   const fetchLogs = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: '50'
+        limit: pageSize.toString()
       });
 
       if (actionFilter !== 'all') params.append('action', actionFilter);
@@ -64,17 +81,30 @@ export default function AuditLogClient() {
       const response = await fetch(`/api/admin/audit?${params}`);
       if (response.ok) {
         const data = await response.json();
-        setLogs(data.logs);
-        setTotalPages(data.pagination.pages);
+        setLogs(data.logs || []);
+        setTotalPages(data.pagination?.pages || 1);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        addToast({
+          type: 'error',
+          title: 'Failed to load audit logs',
+          message: errorData.error || 'Please try again'
+        });
       }
     } catch (error) {
       console.error('Error fetching audit logs:', error);
+      addToast({
+        type: 'error',
+        title: 'Network Error',
+        message: 'Failed to connect to server. Please try again.'
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const exportLogs = async () => {
+  const exportLogs = async (format: 'csv' | 'json' = 'csv') => {
+    setExporting(true);
     try {
       const params = new URLSearchParams();
       if (actionFilter !== 'all') params.append('action', actionFilter);
@@ -83,6 +113,7 @@ export default function AuditLogClient() {
       if (startDate) params.append('startDate', startDate);
       if (endDate) params.append('endDate', endDate);
       params.append('export', 'true');
+      params.append('format', format);
 
       const response = await fetch(`/api/admin/audit?${params}`);
       if (response.ok) {
@@ -90,14 +121,35 @@ export default function AuditLogClient() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `audit-logs-${new Date().toISOString().split('T')[0]}.csv`;
+        const extension = format === 'json' ? 'json' : 'csv';
+        a.download = `audit-logs-${new Date().toISOString().split('T')[0]}.${extension}`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
+        
+        addToast({
+          type: 'success',
+          title: 'Export Successful',
+          message: `Audit logs exported as ${format.toUpperCase()}`
+        });
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        addToast({
+          type: 'error',
+          title: 'Export Failed',
+          message: errorData.error || 'Failed to export audit logs'
+        });
       }
     } catch (error) {
       console.error('Error exporting logs:', error);
+      addToast({
+        type: 'error',
+        title: 'Export Error',
+        message: 'Failed to export audit logs. Please try again.'
+      });
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -140,17 +192,29 @@ export default function AuditLogClient() {
         <div className="flex items-center space-x-4">
           <button
             onClick={fetchLogs}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            disabled={loading}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
           </button>
+          <div className="relative">
+            <button
+              onClick={() => exportLogs('csv')}
+              disabled={exporting}
+              className="flex items-center space-x-2 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download className={`w-4 h-4 ${exporting ? 'animate-pulse' : ''}`} />
+              <span>{exporting ? 'Exporting...' : 'Export CSV'}</span>
+            </button>
+          </div>
           <button
-            onClick={exportLogs}
-            className="flex items-center space-x-2 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+            onClick={() => exportLogs('json')}
+            disabled={exporting}
+            className="flex items-center space-x-2 px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Download className="w-4 h-4" />
-            <span>Export</span>
+            <Download className={`w-4 h-4 ${exporting ? 'animate-pulse' : ''}`} />
+            <span>{exporting ? 'Exporting...' : 'Export JSON'}</span>
           </button>
         </div>
       </div>
@@ -314,32 +378,50 @@ export default function AuditLogClient() {
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200">
-                <div className="text-sm text-slate-600">
-                  Page {page} of {totalPages}
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => setPage(Math.max(1, page - 1))}
-                    disabled={page === 1}
-                    className="px-3 py-1 border border-slate-200 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50"
-                  >
-                    Previous
-                  </button>
-                  <button
-                    onClick={() => setPage(Math.min(totalPages, page + 1))}
-                    disabled={page === totalPages}
-                    className="px-3 py-1 border border-slate-200 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50"
-                  >
-                    Next
-                  </button>
-                </div>
+            <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200">
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-slate-600">
+                  Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, filteredLogs.length)} of {filteredLogs.length} logs
+                </span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setPage(1);
+                  }}
+                  className="px-3 py-1 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="25">25 per page</option>
+                  <option value="50">50 per page</option>
+                  <option value="100">100 per page</option>
+                </select>
               </div>
-            )}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage(prev => Math.max(1, prev - 1))}
+                  disabled={page === 1 || loading}
+                  className="px-3 py-1 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="px-4 py-1 text-sm text-slate-600">
+                  Page {page} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={page === totalPages || loading}
+                  className="px-3 py-1 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
           </>
         )}
       </motion.div>
+
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 }

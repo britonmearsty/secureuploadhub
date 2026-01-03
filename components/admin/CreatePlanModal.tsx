@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Trash2, DollarSign } from 'lucide-react';
 
@@ -9,6 +9,7 @@ interface CreatePlanModalProps {
   onClose: () => void;
   onSuccess: (plan: any) => void;
   onError: (message: string) => void;
+  editPlan?: any; // Plan to edit, if provided
 }
 
 interface PlanFormData {
@@ -23,20 +24,50 @@ interface PlanFormData {
   maxUploadsMonth: number;
 }
 
-export function CreatePlanModal({ isOpen, onClose, onSuccess, onError }: CreatePlanModalProps) {
+export function CreatePlanModal({ isOpen, onClose, onSuccess, onError, editPlan }: CreatePlanModalProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<PlanFormData>({
-    name: '',
-    description: '',
-    price: 0,
-    currency: 'USD',
-    features: [''],
-    isActive: true,
-    maxPortals: 1,
-    maxStorageGB: 1,
-    maxUploadsMonth: 100
+    name: editPlan?.name || '',
+    description: editPlan?.description || '',
+    price: editPlan?.price || 0,
+    currency: editPlan?.currency || 'USD',
+    features: editPlan?.features && editPlan.features.length > 0 ? editPlan.features : [''],
+    isActive: editPlan?.isActive !== undefined ? editPlan.isActive : true,
+    maxPortals: editPlan?.maxPortals || 1,
+    maxStorageGB: editPlan?.maxStorageGB || 1,
+    maxUploadsMonth: editPlan?.maxUploadsMonth || 100
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Update form data when editPlan changes
+  useEffect(() => {
+    if (editPlan && isOpen) {
+      setFormData({
+        name: editPlan.name || '',
+        description: editPlan.description || '',
+        price: editPlan.price || 0,
+        currency: editPlan.currency || 'USD',
+        features: editPlan.features && editPlan.features.length > 0 ? editPlan.features : [''],
+        isActive: editPlan.isActive !== undefined ? editPlan.isActive : true,
+        maxPortals: editPlan.maxPortals || 1,
+        maxStorageGB: editPlan.maxStorageGB || 1,
+        maxUploadsMonth: editPlan.maxUploadsMonth || 100
+      });
+    } else if (!editPlan && isOpen) {
+      // Reset to defaults for new plan
+      setFormData({
+        name: '',
+        description: '',
+        price: 0,
+        currency: 'USD',
+        features: [''],
+        isActive: true,
+        maxPortals: 1,
+        maxStorageGB: 1,
+        maxUploadsMonth: 100
+      });
+    }
+  }, [editPlan, isOpen]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -85,8 +116,13 @@ export function CreatePlanModal({ isOpen, onClose, onSuccess, onError }: CreateP
         features: formData.features.filter(f => f.trim())
       };
 
-      const response = await fetch('/api/admin/billing/plans', {
-        method: 'POST',
+      const url = editPlan 
+        ? `/api/admin/billing/plans/${editPlan.id}`
+        : '/api/admin/billing/plans';
+      const method = editPlan ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -96,14 +132,14 @@ export function CreatePlanModal({ isOpen, onClose, onSuccess, onError }: CreateP
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create plan');
+        throw new Error(data.error || `Failed to ${editPlan ? 'update' : 'create'} plan`);
       }
 
       onSuccess(data.plan);
       handleClose();
     } catch (error) {
-      console.error('Error creating plan:', error);
-      onError(error instanceof Error ? error.message : 'Failed to create plan');
+      console.error(`Error ${editPlan ? 'updating' : 'creating'} plan:`, error);
+      onError(error instanceof Error ? error.message : `Failed to ${editPlan ? 'update' : 'create'} plan`);
     } finally {
       setLoading(false);
     }
@@ -168,7 +204,9 @@ export function CreatePlanModal({ isOpen, onClose, onSuccess, onError }: CreateP
         >
           <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 rounded-t-xl">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-slate-900">Create New Plan</h2>
+              <h2 className="text-xl font-semibold text-slate-900">
+                {editPlan ? 'Edit Plan' : 'Create New Plan'}
+              </h2>
               <button
                 onClick={handleClose}
                 className="text-slate-400 hover:text-slate-600 p-1"
@@ -409,7 +447,7 @@ export function CreatePlanModal({ isOpen, onClose, onSuccess, onError }: CreateP
                 className="px-6 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 font-medium transition-colors disabled:opacity-50"
                 disabled={loading}
               >
-                {loading ? 'Creating...' : 'Create Plan'}
+                {loading ? (editPlan ? 'Updating...' : 'Creating...') : (editPlan ? 'Update Plan' : 'Create Plan')}
               </button>
             </div>
           </form>

@@ -355,6 +355,50 @@ export function EmailTemplatesClient() {
     setIsCreateDialogOpen(true);
   };
 
+  const handleTestTemplate = async (template: EmailTemplate | null) => {
+    if (!template) return;
+
+    const testEmail = prompt('Enter email address to send test email to:');
+    if (!testEmail || !testEmail.includes('@')) {
+      addToast({
+        type: 'error',
+        title: 'Invalid Email',
+        message: 'Please enter a valid email address'
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/email-templates/${template.id}/test`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ testEmail })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        addToast({
+          type: 'success',
+          title: 'Test Email Sent',
+          message: `Test email sent to ${testEmail}`
+        });
+      } else {
+        addToast({
+          type: 'error',
+          title: 'Failed to Send Test Email',
+          message: data.error || 'Could not send test email'
+        });
+      }
+    } catch (error) {
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to send test email'
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -866,16 +910,48 @@ export function EmailTemplatesClient() {
             {/* Variable Helper */}
             <div className="mt-4 p-3 bg-blue-50 rounded-lg">
               <h4 className="text-sm font-medium text-blue-900 mb-2">Available Variables:</h4>
-              <div className="text-xs text-blue-800 space-x-2">
-                <code>{'{{user_name}}'}</code>
-                <code>{'{{company_name}}'}</code>
-                <code>{'{{dashboard_url}}'}</code>
-                <code>{'{{support_email}}'}</code>
-                <code>{'{{current_date}}'}</code>
+              <p className="text-xs text-blue-700 mb-2">Click to insert into HTML content</p>
+              <div className="flex flex-wrap gap-2">
+                {['user_name', 'company_name', 'dashboard_url', 'support_email', 'current_date', 'user_email', 'portal_name', 'file_name'].map((varName) => (
+                  <button
+                    key={varName}
+                    type="button"
+                    onClick={() => {
+                      // Find the editing template's HTML textarea
+                      const textareas = document.querySelectorAll('textarea[placeholder*="HTML email"]');
+                      const textarea = Array.from(textareas).find((ta: any) => {
+                        const taElement = ta as HTMLTextAreaElement;
+                        return taElement.value === editingTemplate?.htmlContent;
+                      }) as HTMLTextAreaElement;
+                      
+                      if (textarea && editingTemplate) {
+                        const start = textarea.selectionStart;
+                        const end = textarea.selectionEnd;
+                        const variable = `{{${varName}}}`;
+                        const newValue = editingTemplate.htmlContent.substring(0, start) + variable + editingTemplate.htmlContent.substring(end);
+                        setEditingTemplate({ ...editingTemplate, htmlContent: newValue });
+                        setTimeout(() => {
+                          textarea.focus();
+                          textarea.setSelectionRange(start + variable.length, start + variable.length);
+                        }, 0);
+                      }
+                    }}
+                    className="px-2 py-1 bg-white border border-blue-200 rounded text-xs text-blue-800 hover:bg-blue-100 transition-colors"
+                  >
+                    {`{{${varName}}}`}
+                  </button>
+                ))}
               </div>
             </div>
 
             <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => handleTestTemplate(editingTemplate)}
+                className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium transition-colors flex items-center gap-2"
+              >
+                <Send className="h-4 w-4" />
+                Send Test Email
+              </button>
               <button
                 onClick={() => setEditingTemplate(null)}
                 className="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium"

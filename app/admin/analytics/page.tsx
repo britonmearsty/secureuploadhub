@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { AdminErrorBoundary } from '@/components/admin/AdminErrorBoundary';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -140,7 +141,7 @@ interface UploadAnalytics {
   }>;
 }
 
-export default function AnalyticsPage() {
+function AnalyticsPageContent() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [userAnalytics, setUserAnalytics] = useState<UserAnalytics | null>(null);
   const [uploadAnalytics, setUploadAnalytics] = useState<UploadAnalytics | null>(null);
@@ -531,5 +532,13 @@ export default function AnalyticsPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+export default function AnalyticsPage() {
+  return (
+    <AdminErrorBoundary>
+      <AnalyticsPageContent />
+    </AdminErrorBoundary>
   );
 }

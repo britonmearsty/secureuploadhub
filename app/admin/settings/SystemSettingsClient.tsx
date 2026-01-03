@@ -68,6 +68,59 @@ export function SystemSettingsClient() {
     setToasts(prev => prev.filter(toast => toast.id !== id));
   };
 
+  const validateSettingValue = (value: string, type: string): { valid: boolean; error?: string } => {
+    if (!value && value !== 'false' && value !== '0') {
+      return { valid: false, error: 'Value is required' };
+    }
+
+    switch (type) {
+      case 'number':
+        const numValue = Number(value);
+        if (isNaN(numValue)) {
+          return { valid: false, error: 'Value must be a valid number' };
+        }
+        if (numValue < 0) {
+          return { valid: false, error: 'Number must be 0 or greater' };
+        }
+        break;
+      
+      case 'boolean':
+        if (value !== 'true' && value !== 'false') {
+          return { valid: false, error: 'Boolean must be "true" or "false"' };
+        }
+        break;
+      
+      case 'json':
+        try {
+          JSON.parse(value);
+        } catch (e) {
+          return { valid: false, error: 'Value must be valid JSON' };
+        }
+        break;
+      
+      case 'string':
+        if (value.trim().length === 0) {
+          return { valid: false, error: 'String value cannot be empty' };
+        }
+        break;
+    }
+
+    return { valid: true };
+  };
+
+  const validateSettingKey = (key: string): { valid: boolean; error?: string } => {
+    if (!key || key.trim().length === 0) {
+      return { valid: false, error: 'Setting key is required' };
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(key)) {
+      return { valid: false, error: 'Key can only contain letters, numbers, and underscores' };
+    }
+    if (key.length > 100) {
+      return { valid: false, error: 'Key must be 100 characters or less' };
+    }
+    return { valid: true };
+  };
+
   const categories = ['general', 'security', 'email', 'storage', 'billing', 'ui'];
 
   useEffect(() => {
@@ -103,11 +156,24 @@ export function SystemSettingsClient() {
   };
 
   const handleCreateSetting = async () => {
-    if (!newSetting.key.trim()) {
+    // Validate key
+    const keyValidation = validateSettingKey(newSetting.key);
+    if (!keyValidation.valid) {
       addToast({
         type: 'error',
         title: 'Validation Error',
-        message: 'Setting key is required.'
+        message: keyValidation.error || 'Invalid setting key'
+      });
+      return;
+    }
+
+    // Validate value
+    const valueValidation = validateSettingValue(newSetting.value, newSetting.type);
+    if (!valueValidation.valid) {
+      addToast({
+        type: 'error',
+        title: 'Validation Error',
+        message: valueValidation.error || 'Invalid setting value'
       });
       return;
     }
@@ -152,6 +218,19 @@ export function SystemSettingsClient() {
   };
 
   const handleUpdateSetting = async (setting: SystemSetting) => {
+    // Validate value
+    if (setting.value !== null) {
+      const valueValidation = validateSettingValue(setting.value, setting.type);
+      if (!valueValidation.valid) {
+        addToast({
+          type: 'error',
+          title: 'Validation Error',
+          message: valueValidation.error || 'Invalid setting value'
+        });
+        return;
+      }
+    }
+
     try {
       const response = await fetch(`/api/admin/settings/${setting.id}`, {
         method: 'PUT',
@@ -408,14 +487,48 @@ export function SystemSettingsClient() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Value</label>
-                <input
-                  type="text"
-                  value={newSetting.value}
-                  onChange={(e) => setNewSetting({ ...newSetting, value: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
-                  placeholder="Setting value"
-                />
+                <label className="block text-sm font-medium text-slate-700 mb-2">Value *</label>
+                {newSetting.type === 'boolean' ? (
+                  <select
+                    value={newSetting.value}
+                    onChange={(e) => setNewSetting({ ...newSetting, value: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                    required
+                  >
+                    <option value="">Select...</option>
+                    <option value="true">True</option>
+                    <option value="false">False</option>
+                  </select>
+                ) : newSetting.type === 'number' ? (
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={newSetting.value}
+                    onChange={(e) => setNewSetting({ ...newSetting, value: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                    placeholder="Enter number"
+                    required
+                  />
+                ) : newSetting.type === 'json' ? (
+                  <textarea
+                    value={newSetting.value}
+                    onChange={(e) => setNewSetting({ ...newSetting, value: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent font-mono text-sm"
+                    placeholder='{"key": "value"}'
+                    rows={4}
+                    required
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    value={newSetting.value}
+                    onChange={(e) => setNewSetting({ ...newSetting, value: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                    placeholder="Enter setting value"
+                    required
+                  />
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Type</label>

@@ -6,6 +6,9 @@ import { ThemeSync } from "@/lib/theme-sync"
 import { getFreshUserData } from "@/lib/session-validation"
 import AdminRedirect from "@/components/AdminRedirect"
 
+// Force dynamic rendering for authenticated routes
+export const dynamic = 'force-dynamic'
+
 async function handleSignOut() {
   "use server"
   await signOut({ redirectTo: "/" })

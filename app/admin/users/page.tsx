@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma"
 import EnhancedUsersManagementClient from "./EnhancedUsersManagementClient"
+import { AdminErrorBoundary } from "@/components/admin/AdminErrorBoundary"
 
 export default async function AdminUsersPage() {
     // Authentication and authorization handled by AdminLayout
@@ -53,11 +54,13 @@ export default async function AdminUsersPage() {
     const totalUsers = await prisma.user.count();
 
     return (
-        <div className="p-6">
-            <EnhancedUsersManagementClient 
-                initialUsers={serializedUsers} 
-                totalUsers={totalUsers}
-            />
-        </div>
+        <AdminErrorBoundary>
+            <div className="p-6">
+                <EnhancedUsersManagementClient 
+                    initialUsers={serializedUsers} 
+                    totalUsers={totalUsers}
+                />
+            </div>
+        </AdminErrorBoundary>
     );
 }

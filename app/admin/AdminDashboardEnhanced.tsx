@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
   Users, 
@@ -82,6 +83,7 @@ interface Analytics {
 }
 
 export default function AdminDashboardEnhanced() {
+  const router = useRouter();
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('30');
@@ -471,15 +473,24 @@ export default function AdminDashboardEnhanced() {
       >
         <h3 className="text-lg font-semibold text-slate-900 mb-6">Quick Actions</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="flex items-center space-x-3 p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
+          <button 
+            onClick={() => router.push('/admin/users')}
+            className="flex items-center space-x-3 p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors cursor-pointer"
+          >
             <Users className="w-5 h-5 text-blue-600" />
             <span className="font-medium text-blue-900">Manage Users</span>
           </button>
-          <button className="flex items-center space-x-3 p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
+          <button 
+            onClick={() => router.push('/admin/portals')}
+            className="flex items-center space-x-3 p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors cursor-pointer"
+          >
             <FolderOpen className="w-5 h-5 text-green-600" />
             <span className="font-medium text-green-900">View Portals</span>
           </button>
-          <button className="flex items-center space-x-3 p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors">
+          <button 
+            onClick={() => router.push('/admin/billing')}
+            className="flex items-center space-x-3 p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors cursor-pointer"
+          >
             <CreditCard className="w-5 h-5 text-purple-600" />
             <span className="font-medium text-purple-900">Billing Overview</span>
           </button>

@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { SystemSettingsClient } from './SystemSettingsClient';
+import { AdminErrorBoundary } from '@/components/admin/AdminErrorBoundary';
 
 export const metadata: Metadata = {
   title: 'System Settings - Admin Dashboard',
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function SystemSettingsPage() {
-  return <SystemSettingsClient />;
+  return (
+    <AdminErrorBoundary>
+      <SystemSettingsClient />
+    </AdminErrorBoundary>
+  );
 }

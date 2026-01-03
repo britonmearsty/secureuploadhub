@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { EmailTemplatesClient } from './EmailTemplatesClient';
+import { AdminErrorBoundary } from '@/components/admin/AdminErrorBoundary';
 
 export const metadata: Metadata = {
   title: 'Email Templates - Admin Dashboard',
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function EmailTemplatesPage() {
-  return <EmailTemplatesClient />;
+  return (
+    <AdminErrorBoundary>
+      <EmailTemplatesClient />
+    </AdminErrorBoundary>
+  );
 }

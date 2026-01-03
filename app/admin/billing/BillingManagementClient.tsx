@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { CreatePlanModal } from '@/components/admin/CreatePlanModal';
 import { ToastContainer, Toast } from '@/components/ui/Toast';
+import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 
 interface Subscription {
   id: string;
@@ -111,8 +112,30 @@ export default function BillingManagementClient() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showCreatePlan, setShowCreatePlan] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<BillingPlan | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<BillingPlan | null>(null);
   const [showPlanDetails, setShowPlanDetails] = useState(false);
+  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
+  const [showSubscriptionDetails, setShowSubscriptionDetails] = useState(false);
+  const [showPaymentHistory, setShowPaymentHistory] = useState(false);
+  const [paymentHistory, setPaymentHistory] = useState<any[]>([]);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [openActionMenu, setOpenActionMenu] = useState<string | null>(null);
+
+  // Confirmation modal
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    variant?: 'danger' | 'warning' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    variant: 'danger'
+  });
 
   // Toast notifications
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -126,9 +149,35 @@ export default function BillingManagementClient() {
     setToasts(prev => prev.filter(toast => toast.id !== id));
   };
 
+  const showConfirmation = (title: string, message: string, onConfirm: () => void, variant: 'danger' | 'warning' | 'info' = 'danger') => {
+    setConfirmModal({
+      isOpen: true,
+      title,
+      message,
+      onConfirm,
+      variant
+    });
+  };
+
+  const closeConfirmation = () => {
+    setConfirmModal(prev => ({ ...prev, isOpen: false }));
+  };
+
   useEffect(() => {
     fetchData();
   }, [activeTab]);
+
+  // Close action menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setOpenActionMenu(null);
+    };
+
+    if (openActionMenu) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [openActionMenu]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -165,12 +214,22 @@ export default function BillingManagementClient() {
   };
 
   const handlePlanCreated = (newPlan: BillingPlan) => {
-    setPlans(prev => [...prev, newPlan]);
-    addToast({
-      type: 'success',
-      title: 'Plan Created',
-      message: `${newPlan.name} has been created successfully.`
-    });
+    if (editingPlan) {
+      setPlans(prev => prev.map(p => p.id === editingPlan.id ? newPlan : p));
+      addToast({
+        type: 'success',
+        title: 'Plan Updated',
+        message: `${newPlan.name} has been updated successfully.`
+      });
+      setEditingPlan(null);
+    } else {
+      setPlans(prev => [...prev, newPlan]);
+      addToast({
+        type: 'success',
+        title: 'Plan Created',
+        message: `${newPlan.name} has been created successfully.`
+      });
+    }
   };
 
   const handlePlanError = (message: string) => {
@@ -179,6 +238,128 @@ export default function BillingManagementClient() {
       title: 'Error',
       message
     });
+  };
+
+  const viewSubscriptionDetails = async (subscription: Subscription) => {
+    setSelectedSubscription(subscription);
+    setShowSubscriptionDetails(true);
+  };
+
+  const fetchPaymentHistory = async (subscriptionId: string) => {
+    try {
+      const response = await fetch(`/api/admin/billing/subscriptions/${subscriptionId}/payments`);
+      if (response.ok) {
+        const data = await response.json();
+        setPaymentHistory(data.payments || []);
+        setShowPaymentHistory(true);
+      } else {
+        addToast({
+          type: 'error',
+          title: 'Error',
+          message: 'Failed to fetch payment history'
+        });
+      }
+    } catch (error) {
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to fetch payment history'
+      });
+    }
+  };
+
+  const cancelSubscription = async (subscriptionId: string) => {
+    setActionLoading(true);
+    try {
+      const response = await fetch(`/api/admin/billing/subscriptions/${subscriptionId}/cancel`, {
+        method: 'POST'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSubscriptions(prev => prev.map(sub => 
+          sub.id === subscriptionId 
+            ? { ...sub, cancelAtPeriodEnd: true, status: 'active' }
+            : sub
+        ));
+        closeConfirmation();
+        setOpenActionMenu(null);
+        addToast({
+          type: 'success',
+          title: 'Subscription Cancelled',
+          message: data.message || 'Subscription will be cancelled at the end of the billing period'
+        });
+        fetchData();
+      } else {
+        const error = await response.json();
+        addToast({
+          type: 'error',
+          title: 'Error',
+          message: error.error || 'Failed to cancel subscription'
+        });
+      }
+    } catch (error) {
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to cancel subscription'
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleCancelSubscription = (subscription: Subscription) => {
+    showConfirmation(
+      'Cancel Subscription',
+      `Are you sure you want to cancel ${subscription.user.name || subscription.user.email}'s subscription? The subscription will remain active until ${new Date(subscription.currentPeriodEnd).toLocaleDateString()}.`,
+      () => cancelSubscription(subscription.id),
+      'warning'
+    );
+  };
+
+  const handleDeletePlan = (plan: BillingPlan) => {
+    showConfirmation(
+      'Delete Plan',
+      `Are you sure you want to delete "${plan.name}"? This action cannot be undone. ${plan._count.subscriptions > 0 ? `Warning: This plan has ${plan._count.subscriptions} active subscription(s).` : ''}`,
+      () => deletePlan(plan.id),
+      plan._count.subscriptions > 0 ? 'warning' : 'danger'
+    );
+  };
+
+  const deletePlan = async (planId: string) => {
+    setActionLoading(true);
+    try {
+      const response = await fetch(`/api/admin/billing/plans/${planId}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        setPlans(prev => prev.filter(p => p.id !== planId));
+        closeConfirmation();
+        addToast({
+          type: 'success',
+          title: 'Plan Deleted',
+          message: 'Billing plan deleted successfully'
+        });
+        fetchData();
+      } else {
+        const error = await response.json();
+        addToast({
+          type: 'error',
+          title: 'Delete Failed',
+          message: error.error || 'Failed to delete plan. Make sure there are no active subscriptions.'
+        });
+      }
+    } catch (error) {
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to delete plan'
+      });
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const formatCurrency = (amount: number, currency: string = 'USD') => {
@@ -237,12 +418,16 @@ export default function BillingManagementClient() {
       {/* Toast Container */}
       <ToastContainer toasts={toasts} onRemove={removeToast} />
 
-      {/* Create Plan Modal */}
+      {/* Create/Edit Plan Modal */}
       <CreatePlanModal
-        isOpen={showCreatePlan}
-        onClose={() => setShowCreatePlan(false)}
+        isOpen={showCreatePlan || !!editingPlan}
+        onClose={() => {
+          setShowCreatePlan(false);
+          setEditingPlan(null);
+        }}
         onSuccess={handlePlanCreated}
         onError={handlePlanError}
+        editPlan={editingPlan}
       />
 
       {/* Header */}
@@ -386,28 +571,57 @@ export default function BillingManagementClient() {
                       
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-2">
-                          <div className="relative group">
-                            <button className="p-1 text-slate-400 hover:text-slate-600 rounded">
+                          <div className="relative">
+                            <button 
+                              onClick={() => setOpenActionMenu(openActionMenu === subscription.id ? null : subscription.id)}
+                              className="p-1 text-slate-400 hover:text-slate-600 rounded"
+                              disabled={actionLoading}
+                            >
                               <MoreHorizontal className="w-4 h-4" />
                             </button>
                             
-                            <div className="absolute right-0 top-8 w-48 bg-white border border-slate-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                              <div className="py-1">
-                                <button className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-                                  <Eye className="w-4 h-4" />
-                                  View Details
-                                </button>
-                                <button className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-                                  <CreditCard className="w-4 h-4" />
-                                  Payment History
-                                </button>
-                                <hr className="my-1" />
-                                <button className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                                  <XCircle className="w-4 h-4" />
-                                  Cancel Subscription
-                                </button>
+                            {openActionMenu === subscription.id && (
+                              <div className="absolute right-0 top-8 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-10">
+                                <div className="py-1">
+                                  <button 
+                                    onClick={() => {
+                                      viewSubscriptionDetails(subscription);
+                                      setOpenActionMenu(null);
+                                    }}
+                                    className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                    View Details
+                                  </button>
+                                  <button 
+                                    onClick={() => {
+                                      fetchPaymentHistory(subscription.id);
+                                      setOpenActionMenu(null);
+                                    }}
+                                    className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                  >
+                                    <CreditCard className="w-4 h-4" />
+                                    Payment History
+                                  </button>
+                                  {subscription.status === 'active' && !subscription.cancelAtPeriodEnd && (
+                                    <>
+                                      <hr className="my-1" />
+                                      <button 
+                                        onClick={() => {
+                                          handleCancelSubscription(subscription);
+                                          setOpenActionMenu(null);
+                                        }}
+                                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                        disabled={actionLoading}
+                                      >
+                                        <XCircle className="w-4 h-4" />
+                                        Cancel Subscription
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
                               </div>
-                            </div>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -493,10 +707,22 @@ export default function BillingManagementClient() {
                     >
                       <Eye className="w-4 h-4" />
                     </button>
-                    <button className="p-1 text-slate-400 hover:text-slate-600 rounded">
+                    <button 
+                      onClick={() => {
+                        setEditingPlan(plan);
+                        setShowCreatePlan(true);
+                      }}
+                      className="p-1 text-slate-400 hover:text-slate-600 rounded"
+                      title="Edit Plan"
+                    >
                       <Edit className="w-4 h-4" />
                     </button>
-                    <button className="p-1 text-slate-400 hover:text-red-600 rounded">
+                    <button 
+                      onClick={() => handleDeletePlan(plan)}
+                      className="p-1 text-slate-400 hover:text-red-600 rounded"
+                      title="Delete Plan"
+                      disabled={actionLoading}
+                    >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
@@ -607,6 +833,291 @@ export default function BillingManagementClient() {
           </div>
         </div>
       )}
+
+      {/* Subscription Details Modal */}
+      <AnimatePresence>
+        {showSubscriptionDetails && selectedSubscription && (
+          <SubscriptionDetailsModal
+            subscription={selectedSubscription}
+            onClose={() => {
+              setShowSubscriptionDetails(false);
+              setSelectedSubscription(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Payment History Modal */}
+      <AnimatePresence>
+        {showPaymentHistory && (
+          <PaymentHistoryModal
+            payments={paymentHistory}
+            subscription={selectedSubscription}
+            onClose={() => {
+              setShowPaymentHistory(false);
+              setPaymentHistory([]);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        onClose={closeConfirmation}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant}
+        loading={actionLoading}
+      />
+
+      {/* Click outside to close action menus */}
+      {openActionMenu && (
+        <div 
+          className="fixed inset-0 z-30" 
+          onClick={() => setOpenActionMenu(null)}
+        />
+      )}
     </div>
+  );
+}
+
+// Subscription Details Modal Component
+function SubscriptionDetailsModal({ 
+  subscription, 
+  onClose 
+}: { 
+  subscription: Subscription; 
+  onClose: () => void;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-slate-900">Subscription Details</h2>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          {/* Customer Info */}
+          <div>
+            <h3 className="font-medium text-slate-900 mb-3">Customer</h3>
+            <div className="flex items-center gap-3">
+              {subscription.user.image ? (
+                <img
+                  src={subscription.user.image}
+                  alt={subscription.user.name || subscription.user.email}
+                  className="w-10 h-10 rounded-full"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center">
+                  <span className="font-medium text-slate-600">
+                    {(subscription.user.name || subscription.user.email).charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <div>
+                <div className="font-medium text-slate-900">
+                  {subscription.user.name || 'No name'}
+                </div>
+                <div className="text-sm text-slate-600">{subscription.user.email}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Plan Info */}
+          <div>
+            <h3 className="font-medium text-slate-900 mb-3">Plan</h3>
+            <div className="bg-slate-50 rounded-lg p-4">
+              <div className="font-semibold text-slate-900">{subscription.plan.name}</div>
+              <div className="text-sm text-slate-600 mt-1">
+                {new Intl.NumberFormat('en-US', {
+                  style: 'currency',
+                  currency: subscription.plan.currency
+                }).format(subscription.plan.price)}/month
+              </div>
+            </div>
+          </div>
+
+          {/* Subscription Status */}
+          <div>
+            <h3 className="font-medium text-slate-900 mb-3">Status</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <span className="text-sm text-slate-600">Status:</span>
+                <div className="mt-1">
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    subscription.status === 'active' ? 'bg-green-100 text-green-700' :
+                    subscription.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                    'bg-orange-100 text-orange-700'
+                  }`}>
+                    {subscription.status}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <span className="text-sm text-slate-600">Cancels at period end:</span>
+                <div className="mt-1 font-medium">
+                  {subscription.cancelAtPeriodEnd ? 'Yes' : 'No'}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Billing Period */}
+          <div>
+            <h3 className="font-medium text-slate-900 mb-3">Billing Period</h3>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-slate-600">Current Period Start:</span>
+                <div className="font-medium">
+                  {new Date(subscription.currentPeriodStart).toLocaleDateString()}
+                </div>
+              </div>
+              <div>
+                <span className="text-slate-600">Current Period End:</span>
+                <div className="font-medium">
+                  {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Payment Statistics */}
+          <div>
+            <h3 className="font-medium text-slate-900 mb-3">Payment Statistics</h3>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="bg-slate-50 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-slate-900">
+                  {new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: subscription.plan.currency
+                  }).format(subscription.paymentStats.totalRevenue)}
+                </div>
+                <div className="text-sm text-slate-600">Total Revenue</div>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-slate-900">
+                  {subscription.paymentStats.successfulPayments}
+                </div>
+                <div className="text-sm text-slate-600">Successful Payments</div>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-slate-900">
+                  {subscription.paymentStats.totalPayments}
+                </div>
+                <div className="text-sm text-slate-600">Total Payments</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Created Date */}
+          <div className="text-sm text-slate-600">
+            Created: {new Date(subscription.createdAt).toLocaleString()}
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// Payment History Modal Component
+function PaymentHistoryModal({ 
+  payments, 
+  subscription,
+  onClose 
+}: { 
+  payments: any[]; 
+  subscription: Subscription | null;
+  onClose: () => void;
+}) {
+  const formatCurrency = (amount: number, currency: string = 'USD') => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency
+    }).format(amount);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        className="bg-white rounded-xl p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-slate-900">Payment History</h2>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600"
+          >
+            ×
+          </button>
+        </div>
+
+        {subscription && (
+          <div className="mb-4 p-3 bg-slate-50 rounded-lg">
+            <div className="text-sm text-slate-600">Subscription:</div>
+            <div className="font-medium">{subscription.plan.name}</div>
+          </div>
+        )}
+
+        {payments.length > 0 ? (
+          <div className="space-y-2">
+            {payments.map((payment) => (
+              <div key={payment.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div>
+                  <div className="font-medium text-slate-900">
+                    {formatCurrency(payment.amount, payment.currency || 'USD')}
+                  </div>
+                  <div className="text-sm text-slate-600">
+                    {new Date(payment.createdAt).toLocaleString()}
+                  </div>
+                </div>
+                <div>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    payment.status === 'completed' ? 'bg-green-100 text-green-700' :
+                    payment.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-red-100 text-red-700'
+                  }`}>
+                    {payment.status}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-slate-500">
+            No payment history available
+          </div>
+        )}
+      </motion.div>
+    </motion.div>
   );
 }
