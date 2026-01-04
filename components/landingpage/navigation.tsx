@@ -7,7 +7,7 @@ export function Navigation() {
 
   return (
     <nav className="fixed top-0 w-full z-50 transition-all duration-300">
-      <div className="absolute inset-0 bg-white/80 backdrop-blur-xl border-b border-border/50 support-[backdrop-filter]:bg-white/60"></div>
+      <div className="absolute inset-0 bg-white border-b border-border/50 dark:bg-background dark:border-border"></div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
@@ -57,7 +57,7 @@ export function Navigation() {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 w-full bg-white/95 backdrop-blur-xl border-b border-border p-4 shadow-xl animate-slide-up">
+          <div className="md:hidden absolute top-full left-0 w-full bg-white dark:bg-background border-b border-border p-4 shadow-xl animate-slide-up">
             <div className="flex flex-col gap-2">
               {['Features', 'How It Works', 'Pricing'].map((item) => (
                 <a

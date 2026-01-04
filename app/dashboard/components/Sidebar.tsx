@@ -294,7 +294,7 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsMobileMenuOpen(false)}
-              className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden"
+              className="fixed inset-0 bg-background/80 z-40 lg:hidden"
             />
             <motion.aside
               initial={{ x: "-100%" }}
