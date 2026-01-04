@@ -634,7 +634,14 @@ export default function EditPortalPage() {
                           <input
                             type="text"
                             value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            onChange={(e) => {
+                              const newName = e.target.value
+                              setFormData({ ...formData, name: newName })
+                              // Clear error if name is now valid
+                              if (newName.trim() && error.includes("Portal name is required")) {
+                                setError("")
+                              }
+                            }}
                             className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-medium text-slate-900 dark:text-slate-100"
                             required
                           />
@@ -1037,7 +1044,13 @@ export default function EditPortalPage() {
                                 <button
                                   key={template.size}
                                   type="button"
-                                  onClick={() => setFormData({ ...formData, maxFileSize: template.size })}
+                                  onClick={() => {
+                                    setFormData({ ...formData, maxFileSize: template.size })
+                                    // Clear error when selecting a template
+                                    if (error.includes("Maximum file size must be specified")) {
+                                      setError("")
+                                    }
+                                  }}
                                   className={`p-3 rounded-xl border text-center transition-all ${
                                     formData.maxFileSize === template.size
                                       ? "border-slate-900 bg-slate-900 text-white shadow-md"
@@ -1056,7 +1069,14 @@ export default function EditPortalPage() {
                               <input
                                 type="number"
                                 value={formData.maxFileSize}
-                                onChange={(e) => setFormData({ ...formData, maxFileSize: e.target.value === '' ? '' : parseInt(e.target.value) })}
+                                onChange={(e) => {
+                                  const newSize = e.target.value === '' ? '' : parseInt(e.target.value)
+                                  setFormData({ ...formData, maxFileSize: newSize })
+                                  // Clear error if file size is now valid
+                                  if (newSize && Number(newSize) > 0 && error.includes("Maximum file size must be specified")) {
+                                    setError("")
+                                  }
+                                }}
                                 placeholder="Custom size..."
                                 className={`w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border rounded-xl focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-semibold text-slate-900 dark:text-slate-100 ${!formData.maxFileSize ? 'border-amber-300 dark:border-amber-600' : 'border-slate-200 dark:border-slate-700'}`}
                               />

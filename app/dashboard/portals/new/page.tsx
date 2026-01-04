@@ -330,6 +330,11 @@ export default function CreatePortalPage() {
       .slice(0, 50)
 
     setFormData({ ...formData, name, slug })
+    
+    // Clear error if name is now valid
+    if (name.trim() && error.includes("Portal name is required")) {
+      setError("")
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -524,9 +529,14 @@ export default function CreatePortalPage() {
                             <input
                               type="text"
                               value={formData.slug}
-                              onChange={(e) =>
-                                setFormData({ ...formData, slug: e.target.value.toLowerCase() })
-                              }
+                              onChange={(e) => {
+                                const newSlug = e.target.value.toLowerCase()
+                                setFormData({ ...formData, slug: newSlug })
+                                // Clear error if slug is now valid
+                                if (newSlug.trim() && error.includes("Portal handle is required")) {
+                                  setError("")
+                                }
+                              }}
                               placeholder="custom-address"
                               className="flex-1 px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-r-xl focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-medium text-slate-900 dark:text-slate-100"
                               pattern="[a-z0-9-]+"
@@ -884,7 +894,13 @@ export default function CreatePortalPage() {
                                 <button
                                   key={template.size}
                                   type="button"
-                                  onClick={() => setFormData({ ...formData, maxFileSize: template.size })}
+                                  onClick={() => {
+                                    setFormData({ ...formData, maxFileSize: template.size })
+                                    // Clear error when selecting a template
+                                    if (error.includes("Maximum file size must be specified")) {
+                                      setError("")
+                                    }
+                                  }}
                                   className={`p-3 rounded-xl border text-center transition-all ${
                                     formData.maxFileSize === template.size
                                       ? "border-slate-900 bg-slate-900 text-white shadow-md"
@@ -903,7 +919,14 @@ export default function CreatePortalPage() {
                               <input
                                 type="number"
                                 value={formData.maxFileSize}
-                                onChange={(e) => setFormData({ ...formData, maxFileSize: e.target.value === '' ? 0 : parseInt(e.target.value) || 0 })}
+                                onChange={(e) => {
+                                  const newSize = e.target.value === '' ? 0 : parseInt(e.target.value) || 0
+                                  setFormData({ ...formData, maxFileSize: newSize })
+                                  // Clear error if file size is now valid
+                                  if (newSize > 0 && error.includes("Maximum file size must be specified")) {
+                                    setError("")
+                                  }
+                                }}
                                 placeholder="Custom size..."
                                 className={`w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border rounded-xl focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-semibold text-slate-900 dark:text-slate-100 ${!formData.maxFileSize ? 'border-amber-300 dark:border-amber-600' : 'border-slate-200 dark:border-slate-700'}`}
                               />
