@@ -157,9 +157,9 @@ function AnalyticsPageContent() {
     try {
       console.log('Making API calls...');
       const [dashboardRes, usersRes, uploadsRes] = await Promise.all([
-        fetch(`/api/admin/analytics/dashboard?period=${period}`),
-        fetch(`/api/admin/analytics/users?period=${period}`),
-        fetch(`/api/admin/analytics/uploads?period=${period}`),
+        fetch(`/api/admin/analytics/dashboard-simple?period=${period}`),
+        fetch(`/api/admin/analytics/users?period=${period}&groupBy=day`),
+        fetch(`/api/admin/analytics/uploads?period=${period}&groupBy=day`),
       ]);
 
       console.log('API responses:', {

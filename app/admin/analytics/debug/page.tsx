@@ -58,9 +58,10 @@ export default function AnalyticsDebugPage() {
       ['/api/admin/test-auth', 'Auth Test'],
       ['/api/admin/test-db', 'Database Test'],
       ['/api/admin/analytics/dashboard-simple?period=30d', 'Dashboard Simple'],
-      ['/api/admin/analytics/dashboard?period=30d', 'Dashboard'],
-      ['/api/admin/analytics/users?period=30d', 'Users'],
-      ['/api/admin/analytics/uploads?period=30d', 'Uploads'],
+      ['/api/admin/analytics/dashboard?period=30d&timezone=UTC', 'Dashboard'],
+      ['/api/admin/analytics/users?period=30d&groupBy=day', 'Users'],
+      ['/api/admin/analytics/uploads?period=30d&groupBy=day', 'Uploads'],
+      ['/api/admin/analytics/performance-simple?period=24h', 'Performance Simple'],
       ['/api/admin/analytics/performance?period=24h', 'Performance'],
       ['/api/admin/analytics?days=30', 'Main Analytics'],
     ];
