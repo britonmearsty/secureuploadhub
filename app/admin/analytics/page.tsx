@@ -24,26 +24,6 @@ import { MetricCard } from '@/components/admin/analytics/MetricCard';
 import { RecentActivity } from '@/components/admin/analytics/RecentActivity';
 import { TopPortals } from '@/components/admin/analytics/TopPortals';
 
-// Helper function to format bytes if not available in utils
-const formatBytesLocal = (bytes: number): string => {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
-
-// Helper function to format numbers if not available in utils
-const formatNumberLocal = (num: number): string => {
-  if (num >= 1000000) {
-    return (num / 1000000).toFixed(1) + 'M';
-  }
-  if (num >= 1000) {
-    return (num / 1000).toFixed(1) + 'K';
-  }
-  return num.toString();
-};
-
 interface DashboardData {
   overview: {
     totalUsers: number;
@@ -392,21 +372,21 @@ function AnalyticsPageContent() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <MetricCard
               title="Total Users"
-              value={formatNumberLocal(dashboardData?.overview.totalUsers || 0)}
+              value={formatNumber(dashboardData?.overview.totalUsers || 0)}
               change={dashboardData?.overview.newUsers || 0}
               changeLabel={`+${dashboardData?.overview.newUsers || 0} this ${period}`}
               icon={Users}
             />
             <MetricCard
               title="Total Portals"
-              value={formatNumberLocal(dashboardData?.overview.totalPortals || 0)}
+              value={formatNumber(dashboardData?.overview.totalPortals || 0)}
               change={dashboardData?.overview.newPortals || 0}
               changeLabel={`+${dashboardData?.overview.newPortals || 0} this ${period}`}
               icon={BarChart3}
             />
             <MetricCard
               title="Total Uploads"
-              value={formatNumberLocal(dashboardData?.overview.totalUploads || 0)}
+              value={formatNumber(dashboardData?.overview.totalUploads || 0)}
               change={dashboardData?.overview.newUploads || 0}
               changeLabel={`+${dashboardData?.overview.newUploads || 0} this ${period}`}
               icon={Upload}
@@ -467,22 +447,22 @@ function AnalyticsPageContent() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <MetricCard
               title="Total Users"
-              value={formatNumberLocal(userAnalytics?.summary.totalUsers || 0)}
+              value={formatNumber(userAnalytics?.summary.totalUsers || 0)}
               icon={Users}
             />
             <MetricCard
               title="Active Users"
-              value={formatNumberLocal(userAnalytics?.activity.active_users || 0)}
+              value={formatNumber(userAnalytics?.activity.active_users || 0)}
               icon={Activity}
             />
             <MetricCard
               title="Users with Portals"
-              value={formatNumberLocal(userAnalytics?.activity.users_with_portals || 0)}
+              value={formatNumber(userAnalytics?.activity.users_with_portals || 0)}
               icon={BarChart3}
             />
             <MetricCard
               title="Users with Uploads"
-              value={formatNumberLocal(userAnalytics?.activity.users_with_uploads || 0)}
+              value={formatNumber(userAnalytics?.activity.users_with_uploads || 0)}
               icon={Upload}
             />
           </div>
@@ -574,7 +554,7 @@ function AnalyticsPageContent() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <MetricCard
               title="Total Uploads"
-              value={formatNumberLocal(uploadAnalytics?.summary.totalUploads || 0)}
+              value={formatNumber(uploadAnalytics?.summary.totalUploads || 0)}
               icon={Upload}
             />
             <MetricCard
@@ -584,7 +564,7 @@ function AnalyticsPageContent() {
             />
             <MetricCard
               title="Average Size"
-              value={formatBytesLocal((uploadAnalytics?.summary.averageSize || 0) * 1024)}
+              value={formatBytes((uploadAnalytics?.summary.averageSize || 0))}
               icon={BarChart3}
             />
             <MetricCard
@@ -655,7 +635,7 @@ function AnalyticsPageContent() {
                         <Badge variant="secondary">{type.percentage}%</Badge>
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {type.count} files • {formatBytesLocal(type.totalSize)}
+                        {type.count} files • {formatBytes(type.totalSize)}
                       </div>
                     </div>
                   ))}

@@ -17,7 +17,10 @@
     "email": "email dev",
     "create-admin": "tsx scripts/create-admin.ts",
     "seed-audit-logs": "tsx scripts/seed-audit-logs.ts",
-    "seed-system-settings": "tsx scripts/seed-system-settings.ts"
+    "seed-system-settings": "tsx scripts/seed-system-settings.ts",
+    "db:seed": "prisma db seed",
+    "analytics:health": "tsx scripts/analytics-health-check.ts",
+    "analytics:test": "node scripts/test-analytics.js"
   },
   "dependencies": {
     "@auth/prisma-adapter": "2.7.4",
