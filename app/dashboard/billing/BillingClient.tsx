@@ -14,6 +14,7 @@ import {
     Clock,
     ArrowUpRight
 } from "lucide-react"
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal"
 
 interface BillingPlan {
     id: string
@@ -59,6 +60,19 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
     const [subscribing, setSubscribing] = useState<string | null>(null)
     const [canceling, setCanceling] = useState(false)
     const [banner, setBanner] = useState<{ type: "success" | "error" | "info", message: string } | null>(null)
+    
+    // Modal states
+    const [errorModal, setErrorModal] = useState<{ isOpen: boolean; title: string; message: string }>({
+        isOpen: false,
+        title: "",
+        message: ""
+    })
+    const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; title: string; message: string; onConfirm: () => void }>({
+        isOpen: false,
+        title: "",
+        message: "",
+        onConfirm: () => {}
+    })
 
     const currentPlan = subscription?.plan || fallbackPlan
 
@@ -112,35 +126,55 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                 }
             } else {
                 const errorMessage = data.details ? `${data.error}: ${data.details}` : (data.error || "Failed to create subscription")
-                alert(errorMessage)
+                setErrorModal({
+                    isOpen: true,
+                    title: "Subscription Error",
+                    message: errorMessage
+                })
             }
         } catch (error) {
             console.error("Error subscribing:", error)
-            alert("Failed to create subscription")
+            setErrorModal({
+                isOpen: true,
+                title: "Subscription Error",
+                message: "Failed to create subscription"
+            })
         } finally {
             setSubscribing(null)
         }
     }
 
     const handleCancelSubscription = async () => {
-        if (!confirm("Are you sure you want to cancel? Your plan remains active until the end of the period.")) {
-            return
-        }
-
-        setCanceling(true)
-        try {
-            const response = await fetch("/api/billing/subscription", { method: "DELETE" })
-            if (response.ok) {
-                window.location.reload()
-            } else {
-                const data = await response.json()
-                alert(data.error || "Failed to cancel")
+        setConfirmModal({
+            isOpen: true,
+            title: "Cancel Subscription",
+            message: "Are you sure you want to cancel? Your plan remains active until the end of the period.",
+            onConfirm: async () => {
+                setConfirmModal({ ...confirmModal, isOpen: false })
+                setCanceling(true)
+                try {
+                    const response = await fetch("/api/billing/subscription", { method: "DELETE" })
+                    if (response.ok) {
+                        window.location.reload()
+                    } else {
+                        const data = await response.json()
+                        setErrorModal({
+                            isOpen: true,
+                            title: "Cancellation Error",
+                            message: data.error || "Failed to cancel"
+                        })
+                    }
+                } catch (error) {
+                    setErrorModal({
+                        isOpen: true,
+                        title: "Cancellation Error",
+                        message: "Failed to cancel subscription"
+                    })
+                } finally {
+                    setCanceling(false)
+                }
             }
-        } catch (error) {
-            alert("Failed to cancel subscription")
-        } finally {
-            setCanceling(false)
-        }
+        })
     }
 
     const [downloadingInvoice, setDownloadingInvoice] = useState<string | null>(null)
@@ -159,11 +193,19 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                 a.click()
                 a.remove()
             } else {
-                alert("Failed to download invoice.")
+                setErrorModal({
+                    isOpen: true,
+                    title: "Download Error",
+                    message: "Failed to download invoice."
+                })
             }
         } catch (error) {
             console.error("Error downloading invoice:", error)
-            alert("Failed to download invoice.")
+            setErrorModal({
+                isOpen: true,
+                title: "Download Error",
+                message: "Failed to download invoice."
+            })
         } finally {
             setDownloadingInvoice(null)
         }
@@ -448,6 +490,30 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                         </motion.div>
                     </AnimatePresence>
                 </main>
+
+                {/* Error Modal */}
+                <ConfirmationModal
+                    isOpen={errorModal.isOpen}
+                    onClose={() => setErrorModal({ ...errorModal, isOpen: false })}
+                    onConfirm={() => setErrorModal({ ...errorModal, isOpen: false })}
+                    title={errorModal.title}
+                    message={errorModal.message}
+                    confirmText="OK"
+                    variant="danger"
+                />
+
+                {/* Confirmation Modal */}
+                <ConfirmationModal
+                    isOpen={confirmModal.isOpen}
+                    onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                    onConfirm={confirmModal.onConfirm}
+                    title={confirmModal.title}
+                    message={confirmModal.message}
+                    confirmText="Yes, Cancel"
+                    cancelText="Keep Subscription"
+                    variant="warning"
+                    loading={canceling}
+                />
             </div>
         </div>
     )

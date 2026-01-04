@@ -33,6 +33,7 @@ import {
     X,
     RefreshCw
 } from "lucide-react"
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal"
 
 interface FileUpload {
     id: string
@@ -60,6 +61,13 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
     const [searchQuery, setSearchQuery] = useState("")
     const [viewMode, setViewMode] = useState<"grid" | "list">("list")
     const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
+    
+    // Modal states
+    const [errorModal, setErrorModal] = useState<{ isOpen: boolean; title: string; message: string }>({
+        isOpen: false,
+        title: "",
+        message: ""
+    })
 
     const tabs = [
         { id: "all", name: "All Assets", icon: Database, description: "All uploaded files across all providers" },
@@ -149,10 +157,18 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                 setShowDeleteModal(false)
                 setFileToDelete(null)
             } else {
-                alert('Failed to delete file')
+                setErrorModal({
+                    isOpen: true,
+                    title: "Delete Error",
+                    message: "Failed to delete file"
+                })
             }
         } catch (error) {
-            alert('Error deleting file')
+            setErrorModal({
+                isOpen: true,
+                title: "Delete Error", 
+                message: "Error deleting file"
+            })
         } finally {
             setIsDeleting(false)
         }
@@ -464,6 +480,17 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                     </div>
                 )}
             </AnimatePresence>
+
+            {/* Error Modal */}
+            <ConfirmationModal
+                isOpen={errorModal.isOpen}
+                onClose={() => setErrorModal({ ...errorModal, isOpen: false })}
+                onConfirm={() => setErrorModal({ ...errorModal, isOpen: false })}
+                title={errorModal.title}
+                message={errorModal.message}
+                confirmText="OK"
+                variant="danger"
+            />
         </div>
     )
 }

@@ -498,8 +498,8 @@ export default function EditPortalPage() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
-                    ? "bg-white shadow-sm border border-slate-200 text-slate-900"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                    ? "bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100"
+                    : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100"
                     }`}
                 >
                   <Icon className={`w-5 h-5 ${isActive ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
@@ -531,7 +531,7 @@ export default function EditPortalPage() {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                   <div className="p-6 border-b border-slate-100 bg-slate-50/30 flex justify-between items-center">
                     <div>
                       <h2 className="text-xl font-semibold text-slate-900">
@@ -549,21 +549,21 @@ export default function EditPortalPage() {
                     {activeTab === 'Portal Details' && (
                       <div className="space-y-6">
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">Portal Name</label>
+                          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Portal Name</label>
                           <input
                             type="text"
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium text-slate-900"
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-medium text-slate-900 dark:text-slate-100"
                             required
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">Permanent Handle</label>
-                          <div className="flex items-center px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl opacity-75 cursor-not-allowed">
+                          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Permanent Handle</label>
+                          <div className="flex items-center px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl opacity-75 cursor-not-allowed">
                             <span className="text-slate-500 text-xs font-bold uppercase tracking-wider mr-2">/p/</span>
-                            <span className="text-slate-900 font-mono text-sm font-bold">{portal.slug}</span>
+                            <span className="text-slate-900 dark:text-slate-100 font-mono text-sm font-bold">{portal.slug}</span>
                             <Lock className="w-3.5 h-3.5 text-slate-400 ml-auto" />
                           </div>
                         </div>
@@ -583,7 +583,7 @@ export default function EditPortalPage() {
                     {activeTab === 'Branding' && (
                       <div className="space-y-8">
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">Logo Link</label>
+                          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Logo Link</label>
                           <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
                             {DEFAULT_LOGOS.map((logo) => (
                               logo.value && (
@@ -591,7 +591,7 @@ export default function EditPortalPage() {
                                   key={logo.value}
                                   type="button"
                                   onClick={() => setFormData({ ...formData, logoUrl: logo.value })}
-                                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-medium whitespace-nowrap transition-colors"
+                                  className="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-xs font-medium whitespace-nowrap transition-colors text-slate-900 dark:text-slate-100"
                                 >
                                   {logo.label}
                                 </button>
