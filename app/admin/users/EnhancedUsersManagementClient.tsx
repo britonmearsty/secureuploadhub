@@ -20,7 +20,9 @@ import {
   Mail,
   AlertTriangle,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  X,
+  Settings
 } from 'lucide-react';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 import { ToastContainer, Toast } from '@/components/ui/Toast';
@@ -84,8 +86,8 @@ export default function EnhancedUsersManagementClient({
     variant: 'danger'
   });
 
-  // Actions menu state
-  const [openActionMenu, setOpenActionMenu] = useState<string | null>(null);
+  // Actions menu state - removed since actions are now in modal
+  // const [openActionMenu, setOpenActionMenu] = useState<string | null>(null);
 
   // Toast notifications
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -164,186 +166,12 @@ export default function EnhancedUsersManagementClient({
     setConfirmModal(prev => ({ ...prev, isOpen: false }));
   };
 
-  // User actions
-  const changeUserRole = async (userId: string, newRole: string) => {
-    setLoading(true);
-    try {
-      await retryOperation(async () => {
-        const response = await fetch(`/api/admin/users/${userId}/role`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ role: newRole })
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || 'Failed to update role');
-        }
-
-        const result = await response.json();
-        setUsers(users.map(user => 
-          user.id === userId ? { ...user, role: newRole } : user
-        ));
-        const user = users.find(u => u.id === userId);
-        addToast({
-          type: 'success',
-          title: 'Role Updated',
-          message: `${user?.name || user?.email} is now ${newRole === 'admin' ? 'an admin' : 'a user'}`
-        });
-      });
-    } catch (error: any) {
-      addToast({
-        type: 'error',
-        title: 'Failed to Update Role',
-        message: error.message || 'An unexpected error occurred'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const changeUserStatus = async (userId: string, newStatus: string) => {
-    setLoading(true);
-    try {
-      await retryOperation(async () => {
-        const response = await fetch(`/api/admin/users/${userId}/status`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: newStatus })
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || 'Failed to update status');
-        }
-
-        const result = await response.json();
-        setUsers(users.map(user => 
-          user.id === userId ? { ...user, status: newStatus } : user
-        ));
-        const user = users.find(u => u.id === userId);
-        addToast({
-          type: 'success',
-          title: 'Status Updated',
-          message: `${user?.name || user?.email} account is now ${newStatus}`
-        });
-      });
-    } catch (error: any) {
-      addToast({
-        type: 'error',
-        title: 'Failed to Update Status',
-        message: error.message || 'An unexpected error occurred'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteUser = async (userId: string) => {
-    const user = users.find(u => u.id === userId);
-    showConfirmation(
-      'Delete User',
-      `Are you sure you want to delete ${user?.name || user?.email}? This action cannot be undone.`,
-      async () => {
-        setLoading(true);
-        try {
-          const response = await fetch(`/api/admin/users/${userId}`, {
-            method: 'DELETE'
-          });
-
-          if (response.ok) {
-            setUsers(users.filter(user => user.id !== userId));
-            closeConfirmation();
-            addToast({
-              type: 'success',
-              title: 'User Deleted',
-              message: `${user?.name || user?.email} has been deleted successfully`
-            });
-          } else {
-            const error = await response.json();
-            addToast({
-              type: 'error',
-              title: 'Failed to Delete User',
-              message: error.error || 'An unexpected error occurred'
-            });
-          }
-        } catch (error) {
-          addToast({
-            type: 'error',
-            title: 'Network Error',
-            message: 'Failed to connect to server. Please try again.'
-          });
-        } finally {
-          setLoading(false);
-        }
-      },
-      'danger'
-    );
-  };
-
-  const resetUserPassword = async (userId: string) => {
-    const user = users.find(u => u.id === userId);
-    showConfirmation(
-      'Reset Password',
-      `Send password reset email to ${user?.email}?`,
-      async () => {
-        setLoading(true);
-        try {
-          const response = await fetch(`/api/admin/users/${userId}/password-reset`, {
-            method: 'POST'
-          });
-
-          if (response.ok) {
-            closeConfirmation();
-            addToast({
-              type: 'success',
-              title: 'Password Reset Sent',
-              message: `Password reset email sent to ${user?.email}`
-            });
-          } else {
-            const error = await response.json();
-            addToast({
-              type: 'error',
-              title: 'Failed to Send Reset Email',
-              message: error.error || 'An unexpected error occurred'
-            });
-          }
-        } catch (error) {
-          addToast({
-            type: 'error',
-            title: 'Network Error',
-            message: 'Failed to connect to server. Please try again.'
-          });
-        } finally {
-          setLoading(false);
-        }
-      },
-      'info'
-    );
-  };
-
-  const fetchLoginHistory = async (userId: string) => {
-    try {
-      const response = await fetch(`/api/admin/users/${userId}/login-history`);
-      if (response.ok) {
-        const data = await response.json();
-        setLoginHistory(data.loginHistory);
-        setShowLoginHistory(true);
-      } else {
-        addToast({
-          type: 'error',
-          title: 'Failed to Load Login History',
-          message: 'Could not retrieve login history data'
-        });
-      }
-    } catch (error) {
-      addToast({
-        type: 'error',
-        title: 'Network Error',
-        message: 'Failed to connect to server. Please try again.'
-      });
-    }
-  };
+  // User actions - moved to modal component
+  // const changeUserRole = async (userId: string, newRole: string) => { ... }
+  // const changeUserStatus = async (userId: string, newStatus: string) => { ... }
+  // const deleteUser = async (userId: string) => { ... }
+  // const resetUserPassword = async (userId: string) => { ... }
+  // const fetchLoginHistory = async (userId: string) => { ... }
 
   const performBulkAction = async (action: string, data?: any) => {
     const actionNames = {
@@ -467,7 +295,7 @@ export default function EnhancedUsersManagementClient({
             className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg p-4 z-40"
           >
             <div className="flex items-center justify-center">
-              <div className="flex items-center gap-4 max-w-4xl w-full justify-between">
+              <div className="flex items-center gap-4 bg-white rounded-2xl shadow-lg border border-slate-200 px-6 py-4">
                 <div className="flex items-center gap-4">
                   <span className="text-sm font-medium text-slate-900">
                     {selectedUsers.size} users selected
@@ -553,16 +381,22 @@ export default function EnhancedUsersManagementClient({
                 <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">Status</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">Activity</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">Joined</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-slate-700">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
               {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-slate-50">
+                <tr 
+                  key={user.id} 
+                  className="hover:bg-slate-50 cursor-pointer"
+                  onClick={() => viewUserDetails(user)}
+                >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <button
-                        onClick={() => toggleUserSelection(user.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleUserSelection(user.id);
+                        }}
                         className="text-slate-400 hover:text-slate-600"
                       >
                         {selectedUsers.has(user.id) ? (
@@ -642,137 +476,12 @@ export default function EnhancedUsersManagementClient({
                     </div>
                   </td>
 
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => viewUserDetails(user)}
-                        className="p-1 text-slate-400 hover:text-slate-600 rounded"
-                        title="View Details"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
 
-                      <div className="relative">
-                        <button 
-                          onClick={() => setOpenActionMenu(openActionMenu === user.id ? null : user.id)}
-                          className="p-1 text-slate-400 hover:text-slate-600 rounded"
-                        >
-                          <MoreHorizontal className="w-4 h-4" />
-                        </button>
-
-                        <AnimatePresence>
-                          {openActionMenu === user.id && (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.95 }}
-                              className="absolute right-0 bottom-full mb-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50"
-                              style={{ 
-                                position: 'absolute',
-                                zIndex: 50
-                              }}
-                            >
-                              <div className="py-1">
-                                {user.role === 'admin' ? (
-                                  <button
-                                    onClick={() => {
-                                      changeUserRole(user.id, 'user');
-                                      setOpenActionMenu(null);
-                                    }}
-                                    className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                    disabled={loading}
-                                  >
-                                    <ShieldOff className="w-4 h-4" />
-                                    Remove Admin
-                                  </button>
-                                ) : (
-                                  <button
-                                    onClick={() => {
-                                      changeUserRole(user.id, 'admin');
-                                      setOpenActionMenu(null);
-                                    }}
-                                    className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                    disabled={loading}
-                                  >
-                                    <Shield className="w-4 h-4" />
-                                    Make Admin
-                                  </button>
-                                )}
-
-                                {user.status === 'active' ? (
-                                  <button
-                                    onClick={() => {
-                                      changeUserStatus(user.id, 'disabled');
-                                      setOpenActionMenu(null);
-                                    }}
-                                    className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                    disabled={loading}
-                                  >
-                                    <UserX className="w-4 h-4" />
-                                    Disable Account
-                                  </button>
-                                ) : (
-                                  <button
-                                    onClick={() => {
-                                      changeUserStatus(user.id, 'active');
-                                      setOpenActionMenu(null);
-                                    }}
-                                    className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                    disabled={loading}
-                                  >
-                                    <UserCheck className="w-4 h-4" />
-                                    Enable Account
-                                  </button>
-                                )}
-
-                                <button
-                                  onClick={() => {
-                                    resetUserPassword(user.id);
-                                    setOpenActionMenu(null);
-                                  }}
-                                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                  disabled={loading}
-                                >
-                                  <Mail className="w-4 h-4" />
-                                  Reset Password
-                                </button>
-
-                                <button
-                                  onClick={() => {
-                                    fetchLoginHistory(user.id);
-                                    setOpenActionMenu(null);
-                                  }}
-                                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                >
-                                  <Activity className="w-4 h-4" />
-                                  Login History
-                                </button>
-
-                                <hr className="my-1" />
-
-                                <button
-                                  onClick={() => {
-                                    deleteUser(user.id);
-                                    setOpenActionMenu(null);
-                                  }}
-                                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                                  disabled={loading}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                  Delete User
-                                </button>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </div>
-                  </td>
                 </tr>
               ))}
               {filteredUsers.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12">
+                  <td colSpan={5} className="px-4 py-12">
                     <div className="text-center">
                       <Users className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-slate-900 mb-2">No users found</h3>
@@ -820,13 +529,7 @@ export default function EnhancedUsersManagementClient({
         loading={loading}
       />
 
-      {/* Click outside to close action menus */}
-      {openActionMenu && (
-        <div 
-          className="fixed inset-0 z-30" 
-          onClick={() => setOpenActionMenu(null)}
-        />
-      )}
+      {/* Click outside handler removed - no longer needed */}
 
       {/* Toast Notifications */}
       <ToastContainer toasts={toasts} onRemove={removeToast} />
@@ -836,58 +539,159 @@ export default function EnhancedUsersManagementClient({
 
 // User Details Modal Component
 function UserDetailsModal({ user, onClose }: { user: User; onClose: () => void }) {
+  const [loading, setLoading] = useState(false);
+
+  const handleRoleChange = async (newRole: string) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/admin/users/${user.id}/role`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: newRole })
+      });
+
+      if (response.ok) {
+        window.location.reload(); // Refresh to update the user data
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to update role');
+      }
+    } catch (error) {
+      alert('Failed to update role');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStatusChange = async (newStatus: string) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/admin/users/${user.id}/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (response.ok) {
+        window.location.reload(); // Refresh to update the user data
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to update status');
+      }
+    } catch (error) {
+      alert('Failed to update status');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!confirm(`Send password reset email to ${user.email}?`)) return;
+    
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/admin/users/${user.id}/password-reset`, {
+        method: 'POST'
+      });
+
+      if (response.ok) {
+        alert(`Password reset email sent to ${user.email}`);
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to send reset email');
+      }
+    } catch (error) {
+      alert('Failed to send reset email');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm(`Are you sure you want to delete ${user.name || user.email}? This action cannot be undone.`)) return;
+    
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/admin/users/${user.id}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        alert(`${user.name || user.email} has been deleted successfully`);
+        window.location.reload(); // Refresh to update the user list
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to delete user');
+      }
+    } catch (error) {
+      alert('Failed to delete user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLoginHistory = async () => {
+    try {
+      const response = await fetch(`/api/admin/users/${user.id}/login-history`);
+      if (response.ok) {
+        const data = await response.json();
+        // For now, just show an alert with basic info
+        alert(`Login History for ${user.email}:\nTotal Logins: ${data.loginHistory?.statistics?.totalLogins || 0}\nLast Login: ${data.loginHistory?.statistics?.lastLogin ? new Date(data.loginHistory.statistics.lastLogin).toLocaleString() : 'Never'}`);
+      } else {
+        alert('Failed to load login history');
+      }
+    } catch (error) {
+      alert('Failed to load login history');
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+        className="bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] w-full max-w-2xl border border-slate-200"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-slate-900">User Details</h2>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600"
-          >
-            ×
-          </button>
-        </div>
-
-        <div className="space-y-6">
-          {/* User Info */}
+        {/* Header */}
+        <div className="p-8 border-b border-slate-200 bg-slate-50/50 flex justify-between items-start shrink-0">
           <div className="flex items-center gap-4">
             {user.image ? (
               <img
                 src={user.image}
                 alt={user.name || user.email}
-                className="w-16 h-16 rounded-full"
+                className="w-16 h-16 rounded-2xl shadow-sm border border-slate-200"
               />
             ) : (
-              <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center">
-                <span className="text-xl font-medium text-slate-600">
+              <div className="w-16 h-16 bg-slate-200 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-center">
+                <span className="text-xl font-bold text-slate-600">
                   {(user.name || user.email).charAt(0).toUpperCase()}
                 </span>
               </div>
             )}
             <div>
-              <h3 className="text-lg font-medium text-slate-900">
+              <h3 className="text-2xl font-bold text-slate-900 leading-tight">
                 {user.name || 'No name'}
               </h3>
-              <p className="text-slate-600">{user.email}</p>
+              <p className="text-slate-600 mt-1">{user.email}</p>
               <div className="flex items-center gap-2 mt-2">
                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                   user.role === 'admin'
                     ? 'bg-purple-100 text-purple-700'
                     : 'bg-slate-100 text-slate-700'
                 }`}>
+                  {user.role === 'admin' ? (
+                    <Shield className="w-3 h-3 mr-1" />
+                  ) : (
+                    <Users className="w-3 h-3 mr-1" />
+                  )}
                   {user.role}
                 </span>
                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
@@ -895,44 +699,155 @@ function UserDetailsModal({ user, onClose }: { user: User; onClose: () => void }
                     ? 'bg-green-100 text-green-700'
                     : 'bg-red-100 text-red-700'
                 }`}>
+                  {user.status === 'active' ? (
+                    <UserCheck className="w-3 h-3 mr-1" />
+                  ) : (
+                    <UserX className="w-3 h-3 mr-1" />
+                  )}
                   {user.status}
                 </span>
               </div>
             </div>
           </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-slate-200 rounded-xl transition-colors text-slate-400 hover:text-slate-600"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
 
+        {/* Content */}
+        <div className="p-8 overflow-y-auto">
           {/* Stats */}
           {user._count && (
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-slate-50 rounded-lg">
-                <div className="text-2xl font-bold text-slate-900">{user._count.uploadPortals}</div>
-                <div className="text-sm text-slate-600">Portals</div>
+            <div className="grid grid-cols-3 gap-4 mb-8">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-1">Portals</p>
+                <p className="text-xl font-bold text-slate-900">{user._count.uploadPortals}</p>
               </div>
-              <div className="text-center p-4 bg-slate-50 rounded-lg">
-                <div className="text-2xl font-bold text-slate-900">{user._count.fileUploads}</div>
-                <div className="text-sm text-slate-600">Uploads</div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-1">Uploads</p>
+                <p className="text-xl font-bold text-slate-900">{user._count.fileUploads}</p>
               </div>
-              <div className="text-center p-4 bg-slate-50 rounded-lg">
-                <div className="text-2xl font-bold text-slate-900">{user._count.subscriptions}</div>
-                <div className="text-sm text-slate-600">Subscriptions</div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-1">Subscriptions</p>
+                <p className="text-xl font-bold text-slate-900">{user._count.subscriptions}</p>
               </div>
             </div>
           )}
 
           {/* Account Info */}
-          <div className="space-y-3">
-            <h4 className="font-medium text-slate-900">Account Information</h4>
+          <div className="space-y-3 mb-8">
+            <h4 className="font-bold text-slate-900 flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-slate-600" />
+              Account Information
+            </h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-slate-600">Joined:</span>
-                <div className="font-medium">{new Date(user.createdAt).toLocaleDateString()}</div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <span className="text-slate-600 text-xs font-medium">Joined:</span>
+                <div className="font-bold text-slate-900">{new Date(user.createdAt).toLocaleDateString()}</div>
               </div>
-              <div>
-                <span className="text-slate-600">ID:</span>
-                <div className="font-mono text-xs">{user.id}</div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <span className="text-slate-600 text-xs font-medium">User ID:</span>
+                <div className="font-mono text-xs text-slate-900 truncate">{user.id}</div>
               </div>
             </div>
           </div>
+
+          {/* Action Buttons */}
+          <div className="space-y-4">
+            <h4 className="font-bold text-slate-900 flex items-center gap-2">
+              <Settings className="w-4 h-4 text-slate-600" />
+              User Actions
+            </h4>
+            
+            <div className="grid grid-cols-2 gap-3">
+              {/* Role Actions */}
+              {user.role === 'admin' ? (
+                <button
+                  onClick={() => handleRoleChange('user')}
+                  disabled={loading}
+                  className="p-3 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors flex items-center gap-2 text-sm font-medium disabled:opacity-50"
+                >
+                  <ShieldOff className="w-4 h-4" />
+                  Remove Admin
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleRoleChange('admin')}
+                  disabled={loading}
+                  className="p-3 bg-purple-100 text-purple-700 rounded-xl hover:bg-purple-200 transition-colors flex items-center gap-2 text-sm font-medium disabled:opacity-50"
+                >
+                  <Shield className="w-4 h-4" />
+                  Make Admin
+                </button>
+              )}
+
+              {/* Status Actions */}
+              {user.status === 'active' ? (
+                <button
+                  onClick={() => handleStatusChange('disabled')}
+                  disabled={loading}
+                  className="p-3 bg-orange-100 text-orange-700 rounded-xl hover:bg-orange-200 transition-colors flex items-center gap-2 text-sm font-medium disabled:opacity-50"
+                >
+                  <UserX className="w-4 h-4" />
+                  Disable Account
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleStatusChange('active')}
+                  disabled={loading}
+                  className="p-3 bg-green-100 text-green-700 rounded-xl hover:bg-green-200 transition-colors flex items-center gap-2 text-sm font-medium disabled:opacity-50"
+                >
+                  <UserCheck className="w-4 h-4" />
+                  Enable Account
+                </button>
+              )}
+
+              {/* Password Reset */}
+              <button
+                onClick={handlePasswordReset}
+                disabled={loading}
+                className="p-3 bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors flex items-center gap-2 text-sm font-medium disabled:opacity-50"
+              >
+                <Mail className="w-4 h-4" />
+                Reset Password
+              </button>
+
+              {/* Login History */}
+              <button
+                onClick={handleLoginHistory}
+                disabled={loading}
+                className="p-3 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors flex items-center gap-2 text-sm font-medium disabled:opacity-50"
+              >
+                <Activity className="w-4 h-4" />
+                Login History
+              </button>
+            </div>
+
+            {/* Danger Zone */}
+            <div className="pt-4 border-t border-slate-200">
+              <button
+                onClick={handleDelete}
+                disabled={loading}
+                className="w-full p-3 bg-red-100 text-red-700 rounded-xl hover:bg-red-200 transition-colors flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-50"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete User
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-end gap-3 shrink-0">
+          <button
+            onClick={onClose}
+            className="px-6 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all"
+          >
+            Close
+          </button>
         </div>
       </motion.div>
     </motion.div>
