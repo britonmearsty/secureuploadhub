@@ -631,14 +631,32 @@ export default function EditPortalPage() {
                           </div>
                         </div>
 
-                        <div className="pt-4 flex justify-end">
-                          <button
-                            type="button"
-                            onClick={() => setActiveTab('Branding')}
-                            className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
-                          >
-                            Next: Branding
-                          </button>
+                        <div className="pt-4 flex justify-between">
+                          <div></div>
+                          <div className="flex gap-3">
+                            <button
+                              type="submit"
+                              disabled={saving}
+                              className="px-4 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-xl font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                handleSubmit(e).then(() => {
+                                  if (!error) {
+                                    router.push('/dashboard')
+                                  }
+                                })
+                              }}
+                            >
+                              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save & Return'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab('Branding')}
+                              className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
+                            >
+                              Next: Branding
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}
