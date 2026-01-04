@@ -21,7 +21,8 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  BarChart3
+  BarChart3,
+  X
 } from 'lucide-react';
 import { CreatePlanModal } from '@/components/admin/CreatePlanModal';
 import { DeletePlanModal } from '@/components/admin/DeletePlanModal';
@@ -121,7 +122,7 @@ export default function BillingManagementClient() {
   const [showPaymentHistory, setShowPaymentHistory] = useState(false);
   const [paymentHistory, setPaymentHistory] = useState<any[]>([]);
   const [actionLoading, setActionLoading] = useState(false);
-  const [openActionMenu, setOpenActionMenu] = useState<string | null>(null);
+  // const [openActionMenu, setOpenActionMenu] = useState<string | null>(null); // Removed - actions now in modal
   const [showDeletePlan, setShowDeletePlan] = useState(false);
   const [planToDelete, setPlanToDelete] = useState<BillingPlan | null>(null);
 
@@ -170,17 +171,8 @@ export default function BillingManagementClient() {
     fetchData();
   }, [activeTab]);
 
-  // Close action menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = () => {
-      setOpenActionMenu(null);
-    };
-
-    if (openActionMenu) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
-    }
-  }, [openActionMenu]);
+  // Close action menu handler removed - no longer needed
+  // useEffect(() => { ... }, [openActionMenu]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -286,7 +278,7 @@ export default function BillingManagementClient() {
             : sub
         ));
         closeConfirmation();
-        setOpenActionMenu(null);
+        // setOpenActionMenu(null); // Removed - no longer needed
         addToast({
           type: 'success',
           title: 'Subscription Cancelled',
@@ -528,12 +520,15 @@ export default function BillingManagementClient() {
                     <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">Status</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">Revenue</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">Period</th>
-                    <th className="px-4 py-3 text-right text-sm font-medium text-slate-700">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
                   {filteredSubscriptions.map((subscription) => (
-                    <tr key={subscription.id} className="hover:bg-slate-50">
+                    <tr 
+                      key={subscription.id} 
+                      className="hover:bg-slate-50 cursor-pointer"
+                      onClick={() => viewSubscriptionDetails(subscription)}
+                    >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           {subscription.user.image ? (
@@ -598,72 +593,14 @@ export default function BillingManagementClient() {
                       
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-2">
-                          <div className="relative">
-                            <button 
-                              onClick={() => setOpenActionMenu(openActionMenu === subscription.id ? null : subscription.id)}
-                              className="p-1 text-slate-400 hover:text-slate-600 rounded"
-                              disabled={actionLoading}
-                            >
-                              <MoreHorizontal className="w-4 h-4" />
-                            </button>
-                            
-                            <AnimatePresence>
-                              {openActionMenu === subscription.id && (
-                                <motion.div
-                                  initial={{ opacity: 0, scale: 0.95 }}
-                                  animate={{ opacity: 1, scale: 1 }}
-                                  exit={{ opacity: 0, scale: 0.95 }}
-                                  className="absolute right-0 bottom-full mb-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50"
-                                >
-                                  <div className="py-1">
-                                    <button 
-                                      onClick={() => {
-                                        viewSubscriptionDetails(subscription);
-                                        setOpenActionMenu(null);
-                                      }}
-                                      className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                    >
-                                      <Eye className="w-4 h-4" />
-                                      View Details
-                                    </button>
-                                    <button 
-                                      onClick={() => {
-                                        fetchPaymentHistory(subscription.id);
-                                        setOpenActionMenu(null);
-                                      }}
-                                      className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                    >
-                                      <CreditCard className="w-4 h-4" />
-                                      Payment History
-                                    </button>
-                                    {subscription.status === 'active' && !subscription.cancelAtPeriodEnd && (
-                                      <>
-                                        <hr className="my-1" />
-                                        <button 
-                                          onClick={() => {
-                                            handleCancelSubscription(subscription);
-                                            setOpenActionMenu(null);
-                                          }}
-                                          className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                                          disabled={actionLoading}
-                                        >
-                                          <XCircle className="w-4 h-4" />
-                                          Cancel Subscription
-                                        </button>
-                                      </>
-                                    )}
-                                  </div>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
+                          {/* Actions moved to modal */}
                         </div>
                       </td>
                     </tr>
                   ))}
                   {filteredSubscriptions.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-4 py-12">
+                      <td colSpan={5} className="px-4 py-12">
                         <div className="text-center">
                           <CreditCard className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                           <h3 className="text-lg font-medium text-slate-900 mb-2">No subscriptions found</h3>
@@ -922,13 +859,7 @@ export default function BillingManagementClient() {
         loading={actionLoading}
       />
 
-      {/* Click outside to close action menus */}
-      {openActionMenu && (
-        <div 
-          className="fixed inset-0 z-30" 
-          onClick={() => setOpenActionMenu(null)}
-        />
-      )}
+      {/* Click outside handler removed - no longer needed */}
     </div>
   );
 }
@@ -941,148 +872,237 @@ function SubscriptionDetailsModal({
   subscription: Subscription; 
   onClose: () => void;
 }) {
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const formatCurrency = (amount: number, currency: string = 'USD') => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency
+    }).format(amount);
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!confirm(`Are you sure you want to cancel ${subscription.user.name || subscription.user.email}'s subscription? This will cancel at the end of the current billing period.`)) return;
+    
+    setActionLoading(true);
+    try {
+      const response = await fetch(`/api/admin/billing/subscriptions/${subscription.id}/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cancelAtPeriodEnd: true })
+      });
+
+      if (response.ok) {
+        alert('Subscription cancelled successfully');
+        window.location.reload(); // Refresh to update the subscription list
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to cancel subscription');
+      }
+    } catch (error) {
+      alert('Failed to cancel subscription');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleViewPaymentHistory = async () => {
+    try {
+      const response = await fetch(`/api/admin/billing/subscriptions/${subscription.id}/payments`);
+      if (response.ok) {
+        const data = await response.json();
+        // For now, just show an alert with basic info
+        const totalPayments = data.payments?.length || 0;
+        const successfulPayments = data.payments?.filter((p: any) => p.status === 'succeeded').length || 0;
+        alert(`Payment History for ${subscription.user.email}:\nTotal Payments: ${totalPayments}\nSuccessful Payments: ${successfulPayments}\nTotal Revenue: ${formatCurrency(subscription.paymentStats.totalRevenue, subscription.plan.currency)}`);
+      } else {
+        alert('Failed to load payment history');
+      }
+    } catch (error) {
+      alert('Failed to load payment history');
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+        className="bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] w-full max-w-2xl border border-slate-200"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-slate-900">Subscription Details</h2>
+        {/* Header */}
+        <div className="p-8 border-b border-slate-200 bg-slate-50/50 flex justify-between items-start shrink-0">
+          <div className="flex items-center gap-4">
+            {subscription.user.image ? (
+              <img
+                src={subscription.user.image}
+                alt={subscription.user.name || subscription.user.email}
+                className="w-16 h-16 rounded-2xl shadow-sm border border-slate-200"
+              />
+            ) : (
+              <div className="w-16 h-16 bg-slate-200 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-center">
+                <span className="text-xl font-bold text-slate-600">
+                  {(subscription.user.name || subscription.user.email).charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
+            <div>
+              <h3 className="text-2xl font-bold text-slate-900 leading-tight">
+                {subscription.user.name || 'No name'}
+              </h3>
+              <p className="text-slate-600 mt-1">{subscription.user.email}</p>
+              <div className="flex items-center gap-2 mt-2">
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                  subscription.status === 'active' ? 'bg-green-100 text-green-700' :
+                  subscription.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                  'bg-orange-100 text-orange-700'
+                }`}>
+                  {subscription.status === 'active' ? (
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                  ) : subscription.status === 'cancelled' ? (
+                    <XCircle className="w-3 h-3 mr-1" />
+                  ) : (
+                    <Clock className="w-3 h-3 mr-1" />
+                  )}
+                  {subscription.status}
+                </span>
+                {subscription.cancelAtPeriodEnd && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+                    Cancels at period end
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600"
+            className="p-2 hover:bg-slate-200 rounded-xl transition-colors text-slate-400 hover:text-slate-600"
           >
-            ×
+            <X className="w-6 h-6" />
           </button>
         </div>
 
-        <div className="space-y-6">
-          {/* Customer Info */}
-          <div>
-            <h3 className="font-medium text-slate-900 mb-3">Customer</h3>
-            <div className="flex items-center gap-3">
-              {subscription.user.image ? (
-                <img
-                  src={subscription.user.image}
-                  alt={subscription.user.name || subscription.user.email}
-                  className="w-10 h-10 rounded-full"
-                />
-              ) : (
-                <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center">
-                  <span className="font-medium text-slate-600">
-                    {(subscription.user.name || subscription.user.email).charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
-              <div>
-                <div className="font-medium text-slate-900">
-                  {subscription.user.name || 'No name'}
-                </div>
-                <div className="text-sm text-slate-600">{subscription.user.email}</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Plan Info */}
-          <div>
-            <h3 className="font-medium text-slate-900 mb-3">Plan</h3>
-            <div className="bg-slate-50 rounded-lg p-4">
-              <div className="font-semibold text-slate-900">{subscription.plan.name}</div>
-              <div className="text-sm text-slate-600 mt-1">
-                {new Intl.NumberFormat('en-US', {
-                  style: 'currency',
-                  currency: subscription.plan.currency
-                }).format(subscription.plan.price)}/month
-              </div>
-            </div>
-          </div>
-
-          {/* Subscription Status */}
-          <div>
-            <h3 className="font-medium text-slate-900 mb-3">Status</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <span className="text-sm text-slate-600">Status:</span>
-                <div className="mt-1">
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                    subscription.status === 'active' ? 'bg-green-100 text-green-700' :
-                    subscription.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                    'bg-orange-100 text-orange-700'
-                  }`}>
-                    {subscription.status}
-                  </span>
-                </div>
-              </div>
-              <div>
-                <span className="text-sm text-slate-600">Cancels at period end:</span>
-                <div className="mt-1 font-medium">
-                  {subscription.cancelAtPeriodEnd ? 'Yes' : 'No'}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Billing Period */}
-          <div>
-            <h3 className="font-medium text-slate-900 mb-3">Billing Period</h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-slate-600">Current Period Start:</span>
-                <div className="font-medium">
-                  {new Date(subscription.currentPeriodStart).toLocaleDateString()}
-                </div>
-              </div>
-              <div>
-                <span className="text-slate-600">Current Period End:</span>
-                <div className="font-medium">
-                  {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Payment Statistics */}
-          <div>
-            <h3 className="font-medium text-slate-900 mb-3">Payment Statistics</h3>
+        {/* Content */}
+        <div className="p-8 overflow-y-auto">
+          <div className="space-y-8">
+            {/* Payment Statistics */}
             <div className="grid grid-cols-3 gap-4">
-              <div className="bg-slate-50 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-slate-900">
-                  {new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: subscription.plan.currency
-                  }).format(subscription.paymentStats.totalRevenue)}
-                </div>
-                <div className="text-sm text-slate-600">Total Revenue</div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-1">Total Revenue</p>
+                <p className="text-xl font-bold text-slate-900">
+                  {formatCurrency(subscription.paymentStats.totalRevenue, subscription.plan.currency)}
+                </p>
               </div>
-              <div className="bg-slate-50 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-slate-900">
-                  {subscription.paymentStats.successfulPayments}
-                </div>
-                <div className="text-sm text-slate-600">Successful Payments</div>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-1">Successful</p>
+                <p className="text-xl font-bold text-slate-900">{subscription.paymentStats.successfulPayments}</p>
               </div>
-              <div className="bg-slate-50 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-slate-900">
-                  {subscription.paymentStats.totalPayments}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-1">Total Payments</p>
+                <p className="text-xl font-bold text-slate-900">{subscription.paymentStats.totalPayments}</p>
+              </div>
+            </div>
+
+            {/* Plan Information */}
+            <div className="space-y-3">
+              <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-slate-600" />
+                Plan Information
+              </h4>
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-bold text-slate-900 text-lg">{subscription.plan.name}</div>
+                    <div className="text-sm text-slate-600 mt-1">
+                      {formatCurrency(subscription.plan.price, subscription.plan.currency)}/month
+                    </div>
+                  </div>
                 </div>
-                <div className="text-sm text-slate-600">Total Payments</div>
+              </div>
+            </div>
+
+            {/* Billing Period */}
+            <div className="space-y-3">
+              <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-slate-600" />
+                Billing Period
+              </h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                  <span className="text-slate-600 text-xs font-medium">Period Start:</span>
+                  <div className="font-bold text-slate-900">{new Date(subscription.currentPeriodStart).toLocaleDateString()}</div>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                  <span className="text-slate-600 text-xs font-medium">Period End:</span>
+                  <div className="font-bold text-slate-900">{new Date(subscription.currentPeriodEnd).toLocaleDateString()}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Account Information */}
+            <div className="space-y-3">
+              <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                <Settings className="w-4 h-4 text-slate-600" />
+                Account Information
+              </h4>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <span className="text-slate-600 text-xs font-medium">Created:</span>
+                <div className="font-bold text-slate-900">{new Date(subscription.createdAt).toLocaleString()}</div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-4">
+              <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                <Settings className="w-4 h-4 text-slate-600" />
+                Subscription Actions
+              </h4>
+              
+              <div className="grid grid-cols-1 gap-3">
+                {/* Payment History */}
+                <button
+                  onClick={handleViewPaymentHistory}
+                  disabled={actionLoading}
+                  className="p-3 bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors flex items-center gap-2 text-sm font-medium disabled:opacity-50"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  View Payment History
+                </button>
+
+                {/* Cancel Subscription */}
+                {subscription.status === 'active' && !subscription.cancelAtPeriodEnd && (
+                  <div className="pt-4 border-t border-slate-200">
+                    <button
+                      onClick={handleCancelSubscription}
+                      disabled={actionLoading}
+                      className="w-full p-3 bg-red-100 text-red-700 rounded-xl hover:bg-red-200 transition-colors flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-50"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      Cancel Subscription
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Created Date */}
-          <div className="text-sm text-slate-600">
-            Created: {new Date(subscription.createdAt).toLocaleString()}
-          </div>
+        {/* Footer */}
+        <div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-end gap-3 shrink-0">
+          <button
+            onClick={onClose}
+            className="px-6 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all"
+          >
+            Close
+          </button>
         </div>
       </motion.div>
     </motion.div>

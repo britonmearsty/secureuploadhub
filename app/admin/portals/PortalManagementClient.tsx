@@ -12,7 +12,10 @@ import {
   TrendingUp,
   ExternalLink,
   AlertTriangle,
-  UserPlus
+  UserPlus,
+  X,
+  Settings,
+  Users
 } from 'lucide-react';
 import { ConfirmationModal } from '@/components/ui/ConfirmationModal';
 import { ToastContainer, Toast } from '@/components/ui/Toast';
@@ -84,8 +87,8 @@ export default function PortalManagementClient() {
   const [transferLoading, setTransferLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Actions menu state
-  const [openActionMenu, setOpenActionMenu] = useState<string | null>(null);
+  // Actions menu state - removed since actions are now in modal
+  // const [openActionMenu, setOpenActionMenu] = useState<string | null>(null);
 
   // Modal states
   const [confirmModal, setConfirmModal] = useState<{
@@ -120,17 +123,8 @@ export default function PortalManagementClient() {
     fetchAnalytics();
   }, []);
 
-  // Close action menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = () => {
-      setOpenActionMenu(null);
-    };
-
-    if (openActionMenu) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
-    }
-  }, [openActionMenu]);
+  // Close action menu handler removed - no longer needed
+  // useEffect(() => { ... }, [openActionMenu]);
 
   const fetchPortals = async () => {
     try {
@@ -199,7 +193,7 @@ export default function PortalManagementClient() {
 
   const togglePortalStatus = async (portalId: string, isActive: boolean) => {
     setActionLoading(true);
-    setOpenActionMenu(null);
+    // setOpenActionMenu(null); // Removed - no longer needed
     
     try {
       await retryOperation(async () => {
@@ -236,7 +230,7 @@ export default function PortalManagementClient() {
 
   const deletePortal = async (portalId: string) => {
     setActionLoading(true);
-    setOpenActionMenu(null);
+    // setOpenActionMenu(null); // Removed - no longer needed
     
     try {
       await retryOperation(async () => {
@@ -509,12 +503,15 @@ export default function PortalManagementClient() {
                 <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">Uploads</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">Storage</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">Created</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-slate-700">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
               {filteredPortals.map((portal) => (
-                <tr key={portal.id} className="hover:bg-slate-50">
+                <tr 
+                  key={portal.id} 
+                  className="hover:bg-slate-50 cursor-pointer"
+                  onClick={() => viewPortalDetails(portal)}
+                >
                   <td className="px-4 py-3">
                     <div>
                       <div className="font-medium text-slate-900">{portal.name}</div>
@@ -581,98 +578,23 @@ export default function PortalManagementClient() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => viewPortalDetails(portal)}
-                        className="p-1 text-slate-400 hover:text-slate-600 rounded"
-                        title="View Details"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
                       <a
                         href={`/p/${portal.slug}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-1 text-slate-400 hover:text-slate-600 rounded"
                         title="Open Portal"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <ExternalLink className="w-4 h-4" />
                       </a>
-                      <div className="relative">
-                        <button 
-                          onClick={() => setOpenActionMenu(openActionMenu === portal.id ? null : portal.id)}
-                          className="p-1 text-slate-400 hover:text-slate-600 rounded"
-                          disabled={actionLoading}
-                        >
-                          <MoreHorizontal className="w-4 h-4" />
-                        </button>
-
-                        <AnimatePresence>
-                          {openActionMenu === portal.id && (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.95 }}
-                              className="absolute right-0 bottom-full mb-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50"
-                            >
-                              <div className="py-1">
-                                <button
-                                  onClick={() => {
-                                    handleTogglePortalStatus(portal);
-                                    setOpenActionMenu(null);
-                                  }}
-                                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                  disabled={actionLoading}
-                                >
-                                  {portal.isActive ? (
-                                    <>
-                                      <GlobeOff className="w-4 h-4" />
-                                      Disable Portal
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Globe className="w-4 h-4" />
-                                      Enable Portal
-                                    </>
-                                  )}
-                                </button>
-                                
-                                <button
-                                  onClick={() => {
-                                    handleTransferPortal(portal);
-                                    setOpenActionMenu(null);
-                                  }}
-                                  className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                                  disabled={actionLoading}
-                                >
-                                  <UserPlus className="w-4 h-4" />
-                                  Transfer Ownership
-                                </button>
-                                
-                                <hr className="my-1" />
-                                
-                                <button
-                                  onClick={() => {
-                                    handleDeletePortal(portal);
-                                    setOpenActionMenu(null);
-                                  }}
-                                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                                  disabled={actionLoading}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                  Delete Portal
-                                </button>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
                     </div>
                   </td>
                 </tr>
               ))}
               {filteredPortals.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12">
+                  <td colSpan={6} className="px-4 py-12">
                     <div className="text-center">
                       <Globe className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-slate-900 mb-2">No portals found</h3>
@@ -835,6 +757,7 @@ function TransferPortalModal({
 function PortalDetailsModal({ portal, onClose }: { portal: Portal; onClose: () => void }) {
   const [detailedPortal, setDetailedPortal] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -854,123 +777,258 @@ function PortalDetailsModal({ portal, onClose }: { portal: Portal; onClose: () =
     fetchDetails();
   }, [portal.id]);
 
+  const handleToggleStatus = async () => {
+    if (!detailedPortal) return;
+    
+    const newStatus = !detailedPortal.isActive;
+    if (!confirm(`Are you sure you want to ${newStatus ? 'enable' : 'disable'} "${detailedPortal.name}"?`)) return;
+    
+    setActionLoading(true);
+    try {
+      const response = await fetch(`/api/admin/portals/${detailedPortal.id}/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: newStatus })
+      });
+
+      if (response.ok) {
+        const { portal: updatedPortal } = await response.json();
+        setDetailedPortal((prev: any) => ({ ...prev, isActive: updatedPortal.isActive }));
+        alert(`Portal ${newStatus ? 'enabled' : 'disabled'} successfully`);
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to change portal status');
+      }
+    } catch (error) {
+      alert('Failed to change portal status');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleTransfer = async () => {
+    if (!detailedPortal) return;
+    
+    try {
+      // Fetch available users for transfer
+      const response = await fetch('/api/admin/users?limit=100&role=user&status=active');
+      if (response.ok) {
+        const data = await response.json();
+        const availableUsers = (data.users || []).filter((u: any) => u.id !== detailedPortal.user.id);
+        
+        if (availableUsers.length === 0) {
+          alert('No available users for transfer');
+          return;
+        }
+
+        const userOptions = availableUsers.map((u: any) => `${u.name || u.email} (${u.email})`).join('\n');
+        const selectedEmail = prompt(`Select user to transfer to:\n\n${userOptions}\n\nEnter email:`);
+        
+        if (selectedEmail) {
+          const selectedUser = availableUsers.find((u: any) => u.email === selectedEmail);
+          if (selectedUser) {
+            setActionLoading(true);
+            const transferResponse = await fetch(`/api/admin/portals/${detailedPortal.id}/transfer`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ newOwnerId: selectedUser.id, notifyUsers: true })
+            });
+
+            if (transferResponse.ok) {
+              const transferData = await transferResponse.json();
+              setDetailedPortal((prev: any) => ({ ...prev, user: transferData.portal.user }));
+              alert('Portal ownership transferred successfully');
+            } else {
+              const error = await transferResponse.json();
+              alert(error.error || 'Failed to transfer portal');
+            }
+          } else {
+            alert('Invalid email selected');
+          }
+        }
+      } else {
+        alert('Failed to load users for transfer');
+      }
+    } catch (error) {
+      alert('Failed to transfer portal');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!detailedPortal) return;
+    
+    if (!confirm(`Are you sure you want to delete "${detailedPortal.name}"? This action cannot be undone and will delete all associated files (${detailedPortal.stats.totalUploads} uploads).`)) return;
+    
+    setActionLoading(true);
+    try {
+      const response = await fetch(`/api/admin/portals/${detailedPortal.id}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        alert('Portal deleted successfully');
+        window.location.reload(); // Refresh to update the portal list
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to delete portal');
+      }
+    } catch (error) {
+      alert('Failed to delete portal');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+        className="bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] w-full max-w-4xl border border-slate-200"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-slate-900">Portal Details</h2>
-            <button
-              onClick={onClose}
-              className="text-slate-400 hover:text-slate-600"
-            >
-              ×
-            </button>
+        {/* Header */}
+        <div className="p-8 border-b border-slate-200 bg-slate-50/50 flex justify-between items-start shrink-0">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-slate-200 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-center">
+              <Globe className="w-8 h-8 text-slate-600" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-slate-900 leading-tight">
+                {portal.name}
+              </h3>
+              <p className="text-slate-600 mt-1">/{portal.slug}</p>
+              <div className="flex items-center gap-2 mt-2">
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                  portal.isActive 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-red-100 text-red-700'
+                }`}>
+                  {portal.isActive ? (
+                    <Globe className="w-3 h-3 mr-1" />
+                  ) : (
+                    <GlobeOff className="w-3 h-3 mr-1" />
+                  )}
+                  {portal.isActive ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+            </div>
           </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-slate-200 rounded-xl transition-colors text-slate-400 hover:text-slate-600"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
 
+        {/* Content */}
+        <div className="p-8 overflow-y-auto">
           {loading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 mx-auto"></div>
               <p className="text-slate-600 mt-2">Loading details...</p>
             </div>
           ) : detailedPortal ? (
-            <div className="space-y-6">
-              {/* Portal Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-medium text-slate-900 mb-3">Portal Information</h3>
-                  <div className="space-y-2 text-sm">
-                    <div><span className="font-medium">Name:</span> {detailedPortal.name}</div>
-                    <div><span className="font-medium">Slug:</span> /{detailedPortal.slug}</div>
-                    <div><span className="font-medium">Status:</span> 
-                      <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
-                        detailedPortal.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                      }`}>
-                        {detailedPortal.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </div>
-                    <div><span className="font-medium">Max File Size:</span> {Math.round(detailedPortal.maxFileSize / (1024 * 1024))}MB</div>
-                    <div><span className="font-medium">Created:</span> {new Date(detailedPortal.createdAt).toLocaleString()}</div>
-                  </div>
+            <div className="space-y-8">
+              {/* Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                  <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-1">Total Uploads</p>
+                  <p className="text-xl font-bold text-slate-900">{detailedPortal.stats.totalUploads}</p>
                 </div>
-
-                <div>
-                  <h3 className="font-medium text-slate-900 mb-3">Owner</h3>
-                  <div className="flex items-center gap-3">
-                    {detailedPortal.user.image ? (
-                      <img
-                        src={detailedPortal.user.image}
-                        alt={detailedPortal.user.name || detailedPortal.user.email}
-                        className="w-10 h-10 rounded-full"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center">
-                        <span className="font-medium text-slate-600">
-                          {(detailedPortal.user.name || detailedPortal.user.email).charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                    <div>
-                      <div className="font-medium text-slate-900">
-                        {detailedPortal.user.name || 'No name'}
-                      </div>
-                      <div className="text-sm text-slate-600">{detailedPortal.user.email}</div>
-                    </div>
-                  </div>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                  <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-1">Completed</p>
+                  <p className="text-xl font-bold text-slate-900">{detailedPortal.stats.byStatus?.completed || 0}</p>
+                </div>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                  <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-1">Pending</p>
+                  <p className="text-xl font-bold text-slate-900">{detailedPortal.stats.byStatus?.pending || 0}</p>
+                </div>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                  <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mb-1">Storage Used</p>
+                  <p className="text-xl font-bold text-slate-900">{formatFileSize(detailedPortal.stats.totalSize)}</p>
                 </div>
               </div>
 
-              {/* Statistics */}
-              <div>
-                <h3 className="font-medium text-slate-900 mb-3">Statistics</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <div className="text-2xl font-bold text-slate-900">
-                      {detailedPortal.stats.totalUploads}
+              {/* Portal Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                    <Settings className="w-4 h-4 text-slate-600" />
+                    Portal Information
+                  </h4>
+                  <div className="space-y-2">
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                      <span className="text-slate-600 text-xs font-medium">Max File Size:</span>
+                      <div className="font-bold text-slate-900">{Math.round(detailedPortal.maxFileSize / (1024 * 1024))}MB</div>
                     </div>
-                    <div className="text-sm text-slate-600">Total Uploads</div>
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                      <span className="text-slate-600 text-xs font-medium">Created:</span>
+                      <div className="font-bold text-slate-900">{new Date(detailedPortal.createdAt).toLocaleString()}</div>
+                    </div>
                   </div>
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <div className="text-2xl font-bold text-slate-900">
-                      {detailedPortal.stats.byStatus?.completed || 0}
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                    <Users className="w-4 h-4 text-slate-600" />
+                    Owner Information
+                  </h4>
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div className="flex items-center gap-3">
+                      {detailedPortal.user.image ? (
+                        <img
+                          src={detailedPortal.user.image}
+                          alt={detailedPortal.user.name || detailedPortal.user.email}
+                          className="w-10 h-10 rounded-full"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center">
+                          <span className="font-medium text-slate-600">
+                            {(detailedPortal.user.name || detailedPortal.user.email).charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                      <div>
+                        <div className="font-medium text-slate-900">
+                          {detailedPortal.user.name || 'No name'}
+                        </div>
+                        <div className="text-sm text-slate-600">{detailedPortal.user.email}</div>
+                      </div>
                     </div>
-                    <div className="text-sm text-slate-600">Completed</div>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <div className="text-2xl font-bold text-slate-900">
-                      {detailedPortal.stats.byStatus?.pending || 0}
-                    </div>
-                    <div className="text-sm text-slate-600">Pending</div>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <div className="text-2xl font-bold text-slate-900">
-                      {Math.round(detailedPortal.stats.totalSize / (1024 * 1024))}MB
-                    </div>
-                    <div className="text-sm text-slate-600">Storage Used</div>
                   </div>
                 </div>
               </div>
 
               {/* Recent Uploads */}
-              <div>
-                <h3 className="font-medium text-slate-900 mb-3">Recent Uploads</h3>
+              <div className="space-y-4">
+                <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-slate-600" />
+                  Recent Uploads
+                </h4>
                 <div className="space-y-2">
                   {detailedPortal.recentUploads?.slice(0, 5).map((upload: any) => (
-                    <div key={upload.id} className="flex items-center justify-between py-2 px-3 bg-slate-50 rounded">
+                    <div key={upload.id} className="flex items-center justify-between py-3 px-4 bg-slate-50 rounded-xl border border-slate-200">
                       <div>
-                        <div className="font-medium text-sm">{upload.fileName}</div>
+                        <div className="font-medium text-sm text-slate-900">{upload.fileName}</div>
                         <div className="text-xs text-slate-600">
                           {upload.clientName && `From: ${upload.clientName}`}
                           {upload.clientEmail && ` (${upload.clientEmail})`}
@@ -993,8 +1051,72 @@ function PortalDetailsModal({ portal, onClose }: { portal: Portal; onClose: () =
                     </div>
                   ))}
                   {(!detailedPortal.recentUploads || detailedPortal.recentUploads.length === 0) && (
-                    <p className="text-slate-500 text-sm">No recent uploads</p>
+                    <p className="text-slate-500 text-sm text-center py-8">No recent uploads</p>
                   )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-4">
+                <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                  <Settings className="w-4 h-4 text-slate-600" />
+                  Portal Actions
+                </h4>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Status Toggle */}
+                  {detailedPortal.isActive ? (
+                    <button
+                      onClick={handleToggleStatus}
+                      disabled={actionLoading}
+                      className="p-3 bg-orange-100 text-orange-700 rounded-xl hover:bg-orange-200 transition-colors flex items-center gap-2 text-sm font-medium disabled:opacity-50"
+                    >
+                      <GlobeOff className="w-4 h-4" />
+                      Disable Portal
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleToggleStatus}
+                      disabled={actionLoading}
+                      className="p-3 bg-green-100 text-green-700 rounded-xl hover:bg-green-200 transition-colors flex items-center gap-2 text-sm font-medium disabled:opacity-50"
+                    >
+                      <Globe className="w-4 h-4" />
+                      Enable Portal
+                    </button>
+                  )}
+
+                  {/* Transfer Ownership */}
+                  <button
+                    onClick={handleTransfer}
+                    disabled={actionLoading}
+                    className="p-3 bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 transition-colors flex items-center gap-2 text-sm font-medium disabled:opacity-50"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Transfer Ownership
+                  </button>
+
+                  {/* Open Portal */}
+                  <a
+                    href={`/p/${detailedPortal.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-3 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors flex items-center gap-2 text-sm font-medium"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Open Portal
+                  </a>
+                </div>
+
+                {/* Danger Zone */}
+                <div className="pt-4 border-t border-slate-200">
+                  <button
+                    onClick={handleDelete}
+                    disabled={actionLoading}
+                    className="w-full p-3 bg-red-100 text-red-700 rounded-xl hover:bg-red-200 transition-colors flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete Portal
+                  </button>
                 </div>
               </div>
             </div>
@@ -1004,6 +1126,16 @@ function PortalDetailsModal({ portal, onClose }: { portal: Portal; onClose: () =
               <p className="text-slate-600">Failed to load portal details</p>
             </div>
           )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-end gap-3 shrink-0">
+          <button
+            onClick={onClose}
+            className="px-6 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all"
+          >
+            Close
+          </button>
         </div>
       </motion.div>
     </motion.div>
