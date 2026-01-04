@@ -333,6 +333,34 @@ export default function CreatePortalPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
+    
+    // Validate required fields and navigate to first unfilled section
+    const validationErrors = []
+    
+    if (!formData.name.trim()) {
+      validationErrors.push({ field: 'name', tab: 'Identity', message: 'Portal name is required' })
+    }
+    
+    if (!formData.slug.trim()) {
+      validationErrors.push({ field: 'slug', tab: 'Identity', message: 'Portal handle is required' })
+    }
+    
+    if (!formData.storageProvider || !formData.storageFolderId) {
+      validationErrors.push({ field: 'storage', tab: 'Storage', message: 'Storage provider and folder must be selected' })
+    }
+    
+    if (!formData.maxFileSize || Number(formData.maxFileSize) <= 0) {
+      validationErrors.push({ field: 'maxFileSize', tab: 'Security', message: 'Maximum file size must be specified' })
+    }
+    
+    // If there are validation errors, navigate to the first problematic section
+    if (validationErrors.length > 0) {
+      const firstError = validationErrors[0]
+      setActiveTab(firstError.tab)
+      setError(firstError.message)
+      return
+    }
+    
     setLoading(true)
 
     try {
@@ -794,14 +822,39 @@ export default function CreatePortalPage() {
                       <div className="space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
-                            <label className="block text-sm font-semibold text-slate-700 mb-2">Max Payload (MB)</label>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Max Payload (MB)</label>
+                            
+                            {/* File Size Templates */}
+                            <div className="grid grid-cols-3 gap-2 mb-4">
+                              {[
+                                { size: 10, label: "Small", description: "Documents & images" },
+                                { size: 50, label: "Medium", description: "Presentations & videos" },
+                                { size: 200, label: "Large", description: "High-res media & archives" }
+                              ].map((template) => (
+                                <button
+                                  key={template.size}
+                                  type="button"
+                                  onClick={() => setFormData({ ...formData, maxFileSize: template.size })}
+                                  className={`p-3 rounded-xl border text-center transition-all ${
+                                    formData.maxFileSize === template.size
+                                      ? "border-slate-900 bg-slate-900 text-white shadow-md"
+                                      : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600"
+                                  }`}
+                                >
+                                  <div className="font-bold text-lg">{template.size}MB</div>
+                                  <div className="text-[10px] font-bold uppercase tracking-wider opacity-75">{template.label}</div>
+                                  <div className="text-[9px] opacity-60 mt-1">{template.description}</div>
+                                </button>
+                              ))}
+                            </div>
+
                             <div className="relative">
                               <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                               <input
                                 type="number"
                                 value={formData.maxFileSize}
                                 onChange={(e) => setFormData({ ...formData, maxFileSize: e.target.value === '' ? 0 : parseInt(e.target.value) || 0 })}
-                                placeholder="e.g. 200"
+                                placeholder="Custom size..."
                                 className={`w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border rounded-xl focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-semibold text-slate-900 dark:text-slate-100 ${!formData.maxFileSize ? 'border-amber-300 dark:border-amber-600' : 'border-slate-200 dark:border-slate-700'}`}
                               />
                             </div>
@@ -883,13 +936,7 @@ export default function CreatePortalPage() {
                         <div className="pt-4 flex justify-end">
                           <button
                             type="button"
-                            onClick={() => {
-                              if (!formData.maxFileSize) {
-                                setError("Please provide a valid payload limit before proceeding.");
-                                return;
-                              }
-                              setActiveTab('Messaging');
-                            }}
+                            onClick={() => setActiveTab('Messaging')}
                             className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
                           >
                             Next: Messaging
