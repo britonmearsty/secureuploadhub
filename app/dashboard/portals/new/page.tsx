@@ -28,7 +28,6 @@ import StorageSelector from "@/components/ui/StorageSelector"
 import FolderTree from "@/components/ui/FolderTree"
 import Breadcrumb from "@/components/ui/Breadcrumb"
 import FileConstraints from "@/components/ui/FileConstraints"
-import FormNavigation from "@/components/ui/FormNavigation"
 
 interface ConnectedAccount {
   provider: "google" | "dropbox"
@@ -160,32 +159,6 @@ export default function CreatePortalPage() {
   })
 
   const [activeTab, setActiveTab] = useState('Identity')
-
-  // Form steps configuration
-  const formSteps = [
-    { id: 'Identity', label: 'Identity', icon: Type, isRequired: true, isValid: !!formData.name && !!formData.slug },
-    { id: 'Branding', label: 'Branding', icon: Palette, isRequired: false, isValid: true },
-    { id: 'Storage', label: 'Storage', icon: Cloud, isRequired: true, isValid: !!formData.storageProvider && !!formData.storageFolderId },
-    { id: 'Security', label: 'Security', icon: Lock, isRequired: false, isValid: true },
-    { id: 'Messaging', label: 'Messaging', icon: Settings2, isRequired: false, isValid: true }
-  ]
-
-  const currentStepIndex = formSteps.findIndex(step => step.id === activeTab)
-  const canProceedToNext = formSteps[currentStepIndex]?.isValid !== false
-
-  const handleNextStep = () => {
-    const nextIndex = currentStepIndex + 1
-    if (nextIndex < formSteps.length) {
-      setActiveTab(formSteps[nextIndex].id)
-    }
-  }
-
-  const handlePreviousStep = () => {
-    const prevIndex = currentStepIndex - 1
-    if (prevIndex >= 0) {
-      setActiveTab(formSteps[prevIndex].id)
-    }
-  }
 
   const toggleFolder = (id: string) => {
     setExpandedFolders(prev => {
@@ -382,10 +355,10 @@ export default function CreatePortalPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-4 py-8">
       <Link
         href="/dashboard"
-        className="group inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 transition-colors font-medium text-sm"
+        className="group inline-flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-colors font-medium text-sm mb-8"
       >
         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
         Back to Dashboard
@@ -395,8 +368,8 @@ export default function CreatePortalPage() {
         {/* Navigation Sidebar */}
         <aside className="lg:w-64 flex-shrink-0">
           <div className="mb-6 px-2">
-            <h1 className="text-3xl font-black text-foreground tracking-tight">New Portal</h1>
-            <p className="text-muted-foreground text-sm mt-1">Create a secure space for your clients.</p>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">New Portal</h1>
+            <p className="text-slate-500 text-sm mt-1">Create a secure space for your clients.</p>
           </div>
           <nav className="space-y-1">
             {[
@@ -414,11 +387,11 @@ export default function CreatePortalPage() {
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
-                    ? "bg-card shadow-sm border border-border text-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-white shadow-sm border border-slate-200 text-slate-900"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                     }`}
                 >
-                  <Icon className={`w-5 h-5 ${isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`} />
+                  <Icon className={`w-5 h-5 ${isActive ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
                   <span className="font-medium text-sm">{tab.label}</span>
                   {isActive && (
                     <motion.div
@@ -427,7 +400,7 @@ export default function CreatePortalPage() {
                       initial={{ opacity: 0, x: -5 }}
                       animate={{ opacity: 1, x: 0 }}
                     >
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                      <ChevronRight className="w-4 h-4 text-slate-400" />
                     </motion.div>
                   )}
                 </button>
@@ -447,39 +420,42 @@ export default function CreatePortalPage() {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
-                  <div className="p-6 border-b border-border bg-muted/30">
-                    <h2 className="text-2xl font-black text-foreground">
-                      {activeTab} Settings
-                    </h2>
-                    <p className="text-sm text-muted-foreground mt-1 font-medium">
-                      Configure the {activeTab.toLowerCase()} parameters for your new portal.
-                    </p>
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                  <div className="p-6 border-b border-slate-100 bg-slate-50/30 flex justify-between items-center">
+                    <div>
+                      <h2 className="text-xl font-semibold text-slate-900">
+                        {activeTab}
+                      </h2>
+                      <p className="text-sm text-slate-500 mt-1">
+                        Manage settings for this section.
+                      </p>
+                    </div>
+                    {loading && <Loader2 className="w-5 h-5 animate-spin text-slate-400" />}
                   </div>
 
                   <div className="p-8 space-y-8">
                     {activeTab === 'Identity' && (
                       <div className="space-y-6">
                         <div>
-                          <label className="block text-sm font-bold text-foreground mb-2">
-                            Workspace Name
+                          <label className="block text-sm font-semibold text-slate-700 mb-2">
+                            Portal Name
                           </label>
                           <input
                             type="text"
                             value={formData.name}
                             onChange={(e) => handleNameChange(e.target.value)}
                             placeholder="e.g. Project Delivery Materials"
-                            className="w-full px-5 py-4 bg-muted border border-border rounded-2xl focus:bg-card focus:ring-2 focus:ring-ring transition-all outline-none font-bold text-foreground placeholder:text-muted-foreground"
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium text-slate-900"
                             required
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-bold text-foreground mb-2">
-                            Access Address
+                          <label className="block text-sm font-semibold text-slate-700 mb-2">
+                            Permanent Handle
                           </label>
                           <div className="flex items-stretch shadow-sm rounded-xl">
-                            <div className="px-4 flex items-center bg-muted border border-r-0 border-border rounded-l-xl text-muted-foreground text-sm font-medium">
+                            <div className="px-4 flex items-center bg-slate-50 border border-r-0 border-slate-200 rounded-l-xl text-slate-500 text-sm font-medium">
                               /p/
                             </div>
                             <input
@@ -489,7 +465,7 @@ export default function CreatePortalPage() {
                                 setFormData({ ...formData, slug: e.target.value.toLowerCase() })
                               }
                               placeholder="custom-address"
-                              className="flex-1 px-5 py-4 bg-card border border-border rounded-r-2xl focus:ring-2 focus:ring-ring transition-all outline-none font-bold text-foreground"
+                              className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-r-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium text-slate-900"
                               pattern="[a-z0-9-]+"
                               required
                             />
@@ -497,7 +473,7 @@ export default function CreatePortalPage() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-bold text-foreground mb-2">
+                          <label className="block text-sm font-semibold text-slate-700 mb-2">
                             Description (Optional)
                           </label>
                           <textarea
@@ -505,7 +481,7 @@ export default function CreatePortalPage() {
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                             placeholder="Tell your clients what this portal is for..."
                             rows={4}
-                            className="w-full px-5 py-4 bg-muted border border-border rounded-2xl focus:bg-card focus:ring-2 focus:ring-ring transition-all outline-none font-medium text-foreground placeholder:text-muted-foreground resize-none"
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium text-slate-900 placeholder:text-slate-400 resize-none"
                           />
                         </div>
 
@@ -513,7 +489,7 @@ export default function CreatePortalPage() {
                           <button
                             type="button"
                             onClick={() => setActiveTab('Branding')}
-                            className="px-6 py-2.5 bg-foreground text-primary-foreground rounded-xl font-bold text-sm hover:bg-primary transition-colors"
+                            className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
                           >
                             Next: Branding
                           </button>
@@ -536,36 +512,92 @@ export default function CreatePortalPage() {
                           />
                         </div>
 
-                        <div className="bg-muted/30 rounded-xl p-6 border border-border">
-                          <h3 className="text-sm font-bold text-foreground mb-6 uppercase tracking-wider">Color Configuration</h3>
-                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <ColorPicker
-                              label="Primary Brand Color"
-                              value={formData.primaryColor}
-                              onChange={(value) => setFormData({ ...formData, primaryColor: value })}
-                              presets={["#0f172a", "#1e40af", "#dc2626", "#059669", "#7c3aed", "#ea580c"]}
-                            />
+                        <div className="bg-slate-50 rounded-xl p-6 border border-slate-100">
+                          <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Color Palette</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Primary Color</label>
+                              <div className="flex items-center gap-3">
+                                <div className="relative">
+                                  <input
+                                    type="color"
+                                    value={formData.primaryColor}
+                                    onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+                                    className="w-12 h-12 rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden shrink-0"
+                                  />
+                                  <div className="absolute inset-0 rounded-xl border border-slate-200 pointer-events-none" />
+                                </div>
+                                <input
+                                  type="text"
+                                  value={formData.primaryColor}
+                                  onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+                                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 transition-all outline-none font-mono text-sm uppercase"
+                                />
+                              </div>
+                            </div>
 
-                            <ColorPicker
-                              label="Text Color"
-                              value={formData.textColor}
-                              onChange={(value) => setFormData({ ...formData, textColor: value })}
-                              presets={["#0f172a", "#374151", "#6b7280", "#ffffff", "#f9fafb", "#1f2937"]}
-                            />
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Text Color</label>
+                              <div className="flex items-center gap-3">
+                                <div className="relative">
+                                  <input
+                                    type="color"
+                                    value={formData.textColor}
+                                    onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
+                                    className="w-12 h-12 rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden shrink-0"
+                                  />
+                                  <div className="absolute inset-0 rounded-xl border border-slate-200 pointer-events-none" />
+                                </div>
+                                <input
+                                  type="text"
+                                  value={formData.textColor}
+                                  onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
+                                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 transition-all outline-none font-mono text-sm uppercase"
+                                />
+                              </div>
+                            </div>
 
-                            <ColorPicker
-                              label="Background Color"
-                              value={formData.backgroundColor || "#ffffff"}
-                              onChange={(value) => setFormData({ ...formData, backgroundColor: value })}
-                              presets={["#ffffff", "#f9fafb", "#f3f4f6", "#e5e7eb", "#0f172a", "#1e293b"]}
-                            />
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Background</label>
+                              <div className="flex items-center gap-3">
+                                <div className="relative">
+                                  <input
+                                    type="color"
+                                    value={formData.backgroundColor || "#ffffff"}
+                                    onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
+                                    className="w-12 h-12 rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden shrink-0"
+                                  />
+                                  <div className="absolute inset-0 rounded-xl border border-slate-200 pointer-events-none" />
+                                </div>
+                                <input
+                                  type="text"
+                                  value={formData.backgroundColor || ""}
+                                  onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
+                                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 transition-all outline-none font-mono text-sm uppercase"
+                                />
+                              </div>
+                            </div>
 
-                            <ColorPicker
-                              label="Card Background"
-                              value={formData.cardBackgroundColor}
-                              onChange={(value) => setFormData({ ...formData, cardBackgroundColor: value })}
-                              presets={["#ffffff", "#f9fafb", "#f3f4f6", "#e5e7eb", "#1f2937", "#374151"]}
-                            />
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Card Background</label>
+                              <div className="flex items-center gap-3">
+                                <div className="relative">
+                                  <input
+                                    type="color"
+                                    value={formData.cardBackgroundColor}
+                                    onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
+                                    className="w-12 h-12 rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden shrink-0"
+                                  />
+                                  <div className="absolute inset-0 rounded-xl border border-slate-200 pointer-events-none" />
+                                </div>
+                                <input
+                                  type="text"
+                                  value={formData.cardBackgroundColor}
+                                  onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
+                                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 transition-all outline-none font-mono text-sm uppercase"
+                                />
+                              </div>
+                            </div>
                           </div>
                         </div>
 
@@ -592,19 +624,19 @@ export default function CreatePortalPage() {
                         />
 
                         {formData.storageProvider && (
-                          <div className="bg-muted/30 border border-border rounded-2xl overflow-hidden">
-                            <div className="px-6 py-4 border-b border-border bg-muted/50 flex flex-col gap-3">
+                          <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden">
+                            <div className="px-5 py-4 border-b border-slate-200 bg-slate-100/50 flex flex-col gap-3">
                               <div className="flex items-center justify-between">
-                                <span className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Folder Selection</span>
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Navigation Tree</span>
                                 <button
                                   type="button"
                                   onClick={() => {
                                     setIsCreatingFolder(true)
                                     setNewFolderName(formData.name || "New Portal Folder")
                                   }}
-                                  className="flex items-center gap-2 px-3 py-1.5 bg-card border border-border rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-all shadow-sm"
+                                  className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded-lg text-[10px] font-bold uppercase tracking-wider text-slate-600 hover:text-slate-900 hover:border-slate-300 transition-all shadow-sm"
                                 >
-                                  <FolderOpen className="w-4 h-4 text-amber-500" />
+                                  <FolderOpen className="w-3 h-3 text-amber-500" />
                                   New Folder
                                 </button>
                               </div>
@@ -618,14 +650,14 @@ export default function CreatePortalPage() {
                                     path: folder.path
                                   }))}
                                   onItemClick={(item, index) => navigateToBreadcrumb(index)}
-                                  className="bg-card px-3 py-2 rounded-lg border border-border"
+                                  className="bg-white px-3 py-2 rounded-lg border border-slate-200"
                                 />
                               )}
                             </div>
 
                             {/* Folder Creation Input */}
                             {isCreatingFolder && (
-                              <div className="px-6 py-4 border-b border-border bg-amber-50/50">
+                              <div className="px-6 py-4 border-b border-slate-200 bg-amber-50/50">
                                 <div className="flex items-center gap-3">
                                   <FolderOpen className="w-5 h-5 text-amber-500 flex-shrink-0" />
                                   <input
@@ -633,7 +665,7 @@ export default function CreatePortalPage() {
                                     value={newFolderName}
                                     onChange={(e) => setNewFolderName(e.target.value)}
                                     placeholder="Enter folder name..."
-                                    className="flex-1 px-3 py-2 bg-card border border-border rounded-lg focus:ring-2 focus:ring-ring outline-none text-sm"
+                                    className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 outline-none text-sm"
                                     onKeyDown={(e) => {
                                       if (e.key === 'Enter') handleCreateFolder()
                                       if (e.key === 'Escape') setIsCreatingFolder(false)
@@ -644,14 +676,14 @@ export default function CreatePortalPage() {
                                     type="button"
                                     onClick={handleCreateFolder}
                                     disabled={!newFolderName.trim() || loadingFolders}
-                                    className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium"
+                                    className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium"
                                   >
                                     {loadingFolders ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create"}
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => setIsCreatingFolder(false)}
-                                    className="px-3 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                                    className="px-3 py-2 text-slate-500 hover:text-slate-900 transition-colors"
                                   >
                                     Cancel
                                   </button>
@@ -723,7 +755,7 @@ export default function CreatePortalPage() {
                           <button
                             type="button"
                             onClick={() => setActiveTab('Security')}
-                            className="px-6 py-2.5 bg-foreground text-primary-foreground rounded-xl font-bold text-sm hover:bg-primary transition-colors"
+                            className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
                           >
                             Next: Security
                           </button>
@@ -744,11 +776,11 @@ export default function CreatePortalPage() {
                         {/* Password Protection */}
                         <div className="space-y-4">
                           <div className="flex items-center gap-2">
-                            <Lock className="w-5 h-5 text-primary" />
-                            <h3 className="text-lg font-semibold text-foreground">Password Protection</h3>
+                            <Lock className="w-5 h-5 text-slate-900" />
+                            <h3 className="text-lg font-semibold text-slate-900">Password Protection</h3>
                           </div>
 
-                          <div className="p-4 bg-muted/30 border border-border rounded-xl">
+                          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
                             <label className="flex items-center gap-3 cursor-pointer">
                               <input
                                 type="checkbox"
@@ -758,11 +790,11 @@ export default function CreatePortalPage() {
                                     setFormData({ ...formData, password: "" })
                                   }
                                 }}
-                                className="w-4 h-4 text-primary bg-card border-border rounded focus:ring-ring focus:ring-2"
+                                className="w-4 h-4 text-slate-900 bg-white border-slate-200 rounded focus:ring-slate-900 focus:ring-2"
                               />
                               <div>
-                                <span className="font-medium text-foreground">Enable password protection</span>
-                                <p className="text-sm text-muted-foreground mt-1">
+                                <span className="font-medium text-slate-900">Enable password protection</span>
+                                <p className="text-sm text-slate-500 mt-1">
                                   Require users to enter a password before accessing this portal
                                 </p>
                               </div>
@@ -775,7 +807,7 @@ export default function CreatePortalPage() {
                                   value={formData.password}
                                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                   placeholder="Enter portal password..."
-                                  className="w-full px-4 py-3 bg-card border border-border rounded-xl focus:ring-2 focus:ring-ring transition-all outline-none font-medium"
+                                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium"
                                 />
                               </div>
                             )}
@@ -784,32 +816,32 @@ export default function CreatePortalPage() {
 
                         {/* Client Information Requirements */}
                         <div className="space-y-4">
-                          <h3 className="text-lg font-semibold text-foreground">Client Information</h3>
+                          <h3 className="text-lg font-semibold text-slate-900">Client Information</h3>
                           
                           <div className="space-y-3">
-                            <label className="flex items-center gap-3 cursor-pointer p-3 bg-muted/30 border border-border rounded-xl hover:bg-muted/50 transition-colors">
+                            <label className="flex items-center gap-3 cursor-pointer p-3 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors">
                               <input
                                 type="checkbox"
                                 checked={formData.requireClientName}
                                 onChange={(e) => setFormData({ ...formData, requireClientName: e.target.checked })}
-                                className="w-4 h-4 text-primary bg-card border-border rounded focus:ring-ring focus:ring-2"
+                                className="w-4 h-4 text-slate-900 bg-white border-slate-200 rounded focus:ring-slate-900 focus:ring-2"
                               />
                               <div>
-                                <span className="font-medium text-foreground">Require client name</span>
-                                <p className="text-sm text-muted-foreground">Users must provide their name before uploading</p>
+                                <span className="font-medium text-slate-900">Require client name</span>
+                                <p className="text-sm text-slate-500">Users must provide their name before uploading</p>
                               </div>
                             </label>
 
-                            <label className="flex items-center gap-3 cursor-pointer p-3 bg-muted/30 border border-border rounded-xl hover:bg-muted/50 transition-colors">
+                            <label className="flex items-center gap-3 cursor-pointer p-3 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors">
                               <input
                                 type="checkbox"
                                 checked={formData.requireClientEmail}
                                 onChange={(e) => setFormData({ ...formData, requireClientEmail: e.target.checked })}
-                                className="w-4 h-4 text-primary bg-card border-border rounded focus:ring-ring focus:ring-2"
+                                className="w-4 h-4 text-slate-900 bg-white border-slate-200 rounded focus:ring-slate-900 focus:ring-2"
                               />
                               <div>
-                                <span className="font-medium text-foreground">Require client email</span>
-                                <p className="text-sm text-muted-foreground">Users must provide their email address before uploading</p>
+                                <span className="font-medium text-slate-900">Require client email</span>
+                                <p className="text-sm text-slate-500">Users must provide their email address before uploading</p>
                               </div>
                             </label>
                           </div>
@@ -819,7 +851,7 @@ export default function CreatePortalPage() {
                           <button
                             type="button"
                             onClick={() => setActiveTab('Messaging')}
-                            className="px-6 py-2.5 bg-foreground text-primary-foreground rounded-xl font-bold text-sm hover:bg-primary transition-colors"
+                            className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
                           >
                             Next: Messaging
                           </button>
@@ -908,21 +940,7 @@ export default function CreatePortalPage() {
               </motion.div>
             </AnimatePresence>
 
-            {/* Form Navigation */}
-            <div className="mt-8">
-              <FormNavigation
-                steps={formSteps}
-                currentStep={activeTab}
-                onStepChange={setActiveTab}
-                onNext={handleNextStep}
-                onPrevious={handlePreviousStep}
-                onSubmit={() => handleSubmit({ preventDefault: () => {} } as any)}
-                isSubmitting={loading}
-                canProceed={canProceedToNext}
-              />
-            </div>
-
-            {/* Error Toast Positioned or Inline */}
+            {/* Error Toast */}
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
