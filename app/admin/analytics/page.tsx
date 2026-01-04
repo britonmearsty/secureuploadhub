@@ -145,23 +145,37 @@ function AnalyticsPageContent() {
   const [userAnalytics, setUserAnalytics] = useState<UserAnalytics | null>(null);
   const [uploadAnalytics, setUploadAnalytics] = useState<UploadAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState('30d');
   const [activeTab, setActiveTab] = useState('overview');
 
   const fetchAnalytics = async () => {
     setLoading(true);
+    setError(null);
+    console.log('🔍 Fetching analytics data for period:', period);
+    
     try {
+      console.log('Making API calls...');
       const [dashboardRes, usersRes, uploadsRes] = await Promise.all([
         fetch(`/api/admin/analytics/dashboard?period=${period}`),
         fetch(`/api/admin/analytics/users?period=${period}`),
         fetch(`/api/admin/analytics/uploads?period=${period}`),
       ]);
 
+      console.log('API responses:', {
+        dashboard: { status: dashboardRes.status, ok: dashboardRes.ok },
+        users: { status: usersRes.status, ok: usersRes.ok },
+        uploads: { status: uploadsRes.status, ok: uploadsRes.ok }
+      });
+
       if (dashboardRes.ok) {
         const data = await dashboardRes.json();
+        console.log('✅ Dashboard data received:', data);
         setDashboardData(data);
       } else {
-        console.error('Failed to fetch dashboard data:', dashboardRes.status);
+        console.error('❌ Failed to fetch dashboard data:', dashboardRes.status);
+        const errorText = await dashboardRes.text();
+        console.error('Dashboard error details:', errorText);
         // Set default empty data structure
         setDashboardData({
           overview: {
@@ -187,9 +201,12 @@ function AnalyticsPageContent() {
 
       if (usersRes.ok) {
         const data = await usersRes.json();
+        console.log('✅ User analytics data received:', data);
         setUserAnalytics(data);
       } else {
-        console.error('Failed to fetch user analytics:', usersRes.status);
+        console.error('❌ Failed to fetch user analytics:', usersRes.status);
+        const errorText = await usersRes.text();
+        console.error('Users error details:', errorText);
         // Set default empty data structure
         setUserAnalytics({
           summary: { totalUsers: 0, period, groupBy: 'day' },
@@ -207,9 +224,12 @@ function AnalyticsPageContent() {
 
       if (uploadsRes.ok) {
         const data = await uploadsRes.json();
+        console.log('✅ Upload analytics data received:', data);
         setUploadAnalytics(data);
       } else {
-        console.error('Failed to fetch upload analytics:', uploadsRes.status);
+        console.error('❌ Failed to fetch upload analytics:', uploadsRes.status);
+        const errorText = await uploadsRes.text();
+        console.error('Uploads error details:', errorText);
         // Set default empty data structure
         setUploadAnalytics({
           summary: {
@@ -230,7 +250,8 @@ function AnalyticsPageContent() {
         });
       }
     } catch (error) {
-      console.error('Failed to fetch analytics:', error);
+      console.error('❌ Failed to fetch analytics:', error);
+      setError(`Failed to fetch analytics: ${error instanceof Error ? error.message : 'Unknown error'}`);
       // Set default empty data structures for all
       setDashboardData({
         overview: {
@@ -284,6 +305,7 @@ function AnalyticsPageContent() {
         topPortals: [],
       });
     } finally {
+      console.log('✅ Analytics fetch completed');
       setLoading(false);
     }
   };
@@ -322,6 +344,31 @@ function AnalyticsPageContent() {
         <div className="flex items-center space-x-2">
           <RefreshCw className="h-4 w-4 animate-spin" />
           <span>Loading analytics...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-4">
+          <div className="text-red-600">
+            <span className="text-lg">⚠️ Error Loading Analytics</span>
+          </div>
+          <p className="text-sm text-gray-600 max-w-md">{error}</p>
+          <Button onClick={fetchAnalytics} variant="outline">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
+          <div className="mt-4">
+            <a 
+              href="/admin/analytics/debug" 
+              className="text-blue-600 hover:underline text-sm"
+            >
+              Open Debug Page
+            </a>
+          </div>
         </div>
       </div>
     );
