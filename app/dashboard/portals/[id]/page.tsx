@@ -401,6 +401,12 @@ export default function EditPortalPage() {
     setError("")
     setSuccess("")
     
+    // Don't validate if still loading portal data
+    if (loading) {
+      setError("Please wait for portal data to load")
+      return
+    }
+    
     // Validate required fields and navigate to first unfilled section
     const validationErrors = []
     
