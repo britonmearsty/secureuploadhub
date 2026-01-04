@@ -41,9 +41,12 @@ interface Analytics {
     uploads: {
       total: number;
       completed: number;
+      failed: number;
+      pending: number;
       recent: number;
       totalStorage: number;
       averagePerUser: number;
+      averageFileSize: number;
     };
     billing: {
       totalSubscriptions: number;
@@ -320,8 +323,8 @@ export default function AdminDashboardEnhanced() {
         />
         <StatCard
           title="Total Uploads"
-          value={analytics.overview?.uploads?.completed?.toLocaleString() || '0'}
-          change={`+${analytics.overview?.uploads?.recent || 0} recent`}
+          value={analytics.overview?.uploads?.total?.toLocaleString() || '0'}
+          change={`${analytics.overview?.uploads?.completed || 0} completed`}
           icon={Upload}
           trend="up"
           color="purple"
@@ -337,7 +340,7 @@ export default function AdminDashboardEnhanced() {
       </div>
 
       {/* Secondary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
         <StatCard
           title="Admin Users"
           value={analytics.overview?.users?.admins || 0}
@@ -345,8 +348,23 @@ export default function AdminDashboardEnhanced() {
           color="red"
         />
         <StatCard
+          title="Completed Uploads"
+          value={analytics.overview?.uploads?.completed?.toLocaleString() || '0'}
+          change={`${analytics.overview?.uploads?.total > 0 ? Math.round((analytics.overview?.uploads?.completed / analytics.overview?.uploads?.total) * 100) : 0}% success rate`}
+          icon={CheckCircle}
+          color="green"
+        />
+        <StatCard
+          title="Failed Uploads"
+          value={analytics.overview?.uploads?.failed?.toLocaleString() || '0'}
+          change={`${analytics.overview?.uploads?.pending || 0} pending`}
+          icon={AlertTriangle}
+          color="red"
+        />
+        <StatCard
           title="Storage Used"
           value={formatBytes(analytics.overview?.uploads?.totalStorage || 0)}
+          change={`Avg: ${formatBytes(analytics.overview?.uploads?.averageFileSize || 0)}`}
           icon={BarChart3}
           color="blue"
         />
@@ -358,10 +376,11 @@ export default function AdminDashboardEnhanced() {
           color="green"
         />
         <StatCard
-          title="Avg Revenue/User"
-          value={formatCurrency(analytics.overview?.billing?.averageRevenuePerUser || 0)}
-          icon={TrendingUp}
-          color="purple"
+          title="Recent Uploads"
+          value={analytics.overview?.uploads?.recent?.toLocaleString() || '0'}
+          change={`Last ${selectedPeriod} days`}
+          icon={Clock}
+          color="orange"
         />
       </div>
 

@@ -35,9 +35,12 @@ export async function GET(request: NextRequest) {
         uploads: {
           total: 0,
           completed: 0,
+          failed: 0,
+          pending: 0,
           recent: 0,
           totalStorage: 0,
-          averagePerUser: 0
+          averagePerUser: 0,
+          averageFileSize: 0
         },
         billing: {
           totalSubscriptions: 0,
@@ -89,8 +92,11 @@ export async function GET(request: NextRequest) {
         newPortals,
         totalUploads,
         completedUploads,
+        failedUploads,
+        pendingUploads,
         recentUploads,
-        totalStorageUsed
+        totalStorageUsed,
+        averageFileSize
       ] = await Promise.allSettled([
         prisma.user.count(),
         prisma.user.count({ where: { status: 'active' } }),
@@ -102,10 +108,16 @@ export async function GET(request: NextRequest) {
         prisma.uploadPortal.count({ where: { createdAt: { gte: startDate } } }),
         prisma.fileUpload.count(),
         prisma.fileUpload.count({ where: { status: 'completed' } }),
+        prisma.fileUpload.count({ where: { status: 'failed' } }),
+        prisma.fileUpload.count({ where: { status: 'pending' } }),
         prisma.fileUpload.count({ where: { createdAt: { gte: startDate } } }),
         prisma.fileUpload.aggregate({
           where: { status: 'completed' },
           _sum: { fileSize: true }
+        }),
+        prisma.fileUpload.aggregate({
+          where: { status: 'completed' },
+          _avg: { fileSize: true }
         })
       ]);
 
@@ -122,8 +134,11 @@ export async function GET(request: NextRequest) {
       
       analytics.overview.uploads.total = totalUploads.status === 'fulfilled' ? totalUploads.value : 0;
       analytics.overview.uploads.completed = completedUploads.status === 'fulfilled' ? completedUploads.value : 0;
+      analytics.overview.uploads.failed = failedUploads.status === 'fulfilled' ? failedUploads.value : 0;
+      analytics.overview.uploads.pending = pendingUploads.status === 'fulfilled' ? pendingUploads.value : 0;
       analytics.overview.uploads.recent = recentUploads.status === 'fulfilled' ? recentUploads.value : 0;
       analytics.overview.uploads.totalStorage = totalStorageUsed.status === 'fulfilled' ? (totalStorageUsed.value._sum.fileSize || 0) : 0;
+      analytics.overview.uploads.averageFileSize = averageFileSize.status === 'fulfilled' ? (averageFileSize.value._avg.fileSize || 0) : 0;
 
       // Try to get billing metrics (might not exist)
       try {
