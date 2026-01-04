@@ -216,8 +216,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(performanceAnalytics);
   } catch (error) {
     console.error('Performance analytics error:', error);
+    
+    // More detailed error logging
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to fetch performance analytics' },
+      { 
+        error: 'Failed to fetch performance analytics',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        errorType: error instanceof Error ? error.name : 'Unknown',
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     );
   }

@@ -16,7 +16,11 @@ import {
   TrendingUp,
   Clock,
   Download,
-  RefreshCw
+  RefreshCw,
+  Sparkles,
+  Zap,
+  Target,
+  AlertTriangle
 } from 'lucide-react';
 import { formatBytes, formatNumber } from '@/lib/utils';
 import { AnalyticsChart } from '@/components/admin/analytics/AnalyticsChart';
@@ -144,6 +148,7 @@ function AnalyticsPageContent() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [userAnalytics, setUserAnalytics] = useState<UserAnalytics | null>(null);
   const [uploadAnalytics, setUploadAnalytics] = useState<UploadAnalytics | null>(null);
+  const [performanceAnalytics, setPerformanceAnalytics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState('30d');
@@ -156,10 +161,11 @@ function AnalyticsPageContent() {
     
     try {
       console.log('Making API calls...');
-      const [dashboardRes, usersRes, uploadsRes] = await Promise.all([
+      const [dashboardRes, usersRes, uploadsRes, performanceRes] = await Promise.all([
         fetch(`/api/admin/analytics/dashboard-simple?period=${period}`),
         fetch(`/api/admin/analytics/users?period=${period}&groupBy=day`),
         fetch(`/api/admin/analytics/uploads?period=${period}&groupBy=day`),
+        fetch(`/api/admin/analytics/performance-simple?period=7d`),
       ]);
 
       console.log('API responses:', {
@@ -249,6 +255,31 @@ function AnalyticsPageContent() {
           topPortals: [],
         });
       }
+
+      if (performanceRes.ok) {
+        const data = await performanceRes.json();
+        console.log('✅ Performance analytics data received:', data);
+        setPerformanceAnalytics(data);
+      } else {
+        console.error('❌ Failed to fetch performance analytics:', performanceRes.status);
+        const errorText = await performanceRes.text();
+        console.error('Performance error details:', errorText);
+        // Set default empty data structure
+        setPerformanceAnalytics({
+          summary: {
+            totalRequests: 0,
+            averageResponseTime: 0,
+            errorRate: 0,
+            errorCount: 0
+          },
+          distribution: {
+            responseTime: [],
+            statusCodes: []
+          },
+          endpoints: [],
+          errors: []
+        });
+      }
     } catch (error) {
       console.error('❌ Failed to fetch analytics:', error);
       setError(`Failed to fetch analytics: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -304,6 +335,21 @@ function AnalyticsPageContent() {
         },
         topPortals: [],
       });
+      
+      setPerformanceAnalytics({
+        summary: {
+          totalRequests: 0,
+          averageResponseTime: 0,
+          errorRate: 0,
+          errorCount: 0
+        },
+        distribution: {
+          responseTime: [],
+          statusCodes: []
+        },
+        endpoints: [],
+        errors: []
+      });
     } finally {
       console.log('✅ Analytics fetch completed');
       setLoading(false);
@@ -340,10 +386,27 @@ function AnalyticsPageContent() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex items-center space-x-2">
-          <RefreshCw className="h-4 w-4 animate-spin" />
-          <span>Loading analytics...</span>
+      <div className="p-8 space-y-8">
+        <div className="flex items-center justify-between">
+          <div className="animate-pulse">
+            <div className="h-8 bg-slate-200 rounded w-48 mb-2"></div>
+            <div className="h-4 bg-slate-200 rounded w-64"></div>
+          </div>
+          <div className="h-10 bg-slate-200 rounded w-40 animate-pulse"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-white rounded-xl p-6 border border-slate-200 animate-pulse">
+              <div className="flex items-center justify-between mb-4">
+                <div className="h-12 w-12 bg-slate-200 rounded-lg"></div>
+                <div className="h-4 bg-slate-200 rounded w-20"></div>
+              </div>
+              <div className="space-y-2">
+                <div className="h-8 bg-slate-200 rounded w-24"></div>
+                <div className="h-4 bg-slate-200 rounded w-32"></div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -351,23 +414,28 @@ function AnalyticsPageContent() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center space-y-4">
-          <div className="text-red-600">
-            <span className="text-lg">⚠️ Error Loading Analytics</span>
-          </div>
-          <p className="text-sm text-gray-600 max-w-md">{error}</p>
-          <Button onClick={fetchAnalytics} variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Retry
-          </Button>
-          <div className="mt-4">
-            <a 
-              href="/admin/analytics/debug" 
-              className="text-blue-600 hover:underline text-sm"
-            >
-              Open Debug Page
-            </a>
+      <div className="p-8">
+        <div className="text-center text-slate-600">
+          <div className="mb-4">
+            <AlertTriangle className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-slate-900 mb-2">Unable to load analytics data</h3>
+            <p className="text-slate-500 mb-4 max-w-md mx-auto">{error}</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={fetchAnalytics}
+                className="bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors"
+              >
+                <RefreshCw className="h-4 w-4 mr-2 inline" />
+                Try Again
+              </button>
+              <a 
+                href="/admin/analytics/debug" 
+                className="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors inline-flex items-center"
+              >
+                <Target className="h-4 w-4 mr-2" />
+                Debug Mode
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -375,17 +443,18 @@ function AnalyticsPageContent() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-8 space-y-8">
+      {/* Header Section */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold text-slate-900">Analytics Dashboard</h1>
+          <p className="text-slate-600 mt-1">
             Comprehensive insights into platform performance and usage
           </p>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3">
           <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-40 border-slate-200">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -395,325 +464,596 @@ function AnalyticsPageContent() {
               <SelectItem value="1y">Last year</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={fetchAnalytics} variant="outline" size="sm">
+          <Button 
+            onClick={fetchAnalytics} 
+            variant="outline" 
+            size="sm"
+            className="border-slate-200 hover:bg-slate-50"
+          >
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-          <Button onClick={exportData} variant="outline" size="sm">
+          <Button 
+            onClick={exportData} 
+            size="sm"
+            className="bg-slate-900 hover:bg-slate-800 text-white"
+          >
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="uploads">Uploads</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-        </TabsList>
+      {/* Tabs Section */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+        <div className="flex justify-center">
+          <TabsList className="grid w-full max-w-md grid-cols-4 bg-slate-100 border border-slate-200">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-white data-[state=active]:text-slate-900">
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="users" className="data-[state=active]:bg-white data-[state=active]:text-slate-900">
+              Users
+            </TabsTrigger>
+            <TabsTrigger value="uploads" className="data-[state=active]:bg-white data-[state=active]:text-slate-900">
+              Uploads
+            </TabsTrigger>
+            <TabsTrigger value="performance" className="data-[state=active]:bg-white data-[state=active]:text-slate-900">
+              Performance
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-        <TabsContent value="overview" className="space-y-6">
+        <TabsContent value="overview" className="space-y-8">
           {/* Overview Metrics */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <MetricCard
-              title="Total Users"
-              value={formatNumber(dashboardData?.overview.totalUsers || 0)}
-              change={dashboardData?.overview.newUsers || 0}
-              changeLabel={`+${dashboardData?.overview.newUsers || 0} this ${period}`}
-              icon={Users}
-            />
-            <MetricCard
-              title="Total Portals"
-              value={formatNumber(dashboardData?.overview.totalPortals || 0)}
-              change={dashboardData?.overview.newPortals || 0}
-              changeLabel={`+${dashboardData?.overview.newPortals || 0} this ${period}`}
-              icon={BarChart3}
-            />
-            <MetricCard
-              title="Total Uploads"
-              value={formatNumber(dashboardData?.overview.totalUploads || 0)}
-              change={dashboardData?.overview.newUploads || 0}
-              changeLabel={`+${dashboardData?.overview.newUploads || 0} this ${period}`}
-              icon={Upload}
-            />
-            <MetricCard
-              title="Storage Used"
-              value={`${dashboardData?.overview.totalStorageGB || 0} GB`}
-              change={dashboardData?.overview.activeUsers || 0}
-              changeLabel={`${dashboardData?.overview.activeUsers || 0} active users`}
-              icon={HardDrive}
-            />
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-blue-50 text-blue-600 border-blue-100">
+                  <Users className="w-6 h-6" />
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-slate-900">{formatNumber(dashboardData?.overview.totalUsers || 0)}</p>
+                  <p className="text-sm text-slate-600">Total Users</p>
+                </div>
+              </div>
+              <div className="text-sm text-slate-600">
+                +{dashboardData?.overview.newUsers || 0} this {period}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-green-50 text-green-600 border-green-100">
+                  <BarChart3 className="w-6 h-6" />
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-slate-900">{formatNumber(dashboardData?.overview.totalPortals || 0)}</p>
+                  <p className="text-sm text-slate-600">Total Portals</p>
+                </div>
+              </div>
+              <div className="text-sm text-slate-600">
+                +{dashboardData?.overview.newPortals || 0} this {period}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-purple-50 text-purple-600 border-purple-100">
+                  <Upload className="w-6 h-6" />
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-slate-900">{formatNumber(dashboardData?.overview.totalUploads || 0)}</p>
+                  <p className="text-sm text-slate-600">Total Uploads</p>
+                </div>
+              </div>
+              <div className="text-sm text-slate-600">
+                +{dashboardData?.overview.newUploads || 0} this {period}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-orange-50 text-orange-600 border-orange-100">
+                  <HardDrive className="w-6 h-6" />
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-slate-900">{dashboardData?.overview.totalStorageGB || 0} GB</p>
+                  <p className="text-sm text-slate-600">Storage Used</p>
+                </div>
+              </div>
+              <div className="text-sm text-slate-600">
+                {dashboardData?.overview.activeUsers || 0} active users
+              </div>
+            </div>
           </div>
 
           {/* Charts */}
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Growth</CardTitle>
-                <CardDescription>New user registrations over time</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AnalyticsChart
-                  data={dashboardData?.trends.userGrowth || []}
-                  xKey="date"
-                  yKey="count"
-                  type="line"
-                  color="#4F46E5"
-                />
-              </CardContent>
-            </Card>
+          <div className="grid gap-8 md:grid-cols-2">
+            <div className="bg-white rounded-xl p-6 border border-slate-200">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-slate-900">User Growth</h3>
+                <Users className="w-5 h-5 text-slate-400" />
+              </div>
+              <AnalyticsChart
+                data={dashboardData?.trends.userGrowth || []}
+                xKey="date"
+                yKey="count"
+                type="line"
+                color="#4F46E5"
+              />
+            </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Upload Trends</CardTitle>
-                <CardDescription>File uploads over time</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AnalyticsChart
-                  data={dashboardData?.trends.uploadTrends || []}
-                  xKey="date"
-                  yKey="count"
-                  type="bar"
-                  color="#10B981"
-                />
-              </CardContent>
-            </Card>
+            <div className="bg-white rounded-xl p-6 border border-slate-200">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-slate-900">Upload Trends</h3>
+                <Upload className="w-5 h-5 text-slate-400" />
+              </div>
+              <AnalyticsChart
+                data={dashboardData?.trends.uploadTrends || []}
+                xKey="date"
+                yKey="count"
+                type="bar"
+                color="#10B981"
+              />
+            </div>
           </div>
 
           {/* Activity Tables */}
-          <div className="grid gap-6 md:grid-cols-2">
-            <RecentActivity uploads={dashboardData?.recentActivity.uploads || []} />
-            <TopPortals portals={dashboardData?.topPortals || []} />
+          <div className="grid gap-8 md:grid-cols-2">
+            <div className="bg-white rounded-xl border border-slate-200">
+              <RecentActivity uploads={dashboardData?.recentActivity.uploads || []} />
+            </div>
+            <div className="bg-white rounded-xl border border-slate-200">
+              <TopPortals portals={dashboardData?.topPortals || []} />
+            </div>
           </div>
         </TabsContent>
 
-        <TabsContent value="users" className="space-y-6">
+        <TabsContent value="users" className="space-y-8">
           {/* User Metrics */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <MetricCard
-              title="Total Users"
-              value={formatNumber(userAnalytics?.summary.totalUsers || 0)}
-              icon={Users}
-            />
-            <MetricCard
-              title="Active Users"
-              value={formatNumber(userAnalytics?.activity.active_users || 0)}
-              icon={Activity}
-            />
-            <MetricCard
-              title="Users with Portals"
-              value={formatNumber(userAnalytics?.activity.users_with_portals || 0)}
-              icon={BarChart3}
-            />
-            <MetricCard
-              title="Users with Uploads"
-              value={formatNumber(userAnalytics?.activity.users_with_uploads || 0)}
-              icon={Upload}
-            />
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-blue-50 text-blue-600 border-blue-100">
+                  <Users className="w-6 h-6" />
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-slate-900">{formatNumber(userAnalytics?.summary.totalUsers || 0)}</p>
+                  <p className="text-sm text-slate-600">Total Users</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-green-50 text-green-600 border-green-100">
+                  <Activity className="w-6 h-6" />
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-slate-900">{formatNumber(userAnalytics?.activity.active_users || 0)}</p>
+                  <p className="text-sm text-slate-600">Active Users</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-purple-50 text-purple-600 border-purple-100">
+                  <BarChart3 className="w-6 h-6" />
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-slate-900">{formatNumber(userAnalytics?.activity.users_with_portals || 0)}</p>
+                  <p className="text-sm text-slate-600">Users with Portals</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-orange-50 text-orange-600 border-orange-100">
+                  <Upload className="w-6 h-6" />
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-slate-900">{formatNumber(userAnalytics?.activity.users_with_uploads || 0)}</p>
+                  <p className="text-sm text-slate-600">Users with Uploads</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* User Charts */}
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Registration Trends</CardTitle>
-                <CardDescription>New user registrations over time</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AnalyticsChart
-                  data={userAnalytics?.trends.registrations || []}
-                  xKey="period"
-                  yKey="registrations"
-                  type="line"
-                  color="#4F46E5"
-                />
-              </CardContent>
-            </Card>
+          <div className="grid gap-8 md:grid-cols-2">
+            <div className="bg-white rounded-xl p-6 border border-slate-200">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-slate-900">Registration Trends</h3>
+                <Users className="w-5 h-5 text-slate-400" />
+              </div>
+              <AnalyticsChart
+                data={userAnalytics?.trends.registrations || []}
+                xKey="period"
+                yKey="registrations"
+                type="line"
+                color="#4F46E5"
+              />
+            </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Role Distribution</CardTitle>
-                <CardDescription>User roles breakdown</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {userAnalytics?.distribution.roles && userAnalytics.distribution.roles.length > 0 ? (
-                  <div className="space-y-2">
-                    {userAnalytics.distribution.roles.map((role) => (
-                      <div key={role.role} className="flex items-center justify-between">
-                        <span className="capitalize">{role.role}</span>
-                        <Badge variant="secondary">{role.count}</Badge>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                    <div className="text-center">
-                      <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                      <p>No role distribution data available</p>
+            <div className="bg-white rounded-xl p-6 border border-slate-200">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-slate-900">Role Distribution</h3>
+                <BarChart3 className="w-5 h-5 text-slate-400" />
+              </div>
+              {userAnalytics?.distribution.roles && userAnalytics.distribution.roles.length > 0 ? (
+                <div className="space-y-3">
+                  {userAnalytics.distribution.roles.map((role) => (
+                    <div key={role.role} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                      <span className="capitalize font-medium text-slate-900">{role.role}</span>
+                      <Badge variant="secondary" className="bg-slate-200 text-slate-700">{role.count}</Badge>
                     </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center text-slate-500">
+                  <div className="text-center">
+                    <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p>No role distribution data available</p>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Top Users */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Most Active Users</CardTitle>
-              <CardDescription>Users with the most portals and uploads</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {userAnalytics?.topUsers && userAnalytics.topUsers.length > 0 ? (
-                <div className="space-y-4">
-                  {userAnalytics.topUsers.slice(0, 10).map((user) => (
-                    <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium">{user.name || 'Anonymous'}</p>
-                        <p className="text-sm text-muted-foreground">{user.email}</p>
-                      </div>
-                      <div className="flex space-x-4 text-sm">
-                        <span>{user.stats.portals} portals</span>
-                        <span>{user.stats.uploads} uploads</span>
-                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                          {user.role}
-                        </Badge>
-                      </div>
+          <div className="bg-white rounded-xl p-6 border border-slate-200">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-slate-900">Most Active Users</h3>
+              <Users className="w-5 h-5 text-slate-400" />
+            </div>
+            {userAnalytics?.topUsers && userAnalytics.topUsers.length > 0 ? (
+              <div className="space-y-4">
+                {userAnalytics.topUsers.slice(0, 10).map((user) => (
+                  <div key={user.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
+                    <div>
+                      <p className="font-medium text-slate-900">{user.name || 'Anonymous'}</p>
+                      <p className="text-sm text-slate-600">{user.email}</p>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="h-64 flex items-center justify-center text-muted-foreground">
-                  <div className="text-center">
-                    <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                    <p>No user data available</p>
+                    <div className="flex items-center space-x-4 text-sm">
+                      <span className="text-slate-700">{user.stats.portals} portals</span>
+                      <span className="text-slate-700">{user.stats.uploads} uploads</span>
+                      <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className={user.role === 'admin' ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-700'}>
+                        {user.role}
+                      </Badge>
+                    </div>
                   </div>
+                ))}
+              </div>
+            ) : (
+              <div className="h-64 flex items-center justify-center text-slate-500">
+                <div className="text-center">
+                  <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No user data available</p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            )}
+          </div>
         </TabsContent>
 
-        <TabsContent value="uploads" className="space-y-6">
+        <TabsContent value="uploads" className="space-y-8">
           {/* Upload Metrics */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <MetricCard
-              title="Total Uploads"
-              value={formatNumber(uploadAnalytics?.summary.totalUploads || 0)}
-              icon={Upload}
-            />
-            <MetricCard
-              title="Total Size"
-              value={`${uploadAnalytics?.summary.totalSizeGB || 0} GB`}
-              icon={HardDrive}
-            />
-            <MetricCard
-              title="Average Size"
-              value={formatBytes((uploadAnalytics?.summary.averageSize || 0))}
-              icon={BarChart3}
-            />
-            <MetricCard
-              title="Success Rate"
-              value={`${uploadAnalytics?.distribution.status.find(s => s.status === 'completed')?.percentage || 0}%`}
-              icon={TrendingUp}
-            />
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-blue-50 text-blue-600 border-blue-100">
+                  <Upload className="w-6 h-6" />
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-slate-900">{formatNumber(uploadAnalytics?.summary.totalUploads || 0)}</p>
+                  <p className="text-sm text-slate-600">Total Uploads</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-green-50 text-green-600 border-green-100">
+                  <HardDrive className="w-6 h-6" />
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-slate-900">{uploadAnalytics?.summary.totalSizeGB || 0} GB</p>
+                  <p className="text-sm text-slate-600">Total Size</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-purple-50 text-purple-600 border-purple-100">
+                  <BarChart3 className="w-6 h-6" />
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-slate-900">{formatBytes((uploadAnalytics?.summary.averageSize || 0))}</p>
+                  <p className="text-sm text-slate-600">Average Size</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-orange-50 text-orange-600 border-orange-100">
+                  <TrendingUp className="w-6 h-6" />
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-slate-900">{uploadAnalytics?.distribution.status.find(s => s.status === 'completed')?.percentage || 0}%</p>
+                  <p className="text-sm text-slate-600">Success Rate</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Upload Charts */}
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Upload Trends</CardTitle>
-                <CardDescription>File uploads over time</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <AnalyticsChart
-                  data={uploadAnalytics?.trends.uploads || []}
-                  xKey="period"
-                  yKey="uploadCount"
-                  type="bar"
-                  color="#10B981"
-                />
-              </CardContent>
-            </Card>
+          <div className="grid gap-8 md:grid-cols-2">
+            <div className="bg-white rounded-xl p-6 border border-slate-200">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-slate-900">Upload Trends</h3>
+                <Upload className="w-5 h-5 text-slate-400" />
+              </div>
+              <AnalyticsChart
+                data={uploadAnalytics?.trends.uploads || []}
+                xKey="period"
+                yKey="uploadCount"
+                type="bar"
+                color="#10B981"
+              />
+            </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>File Size Distribution</CardTitle>
-                <CardDescription>Distribution of file sizes</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {uploadAnalytics?.distribution.fileSizes && uploadAnalytics.distribution.fileSizes.length > 0 ? (
-                  <div className="space-y-2">
-                    {uploadAnalytics.distribution.fileSizes.map((size) => (
-                      <div key={size.range} className="flex items-center justify-between">
-                        <span>{size.range}</span>
-                        <Badge variant="secondary">{size.count}</Badge>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                    <div className="text-center">
-                      <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                      <p>No file size distribution data available</p>
+            <div className="bg-white rounded-xl p-6 border border-slate-200">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-slate-900">File Size Distribution</h3>
+                <BarChart3 className="w-5 h-5 text-slate-400" />
+              </div>
+              {uploadAnalytics?.distribution.fileSizes && uploadAnalytics.distribution.fileSizes.length > 0 ? (
+                <div className="space-y-3">
+                  {uploadAnalytics.distribution.fileSizes.map((size) => (
+                    <div key={size.range} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                      <span className="font-medium text-slate-900">{size.range}</span>
+                      <Badge variant="secondary" className="bg-slate-200 text-slate-700">{size.count}</Badge>
                     </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center text-slate-500">
+                  <div className="text-center">
+                    <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p>No file size distribution data available</p>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* File Types */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Popular File Types</CardTitle>
-              <CardDescription>Most uploaded file types</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {uploadAnalytics?.distribution.fileTypes && uploadAnalytics.distribution.fileTypes.length > 0 ? (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {uploadAnalytics.distribution.fileTypes.slice(0, 9).map((type) => (
-                    <div key={type.mimeType} className="p-3 border rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">{type.mimeType}</span>
-                        <Badge variant="secondary">{type.percentage}%</Badge>
+          <div className="bg-white rounded-xl p-6 border border-slate-200">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-slate-900">Popular File Types</h3>
+              <Upload className="w-5 h-5 text-slate-400" />
+            </div>
+            {uploadAnalytics?.distribution.fileTypes && uploadAnalytics.distribution.fileTypes.length > 0 ? (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {uploadAnalytics.distribution.fileTypes.slice(0, 9).map((type) => (
+                  <div key={type.mimeType} className="p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-slate-900">{type.mimeType}</span>
+                      <Badge variant="secondary" className="bg-slate-200 text-slate-700">{type.percentage}%</Badge>
+                    </div>
+                    <div className="text-xs text-slate-600">
+                      {type.count} files • {formatBytes(type.totalSize)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="h-64 flex items-center justify-center text-slate-500">
+                <div className="text-center">
+                  <Upload className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No file type data available</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="performance" className="space-y-8">
+          {/* Performance Metrics */}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-blue-50 text-blue-600 border-blue-100">
+                  <Activity className="w-6 h-6" />
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-slate-900">{formatNumber(performanceAnalytics?.summary.totalRequests || 0)}</p>
+                  <p className="text-sm text-slate-600">Total Requests</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-green-50 text-green-600 border-green-100">
+                  <Clock className="w-6 h-6" />
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-slate-900">{performanceAnalytics?.summary.averageResponseTime || 0}ms</p>
+                  <p className="text-sm text-slate-600">Avg Response Time</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-red-50 text-red-600 border-red-100">
+                  <TrendingUp className="w-6 h-6" />
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-slate-900">{performanceAnalytics?.summary.errorRate || 0}%</p>
+                  <p className="text-sm text-slate-600">Error Rate</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-lg bg-orange-50 text-orange-600 border-orange-100">
+                  <BarChart3 className="w-6 h-6" />
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-slate-900">{formatNumber(performanceAnalytics?.summary.errorCount || 0)}</p>
+                  <p className="text-sm text-slate-600">Total Errors</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Performance Charts */}
+          <div className="grid gap-8 md:grid-cols-2">
+            <div className="bg-white rounded-xl p-6 border border-slate-200">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-slate-900">Response Time Distribution</h3>
+                <Clock className="w-5 h-5 text-slate-400" />
+              </div>
+              {performanceAnalytics?.distribution.responseTime && performanceAnalytics.distribution.responseTime.length > 0 ? (
+                <AnalyticsChart
+                  data={performanceAnalytics.distribution.responseTime}
+                  xKey="range"
+                  yKey="count"
+                  type="bar"
+                  color="#8B5CF6"
+                />
+              ) : (
+                <div className="h-[300px] flex items-center justify-center text-slate-500">
+                  <div className="text-center">
+                    <Clock className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p>No response time data available</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border border-slate-200">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-slate-900">Status Code Distribution</h3>
+                <BarChart3 className="w-5 h-5 text-slate-400" />
+              </div>
+              {performanceAnalytics?.distribution.statusCodes && performanceAnalytics.distribution.statusCodes.length > 0 ? (
+                <div className="space-y-3">
+                  {performanceAnalytics.distribution.statusCodes.map((status: any) => (
+                    <div key={status.statusCode} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <Badge variant={status.statusCode >= 400 ? 'destructive' : status.statusCode >= 300 ? 'secondary' : 'default'} 
+                               className={status.statusCode >= 400 ? 'bg-red-100 text-red-700' : status.statusCode >= 300 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}>
+                          {status.statusCode}
+                        </Badge>
+                        <span className="text-sm font-medium text-slate-900">
+                          {status.statusCode >= 500 ? 'Server Error' :
+                           status.statusCode >= 400 ? 'Client Error' :
+                           status.statusCode >= 300 ? 'Redirect' :
+                           status.statusCode >= 200 ? 'Success' : 'Info'}
+                        </span>
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {type.count} files • {formatBytes(type.totalSize)}
+                      <div className="text-right">
+                        <div className="text-sm font-medium text-slate-900">{status.count} requests</div>
+                        <div className="text-xs text-slate-600">{status.averageTime}ms avg</div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="h-64 flex items-center justify-center text-muted-foreground">
+                <div className="h-[300px] flex items-center justify-center text-slate-500">
                   <div className="text-center">
-                    <Upload className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                    <p>No file type data available</p>
+                    <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p>No status code data available</p>
                   </div>
                 </div>
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
+          </div>
 
-        <TabsContent value="performance" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Performance Monitoring</CardTitle>
-              <CardDescription>System performance metrics and monitoring</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-center h-32 text-muted-foreground">
+          {/* Endpoint Performance */}
+          <div className="bg-white rounded-xl p-6 border border-slate-200">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-slate-900">Endpoint Performance</h3>
+              <Activity className="w-5 h-5 text-slate-400" />
+            </div>
+            {performanceAnalytics?.endpoints && performanceAnalytics.endpoints.length > 0 ? (
+              <div className="space-y-4">
+                {performanceAnalytics.endpoints.slice(0, 10).map((endpoint: any, index: number) => (
+                  <div key={`${endpoint.endpoint}-${endpoint.method}`} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <Badge variant="outline" className="text-xs bg-slate-200 text-slate-700">
+                          {endpoint.method}
+                        </Badge>
+                        <p className="text-sm font-medium truncate text-slate-900">{endpoint.endpoint}</p>
+                      </div>
+                      <div className="text-xs text-slate-600">
+                        {endpoint.requestCount} requests
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-slate-900">{endpoint.averageTime}ms</div>
+                      <div className="text-xs text-slate-600">
+                        {endpoint.minTime}ms - {endpoint.maxTime}ms
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="h-64 flex items-center justify-center text-slate-500">
                 <div className="text-center">
-                  <Clock className="h-8 w-8 mx-auto mb-2" />
-                  <p>Performance monitoring will be available soon</p>
+                  <Activity className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>No endpoint performance data available</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </div>
+
+          {/* Recent Errors */}
+          {performanceAnalytics?.errors && performanceAnalytics.errors.length > 0 && (
+            <div className="bg-white rounded-xl p-6 border border-slate-200">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-slate-900">Recent Errors</h3>
+                <AlertTriangle className="w-5 h-5 text-slate-400" />
+              </div>
+              <div className="space-y-4">
+                {performanceAnalytics.errors.slice(0, 5).map((error: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <Badge variant="destructive" className="text-xs bg-red-100 text-red-700">
+                          {error.statusCode}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs bg-slate-200 text-slate-700">
+                          {error.method}
+                        </Badge>
+                        <p className="text-sm font-medium truncate text-slate-900">{error.endpoint}</p>
+                      </div>
+                      {error.errorMessage && (
+                        <div className="text-xs text-red-600 truncate">
+                          {error.errorMessage}
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-slate-900">{error.responseTime}ms</div>
+                      <div className="text-xs text-slate-600">
+                        {new Date(error.recordedAt).toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>

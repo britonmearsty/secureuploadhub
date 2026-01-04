@@ -61,6 +61,7 @@ export default function AnalyticsDebugPage() {
       ['/api/admin/analytics/dashboard?period=30d&timezone=UTC', 'Dashboard'],
       ['/api/admin/analytics/users?period=30d&groupBy=day', 'Users'],
       ['/api/admin/analytics/uploads?period=30d&groupBy=day', 'Uploads'],
+      ['/api/admin/analytics/performance-test', 'Performance Test'],
       ['/api/admin/analytics/performance-simple?period=24h', 'Performance Simple'],
       ['/api/admin/analytics/performance?period=24h', 'Performance'],
       ['/api/admin/analytics?days=30', 'Main Analytics'],

@@ -162,9 +162,10 @@ export function AnalyticsChart({
             formatter={formatTooltip || defaultFormatTooltip}
             labelFormatter={formatXAxis || defaultFormatXAxis}
             contentStyle={{
-              backgroundColor: 'hsl(var(--background))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '6px',
+              backgroundColor: 'white',
+              border: '1px solid #e2e8f0',
+              borderRadius: '8px',
+              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
             }}
           />
           <Bar dataKey={yKey} fill={color} radius={[2, 2, 0, 0]} />
@@ -190,9 +191,10 @@ export function AnalyticsChart({
           formatter={formatTooltip || defaultFormatTooltip}
           labelFormatter={formatXAxis || defaultFormatXAxis}
           contentStyle={{
-            backgroundColor: 'hsl(var(--background))',
-            border: '1px solid hsl(var(--border))',
-            borderRadius: '6px',
+            backgroundColor: 'white',
+            border: '1px solid #e2e8f0',
+            borderRadius: '8px',
+            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
           }}
         />
         <Line 
