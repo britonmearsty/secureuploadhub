@@ -173,14 +173,16 @@ export default function CreatePortalPage() {
 
   // Auto-initialize storage when accounts are loaded
   useEffect(() => {
-    if (!loadingAccounts && accounts.length > 0 && !formData.storageProvider) {
-      // Auto-select the first available storage provider
-      const firstAccount = accounts[0]
-      if (firstAccount) {
-        selectStorageProvider(firstAccount.provider as "google_drive" | "dropbox")
+    if (!loadingAccounts && accounts.length > 0) {
+      // Always auto-select storage if not already set or if no folders are loaded
+      if (!formData.storageProvider || (!loadingFolders && folders.length === 0 && folderPath.length === 0)) {
+        const firstAccount = accounts[0]
+        if (firstAccount) {
+          selectStorageProvider(firstAccount.provider as "google_drive" | "dropbox")
+        }
       }
     }
-  }, [loadingAccounts, accounts, formData.storageProvider])
+  }, [loadingAccounts, accounts, formData.storageProvider, folders.length, folderPath.length])
 
   // Close dropdown on outside click
   useEffect(() => {

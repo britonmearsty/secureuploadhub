@@ -206,11 +206,16 @@ export default function EditPortalPage() {
 
   // Auto-initialize storage when accounts are loaded and no storage is set
   useEffect(() => {
-    if (accounts.length > 0 && formData.storageProvider && !formData.storageFolderId) {
-      // Auto-initialize storage if provider is set but no folder
-      selectStorageProvider(formData.storageProvider)
+    if (accounts.length > 0) {
+      // Always try to initialize storage if no folders are showing or storage is not properly set
+      if (!formData.storageFolderId || (!loadingFolders && folders.length === 0 && folderPath.length === 0)) {
+        const storageProvider = formData.storageProvider || (accounts[0]?.provider === "google" ? "google_drive" : "dropbox")
+        if (storageProvider) {
+          selectStorageProvider(storageProvider)
+        }
+      }
     }
-  }, [accounts, formData.storageProvider, formData.storageFolderId])
+  }, [accounts, formData.storageProvider, formData.storageFolderId, folders.length, folderPath.length])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
