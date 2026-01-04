@@ -1215,13 +1215,12 @@ export default function EditPortalPage() {
                         </div>
 
                         <div className="pt-6 border-t border-slate-100 dark:border-slate-700 flex justify-between gap-3">
-                          <button
-                            type="button"
-                            onClick={() => setActiveTab('Access & Security')}
+                          <Link
+                            href="/dashboard"
                             className="px-6 py-3 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all font-bold text-sm"
                           >
-                            ← Previous
-                          </button>
+                            ← Dashboard
+                          </Link>
                           <button
                             type="submit"
                             disabled={saving}

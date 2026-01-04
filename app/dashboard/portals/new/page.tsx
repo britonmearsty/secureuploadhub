@@ -1060,33 +1060,24 @@ export default function CreatePortalPage() {
                           </div>
                         </div>
 
-                        <div className="pt-6 border-t border-slate-100 dark:border-slate-700 flex justify-between gap-3">
-                          <button
-                            type="button"
-                            onClick={() => setActiveTab('Security')}
+                        <div className="pt-6 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-3">
+                          <Link
+                            href="/dashboard"
                             className="px-6 py-3 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all font-bold text-sm"
                           >
-                            ← Previous
+                            Cancel
+                          </Link>
+                          <button
+                            type="submit"
+                            disabled={loading}
+                            className="flex items-center gap-2 px-8 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-md active:scale-95 disabled:opacity-50 font-bold text-sm"
+                          >
+                            {loading ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <>Create Portal <ChevronRight className="w-4 h-4" /></>
+                            )}
                           </button>
-                          <div className="flex gap-3">
-                            <Link
-                              href="/dashboard"
-                              className="px-6 py-3 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all font-bold text-sm"
-                            >
-                              Cancel
-                            </Link>
-                            <button
-                              type="submit"
-                              disabled={loading}
-                              className="flex items-center gap-2 px-8 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-md active:scale-95 disabled:opacity-50 font-bold text-sm"
-                            >
-                              {loading ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <>Create Portal <ChevronRight className="w-4 h-4" /></>
-                              )}
-                            </button>
-                          </div>
                         </div>
                       </div>
                     )}
