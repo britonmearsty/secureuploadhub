@@ -119,6 +119,20 @@ export async function POST(request: NextRequest) {
     const safeFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, "_")
     const uniqueFileName = `${timestamp}-${safeFileName}`
 
+    // Determine folder path (optionally organize by client name)
+    let targetFolderPath: string | undefined = undefined
+
+    if (chunkedUpload.portal.useClientFolders && chunkedUpload.clientName) {
+      // Create a unique folder name with client name and timestamp
+      const now = new Date()
+      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '') // YYYYMMDD
+      const timeStr = now.toTimeString().slice(0, 8).replace(/:/g, '') // HHMMSS
+      const sanitizedClientName = chunkedUpload.clientName.replace(/[^a-zA-Z0-9\s-]/g, "_").trim()
+      
+      // Format: "ClientName_YYYYMMDD_HHMMSS" for uniqueness
+      targetFolderPath = `${sanitizedClientName}_${dateStr}_${timeStr}`
+    }
+
     // Upload to cloud storage
     const storageProvider = chunkedUpload.portal.storageProvider as StorageProvider
     const result = await uploadToCloudStorage(
@@ -128,7 +142,7 @@ export async function POST(request: NextRequest) {
       uniqueFileName,
       mimeType,
       chunkedUpload.portal.storageFolderId || undefined,
-      chunkedUpload.portal.storageFolderPath || undefined
+      targetFolderPath
     )
 
     if (!result.success) {

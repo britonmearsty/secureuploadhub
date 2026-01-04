@@ -76,21 +76,21 @@ const FolderNode: React.FC<FolderNodeProps> = ({ folder, navigateToFolder, expan
 
   return (
     <div className="pl-4">
-      <div className="flex items-center justify-between py-2 hover:bg-slate-50 transition-colors group rounded-lg pr-2">
+      <div className="flex items-center justify-between py-2 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors group rounded-lg pr-2">
         <button
           type="button"
           onClick={() => navigateToFolder(folder)}
           className="flex items-center gap-2 text-left flex-1"
         >
           <FolderOpen className="w-4 h-4 text-amber-500 flex-shrink-0" />
-          <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900 truncate">{folder.name}</span>
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-slate-100 truncate">{folder.name}</span>
         </button>
 
         {subfolders.length > 0 && (
           <button
             type="button"
             onClick={() => toggleFolder(folder.id)}
-            className="p-1 hover:bg-slate-200 rounded-md transition-colors"
+            className="p-1 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-md transition-colors"
           >
             <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
           </button>
@@ -98,7 +98,7 @@ const FolderNode: React.FC<FolderNodeProps> = ({ folder, navigateToFolder, expan
       </div>
 
       {isExpanded && subfolders.length > 0 && (
-        <div className="pl-4 border-l border-slate-100 ml-2">
+        <div className="pl-4 border-l border-slate-100 dark:border-slate-700 ml-2">
           {subfolders.map((sub) => (
             <FolderNode
               key={sub.id}
@@ -198,8 +198,19 @@ export default function EditPortalPage() {
 
   useEffect(() => {
     fetchPortal()
-    fetchAccounts()
   }, [portalId])
+
+  useEffect(() => {
+    fetchAccounts()
+  }, [])
+
+  // Auto-initialize storage when accounts are loaded and no storage is set
+  useEffect(() => {
+    if (accounts.length > 0 && formData.storageProvider && !formData.storageFolderId) {
+      // Auto-initialize storage if provider is set but no folder
+      selectStorageProvider(formData.storageProvider)
+    }
+  }, [accounts, formData.storageProvider, formData.storageFolderId])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -210,6 +221,18 @@ export default function EditPortalPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  async function fetchAccounts() {
+    try {
+      const res = await fetch("/api/storage/accounts")
+      if (res.ok) {
+        const data = await res.json()
+        setAccounts(data.filter((a: ConnectedAccount) => a.isConnected))
+      }
+    } catch (error) {
+      console.error("Error fetching accounts:", error)
+    }
+  }
 
 
   async function fetchPortal() {
@@ -243,7 +266,13 @@ export default function EditPortalPage() {
         })
         setHasPassword(!!data.passwordHash)
 
-        await fetchFolders(data.storageProvider, data.storageFolderId)
+        // Initialize storage if not already set
+        if (data.storageProvider && data.storageFolderId) {
+          await fetchFolders(data.storageProvider, data.storageFolderId)
+        } else if (data.storageProvider) {
+          // Auto-initialize storage if provider is set but no folder
+          await selectStorageProvider(data.storageProvider)
+        }
       } else {
         setError("Portal not found")
       }
@@ -254,47 +283,7 @@ export default function EditPortalPage() {
     }
   }
 
-  async function fetchAccounts() {
-    try {
-      const res = await fetch("/api/storage/accounts")
-      if (res.ok) {
-        const data = await res.json()
-        setAccounts(data.filter((a: ConnectedAccount) => a.isConnected))
-      }
-    } catch (error) {
-      console.error("Error fetching accounts:", error)
-    }
-  }
 
-  async function selectStorageProvider(provider: "google_drive" | "dropbox") {
-    setFormData(prev => ({
-      ...prev,
-      storageProvider: provider,
-      storageFolderId: "",
-      storageFolderPath: "",
-    }))
-    setFolders([])
-    setFolderPath([])
-    setLoadingFolders(true)
-
-    try {
-      const rootRes = await fetch(`/api/storage/folders?provider=${provider}&rootOnly=true`)
-      if (rootRes.ok) {
-        const rootFolder = await rootRes.json()
-        setFolderPath([rootFolder])
-        setFormData(prev => ({
-          ...prev,
-          storageFolderId: rootFolder.id,
-          storageFolderPath: rootFolder.path
-        }))
-        await fetchFolders(provider, rootFolder.id)
-      }
-    } catch (error) {
-      console.error("Error initializing storage:", error)
-    } finally {
-      setLoadingFolders(false)
-    }
-  }
 
   async function handleCreateFolder() {
     if (!newFolderName.trim() || !formData.storageProvider) return
@@ -366,6 +355,45 @@ export default function EditPortalPage() {
       storageFolderPath: newPath.map(f => f.name).join('/'),
     }))
     fetchFolders(formData.storageProvider, folder.id)
+  }
+
+  async function selectStorageProvider(provider: "google_drive" | "dropbox") {
+    setFormData(prev => ({
+      ...prev,
+      storageProvider: provider,
+      storageFolderId: "",
+      storageFolderPath: "",
+    }))
+    setFolders([])
+    setFolderPath([])
+    setLoadingFolders(true)
+
+    try {
+      // 1. Get/Create the SecureUploadHub root
+      const rootRes = await fetch(`/api/storage/folders?provider=${provider}&rootOnly=true`)
+      if (rootRes.ok) {
+        const rootFolder = await rootRes.json()
+        // Check if rootFolder exists and has an id
+        if (rootFolder && rootFolder.id) {
+          setFolderPath([rootFolder])
+          setFormData(prev => ({
+            ...prev,
+            storageFolderId: rootFolder.id,
+            storageFolderPath: rootFolder.path
+          }))
+          // 2. Fetch children of this root
+          await fetchFolders(provider, rootFolder.id)
+        } else {
+          console.error("Root folder not found or invalid:", rootFolder)
+        }
+      } else {
+        console.error("Failed to fetch root folder:", await rootRes.text())
+      }
+    } catch (error) {
+      console.error("Error initializing storage:", error)
+    } finally {
+      setLoadingFolders(false)
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -727,24 +755,24 @@ export default function EditPortalPage() {
                                 disabled={provider.disabled}
                                 onClick={() => selectStorageProvider(provider.id as any)}
                                 className={`relative p-5 rounded-2xl border-2 transition-all flex flex-col items-center gap-3 ${isActive
-                                  ? "border-slate-900 bg-slate-50"
-                                  : "border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50"
+                                  ? "border-slate-900 bg-slate-50 dark:bg-slate-800 dark:border-slate-700"
+                                  : "border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-200 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700"
                                   } ${provider.disabled ? "opacity-40 grayscale cursor-not-allowed" : ""}`}
                               >
-                                <div className={`p-3 rounded-xl ${isActive ? "bg-slate-900 text-white shadow-md" : "bg-slate-100 text-slate-400"}`}>
+                                <div className={`p-3 rounded-xl ${isActive ? "bg-slate-900 text-white shadow-md" : "bg-slate-100 dark:bg-slate-700 text-slate-400"}`}>
                                   <Icon className="w-6 h-6" />
                                 </div>
-                                <span className="font-bold text-sm text-slate-900">{provider.name}</span>
+                                <span className="font-bold text-sm text-slate-900 dark:text-slate-100">{provider.name}</span>
                                 {isActive && (
-                                  <CheckCircle2 className="absolute top-3 right-3 w-5 h-5 text-slate-900" />
+                                  <CheckCircle2 className="absolute top-3 right-3 w-5 h-5 text-slate-900 dark:text-slate-100" />
                                 )}
                               </button>
                             );
                           })}
                         </div>
 
-                        <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden">
-                          <div className="px-5 py-4 border-b border-slate-200 bg-slate-100/50 flex flex-col gap-3">
+                        <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden">
+                          <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-800/50 flex flex-col gap-3">
                             <div className="flex items-center justify-between">
                               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Navigation Tree</span>
                               <button
@@ -753,7 +781,7 @@ export default function EditPortalPage() {
                                   setIsCreatingFolder(true)
                                   setNewFolderName(formData.name || "New Portal Folder")
                                 }}
-                                className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded-lg text-[10px] font-bold uppercase tracking-wider text-slate-600 hover:text-slate-900 hover:border-slate-300 transition-all shadow-sm"
+                                className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-sm"
                               >
                                 <FolderOpen className="w-3 h-3 text-amber-500" />
                                 New Folder
@@ -765,7 +793,7 @@ export default function EditPortalPage() {
                               <button
                                 type="button"
                                 onClick={() => selectStorageProvider(formData.storageProvider)}
-                                className="p-1.5 hover:bg-white rounded-md transition-colors"
+                                className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-md transition-colors"
                               >
                                 <Cloud className="w-3.5 h-3.5 text-slate-400" />
                               </button>
@@ -777,7 +805,7 @@ export default function EditPortalPage() {
                                     onClick={() => navigateToBreadcrumb(idx)}
                                     className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all ${idx === folderPath.length - 1
                                       ? "bg-slate-900 text-white"
-                                      : "text-slate-500 hover:bg-white hover:text-slate-900"
+                                      : "text-slate-500 hover:bg-white dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100"
                                       }`}
                                   >
                                     {folder.name}
@@ -794,12 +822,12 @@ export default function EditPortalPage() {
                                   initial={{ opacity: 0, y: -10 }}
                                   animate={{ opacity: 1, y: 0 }}
                                   exit={{ opacity: 0, y: -10 }}
-                                  className="absolute inset-x-0 top-0 z-10 p-4 bg-white border-b border-slate-100 shadow-xl"
+                                  className="absolute inset-x-0 top-0 z-10 p-4 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 shadow-xl"
                                 >
                                   <div className="flex flex-col gap-3">
                                     <div className="flex items-center justify-between">
                                       <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Creation Module</h4>
-                                      <button onClick={() => setIsCreatingFolder(false)} className="text-slate-400 hover:text-slate-600">
+                                      <button onClick={() => setIsCreatingFolder(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
                                         <ArrowLeft className="w-3.5 h-3.5 rotate-90" />
                                       </button>
                                     </div>
@@ -809,7 +837,7 @@ export default function EditPortalPage() {
                                         value={newFolderName}
                                         onChange={(e) => setNewFolderName(e.target.value)}
                                         placeholder="Enter folder identifier..."
-                                        className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-slate-900 outline-none"
+                                        className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 outline-none text-slate-900 dark:text-slate-100"
                                         onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
                                       />
                                       <button
@@ -825,7 +853,7 @@ export default function EditPortalPage() {
                               )}
                             </AnimatePresence>
 
-                            <div className="max-h-72 overflow-y-auto p-2 bg-white">
+                            <div className="max-h-72 overflow-y-auto p-2 bg-white dark:bg-slate-800">
                               {loadingFolders ? (
                                 <div className="py-12 flex flex-col items-center justify-center gap-3">
                                   <Loader2 className="w-6 h-6 animate-spin text-slate-200" />
@@ -833,7 +861,7 @@ export default function EditPortalPage() {
                                 </div>
                               ) : folders.length === 0 ? (
                                 <div className="py-12 flex flex-col items-center justify-center gap-2">
-                                  <div className="p-3 bg-slate-50 rounded-full">
+                                  <div className="p-3 bg-slate-50 dark:bg-slate-700 rounded-full">
                                     <FolderOpen className="w-5 h-5 text-slate-200" />
                                   </div>
                                   <p className="text-xs font-bold text-slate-400 uppercase tracking-widest italic">Sector is empty</p>
@@ -854,7 +882,7 @@ export default function EditPortalPage() {
                             </div>
                           </div>
 
-                          <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/50">
+                          <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
                             <label className="flex items-center gap-3 cursor-pointer group">
                               <div className="relative flex items-center">
                                 <input
@@ -863,11 +891,11 @@ export default function EditPortalPage() {
                                   onChange={(e) => setFormData({ ...formData, useClientFolders: e.target.checked })}
                                   className="peer sr-only"
                                 />
-                                <div className="w-10 h-5 bg-slate-200 rounded-full peer peer-checked:bg-slate-900 transition-colors" />
+                                <div className="w-10 h-5 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:bg-slate-900 dark:peer-checked:bg-slate-400 transition-colors" />
                                 <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full peer-checked:translate-x-5 transition-transform" />
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider group-hover:text-slate-900 transition-colors">Client Isolation Mode</span>
+                                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider group-hover:text-slate-900 dark:group-hover:text-slate-100 transition-colors">Client Isolation Mode</span>
                                 <span className="text-[9px] text-slate-400 font-medium">Automatic sub-directory generation for each transmission</span>
                               </div>
                             </label>
@@ -890,7 +918,7 @@ export default function EditPortalPage() {
                       <div className="space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
-                            <label className="block text-sm font-semibold text-slate-700 mb-2">Max Payload (MB)</label>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Max Payload (MB)</label>
                             <div className="relative">
                               <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                               <input
@@ -898,7 +926,7 @@ export default function EditPortalPage() {
                                 value={formData.maxFileSize}
                                 onChange={(e) => setFormData({ ...formData, maxFileSize: e.target.value === '' ? '' : parseInt(e.target.value) })}
                                 placeholder="e.g. 200"
-                                className={`w-full pl-10 pr-4 py-3 bg-white border rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-semibold text-slate-900 ${!formData.maxFileSize ? 'border-amber-300' : 'border-slate-200'}`}
+                                className={`w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border rounded-xl focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-semibold text-slate-900 dark:text-slate-100 ${!formData.maxFileSize ? 'border-amber-300 dark:border-amber-600' : 'border-slate-200 dark:border-slate-700'}`}
                               />
                             </div>
                             {!formData.maxFileSize && (
@@ -909,7 +937,7 @@ export default function EditPortalPage() {
                             )}
                           </div>
                           <div>
-                            <label className="block text-sm font-semibold text-slate-700 mb-2">Access Passkey</label>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Access Passkey</label>
                             <div className="relative">
                               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                               <input
@@ -917,7 +945,7 @@ export default function EditPortalPage() {
                                 value={formData.newPassword}
                                 onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
                                 placeholder={hasPassword ? "Change existing key..." : "Set new key..."}
-                                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-semibold text-slate-900"
+                                className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-semibold text-slate-900 dark:text-slate-100"
                               />
                             </div>
                           </div>
@@ -936,7 +964,7 @@ export default function EditPortalPage() {
                                 onClick={() => setFormData(prev => ({ ...prev, [req.key]: !prev[req.key as keyof typeof prev] }))}
                                 className={`flex-1 px-4 py-3 rounded-xl border font-bold text-sm transition-all ${formData[req.key as keyof typeof formData]
                                   ? "border-slate-900 bg-slate-900 text-white shadow-md"
-                                  : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+                                  : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600"
                                   }`}
                               >
                                 {req.label}
@@ -946,14 +974,14 @@ export default function EditPortalPage() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">
+                          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                             Allowed File Types
                           </label>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                             {FILE_TYPE_OPTIONS.map((opt) => {
                               const isSelected = formData.allowedFileTypes.includes(opt.value);
                               return (
-                                <label key={opt.value} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white cursor-pointer transition-colors">
+                                <label key={opt.value} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white dark:hover:bg-slate-700 cursor-pointer transition-colors">
                                   <input
                                     type="checkbox"
                                     checked={isSelected}
@@ -967,7 +995,7 @@ export default function EditPortalPage() {
                                     }
                                     className="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                                   />
-                                  <span className={`text-sm font-medium ${isSelected ? "text-slate-900" : "text-slate-500"}`}>
+                                  <span className={`text-sm font-medium ${isSelected ? "text-slate-900 dark:text-slate-100" : "text-slate-500 dark:text-slate-400"}`}>
                                     {opt.label.split(' (')[0]}
                                   </span>
                                 </label>
@@ -997,33 +1025,33 @@ export default function EditPortalPage() {
                     {activeTab === 'Messages' && (
                       <div className="space-y-8">
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">Welcome Note</label>
+                          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Welcome Note</label>
                           <textarea
                             value={formData.welcomeMessage}
                             onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
                             placeholder="Welcome! Please submit your assets for processing."
                             rows={3}
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium text-slate-900 placeholder:text-slate-400 resize-none"
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none"
                           />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
-                            <label className="block text-sm font-semibold text-slate-700 mb-2">Button Label</label>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Button Label</label>
                             <input
                               type="text"
                               value={formData.submitButtonText}
                               onChange={(e) => setFormData({ ...formData, submitButtonText: e.target.value })}
-                              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-semibold text-slate-900"
+                              className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-semibold text-slate-900 dark:text-slate-100"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-semibold text-slate-700 mb-2">Success Note</label>
+                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Success Note</label>
                             <input
                               type="text"
                               value={formData.successMessage}
                               onChange={(e) => setFormData({ ...formData, successMessage: e.target.value })}
-                              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 transition-all outline-none font-semibold text-slate-900"
+                              className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-semibold text-slate-900 dark:text-slate-100"
                             />
                           </div>
                         </div>
@@ -1042,7 +1070,7 @@ export default function EditPortalPage() {
                           </div>
                         </div>
 
-                        <div className="pt-6 border-t border-slate-100 flex justify-end gap-3">
+                        <div className="pt-6 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-3">
                           <button
                             type="submit"
                             disabled={saving}

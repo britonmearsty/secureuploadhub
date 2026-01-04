@@ -154,8 +154,14 @@ export async function POST(request: NextRequest) {
     let targetFolderPath: string | undefined = undefined
 
     if (portal.useClientFolders && clientName) {
-      const shortTimestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '') // e.g. 20260101
-      targetFolderPath = `${clientName.replace(/[^a-zA-Z0-9\s-]/g, "_")} (${shortTimestamp})`
+      // Create a unique folder name with client name and timestamp
+      const now = new Date()
+      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '') // YYYYMMDD
+      const timeStr = now.toTimeString().slice(0, 8).replace(/:/g, '') // HHMMSS
+      const sanitizedClientName = clientName.replace(/[^a-zA-Z0-9\s-]/g, "_").trim()
+      
+      // Format: "ClientName_YYYYMMDD_HHMMSS" for uniqueness
+      targetFolderPath = `${sanitizedClientName}_${dateStr}_${timeStr}`
     }
 
     // Upload to cloud storage
