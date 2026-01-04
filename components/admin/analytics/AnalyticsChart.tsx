@@ -64,11 +64,23 @@ export function AnalyticsChart({
   }, [data, xKey, formatXAxis]);
 
   const defaultFormatXAxis = (value: any) => {
-    if (typeof value === 'string' && value.includes('T')) {
-      try {
-        return format(parseISO(value), 'MMM dd');
-      } catch {
-        return value;
+    if (typeof value === 'string') {
+      // Handle YYYY-MM-DD format
+      if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        try {
+          const date = new Date(value + 'T00:00:00');
+          return format(date, 'MMM dd');
+        } catch {
+          return value;
+        }
+      }
+      // Handle ISO date strings
+      if (value.includes('T')) {
+        try {
+          return format(parseISO(value), 'MMM dd');
+        } catch {
+          return value;
+        }
       }
     }
     return value;
@@ -91,12 +103,24 @@ export function AnalyticsChart({
     return [formattedValue, name || ''];
   };
 
-  // Handle empty data
-  if (!formattedData || formattedData.length === 0) {
-    return null; // Let parent component handle empty state
-  }
+  // Handle empty data - show empty chart instead of null
+  const chartData = formattedData && formattedData.length > 0 ? formattedData : [{ [xKey]: 'No data', [yKey]: 0 }];
 
   if (type === 'pie') {
+    // For pie charts, don't show anything if no real data
+    if (!formattedData || formattedData.length === 0) {
+      return (
+        <ResponsiveContainer width="100%" height={height}>
+          <div className="flex items-center justify-center h-full text-muted-foreground">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-2 rounded-full border-2 border-dashed border-muted-foreground/30"></div>
+              <p className="text-sm">No data to display</p>
+            </div>
+          </div>
+        </ResponsiveContainer>
+      );
+    }
+
     return (
       <ResponsiveContainer width="100%" height={height}>
         <PieChart>
@@ -123,7 +147,7 @@ export function AnalyticsChart({
   if (type === 'bar') {
     return (
       <ResponsiveContainer width="100%" height={height}>
-        <BarChart data={formattedData}>
+        <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
           <XAxis 
             dataKey={xKey} 
@@ -151,7 +175,7 @@ export function AnalyticsChart({
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <LineChart data={formattedData}>
+      <LineChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
         <XAxis 
           dataKey={xKey} 

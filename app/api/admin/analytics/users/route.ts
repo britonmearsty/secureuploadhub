@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
         break;
     }
 
-    // Initialize default response
+    // Initialize default response with empty arrays
     let userAnalytics = {
       summary: {
         totalUsers: 0,
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
         groupBy,
       },
       trends: {
-        registrations: [] as any[],
+        registrations: [] as Array<{ period: string; registrations: number }>,
       },
       distribution: {
         roles: [] as Array<{ role: string; count: number }>,
@@ -76,6 +76,46 @@ export async function GET(request: NextRequest) {
       }>,
       generatedAt: new Date().toISOString(),
     };
+
+    // Generate date range for trends (always show some data points)
+    const generateDateRange = (start: Date, end: Date, groupBy: string) => {
+      const dates: Date[] = [];
+      const current = new Date(start);
+      const endDate = new Date(end);
+      
+      if (groupBy === 'day') {
+        current.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        while (current <= endDate) {
+          dates.push(new Date(current));
+          current.setDate(current.getDate() + 1);
+        }
+      } else if (groupBy === 'week') {
+        // Start from beginning of week
+        current.setDate(current.getDate() - current.getDay());
+        current.setHours(0, 0, 0, 0);
+        while (current <= endDate) {
+          dates.push(new Date(current));
+          current.setDate(current.getDate() + 7);
+        }
+      } else { // month
+        current.setDate(1);
+        current.setHours(0, 0, 0, 0);
+        while (current <= endDate) {
+          dates.push(new Date(current));
+          current.setMonth(current.getMonth() + 1);
+        }
+      }
+      return dates;
+    };
+
+    const dateRange = generateDateRange(startDate, now, groupBy);
+    
+    // Initialize trends with empty data
+    userAnalytics.trends.registrations = dateRange.map(date => ({
+      period: date.toISOString().split('T')[0],
+      registrations: 0
+    }));
 
     try {
       // Get basic user statistics

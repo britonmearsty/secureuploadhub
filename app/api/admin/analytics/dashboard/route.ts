@@ -231,7 +231,19 @@ export async function GET(request: NextRequest) {
         return date.toISOString().split('T')[0];
       };
 
-      // Try to get trends
+      // Initialize trends with empty data for all dates
+      dashboardData.trends.userGrowth = allDates.map(date => ({
+        date: formatDate(date),
+        count: 0
+      }));
+
+      dashboardData.trends.uploadTrends = allDates.map(date => ({
+        date: formatDate(date),
+        count: 0,
+        total_size: 0
+      }));
+
+      // Try to get trends and merge with initialized data
       try {
         const userGrowth = await prisma.$queryRaw<Array<{ date: Date; count: number }>>`
           SELECT 
@@ -248,18 +260,14 @@ export async function GET(request: NextRequest) {
           userGrowth.map(item => [formatDate(item.date), item.count])
         );
 
-        // Fill in all dates with actual data or 0
-        dashboardData.trends.userGrowth = allDates.map(date => ({
-          date: formatDate(date),
-          count: userGrowthMap.get(formatDate(date)) || 0
+        // Update initialized data with actual values
+        dashboardData.trends.userGrowth = dashboardData.trends.userGrowth.map(item => ({
+          ...item,
+          count: userGrowthMap.get(item.date) || 0
         }));
       } catch (userGrowthError) {
         console.log('User growth trend not available:', userGrowthError);
-        // Fill with zeros if query fails
-        dashboardData.trends.userGrowth = allDates.map(date => ({
-          date: formatDate(date),
-          count: 0
-        }));
+        // Keep initialized empty data
       }
 
       try {
@@ -285,23 +293,18 @@ export async function GET(request: NextRequest) {
           ])
         );
 
-        // Fill in all dates with actual data or 0
-        dashboardData.trends.uploadTrends = allDates.map(date => {
-          const data = uploadTrendsMap.get(formatDate(date));
+        // Update initialized data with actual values
+        dashboardData.trends.uploadTrends = dashboardData.trends.uploadTrends.map(item => {
+          const data = uploadTrendsMap.get(item.date);
           return {
-            date: formatDate(date),
+            ...item,
             count: data?.count || 0,
             total_size: data?.total_size || 0
           };
         });
       } catch (uploadTrendsError) {
         console.log('Upload trends not available:', uploadTrendsError);
-        // Fill with zeros if query fails
-        dashboardData.trends.uploadTrends = allDates.map(date => ({
-          date: formatDate(date),
-          count: 0,
-          total_size: 0
-        }));
+        // Keep initialized empty data
       }
 
     } catch (error) {

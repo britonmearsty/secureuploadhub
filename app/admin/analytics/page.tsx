@@ -15,7 +15,6 @@ import {
   Activity,
   TrendingUp,
   Clock,
-  AlertTriangle,
   Download,
   RefreshCw
 } from 'lucide-react';
@@ -24,6 +23,26 @@ import { AnalyticsChart } from '@/components/admin/analytics/AnalyticsChart';
 import { MetricCard } from '@/components/admin/analytics/MetricCard';
 import { RecentActivity } from '@/components/admin/analytics/RecentActivity';
 import { TopPortals } from '@/components/admin/analytics/TopPortals';
+
+// Helper function to format bytes if not available in utils
+const formatBytesLocal = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+// Helper function to format numbers if not available in utils
+const formatNumberLocal = (num: number): string => {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1) + 'M';
+  }
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'K';
+  }
+  return num.toString();
+};
 
 interface DashboardData {
   overview: {
@@ -163,7 +182,27 @@ function AnalyticsPageContent() {
         setDashboardData(data);
       } else {
         console.error('Failed to fetch dashboard data:', dashboardRes.status);
-        setDashboardData(null);
+        // Set default empty data structure
+        setDashboardData({
+          overview: {
+            totalUsers: 0,
+            totalPortals: 0,
+            totalUploads: 0,
+            totalStorageGB: 0,
+            activeUsers: 0,
+            newUsers: 0,
+            newPortals: 0,
+            newUploads: 0,
+          },
+          recentActivity: { uploads: [] },
+          topPortals: [],
+          trends: {
+            userGrowth: [],
+            uploadTrends: [],
+          },
+          period,
+          generatedAt: new Date().toISOString(),
+        });
       }
 
       if (usersRes.ok) {
@@ -171,7 +210,19 @@ function AnalyticsPageContent() {
         setUserAnalytics(data);
       } else {
         console.error('Failed to fetch user analytics:', usersRes.status);
-        setUserAnalytics(null);
+        // Set default empty data structure
+        setUserAnalytics({
+          summary: { totalUsers: 0, period, groupBy: 'day' },
+          trends: { registrations: [] },
+          distribution: { roles: [], status: [] },
+          activity: {
+            total_users: 0,
+            active_users: 0,
+            users_with_portals: 0,
+            users_with_uploads: 0,
+          },
+          topUsers: [],
+        });
       }
 
       if (uploadsRes.ok) {
@@ -179,13 +230,79 @@ function AnalyticsPageContent() {
         setUploadAnalytics(data);
       } else {
         console.error('Failed to fetch upload analytics:', uploadsRes.status);
-        setUploadAnalytics(null);
+        // Set default empty data structure
+        setUploadAnalytics({
+          summary: {
+            totalUploads: 0,
+            totalSize: 0,
+            totalSizeGB: 0,
+            averageSize: 0,
+            period,
+            groupBy: 'day',
+          },
+          trends: { uploads: [] },
+          distribution: {
+            fileTypes: [],
+            fileSizes: [],
+            status: [],
+          },
+          topPortals: [],
+        });
       }
     } catch (error) {
       console.error('Failed to fetch analytics:', error);
-      setDashboardData(null);
-      setUserAnalytics(null);
-      setUploadAnalytics(null);
+      // Set default empty data structures for all
+      setDashboardData({
+        overview: {
+          totalUsers: 0,
+          totalPortals: 0,
+          totalUploads: 0,
+          totalStorageGB: 0,
+          activeUsers: 0,
+          newUsers: 0,
+          newPortals: 0,
+          newUploads: 0,
+        },
+        recentActivity: { uploads: [] },
+        topPortals: [],
+        trends: {
+          userGrowth: [],
+          uploadTrends: [],
+        },
+        period,
+        generatedAt: new Date().toISOString(),
+      });
+      
+      setUserAnalytics({
+        summary: { totalUsers: 0, period, groupBy: 'day' },
+        trends: { registrations: [] },
+        distribution: { roles: [], status: [] },
+        activity: {
+          total_users: 0,
+          active_users: 0,
+          users_with_portals: 0,
+          users_with_uploads: 0,
+        },
+        topUsers: [],
+      });
+      
+      setUploadAnalytics({
+        summary: {
+          totalUploads: 0,
+          totalSize: 0,
+          totalSizeGB: 0,
+          averageSize: 0,
+          period,
+          groupBy: 'day',
+        },
+        trends: { uploads: [] },
+        distribution: {
+          fileTypes: [],
+          fileSizes: [],
+          status: [],
+        },
+        topPortals: [],
+      });
     } finally {
       setLoading(false);
     }
@@ -271,384 +388,288 @@ function AnalyticsPageContent() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          {dashboardData ? (
-            <>
-              {/* Overview Metrics */}
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <MetricCard
-                  title="Total Users"
-                  value={formatNumber(dashboardData.overview.totalUsers)}
-                  change={dashboardData.overview.newUsers}
-                  changeLabel={`+${dashboardData.overview.newUsers} this ${period}`}
-                  icon={Users}
-                />
-                <MetricCard
-                  title="Total Portals"
-                  value={formatNumber(dashboardData.overview.totalPortals)}
-                  change={dashboardData.overview.newPortals}
-                  changeLabel={`+${dashboardData.overview.newPortals} this ${period}`}
-                  icon={BarChart3}
-                />
-                <MetricCard
-                  title="Total Uploads"
-                  value={formatNumber(dashboardData.overview.totalUploads)}
-                  change={dashboardData.overview.newUploads}
-                  changeLabel={`+${dashboardData.overview.newUploads} this ${period}`}
-                  icon={Upload}
-                />
-                <MetricCard
-                  title="Storage Used"
-                  value={`${dashboardData.overview.totalStorageGB} GB`}
-                  change={dashboardData.overview.activeUsers}
-                  changeLabel={`${dashboardData.overview.activeUsers} active users`}
-                  icon={HardDrive}
-                />
-              </div>
+          {/* Overview Metrics */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <MetricCard
+              title="Total Users"
+              value={formatNumberLocal(dashboardData?.overview.totalUsers || 0)}
+              change={dashboardData?.overview.newUsers || 0}
+              changeLabel={`+${dashboardData?.overview.newUsers || 0} this ${period}`}
+              icon={Users}
+            />
+            <MetricCard
+              title="Total Portals"
+              value={formatNumberLocal(dashboardData?.overview.totalPortals || 0)}
+              change={dashboardData?.overview.newPortals || 0}
+              changeLabel={`+${dashboardData?.overview.newPortals || 0} this ${period}`}
+              icon={BarChart3}
+            />
+            <MetricCard
+              title="Total Uploads"
+              value={formatNumberLocal(dashboardData?.overview.totalUploads || 0)}
+              change={dashboardData?.overview.newUploads || 0}
+              changeLabel={`+${dashboardData?.overview.newUploads || 0} this ${period}`}
+              icon={Upload}
+            />
+            <MetricCard
+              title="Storage Used"
+              value={`${dashboardData?.overview.totalStorageGB || 0} GB`}
+              change={dashboardData?.overview.activeUsers || 0}
+              changeLabel={`${dashboardData?.overview.activeUsers || 0} active users`}
+              icon={HardDrive}
+            />
+          </div>
 
-              {/* Charts */}
-              <div className="grid gap-6 md:grid-cols-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>User Growth</CardTitle>
-                    <CardDescription>New user registrations over time</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {dashboardData.trends.userGrowth && dashboardData.trends.userGrowth.length > 0 ? (
-                      <AnalyticsChart
-                        data={dashboardData.trends.userGrowth}
-                        xKey="date"
-                        yKey="count"
-                        type="line"
-                        color="#4F46E5"
-                      />
-                    ) : (
-                      <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                        <div className="text-center">
-                          <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                          <p>No user growth data available</p>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Upload Trends</CardTitle>
-                    <CardDescription>File uploads over time</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {dashboardData.trends.uploadTrends && dashboardData.trends.uploadTrends.length > 0 ? (
-                      <AnalyticsChart
-                        data={dashboardData.trends.uploadTrends}
-                        xKey="date"
-                        yKey="count"
-                        type="bar"
-                        color="#10B981"
-                      />
-                    ) : (
-                      <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                        <div className="text-center">
-                          <Upload className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                          <p>No upload trend data available</p>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Activity Tables */}
-              <div className="grid gap-6 md:grid-cols-2">
-                <RecentActivity uploads={dashboardData.recentActivity.uploads} />
-                <TopPortals portals={dashboardData.topPortals} />
-              </div>
-            </>
-          ) : (
+          {/* Charts */}
+          <div className="grid gap-6 md:grid-cols-2">
             <Card>
-              <CardContent className="flex items-center justify-center h-64">
-                <div className="text-center">
-                  <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-semibold mb-2">No Data Available</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Unable to load dashboard analytics. Please try refreshing.
-                  </p>
-                  <Button onClick={fetchAnalytics} variant="outline">
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Retry
-                  </Button>
-                </div>
+              <CardHeader>
+                <CardTitle>User Growth</CardTitle>
+                <CardDescription>New user registrations over time</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AnalyticsChart
+                  data={dashboardData?.trends.userGrowth || []}
+                  xKey="date"
+                  yKey="count"
+                  type="line"
+                  color="#4F46E5"
+                />
               </CardContent>
             </Card>
-          )}
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Upload Trends</CardTitle>
+                <CardDescription>File uploads over time</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AnalyticsChart
+                  data={dashboardData?.trends.uploadTrends || []}
+                  xKey="date"
+                  yKey="count"
+                  type="bar"
+                  color="#10B981"
+                />
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Activity Tables */}
+          <div className="grid gap-6 md:grid-cols-2">
+            <RecentActivity uploads={dashboardData?.recentActivity.uploads || []} />
+            <TopPortals portals={dashboardData?.topPortals || []} />
+          </div>
         </TabsContent>
 
         <TabsContent value="users" className="space-y-6">
-          {userAnalytics ? (
-            <>
-              {/* User Metrics */}
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <MetricCard
-                  title="Total Users"
-                  value={formatNumber(userAnalytics.summary.totalUsers)}
-                  icon={Users}
-                />
-                <MetricCard
-                  title="Active Users"
-                  value={formatNumber(userAnalytics.activity.active_users)}
-                  icon={Activity}
-                />
-                <MetricCard
-                  title="Users with Portals"
-                  value={formatNumber(userAnalytics.activity.users_with_portals)}
-                  icon={BarChart3}
-                />
-                <MetricCard
-                  title="Users with Uploads"
-                  value={formatNumber(userAnalytics.activity.users_with_uploads)}
-                  icon={Upload}
-                />
-              </div>
+          {/* User Metrics */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <MetricCard
+              title="Total Users"
+              value={formatNumberLocal(userAnalytics?.summary.totalUsers || 0)}
+              icon={Users}
+            />
+            <MetricCard
+              title="Active Users"
+              value={formatNumberLocal(userAnalytics?.activity.active_users || 0)}
+              icon={Activity}
+            />
+            <MetricCard
+              title="Users with Portals"
+              value={formatNumberLocal(userAnalytics?.activity.users_with_portals || 0)}
+              icon={BarChart3}
+            />
+            <MetricCard
+              title="Users with Uploads"
+              value={formatNumberLocal(userAnalytics?.activity.users_with_uploads || 0)}
+              icon={Upload}
+            />
+          </div>
 
-              {/* User Charts */}
-              <div className="grid gap-6 md:grid-cols-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Registration Trends</CardTitle>
-                    <CardDescription>New user registrations over time</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {userAnalytics.trends.registrations && userAnalytics.trends.registrations.length > 0 ? (
-                      <AnalyticsChart
-                        data={userAnalytics.trends.registrations}
-                        xKey="period"
-                        yKey="registrations"
-                        type="line"
-                        color="#4F46E5"
-                      />
-                    ) : (
-                      <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                        <div className="text-center">
-                          <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                          <p>No registration data available</p>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Role Distribution</CardTitle>
-                    <CardDescription>User roles breakdown</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {userAnalytics.distribution.roles && userAnalytics.distribution.roles.length > 0 ? (
-                      <div className="space-y-2">
-                        {userAnalytics.distribution.roles.map((role) => (
-                          <div key={role.role} className="flex items-center justify-between">
-                            <span className="capitalize">{role.role}</span>
-                            <Badge variant="secondary">{role.count}</Badge>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                        <div className="text-center">
-                          <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                          <p>No role distribution data available</p>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Top Users */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Most Active Users</CardTitle>
-                  <CardDescription>Users with the most portals and uploads</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {userAnalytics.topUsers && userAnalytics.topUsers.length > 0 ? (
-                    <div className="space-y-4">
-                      {userAnalytics.topUsers.slice(0, 10).map((user) => (
-                        <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
-                          <div>
-                            <p className="font-medium">{user.name || 'Anonymous'}</p>
-                            <p className="text-sm text-muted-foreground">{user.email}</p>
-                          </div>
-                          <div className="flex space-x-4 text-sm">
-                            <span>{user.stats.portals} portals</span>
-                            <span>{user.stats.uploads} uploads</span>
-                            <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                              {user.role}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="h-64 flex items-center justify-center text-muted-foreground">
-                      <div className="text-center">
-                        <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                        <p>No user data available</p>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </>
-          ) : (
+          {/* User Charts */}
+          <div className="grid gap-6 md:grid-cols-2">
             <Card>
-              <CardContent className="flex items-center justify-center h-64">
-                <div className="text-center">
-                  <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-semibold mb-2">No Data Available</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Unable to load user analytics. Please try refreshing.
-                  </p>
-                  <Button onClick={fetchAnalytics} variant="outline">
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Retry
-                  </Button>
-                </div>
+              <CardHeader>
+                <CardTitle>Registration Trends</CardTitle>
+                <CardDescription>New user registrations over time</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AnalyticsChart
+                  data={userAnalytics?.trends.registrations || []}
+                  xKey="period"
+                  yKey="registrations"
+                  type="line"
+                  color="#4F46E5"
+                />
               </CardContent>
             </Card>
-          )}
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Role Distribution</CardTitle>
+                <CardDescription>User roles breakdown</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {userAnalytics?.distribution.roles && userAnalytics.distribution.roles.length > 0 ? (
+                  <div className="space-y-2">
+                    {userAnalytics.distribution.roles.map((role) => (
+                      <div key={role.role} className="flex items-center justify-between">
+                        <span className="capitalize">{role.role}</span>
+                        <Badge variant="secondary">{role.count}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                    <div className="text-center">
+                      <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <p>No role distribution data available</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Top Users */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Most Active Users</CardTitle>
+              <CardDescription>Users with the most portals and uploads</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {userAnalytics?.topUsers && userAnalytics.topUsers.length > 0 ? (
+                <div className="space-y-4">
+                  {userAnalytics.topUsers.slice(0, 10).map((user) => (
+                    <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">{user.name || 'Anonymous'}</p>
+                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                      </div>
+                      <div className="flex space-x-4 text-sm">
+                        <span>{user.stats.portals} portals</span>
+                        <span>{user.stats.uploads} uploads</span>
+                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                          {user.role}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="h-64 flex items-center justify-center text-muted-foreground">
+                  <div className="text-center">
+                    <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p>No user data available</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="uploads" className="space-y-6">
-          {uploadAnalytics ? (
-            <>
-              {/* Upload Metrics */}
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <MetricCard
-                  title="Total Uploads"
-                  value={formatNumber(uploadAnalytics.summary.totalUploads)}
-                  icon={Upload}
-                />
-                <MetricCard
-                  title="Total Size"
-                  value={`${uploadAnalytics.summary.totalSizeGB} GB`}
-                  icon={HardDrive}
-                />
-                <MetricCard
-                  title="Average Size"
-                  value={formatBytes(uploadAnalytics.summary.averageSize * 1024)}
-                  icon={BarChart3}
-                />
-                <MetricCard
-                  title="Success Rate"
-                  value={`${uploadAnalytics.distribution.status.find(s => s.status === 'completed')?.percentage || 0}%`}
-                  icon={TrendingUp}
-                />
-              </div>
+          {/* Upload Metrics */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <MetricCard
+              title="Total Uploads"
+              value={formatNumberLocal(uploadAnalytics?.summary.totalUploads || 0)}
+              icon={Upload}
+            />
+            <MetricCard
+              title="Total Size"
+              value={`${uploadAnalytics?.summary.totalSizeGB || 0} GB`}
+              icon={HardDrive}
+            />
+            <MetricCard
+              title="Average Size"
+              value={formatBytesLocal((uploadAnalytics?.summary.averageSize || 0) * 1024)}
+              icon={BarChart3}
+            />
+            <MetricCard
+              title="Success Rate"
+              value={`${uploadAnalytics?.distribution.status.find(s => s.status === 'completed')?.percentage || 0}%`}
+              icon={TrendingUp}
+            />
+          </div>
 
-              {/* Upload Charts */}
-              <div className="grid gap-6 md:grid-cols-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Upload Trends</CardTitle>
-                    <CardDescription>File uploads over time</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {uploadAnalytics.trends.uploads && uploadAnalytics.trends.uploads.length > 0 ? (
-                      <AnalyticsChart
-                        data={uploadAnalytics.trends.uploads}
-                        xKey="period"
-                        yKey="uploadCount"
-                        type="bar"
-                        color="#10B981"
-                      />
-                    ) : (
-                      <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                        <div className="text-center">
-                          <Upload className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                          <p>No upload trend data available</p>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>File Size Distribution</CardTitle>
-                    <CardDescription>Distribution of file sizes</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {uploadAnalytics.distribution.fileSizes && uploadAnalytics.distribution.fileSizes.length > 0 ? (
-                      <div className="space-y-2">
-                        {uploadAnalytics.distribution.fileSizes.map((size) => (
-                          <div key={size.range} className="flex items-center justify-between">
-                            <span>{size.range}</span>
-                            <Badge variant="secondary">{size.count}</Badge>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                        <div className="text-center">
-                          <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                          <p>No file size distribution data available</p>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* File Types */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Popular File Types</CardTitle>
-                  <CardDescription>Most uploaded file types</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {uploadAnalytics.distribution.fileTypes && uploadAnalytics.distribution.fileTypes.length > 0 ? (
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      {uploadAnalytics.distribution.fileTypes.slice(0, 9).map((type) => (
-                        <div key={type.mimeType} className="p-3 border rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium">{type.mimeType}</span>
-                            <Badge variant="secondary">{type.percentage}%</Badge>
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {type.count} files • {formatBytes(type.totalSize)}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="h-64 flex items-center justify-center text-muted-foreground">
-                      <div className="text-center">
-                        <Upload className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                        <p>No file type data available</p>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </>
-          ) : (
+          {/* Upload Charts */}
+          <div className="grid gap-6 md:grid-cols-2">
             <Card>
-              <CardContent className="flex items-center justify-center h-64">
-                <div className="text-center">
-                  <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-semibold mb-2">No Data Available</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Unable to load upload analytics. Please try refreshing.
-                  </p>
-                  <Button onClick={fetchAnalytics} variant="outline">
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Retry
-                  </Button>
-                </div>
+              <CardHeader>
+                <CardTitle>Upload Trends</CardTitle>
+                <CardDescription>File uploads over time</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AnalyticsChart
+                  data={uploadAnalytics?.trends.uploads || []}
+                  xKey="period"
+                  yKey="uploadCount"
+                  type="bar"
+                  color="#10B981"
+                />
               </CardContent>
             </Card>
-          )}
+
+            <Card>
+              <CardHeader>
+                <CardTitle>File Size Distribution</CardTitle>
+                <CardDescription>Distribution of file sizes</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {uploadAnalytics?.distribution.fileSizes && uploadAnalytics.distribution.fileSizes.length > 0 ? (
+                  <div className="space-y-2">
+                    {uploadAnalytics.distribution.fileSizes.map((size) => (
+                      <div key={size.range} className="flex items-center justify-between">
+                        <span>{size.range}</span>
+                        <Badge variant="secondary">{size.count}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                    <div className="text-center">
+                      <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <p>No file size distribution data available</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* File Types */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Popular File Types</CardTitle>
+              <CardDescription>Most uploaded file types</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {uploadAnalytics?.distribution.fileTypes && uploadAnalytics.distribution.fileTypes.length > 0 ? (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {uploadAnalytics.distribution.fileTypes.slice(0, 9).map((type) => (
+                    <div key={type.mimeType} className="p-3 border rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">{type.mimeType}</span>
+                        <Badge variant="secondary">{type.percentage}%</Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {type.count} files • {formatBytesLocal(type.totalSize)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="h-64 flex items-center justify-center text-muted-foreground">
+                  <div className="text-center">
+                    <Upload className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p>No file type data available</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="performance" className="space-y-6">
