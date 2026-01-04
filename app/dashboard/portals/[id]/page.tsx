@@ -595,16 +595,34 @@ export default function EditPortalPage() {
                 transition={{ duration: 0.2 }}
               >
                 <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-                  <div className="p-6 border-b border-slate-100 bg-slate-50/30 flex justify-between items-center">
+                  <div className="p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-800/30 flex justify-between items-center">
                     <div>
-                      <h2 className="text-xl font-semibold text-slate-900">
+                      <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                         {activeTab}
                       </h2>
                       <p className="text-sm text-slate-500 mt-1">
                         Manage settings for this section.
                       </p>
                     </div>
-                    {saving && <Loader2 className="w-5 h-5 animate-spin text-slate-400" />}
+                    <div className="flex items-center gap-3">
+                      {saving && <Loader2 className="w-5 h-5 animate-spin text-slate-400" />}
+                      {activeTab !== 'Portal Details' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const tabs = ['Portal Details', 'Branding', 'Storage & Files', 'Access & Security', 'Messages']
+                            const currentIndex = tabs.indexOf(activeTab)
+                            if (currentIndex > 0) {
+                              setActiveTab(tabs[currentIndex - 1])
+                            }
+                          }}
+                          className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                          title="Return to Previous Section"
+                        >
+                          <ArrowLeft className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="p-8 space-y-8">
@@ -780,14 +798,32 @@ export default function EditPortalPage() {
                           </div>
                         </div>
 
-                        <div className="pt-4 flex justify-end">
-                          <button
-                            type="button"
-                            onClick={() => setActiveTab('Storage & Files')}
-                            className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
-                          >
-                            Next: Storage
-                          </button>
+                        <div className="pt-4 flex justify-between">
+                          <div></div>
+                          <div className="flex gap-3">
+                            <button
+                              type="submit"
+                              disabled={saving}
+                              className="px-4 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-xl font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                handleSubmit(e).then(() => {
+                                  if (!error) {
+                                    router.push('/dashboard')
+                                  }
+                                })
+                              }}
+                            >
+                              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save & Return'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab('Storage & Files')}
+                              className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
+                            >
+                              Next: Storage
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -955,14 +991,32 @@ export default function EditPortalPage() {
                           </div>
                         </div>
 
-                        <div className="pt-4 flex justify-end">
-                          <button
-                            type="button"
-                            onClick={() => setActiveTab('Access & Security')}
-                            className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
-                          >
-                            Next: Security
-                          </button>
+                        <div className="pt-4 flex justify-between">
+                          <div></div>
+                          <div className="flex gap-3">
+                            <button
+                              type="submit"
+                              disabled={saving}
+                              className="px-4 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-xl font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                handleSubmit(e).then(() => {
+                                  if (!error) {
+                                    router.push('/dashboard')
+                                  }
+                                })
+                              }}
+                            >
+                              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save & Return'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab('Access & Security')}
+                              className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
+                            >
+                              Next: Security
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -1082,14 +1136,32 @@ export default function EditPortalPage() {
                           </div>
                         </div>
 
-                        <div className="pt-4 flex justify-end">
-                          <button
-                            type="button"
-                            onClick={() => setActiveTab('Messages')}
-                            className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
-                          >
-                            Next: Messages
-                          </button>
+                        <div className="pt-4 flex justify-between">
+                          <div></div>
+                          <div className="flex gap-3">
+                            <button
+                              type="submit"
+                              disabled={saving}
+                              className="px-4 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-xl font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                handleSubmit(e).then(() => {
+                                  if (!error) {
+                                    router.push('/dashboard')
+                                  }
+                                })
+                              }}
+                            >
+                              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save & Return'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab('Messages')}
+                              className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
+                            >
+                              Next: Messages
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -1142,7 +1214,14 @@ export default function EditPortalPage() {
                           </div>
                         </div>
 
-                        <div className="pt-6 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-3">
+                        <div className="pt-6 border-t border-slate-100 dark:border-slate-700 flex justify-between gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab('Access & Security')}
+                            className="px-6 py-3 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all font-bold text-sm"
+                          >
+                            ← Previous
+                          </button>
                           <button
                             type="submit"
                             disabled={saving}

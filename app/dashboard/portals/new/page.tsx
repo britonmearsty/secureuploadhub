@@ -466,7 +466,7 @@ export default function CreatePortalPage() {
                 transition={{ duration: 0.2 }}
               >
                 <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-                  <div className="p-6 border-b border-slate-100 bg-slate-50/30 flex justify-between items-center">
+                  <div className="p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-800/30 flex justify-between items-center">
                     <div>
                       <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                         {activeTab}
@@ -475,7 +475,25 @@ export default function CreatePortalPage() {
                         Manage settings for this section.
                       </p>
                     </div>
-                    {loading && <Loader2 className="w-5 h-5 animate-spin text-slate-400" />}
+                    <div className="flex items-center gap-3">
+                      {loading && <Loader2 className="w-5 h-5 animate-spin text-slate-400" />}
+                      {activeTab !== 'Identity' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const tabs = ['Identity', 'Branding', 'Storage', 'Security', 'Messaging']
+                            const currentIndex = tabs.indexOf(activeTab)
+                            if (currentIndex > 0) {
+                              setActiveTab(tabs[currentIndex - 1])
+                            }
+                          }}
+                          className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                          title="Return to Previous Section"
+                        >
+                          <ArrowLeft className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="p-8 space-y-8">
