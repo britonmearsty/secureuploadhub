@@ -9,10 +9,12 @@ function createPrismaClient() {
   const connectionString = process.env.DATABASE_URL;
 
   // During build time (especially on Vercel), DATABASE_URL might be missing.
-  // We return a client without an adapter if no URL is present to avoid crashing
+  // We return a basic client if no URL is present to avoid crashing
   // during the build process for pages that don't actually need the DB at build time.
   if (!connectionString) {
-    return new PrismaClient({} as any);
+    console.warn('DATABASE_URL not found, creating basic Prisma client');
+    // Return a basic client that won't be used in production
+    return new PrismaClient();
   }
 
   const adapter = new PrismaPg({
