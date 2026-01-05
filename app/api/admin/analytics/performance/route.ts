@@ -64,30 +64,54 @@ export async function GET(request: NextRequest) {
       }),
       
       // Response time distribution
-      prisma.$queryRaw`
-        SELECT 
-          CASE 
-            WHEN "responseTime" < 100 THEN 'Under 100ms'
-            WHEN "responseTime" < 500 THEN '100-500ms'
-            WHEN "responseTime" < 1000 THEN '500ms-1s'
-            WHEN "responseTime" < 5000 THEN '1-5s'
-            ELSE 'Over 5s'
-          END as response_range,
-          COUNT(*) as count,
-          AVG("responseTime") as avg_response_time
-        FROM "PerformanceMetric"
-        WHERE "recordedAt" >= ${startDate}
-        ${endpoint && endpoint !== null ? prisma.$queryRaw`AND "endpoint" = ${endpoint}` : prisma.$queryRaw``}
-        GROUP BY response_range
-        ORDER BY 
-          CASE response_range
-            WHEN 'Under 100ms' THEN 1
-            WHEN '100-500ms' THEN 2
-            WHEN '500ms-1s' THEN 3
-            WHEN '1-5s' THEN 4
-            WHEN 'Over 5s' THEN 5
-          END
-      `,
+      endpoint && endpoint !== null ? 
+        prisma.$queryRaw`
+          SELECT 
+            CASE 
+              WHEN "responseTime" < 100 THEN 'Under 100ms'
+              WHEN "responseTime" < 500 THEN '100-500ms'
+              WHEN "responseTime" < 1000 THEN '500ms-1s'
+              WHEN "responseTime" < 5000 THEN '1-5s'
+              ELSE 'Over 5s'
+            END as response_range,
+            COUNT(*) as count,
+            AVG("responseTime") as avg_response_time
+          FROM "PerformanceMetric"
+          WHERE "recordedAt" >= ${startDate}
+          AND "endpoint" = ${endpoint}
+          GROUP BY response_range
+          ORDER BY 
+            CASE response_range
+              WHEN 'Under 100ms' THEN 1
+              WHEN '100-500ms' THEN 2
+              WHEN '500ms-1s' THEN 3
+              WHEN '1-5s' THEN 4
+              WHEN 'Over 5s' THEN 5
+            END
+        ` :
+        prisma.$queryRaw`
+          SELECT 
+            CASE 
+              WHEN "responseTime" < 100 THEN 'Under 100ms'
+              WHEN "responseTime" < 500 THEN '100-500ms'
+              WHEN "responseTime" < 1000 THEN '500ms-1s'
+              WHEN "responseTime" < 5000 THEN '1-5s'
+              ELSE 'Over 5s'
+            END as response_range,
+            COUNT(*) as count,
+            AVG("responseTime") as avg_response_time
+          FROM "PerformanceMetric"
+          WHERE "recordedAt" >= ${startDate}
+          GROUP BY response_range
+          ORDER BY 
+            CASE response_range
+              WHEN 'Under 100ms' THEN 1
+              WHEN '100-500ms' THEN 2
+              WHEN '500ms-1s' THEN 3
+              WHEN '1-5s' THEN 4
+              WHEN 'Over 5s' THEN 5
+            END
+        `,
       
       // Status code distribution
       prisma.performanceMetric.groupBy({
@@ -137,18 +161,30 @@ export async function GET(request: NextRequest) {
       }),
       
       // Performance trends over time
-      prisma.$queryRaw`
-        SELECT 
-          DATE_TRUNC('hour', "recordedAt") as hour,
-          COUNT(*) as request_count,
-          AVG("responseTime") as avg_response_time,
-          COUNT(CASE WHEN "statusCode" >= 400 THEN 1 END) as error_count
-        FROM "PerformanceMetric"
-        WHERE "recordedAt" >= ${startDate}
-        ${endpoint && endpoint !== null ? prisma.$queryRaw`AND "endpoint" = ${endpoint}` : prisma.$queryRaw``}
-        GROUP BY DATE_TRUNC('hour', "recordedAt")
-        ORDER BY hour ASC
-      `,
+      endpoint && endpoint !== null ?
+        prisma.$queryRaw`
+          SELECT 
+            DATE_TRUNC('hour', "recordedAt") as hour,
+            COUNT(*) as request_count,
+            AVG("responseTime") as avg_response_time,
+            COUNT(CASE WHEN "statusCode" >= 400 THEN 1 END) as error_count
+          FROM "PerformanceMetric"
+          WHERE "recordedAt" >= ${startDate}
+          AND "endpoint" = ${endpoint}
+          GROUP BY DATE_TRUNC('hour', "recordedAt")
+          ORDER BY hour ASC
+        ` :
+        prisma.$queryRaw`
+          SELECT 
+            DATE_TRUNC('hour', "recordedAt") as hour,
+            COUNT(*) as request_count,
+            AVG("responseTime") as avg_response_time,
+            COUNT(CASE WHEN "statusCode" >= 400 THEN 1 END) as error_count
+          FROM "PerformanceMetric"
+          WHERE "recordedAt" >= ${startDate}
+          GROUP BY DATE_TRUNC('hour', "recordedAt")
+          ORDER BY hour ASC
+        `,
     ]);
 
     // Calculate error rate
