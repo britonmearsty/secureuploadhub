@@ -60,6 +60,7 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
     const [subscribing, setSubscribing] = useState<string | null>(null)
     const [canceling, setCanceling] = useState(false)
     const [banner, setBanner] = useState<{ type: "success" | "error" | "info", message: string } | null>(null)
+    const [checkingStatus, setCheckingStatus] = useState(false)
     
     // Modal states
     const [errorModal, setErrorModal] = useState<{ isOpen: boolean; title: string; message: string }>({
@@ -76,6 +77,32 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
 
     const currentPlan = subscription?.plan || fallbackPlan
 
+    // Function to check subscription status
+    const checkSubscriptionStatus = async () => {
+        if (!subscription || subscription.status === 'active') return
+        
+        setCheckingStatus(true)
+        try {
+            const response = await fetch('/api/billing/subscription/status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            
+            if (response.ok) {
+                const data = await response.json()
+                if (data.updated) {
+                    setBanner({ type: "success", message: data.message })
+                    // Refresh the page to show updated subscription
+                    setTimeout(() => window.location.reload(), 1000)
+                }
+            }
+        } catch (error) {
+            console.error('Error checking subscription status:', error)
+        } finally {
+            setCheckingStatus(false)
+        }
+    }
+
     useEffect(() => {
         const params = new URLSearchParams(window.location.search)
         const status = params.get("status") || params.get("status_code")
@@ -83,10 +110,19 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
 
         if (status === "success") {
             setBanner({ type: "success", message: "Payment successful. Your subscription is active." })
+            // Check subscription status after successful payment
+            setTimeout(checkSubscriptionStatus, 2000)
         } else if (status === "failed") {
             setBanner({ type: "error", message: "Payment failed. Please try again." })
         } else if (status === "processing") {
             setBanner({ type: "info", message: "Payment is processing. Refresh after a moment to see updates." })
+            // Check status periodically for processing payments
+            setTimeout(checkSubscriptionStatus, 5000)
+        }
+
+        // Auto-check status if subscription is incomplete
+        if (subscription?.status === 'incomplete') {
+            setTimeout(checkSubscriptionStatus, 3000)
         }
 
         if (status || reference) {
@@ -97,7 +133,7 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
             const url = next ? `${window.location.pathname}?${next}` : window.location.pathname
             window.history.replaceState({}, "", url)
         }
-    }, [])
+    }, [subscription?.status])
 
     const tabs = [
         { id: "overview", name: "Overview", icon: CreditCard, description: "Your current plan and status" },
@@ -298,7 +334,7 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
 
                                                         {subscription && (
                                                             <div className="flex flex-col items-start md:items-end gap-2">
-                                                                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${subscription.status === 'active' ? 'bg-emerald-500/20 dark:bg-emerald-500/10 text-emerald-400 dark:text-emerald-300' : 'bg-red-500/20 dark:bg-red-500/10 text-red-400 dark:text-red-300'
+                                                                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${subscription.status === 'active' ? 'bg-emerald-500/20 dark:bg-emerald-500/10 text-emerald-400 dark:text-emerald-300' : subscription.status === 'incomplete' ? 'bg-orange-500/20 dark:bg-orange-500/10 text-orange-400 dark:text-orange-300' : 'bg-red-500/20 dark:bg-red-500/10 text-red-400 dark:text-red-300'
                                                                     }`}>
                                                                     <ShieldCheck className="w-3.5 h-3.5" />
                                                                     {subscription.status}
@@ -307,6 +343,15 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                                     <Clock className="w-4 h-4" />
                                                                     Next billing: {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
                                                                 </div>
+                                                                {subscription.status === 'incomplete' && (
+                                                                    <button
+                                                                        onClick={checkSubscriptionStatus}
+                                                                        disabled={checkingStatus}
+                                                                        className="text-xs px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors disabled:opacity-50"
+                                                                    >
+                                                                        {checkingStatus ? "Checking..." : "Check Status"}
+                                                                    </button>
+                                                                )}
                                                             </div>
                                                         )}
                                                     </div>
@@ -329,6 +374,24 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                             <p className="text-sm text-orange-200">
                                                                 Your plan will be downgraded on {new Date(subscription.currentPeriodEnd).toLocaleDateString()}.
                                                             </p>
+                                                        </div>
+                                                    )}
+
+                                                    {subscription?.status === 'incomplete' && (
+                                                        <div className="mt-6 p-4 rounded-xl bg-blue-500/10 dark:bg-blue-500/5 border border-blue-500/20 dark:border-blue-500/10 flex items-center gap-3">
+                                                            <AlertCircle className="w-5 h-5 text-blue-400" />
+                                                            <div className="flex-1">
+                                                                <p className="text-sm text-blue-200 mb-2">
+                                                                    Your subscription is being processed. If you've completed payment, it should activate shortly.
+                                                                </p>
+                                                                <button
+                                                                    onClick={checkSubscriptionStatus}
+                                                                    disabled={checkingStatus}
+                                                                    className="text-xs px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors disabled:opacity-50"
+                                                                >
+                                                                    {checkingStatus ? "Checking..." : "Check Status Now"}
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>

@@ -35,7 +35,12 @@ export async function POST(request: NextRequest) {
 
     const { event, data } = JSON.parse(rawBody)
 
-    console.log(`Processing webhook event: ${event}`)
+    console.log(`Processing webhook event: ${event}`, {
+      reference: data.reference,
+      subscriptionCode: data.subscription_code || data.subscription?.subscription_code,
+      status: data.status,
+      metadata: data.metadata
+    })
 
     // Handle subscription events
     if (event === "subscription.create") {
@@ -394,10 +399,19 @@ async function handleChargeSuccess(data: any) {
 
   if (!existingPayment) {
     console.error("Payment not found for reference:", reference)
+    
+    // Check if this might be a subscription setup payment without proper metadata
+    if (metadata?.subscription_id || metadata?.user_id) {
+      console.log("Attempting to handle as subscription setup payment")
+      await handleSubscriptionSetupPayment(data)
+      return
+    }
+    
     return
   }
 
   if (existingPayment.status === PAYMENT_STATUS.SUCCEEDED) {
+    console.log("Duplicate webhook for payment:", reference)
     return // Duplicate webhook
   }
 
@@ -419,17 +433,33 @@ async function handleChargeSuccess(data: any) {
       }
     })
 
-    // Update subscription if exists
+    // Update subscription if exists and ensure it's activated
     if (subscription && periodEnd) {
+      const updateData: any = {
+        status: SUBSCRIPTION_STATUS.ACTIVE,
+        providerSubscriptionId: data.subscription?.subscription_code ?? subscription.providerSubscriptionId,
+        providerCustomerId: data.customer?.id?.toString() || subscription.providerCustomerId,
+        currentPeriodStart: now,
+        currentPeriodEnd: periodEnd,
+        cancelAtPeriodEnd: false,
+        retryCount: 0, // Reset retry count on successful payment
+        gracePeriodEnd: null, // Clear grace period
+        lastPaymentAttempt: now,
+      }
+
       await tx.subscription.update({
         where: { id: subscription.id },
+        data: updateData
+      })
+
+      // Create subscription history entry
+      await tx.subscriptionHistory.create({
         data: {
-          status: SUBSCRIPTION_STATUS.ACTIVE,
-          providerSubscriptionId: data.subscription?.subscription_code ?? subscription.providerSubscriptionId,
-          providerCustomerId: data.customer?.id?.toString() || subscription.providerCustomerId,
-          currentPeriodStart: now,
-          currentPeriodEnd: periodEnd,
-          cancelAtPeriodEnd: false,
+          subscriptionId: subscription.id,
+          action: subscription.status === 'incomplete' ? 'activated' : 'renewed',
+          oldValue: JSON.stringify({ status: subscription.status }),
+          newValue: JSON.stringify({ status: SUBSCRIPTION_STATUS.ACTIVE }),
+          reason: subscription.status === 'incomplete' ? 'Initial payment succeeded' : 'Payment succeeded',
         }
       })
     }
@@ -441,7 +471,7 @@ async function handleChargeSuccess(data: any) {
       action: AUDIT_ACTIONS.SUBSCRIPTION_UPDATED,
       resource: "subscription",
       resourceId: subscription.id,
-      details: { action: "payment_succeeded", reference }
+      details: { action: "payment_succeeded", reference, previousStatus: subscription.status }
     })
   }
 }
@@ -450,6 +480,7 @@ async function handleSubscriptionSetupPayment(data: any) {
   const { reference, id: paymentId, amount, currency, status, metadata, authorization } = data
 
   if (status !== "success") {
+    console.log("Subscription setup payment not successful:", status)
     return
   }
 
@@ -472,24 +503,46 @@ async function handleSubscriptionSetupPayment(data: any) {
     return
   }
 
+  if (subscription.status === SUBSCRIPTION_STATUS.ACTIVE) {
+    console.log("Subscription already active, skipping setup:", subscriptionId)
+    return
+  }
+
   const now = new Date()
   const periodEnd = addMonthsLocal(now, 1)
 
   await prisma.$transaction(async (tx) => {
-    // Create payment record
-    await tx.payment.create({
-      data: {
-        subscriptionId: subscription.id,
-        userId: subscription.userId,
-        amount: (amount || 0) / 100,
-        currency: currency || subscription.plan.currency,
-        status: PAYMENT_STATUS.SUCCEEDED,
-        providerPaymentId: paymentId.toString(),
-        providerPaymentRef: reference,
-        description: `Initial payment for ${subscription.plan.name}`,
-        ...(authorization?.authorization_code && { authorizationCode: authorization.authorization_code }),
-      }
+    // Check if payment record already exists
+    const existingPayment = await tx.payment.findFirst({
+      where: { providerPaymentRef: reference }
     })
+
+    if (!existingPayment) {
+      // Create payment record
+      await tx.payment.create({
+        data: {
+          subscriptionId: subscription.id,
+          userId: subscription.userId,
+          amount: (amount || 0) / 100,
+          currency: currency || subscription.plan.currency,
+          status: PAYMENT_STATUS.SUCCEEDED,
+          providerPaymentId: paymentId.toString(),
+          providerPaymentRef: reference,
+          description: `Initial payment for ${subscription.plan.name}`,
+          ...(authorization?.authorization_code && { authorizationCode: authorization.authorization_code }),
+        }
+      })
+    } else {
+      // Update existing payment
+      await tx.payment.update({
+        where: { id: existingPayment.id },
+        data: {
+          status: PAYMENT_STATUS.SUCCEEDED,
+          providerPaymentId: paymentId.toString(),
+          ...(authorization?.authorization_code && { authorizationCode: authorization.authorization_code }),
+        }
+      })
+    }
 
     // Now create the Paystack subscription with the authorization
     if (authorization?.authorization_code) {
@@ -522,6 +575,9 @@ async function handleSubscriptionSetupPayment(data: any) {
             currentPeriodEnd: periodEnd,
             nextBillingDate: periodEnd,
             cancelAtPeriodEnd: false,
+            retryCount: 0,
+            gracePeriodEnd: null,
+            lastPaymentAttempt: now,
           }
         })
 
@@ -530,6 +586,7 @@ async function handleSubscriptionSetupPayment(data: any) {
           data: {
             subscriptionId: subscription.id,
             action: "activated",
+            oldValue: JSON.stringify({ status: subscription.status }),
             newValue: JSON.stringify({
               status: SUBSCRIPTION_STATUS.ACTIVE,
               providerSubscriptionId: paystackSubscription.subscription_code,
@@ -537,6 +594,8 @@ async function handleSubscriptionSetupPayment(data: any) {
             reason: "Subscription activated after initial payment",
           }
         })
+
+        console.log("Subscription successfully activated:", subscriptionId)
 
       } catch (error) {
         console.error("Error creating Paystack subscription after payment:", error)
@@ -549,9 +608,53 @@ async function handleSubscriptionSetupPayment(data: any) {
             currentPeriodEnd: periodEnd,
             nextBillingDate: periodEnd,
             cancelAtPeriodEnd: false,
+            retryCount: 0,
+            gracePeriodEnd: null,
+            lastPaymentAttempt: now,
           }
         })
+
+        // Create subscription history entry
+        await tx.subscriptionHistory.create({
+          data: {
+            subscriptionId: subscription.id,
+            action: "activated",
+            oldValue: JSON.stringify({ status: subscription.status }),
+            newValue: JSON.stringify({ status: SUBSCRIPTION_STATUS.ACTIVE }),
+            reason: "Subscription activated after initial payment (Paystack subscription creation failed)",
+          }
+        })
+
+        console.log("Subscription activated without Paystack subscription:", subscriptionId)
       }
+    } else {
+      // No authorization code, but payment succeeded - still activate subscription
+      await tx.subscription.update({
+        where: { id: subscription.id },
+        data: {
+          status: SUBSCRIPTION_STATUS.ACTIVE,
+          currentPeriodStart: now,
+          currentPeriodEnd: periodEnd,
+          nextBillingDate: periodEnd,
+          cancelAtPeriodEnd: false,
+          retryCount: 0,
+          gracePeriodEnd: null,
+          lastPaymentAttempt: now,
+        }
+      })
+
+      // Create subscription history entry
+      await tx.subscriptionHistory.create({
+        data: {
+          subscriptionId: subscription.id,
+          action: "activated",
+          oldValue: JSON.stringify({ status: subscription.status }),
+          newValue: JSON.stringify({ status: SUBSCRIPTION_STATUS.ACTIVE }),
+          reason: "Subscription activated after initial payment (no authorization code)",
+        }
+      })
+
+      console.log("Subscription activated without authorization code:", subscriptionId)
     }
   })
 
@@ -563,7 +666,8 @@ async function handleSubscriptionSetupPayment(data: any) {
     details: { 
       action: "subscription_setup_completed", 
       reference,
-      authorizationCode: authorization?.authorization_code 
+      authorizationCode: authorization?.authorization_code,
+      previousStatus: subscription.status
     }
   })
 }

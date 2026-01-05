@@ -18,6 +18,7 @@ import {
   Users,
   Archive,
   Zap,
+  MessageSquare,
 } from "lucide-react"
 
 interface SidebarProps {
@@ -46,6 +47,11 @@ const navItems = [
     name: "Clients",
     href: "/dashboard/clients",
     icon: Users,
+  },
+  {
+    name: "Support",
+    href: "/dashboard/communication",
+    icon: MessageSquare,
   },
   {
     name: "Integrations",

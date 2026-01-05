@@ -28,6 +28,12 @@ model User {
   syncSettings      SyncSettings?
   fileUploads       FileUpload[]
   auditLogs         AuditLog[]
+  // Communication System Relations
+  tickets           Ticket[]
+  adminTickets      Ticket[]        @relation("AdminTickets")
+  messages          Message[]
+  feedback          Feedback[]
+  notifications     Notification[]
 }
 
 model SyncSettings {
@@ -361,4 +367,145 @@ model SystemHealth {
   @@index([component])
   @@index([status])
   @@index([checkedAt])
+}
+
+// Communication System Models
+
+model Ticket {
+  id          String        @id @default(cuid())
+  userId      String
+  adminId     String?       // Assigned admin
+  subject     String
+  description String
+  status      TicketStatus  @default(OPEN)
+  priority    Priority      @default(MEDIUM)
+  category    String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  closedAt    DateTime?
+  
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  admin       User?         @relation("AdminTickets", fields: [adminId], references: [id])
+  messages    Message[]
+  attachments Attachment[]
+  
+  @@index([userId])
+  @@index([adminId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([category])
+}
+
+model Message {
+  id        String      @id @default(cuid())
+  ticketId  String
+  senderId  String
+  content   String
+  isAdmin   Boolean     @default(false)
+  createdAt DateTime    @default(now())
+  readAt    DateTime?
+  
+  ticket    Ticket      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender    User        @relation(fields: [senderId], references: [id])
+  attachments Attachment[]
+  
+  @@index([ticketId])
+  @@index([senderId])
+  @@index([createdAt])
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  ticketId  String?
+  messageId String?
+  fileName  String
+  fileUrl   String
+  fileSize  Int
+  mimeType  String
+  createdAt DateTime @default(now())
+  
+  ticket    Ticket?  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  message   Message? @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  
+  @@index([ticketId])
+  @@index([messageId])
+}
+
+model Feedback {
+  id          String         @id @default(cuid())
+  userId      String
+  rating      Int            // 1-5 stars
+  comment     String?
+  category    FeedbackCategory
+  status      FeedbackStatus @default(PENDING)
+  adminNotes  String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([category])
+  @@index([rating])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  content   String
+  data      Json?            // Additional data (ticketId, etc.)
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+  @@index([type])
+}
+
+// Communication System Enums
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_FOR_USER
+  RESOLVED
+  CLOSED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum FeedbackCategory {
+  GENERAL
+  BUG_REPORT
+  FEATURE_REQUEST
+  UI_UX
+  PERFORMANCE
+  BILLING
+}
+
+enum FeedbackStatus {
+  PENDING
+  REVIEWED
+  IMPLEMENTED
+  REJECTED
+}
+
+enum NotificationType {
+  TICKET_CREATED
+  TICKET_UPDATED
+  TICKET_RESOLVED
+  MESSAGE_RECEIVED
+  FEEDBACK_RESPONSE
+  SYSTEM_ANNOUNCEMENT
 }

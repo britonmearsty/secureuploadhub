@@ -19,6 +19,7 @@ import {
     Mail,
     FileText,
     BarChart3,
+    MessageSquare,
 } from "lucide-react"
 
 interface AdminSidebarProps {
@@ -42,6 +43,11 @@ const navItems = [
         name: "Users",
         href: "/admin/users",
         icon: Users,
+    },
+    {
+        name: "Communication",
+        href: "/admin/communication",
+        icon: MessageSquare,
     },
     {
         name: "Billing",
