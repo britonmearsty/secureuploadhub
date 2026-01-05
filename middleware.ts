@@ -18,11 +18,10 @@ export function middleware(request: NextRequest) {
   const isAuth = isAuthenticated(request)
   const isOnAdmin = pathname.startsWith("/admin")
   const isOnDashboard = pathname.startsWith("/dashboard")
-  const isOnSupport = pathname.startsWith("/support")
   const isOnAuthPage = pathname.startsWith("/auth")
 
   // Log every middleware execution
-  console.log(`🔄 MIDDLEWARE: ${pathname} | Auth: ${isAuth} | Admin: ${isOnAdmin} | Dashboard: ${isOnDashboard} | Support: ${isOnSupport} | AuthPage: ${isOnAuthPage}`)
+  console.log(`🔄 MIDDLEWARE: ${pathname} | Auth: ${isAuth} | Admin: ${isOnAdmin} | Dashboard: ${isOnDashboard} | AuthPage: ${isOnAuthPage}`)
 
   // Protect admin routes - require authentication (role check happens server-side in layout)
   if (isOnAdmin && !isAuth) {
@@ -32,12 +31,6 @@ export function middleware(request: NextRequest) {
 
   // Protect dashboard routes
   if (isOnDashboard && !isAuth) {
-    console.log(`🚫 MIDDLEWARE: Redirecting unauthenticated user from ${pathname} to /auth/signin`)
-    return NextResponse.redirect(new URL("/auth/signin", request.url))
-  }
-
-  // Protect support routes
-  if (isOnSupport && !isAuth) {
     console.log(`🚫 MIDDLEWARE: Redirecting unauthenticated user from ${pathname} to /auth/signin`)
     return NextResponse.redirect(new URL("/auth/signin", request.url))
   }

@@ -22,7 +22,6 @@ import {
   MessageSquare,
   Star,
   Bell,
-  HelpCircle,
 } from "lucide-react"
 
 interface SidebarProps {
@@ -51,12 +50,6 @@ const navItems = [
     name: "Clients",
     href: "/dashboard/clients",
     icon: Users,
-  },
-  {
-    name: "Support",
-    href: "/support",
-    icon: HelpCircle,
-    description: "Help center and documentation"
   },
   {
     name: "Communication",
@@ -127,10 +120,10 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
     )
   }
 
-  // Auto-expand Support section if we're on a communication page
+  // Auto-expand Communication section if we're on a communication page
   useEffect(() => {
     if (pathname.startsWith('/dashboard/communication')) {
-      setExpandedItems(prev => prev.includes('Support') ? prev : [...prev, 'Support'])
+      setExpandedItems(prev => prev.includes('Communication') ? prev : [...prev, 'Communication'])
     }
   }, [pathname])
 
