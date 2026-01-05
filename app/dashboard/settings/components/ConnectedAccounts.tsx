@@ -110,16 +110,16 @@ export default function ConnectedAccounts() {
                         key={account.provider}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center justify-between p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 transition-all hover:bg-emerald-100/50 dark:hover:bg-emerald-900/30"
+                        className="flex items-center justify-between p-5 rounded-2xl bg-primary/5 border border-primary/20 transition-all hover:bg-primary/10"
                     >
                         <div className="flex gap-5">
-                            <div className="p-3 bg-card rounded-xl shadow-sm border border-emerald-200 h-fit">
+                            <div className="p-3 bg-card rounded-xl shadow-sm border border-border h-fit">
                                 {provider.icon}
                             </div>
                             <div>
                                 <h4 className="font-semibold text-foreground">{provider.name}</h4>
                                 <div className="flex items-center gap-2 mt-1">
-                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
                                     <span className="text-sm text-muted-foreground font-medium">{account.email}</span>
                                 </div>
                             </div>
@@ -128,7 +128,7 @@ export default function ConnectedAccounts() {
                         <button
                             onClick={() => handleDisconnect(account.provider)}
                             disabled={disconnecting === account.provider}
-                            className="px-5 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all active:scale-95 bg-card border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-5 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all active:scale-95 bg-card border border-destructive/30 text-destructive hover:bg-destructive/10 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {disconnecting === account.provider ? (
                                 <>
@@ -147,11 +147,11 @@ export default function ConnectedAccounts() {
             })}
 
             {connectedAccounts.length > 0 && (
-                <div className="mt-8 p-4 rounded-xl bg-primary text-primary-foreground flex items-center gap-3">
-                    <div className="p-2 bg-primary-foreground/10 rounded-lg">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <div className="mt-8 p-4 rounded-xl bg-primary/10 border border-primary/20 flex items-center gap-3">
+                    <div className="p-2 bg-primary/20 rounded-lg">
+                        <CheckCircle2 className="w-4 h-4 text-primary" />
                     </div>
-                    <p className="text-sm font-medium">Automatic sync is active for {connectedAccounts.length} account{connectedAccounts.length > 1 ? 's' : ''}</p>
+                    <p className="text-sm font-medium text-foreground">Automatic sync is active for {connectedAccounts.length} account{connectedAccounts.length > 1 ? 's' : ''}</p>
                 </div>
             )}
         </div>
