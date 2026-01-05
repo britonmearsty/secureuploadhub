@@ -63,117 +63,42 @@ export async function GET(request: NextRequest) {
         where: whereClause,
       }),
       
-      // Response time distribution
-      endpoint && endpoint !== null ? 
-        prisma.$queryRaw`
-          SELECT 
-            CASE 
-              WHEN "responseTime" < 100 THEN 'Under 100ms'
-              WHEN "responseTime" < 500 THEN '100-500ms'
-              WHEN "responseTime" < 1000 THEN '500ms-1s'
-              WHEN "responseTime" < 5000 THEN '1-5s'
-              ELSE 'Over 5s'
-            END as response_range,
-            COUNT(*) as count,
-            AVG("responseTime") as avg_response_time
-          FROM "PerformanceMetric"
-          WHERE "recordedAt" >= ${startDate}
-          AND "endpoint" = ${endpoint}
-          GROUP BY 
-            CASE 
-              WHEN "responseTime" < 100 THEN 'Under 100ms'
-              WHEN "responseTime" < 500 THEN '100-500ms'
-              WHEN "responseTime" < 1000 THEN '500ms-1s'
-              WHEN "responseTime" < 5000 THEN '1-5s'
-              ELSE 'Over 5s'
-            END
-          ORDER BY 
-            CASE 
-              WHEN CASE 
-                WHEN "responseTime" < 100 THEN 'Under 100ms'
-                WHEN "responseTime" < 500 THEN '100-500ms'
-                WHEN "responseTime" < 1000 THEN '500ms-1s'
-                WHEN "responseTime" < 5000 THEN '1-5s'
-                ELSE 'Over 5s'
-              END = 'Under 100ms' THEN 1
-              WHEN CASE 
-                WHEN "responseTime" < 100 THEN 'Under 100ms'
-                WHEN "responseTime" < 500 THEN '100-500ms'
-                WHEN "responseTime" < 1000 THEN '500ms-1s'
-                WHEN "responseTime" < 5000 THEN '1-5s'
-                ELSE 'Over 5s'
-              END = '100-500ms' THEN 2
-              WHEN CASE 
-                WHEN "responseTime" < 100 THEN 'Under 100ms'
-                WHEN "responseTime" < 500 THEN '100-500ms'
-                WHEN "responseTime" < 1000 THEN '500ms-1s'
-                WHEN "responseTime" < 5000 THEN '1-5s'
-                ELSE 'Over 5s'
-              END = '500ms-1s' THEN 3
-              WHEN CASE 
-                WHEN "responseTime" < 100 THEN 'Under 100ms'
-                WHEN "responseTime" < 500 THEN '100-500ms'
-                WHEN "responseTime" < 1000 THEN '500ms-1s'
-                WHEN "responseTime" < 5000 THEN '1-5s'
-                ELSE 'Over 5s'
-              END = '1-5s' THEN 4
-              ELSE 5
-            END
-        ` :
-        prisma.$queryRaw`
-          SELECT 
-            CASE 
-              WHEN "responseTime" < 100 THEN 'Under 100ms'
-              WHEN "responseTime" < 500 THEN '100-500ms'
-              WHEN "responseTime" < 1000 THEN '500ms-1s'
-              WHEN "responseTime" < 5000 THEN '1-5s'
-              ELSE 'Over 5s'
-            END as response_range,
-            COUNT(*) as count,
-            AVG("responseTime") as avg_response_time
-          FROM "PerformanceMetric"
-          WHERE "recordedAt" >= ${startDate}
-          GROUP BY 
-            CASE 
-              WHEN "responseTime" < 100 THEN 'Under 100ms'
-              WHEN "responseTime" < 500 THEN '100-500ms'
-              WHEN "responseTime" < 1000 THEN '500ms-1s'
-              WHEN "responseTime" < 5000 THEN '1-5s'
-              ELSE 'Over 5s'
-            END
-          ORDER BY 
-            CASE 
-              WHEN CASE 
-                WHEN "responseTime" < 100 THEN 'Under 100ms'
-                WHEN "responseTime" < 500 THEN '100-500ms'
-                WHEN "responseTime" < 1000 THEN '500ms-1s'
-                WHEN "responseTime" < 5000 THEN '1-5s'
-                ELSE 'Over 5s'
-              END = 'Under 100ms' THEN 1
-              WHEN CASE 
-                WHEN "responseTime" < 100 THEN 'Under 100ms'
-                WHEN "responseTime" < 500 THEN '100-500ms'
-                WHEN "responseTime" < 1000 THEN '500ms-1s'
-                WHEN "responseTime" < 5000 THEN '1-5s'
-                ELSE 'Over 5s'
-              END = '100-500ms' THEN 2
-              WHEN CASE 
-                WHEN "responseTime" < 100 THEN 'Under 100ms'
-                WHEN "responseTime" < 500 THEN '100-500ms'
-                WHEN "responseTime" < 1000 THEN '500ms-1s'
-                WHEN "responseTime" < 5000 THEN '1-5s'
-                ELSE 'Over 5s'
-              END = '500ms-1s' THEN 3
-              WHEN CASE 
-                WHEN "responseTime" < 100 THEN 'Under 100ms'
-                WHEN "responseTime" < 500 THEN '100-500ms'
-                WHEN "responseTime" < 1000 THEN '500ms-1s'
-                WHEN "responseTime" < 5000 THEN '1-5s'
-                ELSE 'Over 5s'
-              END = '1-5s' THEN 4
-              ELSE 5
-            END
-        `,
+      // Response time distribution using application logic
+      prisma.performanceMetric.findMany({
+        where: whereClause,
+        select: {
+          responseTime: true
+        }
+      }).then(metrics => {
+        // Categorize response times in application logic
+        const responseCategories = {
+          'Under 100ms': { count: 0, totalTime: 0 },
+          '100-500ms': { count: 0, totalTime: 0 },
+          '500ms-1s': { count: 0, totalTime: 0 },
+          '1-5s': { count: 0, totalTime: 0 },
+          'Over 5s': { count: 0, totalTime: 0 }
+        };
+
+        metrics.forEach(metric => {
+          const time = metric.responseTime;
+          let category: keyof typeof responseCategories;
+          
+          if (time < 100) category = 'Under 100ms';
+          else if (time < 500) category = '100-500ms';
+          else if (time < 1000) category = '500ms-1s';
+          else if (time < 5000) category = '1-5s';
+          else category = 'Over 5s';
+          
+          responseCategories[category].count++;
+          responseCategories[category].totalTime += time;
+        });
+
+        return Object.entries(responseCategories).map(([range, data]) => ({
+          response_range: range,
+          count: data.count,
+          avg_response_time: data.count > 0 ? data.totalTime / data.count : 0
+        }));
+      }),
       
       // Status code distribution
       prisma.performanceMetric.groupBy({
@@ -222,31 +147,54 @@ export async function GET(request: NextRequest) {
         take: 50,
       }),
       
-      // Performance trends over time
-      endpoint && endpoint !== null ?
-        prisma.$queryRaw`
-          SELECT 
-            DATE_TRUNC('hour', "recordedAt") as hour,
-            COUNT(*) as request_count,
-            AVG("responseTime") as avg_response_time,
-            COUNT(CASE WHEN "statusCode" >= 400 THEN 1 END) as error_count
-          FROM "PerformanceMetric"
-          WHERE "recordedAt" >= ${startDate}
-          AND "endpoint" = ${endpoint}
-          GROUP BY DATE_TRUNC('hour', "recordedAt")
-          ORDER BY hour ASC
-        ` :
-        prisma.$queryRaw`
-          SELECT 
-            DATE_TRUNC('hour', "recordedAt") as hour,
-            COUNT(*) as request_count,
-            AVG("responseTime") as avg_response_time,
-            COUNT(CASE WHEN "statusCode" >= 400 THEN 1 END) as error_count
-          FROM "PerformanceMetric"
-          WHERE "recordedAt" >= ${startDate}
-          GROUP BY DATE_TRUNC('hour', "recordedAt")
-          ORDER BY hour ASC
-        `,
+      // Performance trends over time using Prisma groupBy
+      prisma.performanceMetric.groupBy({
+        by: ['recordedAt'],
+        where: whereClause,
+        _count: {
+          id: true
+        },
+        _avg: {
+          responseTime: true
+        },
+        orderBy: {
+          recordedAt: 'asc'
+        }
+      }).then(data => {
+        // Process the data to group by hour
+        const hourlyTrends = new Map<string, { requestCount: number; totalResponseTime: number; errorCount: number; count: number }>();
+        
+        // Also get error counts
+        return prisma.performanceMetric.findMany({
+          where: whereClause,
+          select: {
+            recordedAt: true,
+            responseTime: true,
+            statusCode: true
+          }
+        }).then(allMetrics => {
+          allMetrics.forEach(metric => {
+            const hour = new Date(metric.recordedAt);
+            hour.setMinutes(0, 0, 0);
+            const hourKey = hour.toISOString();
+            
+            const existing = hourlyTrends.get(hourKey) || { requestCount: 0, totalResponseTime: 0, errorCount: 0, count: 0 };
+            existing.requestCount += 1;
+            existing.totalResponseTime += metric.responseTime;
+            if (metric.statusCode >= 400) existing.errorCount += 1;
+            existing.count += 1;
+            hourlyTrends.set(hourKey, existing);
+          });
+
+          // Convert to array format
+          return Array.from(hourlyTrends.entries()).map(([hour, data]) => ({
+            hour: new Date(hour),
+            request_count: data.requestCount,
+            avg_response_time: data.count > 0 ? data.totalResponseTime / data.count : 0,
+            error_count: data.errorCount
+          })).sort((a, b) => a.hour.getTime() - b.hour.getTime());
+        });
+      }),
     ]);
 
     // Calculate error rate

@@ -142,17 +142,22 @@ export async function GET(request: NextRequest) {
 
       // Try to get billing metrics (might not exist)
       try {
-        // Check if billing tables exist first
-        const billingTablesExist = await prisma.$queryRaw`
-          SELECT EXISTS (
-            SELECT FROM information_schema.tables 
-            WHERE table_name = 'Subscription'
-          ) as subscription_exists,
-          EXISTS (
-            SELECT FROM information_schema.tables 
-            WHERE table_name = 'Payment'
-          ) as payment_exists
-        `.then((result: any) => result[0]);
+        // Check if billing tables exist by attempting queries with error handling
+        let billingTablesExist = { subscription_exists: false, payment_exists: false };
+        
+        try {
+          await prisma.subscription.findFirst();
+          billingTablesExist.subscription_exists = true;
+        } catch (e) {
+          // Subscription table doesn't exist
+        }
+        
+        try {
+          await prisma.payment.findFirst();
+          billingTablesExist.payment_exists = true;
+        } catch (e) {
+          // Payment table doesn't exist
+        }
 
         if (billingTablesExist.subscription_exists && billingTablesExist.payment_exists) {
           const [totalSubscriptions, activeSubscriptions, totalRevenue, recentRevenue] = await Promise.allSettled([
@@ -206,35 +211,28 @@ export async function GET(request: NextRequest) {
 
       // Get user growth trend data
       try {
-        // Try PostgreSQL syntax first, fallback to generic SQL
-        let userGrowthTrend;
-        try {
-          userGrowthTrend = await prisma.$queryRaw<Array<{ date: Date; count: number }>>`
-            SELECT 
-              DATE_TRUNC('day', "createdAt")::date as date,
-              COUNT(*)::int as count
-            FROM "User"
-            WHERE "createdAt" >= ${startDate}
-            GROUP BY DATE_TRUNC('day', "createdAt")
-            ORDER BY date ASC
-          `;
-        } catch (pgError) {
-          // Fallback for other databases
-          userGrowthTrend = await prisma.$queryRaw<Array<{ date: Date; count: number }>>`
-            SELECT 
-              DATE("createdAt") as date,
-              COUNT(*) as count
-            FROM "User"
-            WHERE "createdAt" >= ${startDate}
-            GROUP BY DATE("createdAt")
-            ORDER BY date ASC
-          `;
-        }
+        // Get user registrations grouped by date using Prisma groupBy
+        const userGrowthData = await prisma.user.groupBy({
+          by: ['createdAt'],
+          where: {
+            createdAt: { gte: startDate }
+          },
+          _count: {
+            id: true
+          },
+          orderBy: {
+            createdAt: 'asc'
+          }
+        });
 
-        // Create a map of existing data
-        const userGrowthMap = new Map(
-          userGrowthTrend.map(item => [formatDate(item.date), item.count])
-        );
+        // Process the data to group by day
+        const userGrowthMap = new Map<string, number>();
+        
+        userGrowthData.forEach(item => {
+          const dateKey = formatDate(item.createdAt);
+          const currentCount = userGrowthMap.get(dateKey) || 0;
+          userGrowthMap.set(dateKey, currentCount + item._count.id);
+        });
 
         // Fill in all dates with actual data or 0
         analytics.trends.userGrowth = allDates.map(date => ({
@@ -252,42 +250,35 @@ export async function GET(request: NextRequest) {
 
       // Get upload trend data
       try {
-        let uploadTrend;
-        try {
-          uploadTrend = await prisma.$queryRaw<Array<{ date: Date; uploads: number; storage: bigint }>>`
-            SELECT 
-              DATE_TRUNC('day', "createdAt")::date as date,
-              COUNT(*)::int as uploads,
-              COALESCE(SUM("fileSize"), 0)::bigint as storage
-            FROM "FileUpload"
-            WHERE "createdAt" >= ${startDate} AND status = 'completed'
-            GROUP BY DATE_TRUNC('day', "createdAt")
-            ORDER BY date ASC
-          `;
-        } catch (pgError) {
-          // Fallback for other databases
-          uploadTrend = await prisma.$queryRaw<Array<{ date: Date; uploads: number; storage: bigint }>>`
-            SELECT 
-              DATE("createdAt") as date,
-              COUNT(*) as uploads,
-              COALESCE(SUM("fileSize"), 0) as storage
-            FROM "FileUpload"
-            WHERE "createdAt" >= ${startDate} AND status = 'completed'
-            GROUP BY DATE("createdAt")
-            ORDER BY date ASC
-          `;
-        }
+        // Get upload data grouped by date using Prisma groupBy
+        const uploadData = await prisma.fileUpload.groupBy({
+          by: ['createdAt'],
+          where: {
+            createdAt: { gte: startDate },
+            status: 'completed'
+          },
+          _count: {
+            id: true
+          },
+          _sum: {
+            fileSize: true
+          },
+          orderBy: {
+            createdAt: 'asc'
+          }
+        });
 
-        // Create a map of existing data
-        const uploadTrendMap = new Map(
-          uploadTrend.map(item => [
-            formatDate(item.date),
-            {
-              uploads: item.uploads,
-              storage: Number(item.storage)
-            }
-          ])
-        );
+        // Process the data to group by day
+        const uploadTrendMap = new Map<string, { uploads: number; storage: number }>();
+        
+        uploadData.forEach(item => {
+          const dateKey = formatDate(item.createdAt);
+          const existing = uploadTrendMap.get(dateKey) || { uploads: 0, storage: 0 };
+          uploadTrendMap.set(dateKey, {
+            uploads: existing.uploads + item._count.id,
+            storage: existing.storage + (Number(item._sum.fileSize) || 0)
+          });
+        });
 
         // Fill in all dates with actual data or 0
         analytics.trends.uploads = allDates.map(date => {
@@ -310,51 +301,45 @@ export async function GET(request: NextRequest) {
 
       // Get revenue trend data
       try {
-        // Check if payment table exists first
-        const paymentTableExists = await prisma.$queryRaw`
-          SELECT EXISTS (
-            SELECT FROM information_schema.tables 
-            WHERE table_name = 'Payment'
-          ) as exists
-        `.then((result: any) => result[0]?.exists);
+        // Check if payment table exists by attempting a query with error handling
+        let paymentTableExists = false;
+        try {
+          await prisma.payment.findFirst();
+          paymentTableExists = true;
+        } catch (e) {
+          // Payment table doesn't exist
+        }
 
         if (paymentTableExists) {
-          let revenueTrend;
-          try {
-            revenueTrend = await prisma.$queryRaw<Array<{ date: Date; payments: number; revenue: number }>>`
-              SELECT 
-                DATE_TRUNC('day', "createdAt")::date as date,
-                COUNT(*)::int as payments,
-                COALESCE(SUM("amount"), 0)::float as revenue
-              FROM "Payment"
-              WHERE "createdAt" >= ${startDate} AND status = 'completed'
-              GROUP BY DATE_TRUNC('day', "createdAt")
-              ORDER BY date ASC
-            `;
-          } catch (pgError) {
-            // Fallback for other databases
-            revenueTrend = await prisma.$queryRaw<Array<{ date: Date; payments: number; revenue: number }>>`
-              SELECT 
-                DATE("createdAt") as date,
-                COUNT(*) as payments,
-                COALESCE(SUM("amount"), 0) as revenue
-              FROM "Payment"
-              WHERE "createdAt" >= ${startDate} AND status = 'completed'
-              GROUP BY DATE("createdAt")
-              ORDER BY date ASC
-            `;
-          }
+          // Get payment data grouped by date using Prisma groupBy
+          const paymentData = await prisma.payment.groupBy({
+            by: ['createdAt'],
+            where: {
+              createdAt: { gte: startDate },
+              status: 'completed'
+            },
+            _count: {
+              id: true
+            },
+            _sum: {
+              amount: true
+            },
+            orderBy: {
+              createdAt: 'asc'
+            }
+          });
 
-          // Create a map of existing data
-          const revenueTrendMap = new Map(
-            revenueTrend.map(item => [
-              formatDate(item.date),
-              {
-                payments: item.payments,
-                revenue: Number(item.revenue) || 0
-              }
-            ])
-          );
+          // Process the data to group by day
+          const revenueTrendMap = new Map<string, { payments: number; revenue: number }>();
+          
+          paymentData.forEach(item => {
+            const dateKey = formatDate(item.createdAt);
+            const existing = revenueTrendMap.get(dateKey) || { payments: 0, revenue: 0 };
+            revenueTrendMap.set(dateKey, {
+              payments: existing.payments + item._count.id,
+              revenue: existing.revenue + (Number(item._sum.amount) || 0)
+            });
+          });
 
           // Fill in all dates with actual data or 0
           analytics.trends.revenue = allDates.map(date => {
@@ -415,13 +400,14 @@ export async function GET(request: NextRequest) {
 
       // Try to get recent activity
       try {
-        // Check if audit log table exists first
-        const auditLogExists = await prisma.$queryRaw`
-          SELECT EXISTS (
-            SELECT FROM information_schema.tables 
-            WHERE table_name = 'AuditLog'
-          ) as exists
-        `.then((result: any) => result[0]?.exists);
+        // Check if audit log table exists by attempting a query with error handling
+        let auditLogExists = false;
+        try {
+          await prisma.auditLog.findFirst();
+          auditLogExists = true;
+        } catch (e) {
+          // AuditLog table doesn't exist
+        }
 
         if (auditLogExists) {
           const recentActivity = await prisma.auditLog.findMany({

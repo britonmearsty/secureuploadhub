@@ -155,108 +155,80 @@ export async function GET(request: NextRequest) {
         console.log('Status distribution not available:', statusError);
       }
 
-      // Get registration trends
+      // Get registration trends using Prisma groupBy
       try {
-        let registrationTrends;
-        if (groupBy === 'day') {
-          registrationTrends = await prisma.$queryRaw`
-            SELECT 
-              DATE_TRUNC('day', "createdAt") as period,
-              COUNT(*)::int as registrations
-            FROM "User"
-            WHERE "createdAt" >= ${startDate}
-            GROUP BY DATE_TRUNC('day', "createdAt")
-            ORDER BY period ASC
-          `;
-        } else if (groupBy === 'week') {
-          registrationTrends = await prisma.$queryRaw`
-            SELECT 
-              DATE_TRUNC('week', "createdAt") as period,
-              COUNT(*)::int as registrations
-            FROM "User"
-            WHERE "createdAt" >= ${startDate}
-            GROUP BY DATE_TRUNC('week', "createdAt")
-            ORDER BY period ASC
-          `;
-        } else {
-          registrationTrends = await prisma.$queryRaw`
-            SELECT 
-              DATE_TRUNC('month', "createdAt") as period,
-              COUNT(*)::int as registrations
-            FROM "User"
-            WHERE "createdAt" >= ${startDate}
-            GROUP BY DATE_TRUNC('month', "createdAt")
-            ORDER BY period ASC
-          `;
-        }
-        // Format periods as ISO date strings
-        userAnalytics.trends.registrations = (registrationTrends as any[]).map((trend: any) => {
-          let periodValue = trend.period;
-          if (trend.period instanceof Date) {
-            periodValue = trend.period.toISOString().split('T')[0];
-          } else if (typeof trend.period === 'string' && trend.period.includes('T')) {
-            periodValue = trend.period.split('T')[0];
+        const userData = await prisma.user.groupBy({
+          by: ['createdAt'],
+          where: {
+            createdAt: { gte: startDate }
+          },
+          _count: {
+            id: true
+          },
+          orderBy: {
+            createdAt: 'asc'
+          }
+        });
+
+        // Process the data based on groupBy parameter
+        const trendsMap = new Map<string, number>();
+        
+        userData.forEach(item => {
+          let periodKey: string;
+          const date = new Date(item.createdAt);
+          
+          if (groupBy === 'day') {
+            periodKey = date.toISOString().split('T')[0];
+          } else if (groupBy === 'week') {
+            // Get start of week (Sunday)
+            const startOfWeek = new Date(date);
+            startOfWeek.setDate(date.getDate() - date.getDay());
+            periodKey = startOfWeek.toISOString().split('T')[0];
+          } else { // month
+            periodKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`;
           }
           
-          return {
-            period: periodValue,
-            registrations: Number(trend.registrations) || 0
-          };
+          const existing = trendsMap.get(periodKey) || 0;
+          trendsMap.set(periodKey, existing + item._count.id);
         });
+
+        // Convert to array
+        userAnalytics.trends.registrations = Array.from(trendsMap.entries()).map(([period, registrations]) => ({
+          period,
+          registrations
+        })).sort((a, b) => a.period.localeCompare(b.period));
       } catch (trendsError) {
         console.log('Registration trends not available:', trendsError);
       }
 
-      // Get activity statistics
+      // Get activity statistics using Prisma queries
       try {
-        const activityStats = await prisma.$queryRaw`
-          SELECT 
-            COUNT(DISTINCT u.id)::int as total_users,
-            0::int as active_users,
-            COUNT(DISTINCT CASE WHEN up.id IS NOT NULL THEN u.id END)::int as users_with_portals,
-            COUNT(DISTINCT CASE WHEN fu.id IS NOT NULL THEN u.id END)::int as users_with_uploads
-          FROM "User" u
-          LEFT JOIN "UploadPortal" up ON u.id = up."userId"
-          LEFT JOIN "FileUpload" fu ON u.id = fu."userId"
-        `;
-        const stats = (activityStats as any[])[0];
-        if (stats) {
-          userAnalytics.activity = {
-            total_users: stats.total_users || 0,
-            active_users: stats.active_users || 0,
-            users_with_portals: stats.users_with_portals || 0,
-            users_with_uploads: stats.users_with_uploads || 0,
-          };
-        }
-      } catch (activityError) {
-        console.log('Activity statistics not available:', activityError);
-        // Try a simpler approach
-        try {
-          const totalUsers = await prisma.user.count();
-          const usersWithPortals = await prisma.user.count({
+        const [totalUsers, usersWithPortals, usersWithUploads] = await Promise.all([
+          prisma.user.count(),
+          prisma.user.count({
             where: {
               uploadPortals: {
                 some: {}
               }
             }
-          });
-          const usersWithUploads = await prisma.user.count({
+          }),
+          prisma.user.count({
             where: {
               fileUploads: {
                 some: {}
               }
             }
-          });
-          
-          userAnalytics.activity = {
-            total_users: totalUsers,
-            active_users: 0,
-            users_with_portals: usersWithPortals,
-            users_with_uploads: usersWithUploads,
-          };
-        } catch (fallbackError) {
-          console.log('Fallback activity stats failed:', fallbackError);
-        }
+          })
+        ]);
+        
+        userAnalytics.activity = {
+          total_users: totalUsers,
+          active_users: 0, // Could be calculated based on recent activity
+          users_with_portals: usersWithPortals,
+          users_with_uploads: usersWithUploads,
+        };
+      } catch (activityError) {
+        console.log('Activity statistics not available:', activityError);
       }
 
       // Get top users

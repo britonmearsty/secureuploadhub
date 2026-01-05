@@ -33,6 +33,14 @@
 
   --ring: #3182ce;
 
+  /* Success/Active state colors */
+  --success: #38a169;
+  --success-foreground: #ffffff;
+
+  /* Warning colors */
+  --warning: #d69e2e;
+  --warning-foreground: #ffffff;
+
   /* Clean Panel Effects - No Blur */
   --glass-border: #e2e8f0;
   --glass-bg: #ffffff;
@@ -69,6 +77,14 @@
 
   --ring: #63b3ed;
 
+  /* Success/Active state colors */
+  --success: #68d391;
+  --success-foreground: #1a202c;
+
+  /* Warning colors */
+  --warning: #f6e05e;
+  --warning-foreground: #1a202c;
+
   /* Clean Panel Effects - No Blur */
   --glass-border: #4a5568;
   --glass-bg: #2d3748;
@@ -101,6 +117,12 @@
 
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
 
   --color-ring: var(--ring);
 

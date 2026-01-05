@@ -41,17 +41,34 @@ export async function GET(request: NextRequest) {
         }
       }),
 
-      // Upload trends by day
-      prisma.$queryRaw`
-        SELECT 
-          DATE(created_at) as date,
-          COUNT(*) as uploads,
-          COUNT(DISTINCT portal_id) as active_portals
-        FROM "FileUpload"
-        WHERE created_at >= ${startDate}
-        GROUP BY DATE(created_at)
-        ORDER BY date ASC
-      `,
+      // Upload trends by day - using Prisma groupBy
+      prisma.fileUpload.groupBy({
+        by: ['createdAt', 'portalId'],
+        where: {
+          createdAt: { gte: startDate }
+        },
+        _count: {
+          id: true
+        }
+      }).then(data => {
+        // Process the grouped data to get daily trends
+        const dailyTrends = new Map<string, { uploads: number; active_portals: Set<string> }>();
+        
+        data.forEach(item => {
+          const dateKey = item.createdAt.toISOString().split('T')[0];
+          const existing = dailyTrends.get(dateKey) || { uploads: 0, active_portals: new Set() };
+          existing.uploads += item._count.id;
+          existing.active_portals.add(item.portalId);
+          dailyTrends.set(dateKey, existing);
+        });
+
+        // Convert to array format
+        return Array.from(dailyTrends.entries()).map(([date, data]) => ({
+          date,
+          uploads: data.uploads,
+          active_portals: data.active_portals.size
+        })).sort((a, b) => a.date.localeCompare(b.date));
+      }),
 
       // Top portals by upload count
       prisma.uploadPortal.findMany({
@@ -105,33 +122,66 @@ export async function GET(request: NextRequest) {
       })
     ]);
 
-    // Get file type distribution
-    const fileTypeStats = await prisma.$queryRaw`
-      SELECT 
-        mime_type,
-        COUNT(*) as count,
-        SUM(file_size) as total_size
-      FROM "FileUpload"
-      WHERE created_at >= ${startDate}
-      GROUP BY mime_type
-      ORDER BY count DESC
-      LIMIT 10
-    `;
+    // Get file type distribution using Prisma groupBy
+    const fileTypeStats = await prisma.fileUpload.groupBy({
+      by: ['mimeType'],
+      where: {
+        createdAt: { gte: startDate }
+      },
+      _count: {
+        id: true
+      },
+      _sum: {
+        fileSize: true
+      },
+      orderBy: {
+        _count: {
+          id: 'desc'
+        }
+      },
+      take: 10
+    }).then(data => 
+      data.map(item => ({
+        mime_type: item.mimeType,
+        count: item._count.id,
+        total_size: Number(item._sum.fileSize) || 0
+      }))
+    );
 
-    // Get storage usage by portal
-    const storageStats = await prisma.$queryRaw`
-      SELECT 
-        p.id,
-        p.name,
-        p.slug,
-        COUNT(f.id) as upload_count,
-        COALESCE(SUM(f.file_size), 0) as total_size
-      FROM "UploadPortal" p
-      LEFT JOIN "FileUpload" f ON p.id = f.portal_id AND f.status = 'completed'
-      GROUP BY p.id, p.name, p.slug
-      ORDER BY total_size DESC
-      LIMIT 10
-    `;
+    // Get storage usage by portal using Prisma with include
+    const storageStats = await prisma.uploadPortal.findMany({
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        uploads: {
+          where: {
+            status: 'completed'
+          },
+          select: {
+            fileSize: true
+          }
+        },
+        _count: {
+          select: {
+            uploads: {
+              where: {
+                status: 'completed'
+              }
+            }
+          }
+        }
+      },
+      take: 10
+    }).then(portals => 
+      portals.map(portal => ({
+        id: portal.id,
+        name: portal.name,
+        slug: portal.slug,
+        upload_count: portal._count.uploads,
+        total_size: portal.uploads.reduce((sum, upload) => sum + (Number(upload.fileSize) || 0), 0)
+      })).sort((a, b) => b.total_size - a.total_size)
+    );
 
     const analytics = {
       overview: {

@@ -245,20 +245,28 @@ export async function GET(request: NextRequest) {
 
       // Try to get trends and merge with initialized data
       try {
-        const userGrowth = await prisma.$queryRaw<Array<{ date: Date; count: number }>>`
-          SELECT 
-            DATE_TRUNC('day', "createdAt")::date as date,
-            COUNT(*)::int as count
-          FROM "User"
-          WHERE "createdAt" >= ${startDate}
-          GROUP BY DATE_TRUNC('day', "createdAt")
-          ORDER BY date ASC
-        `;
+        // Get user growth using Prisma groupBy
+        const userData = await prisma.user.groupBy({
+          by: ['createdAt'],
+          where: {
+            createdAt: { gte: startDate }
+          },
+          _count: {
+            id: true
+          },
+          orderBy: {
+            createdAt: 'asc'
+          }
+        });
 
-        // Create a map of existing data
-        const userGrowthMap = new Map(
-          userGrowth.map(item => [formatDate(item.date), item.count])
-        );
+        // Process the data to group by day
+        const userGrowthMap = new Map<string, number>();
+        
+        userData.forEach(item => {
+          const dateKey = formatDate(item.createdAt);
+          const currentCount = userGrowthMap.get(dateKey) || 0;
+          userGrowthMap.set(dateKey, currentCount + item._count.id);
+        });
 
         // Update initialized data with actual values
         dashboardData.trends.userGrowth = dashboardData.trends.userGrowth.map(item => ({
@@ -271,27 +279,33 @@ export async function GET(request: NextRequest) {
       }
 
       try {
-        const uploadTrends = await prisma.$queryRaw<Array<{ date: Date; count: number; total_size: bigint }>>`
-          SELECT 
-            DATE_TRUNC('day', "createdAt")::date as date,
-            COUNT(*)::int as count,
-            COALESCE(SUM("fileSize"), 0)::bigint as total_size
-          FROM "FileUpload"
-          WHERE "createdAt" >= ${startDate}
-          GROUP BY DATE_TRUNC('day', "createdAt")
-          ORDER BY date ASC
-        `;
+        // Get upload trends using Prisma groupBy
+        const uploadData = await prisma.fileUpload.groupBy({
+          by: ['createdAt'],
+          where: {
+            createdAt: { gte: startDate }
+          },
+          _count: {
+            id: true
+          },
+          _sum: {
+            fileSize: true
+          },
+          orderBy: {
+            createdAt: 'asc'
+          }
+        });
 
-        // Create a map of existing data
-        const uploadTrendsMap = new Map(
-          uploadTrends.map(item => [
-            formatDate(item.date),
-            {
-              count: item.count,
-              total_size: Number(item.total_size)
-            }
-          ])
-        );
+        // Process the data to group by day
+        const uploadTrendsMap = new Map<string, { count: number; total_size: number }>();
+        
+        uploadData.forEach(item => {
+          const dateKey = formatDate(item.createdAt);
+          const existing = uploadTrendsMap.get(dateKey) || { count: 0, total_size: 0 };
+          existing.count += item._count.id;
+          existing.total_size += Number(item._sum.fileSize) || 0;
+          uploadTrendsMap.set(dateKey, existing);
+        });
 
         // Update initialized data with actual values
         dashboardData.trends.uploadTrends = dashboardData.trends.uploadTrends.map(item => {

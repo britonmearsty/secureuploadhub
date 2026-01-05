@@ -95,17 +95,41 @@ export async function GET(request: NextRequest) {
         }
       }),
 
-      // Revenue trends by day (last 30 days)
-      prisma.$queryRaw`
-        SELECT 
-          DATE(created_at) as date,
-          COUNT(*) as payments,
-          SUM(amount) as revenue
-        FROM "Payment"
-        WHERE status = 'succeeded' AND created_at >= ${startDate}
-        GROUP BY DATE(created_at)
-        ORDER BY date ASC
-      `,
+      // Revenue trends by day using Prisma groupBy
+      prisma.payment.groupBy({
+        by: ['createdAt'],
+        where: {
+          status: 'succeeded',
+          createdAt: { gte: startDate }
+        },
+        _count: {
+          id: true
+        },
+        _sum: {
+          amount: true
+        },
+        orderBy: {
+          createdAt: 'asc'
+        }
+      }).then(data => {
+        // Process the grouped data to get daily trends
+        const dailyTrends = new Map<string, { payments: number; revenue: number }>();
+        
+        data.forEach(item => {
+          const dateKey = item.createdAt.toISOString().split('T')[0];
+          const existing = dailyTrends.get(dateKey) || { payments: 0, revenue: 0 };
+          existing.payments += item._count.id;
+          existing.revenue += Number(item._sum.amount) || 0;
+          dailyTrends.set(dateKey, existing);
+        });
+
+        // Convert to array format
+        return Array.from(dailyTrends.entries()).map(([date, data]) => ({
+          date,
+          payments: data.payments,
+          revenue: data.revenue
+        })).sort((a, b) => a.date.localeCompare(b.date));
+      }),
 
       // Calculate churn rate (cancelled in last 30 days / total active at start of period)
       Promise.all([
@@ -153,13 +177,23 @@ export async function GET(request: NextRequest) {
       ? (churnedSubscriptions / activeAtPeriodStart) * 100 
       : 0;
 
-    // Monthly Recurring Revenue (MRR)
-    const mrr = await prisma.$queryRaw`
-      SELECT SUM(bp.price) as mrr
-      FROM "Subscription" s
-      JOIN "BillingPlan" bp ON s.plan_id = bp.id
-      WHERE s.status = 'active'
-    `;
+    // Monthly Recurring Revenue (MRR) using Prisma with include
+    const mrrData = await prisma.subscription.findMany({
+      where: {
+        status: 'active'
+      },
+      include: {
+        plan: {
+          select: {
+            price: true
+          }
+        }
+      }
+    });
+
+    const mrr = mrrData.reduce((sum, subscription) => {
+      return sum + (Number(subscription.plan?.price) || 0);
+    }, 0);
 
     // Average Revenue Per User (ARPU)
     const arpu = activeSubscriptions > 0 
@@ -177,7 +211,7 @@ export async function GET(request: NextRequest) {
       revenue: {
         total: totalRevenue._sum.amount || 0,
         recent: recentRevenue._sum.amount || 0,
-        mrr: (mrr as any)[0]?.mrr || 0,
+        mrr: mrr,
         arpu: Math.round(arpu * 100) / 100,
         trends: revenueTrends
       },

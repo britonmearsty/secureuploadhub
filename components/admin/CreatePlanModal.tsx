@@ -19,6 +19,7 @@ interface PlanFormData {
   currency: string;
   features: string[];
   isActive: boolean;
+  maxPortals: number;
   maxStorageGB: number;
   maxUploadsMonth: number;
 }
@@ -32,6 +33,7 @@ export function CreatePlanModal({ isOpen, onClose, onSuccess, onError, editPlan 
     currency: editPlan?.currency || 'USD',
     features: editPlan?.features && editPlan.features.length > 0 ? editPlan.features : [''],
     isActive: editPlan?.isActive !== undefined ? editPlan.isActive : true,
+    maxPortals: editPlan?.maxPortals || 1,
     maxStorageGB: editPlan?.maxStorageGB || 1,
     maxUploadsMonth: editPlan?.maxUploadsMonth || 100
   });
@@ -47,6 +49,7 @@ export function CreatePlanModal({ isOpen, onClose, onSuccess, onError, editPlan 
         currency: editPlan.currency || 'USD',
         features: editPlan.features && editPlan.features.length > 0 ? editPlan.features : [''],
         isActive: editPlan.isActive !== undefined ? editPlan.isActive : true,
+        maxPortals: editPlan.maxPortals || 1,
         maxStorageGB: editPlan.maxStorageGB || 1,
         maxUploadsMonth: editPlan.maxUploadsMonth || 100
       });
@@ -59,6 +62,7 @@ export function CreatePlanModal({ isOpen, onClose, onSuccess, onError, editPlan 
         currency: 'USD',
         features: [''],
         isActive: true,
+        maxPortals: 1,
         maxStorageGB: 1,
         maxUploadsMonth: 100
       });
@@ -74,6 +78,10 @@ export function CreatePlanModal({ isOpen, onClose, onSuccess, onError, editPlan 
 
     if (formData.price < 0) {
       newErrors.price = 'Price must be 0 or greater';
+    }
+
+    if (formData.maxPortals < -1 || formData.maxPortals === 0) {
+      newErrors.maxPortals = 'Must be -1 (unlimited) or positive number';
     }
 
     if (formData.maxStorageGB < -1 || formData.maxStorageGB === 0) {
@@ -146,6 +154,7 @@ export function CreatePlanModal({ isOpen, onClose, onSuccess, onError, editPlan 
         currency: 'USD',
         features: [''],
         isActive: true,
+        maxPortals: 1,
         maxStorageGB: 1,
         maxUploadsMonth: 100
       });
@@ -338,7 +347,26 @@ export function CreatePlanModal({ isOpen, onClose, onSuccess, onError, editPlan 
               <h3 className="text-lg font-medium text-slate-900">Limits</h3>
               <p className="text-sm text-slate-600">Use -1 for unlimited</p>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Max Portals *
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.maxPortals}
+                    onChange={(e) => setFormData(prev => ({ ...prev, maxPortals: parseInt(e.target.value) || 0 }))}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent ${
+                      errors.maxPortals ? 'border-red-300' : 'border-slate-300'
+                    }`}
+                    placeholder="-1 for unlimited"
+                    disabled={loading}
+                  />
+                  {errors.maxPortals && (
+                    <p className="mt-1 text-sm text-red-600">{errors.maxPortals}</p>
+                  )}
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     Max Storage (GB) *

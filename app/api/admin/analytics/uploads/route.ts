@@ -152,63 +152,60 @@ export async function GET(request: NextRequest) {
       uploadAnalytics.summary.totalSizeGB = Math.round(((uploadStats._sum.fileSize || 0) / (1024 * 1024 * 1024)) * 100) / 100;
       uploadAnalytics.summary.averageSize = Math.round((uploadStats._avg.fileSize || 0) / 1024); // in KB
 
-      // Get upload trends
+      // Get upload trends using Prisma groupBy
       try {
-        let uploadTrends;
-        if (groupBy === 'day') {
-          uploadTrends = await prisma.$queryRaw`
-            SELECT 
-              DATE_TRUNC('day', "createdAt") as period,
-              COUNT(*)::int as upload_count,
-              COALESCE(SUM("fileSize"), 0)::bigint as total_size,
-              COALESCE(AVG("fileSize"), 0)::bigint as avg_size
-            FROM "FileUpload"
-            WHERE "createdAt" >= ${startDate}
-            GROUP BY DATE_TRUNC('day', "createdAt")
-            ORDER BY period ASC
-          `;
-        } else if (groupBy === 'week') {
-          uploadTrends = await prisma.$queryRaw`
-            SELECT 
-              DATE_TRUNC('week', "createdAt") as period,
-              COUNT(*)::int as upload_count,
-              COALESCE(SUM("fileSize"), 0)::bigint as total_size,
-              COALESCE(AVG("fileSize"), 0)::bigint as avg_size
-            FROM "FileUpload"
-            WHERE "createdAt" >= ${startDate}
-            GROUP BY DATE_TRUNC('week', "createdAt")
-            ORDER BY period ASC
-          `;
-        } else {
-          uploadTrends = await prisma.$queryRaw`
-            SELECT 
-              DATE_TRUNC('month', "createdAt") as period,
-              COUNT(*)::int as upload_count,
-              COALESCE(SUM("fileSize"), 0)::bigint as total_size,
-              COALESCE(AVG("fileSize"), 0)::bigint as avg_size
-            FROM "FileUpload"
-            WHERE "createdAt" >= ${startDate}
-            GROUP BY DATE_TRUNC('month', "createdAt")
-            ORDER BY period ASC
-          `;
-        }
+        const uploadData = await prisma.fileUpload.groupBy({
+          by: ['createdAt'],
+          where: {
+            createdAt: { gte: startDate }
+          },
+          _count: {
+            id: true
+          },
+          _sum: {
+            fileSize: true
+          },
+          _avg: {
+            fileSize: true
+          },
+          orderBy: {
+            createdAt: 'asc'
+          }
+        });
 
-        uploadAnalytics.trends.uploads = (uploadTrends as any[]).map((trend: any) => {
-          // Format period date as ISO string if it's a Date object
-          let periodValue = trend.period;
-          if (trend.period instanceof Date) {
-            periodValue = trend.period.toISOString().split('T')[0];
-          } else if (typeof trend.period === 'string' && trend.period.includes('T')) {
-            periodValue = trend.period.split('T')[0];
+        // Process the data based on groupBy parameter
+        const trendsMap = new Map<string, { uploadCount: number; totalSize: number; avgSize: number; count: number }>();
+        
+        uploadData.forEach(item => {
+          let periodKey: string;
+          const date = new Date(item.createdAt);
+          
+          if (groupBy === 'day') {
+            periodKey = date.toISOString().split('T')[0];
+          } else if (groupBy === 'week') {
+            // Get start of week (Sunday)
+            const startOfWeek = new Date(date);
+            startOfWeek.setDate(date.getDate() - date.getDay());
+            periodKey = startOfWeek.toISOString().split('T')[0];
+          } else { // month
+            periodKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-01`;
           }
           
-          return {
-            period: periodValue,
-            uploadCount: Number(trend.upload_count),
-            totalSize: Number(trend.total_size),
-            averageSize: Math.round(Number(trend.avg_size) / 1024), // in KB
-          };
+          const existing = trendsMap.get(periodKey) || { uploadCount: 0, totalSize: 0, avgSize: 0, count: 0 };
+          existing.uploadCount += item._count.id;
+          existing.totalSize += Number(item._sum.fileSize) || 0;
+          existing.avgSize += Number(item._avg.fileSize) || 0;
+          existing.count += 1;
+          trendsMap.set(periodKey, existing);
         });
+
+        // Convert to array and calculate final averages
+        uploadAnalytics.trends.uploads = Array.from(trendsMap.entries()).map(([period, data]) => ({
+          period,
+          uploadCount: data.uploadCount,
+          totalSize: data.totalSize,
+          averageSize: data.count > 0 ? Math.round((data.avgSize / data.count) / 1024) : 0, // in KB
+        })).sort((a, b) => a.period.localeCompare(b.period));
       } catch (trendsError) {
         console.log('Upload trends not available:', trendsError);
       }
@@ -241,36 +238,44 @@ export async function GET(request: NextRequest) {
         console.log('File type distribution not available:', fileTypesError);
       }
 
-      // Get file size distribution
+      // Get file size distribution using application logic
       try {
-        const sizeDistribution = await prisma.$queryRaw`
-          SELECT 
-            CASE 
-              WHEN "fileSize" < 1048576 THEN 'Under 1MB'
-              WHEN "fileSize" < 10485760 THEN '1-10MB'
-              WHEN "fileSize" < 104857600 THEN '10-100MB'
-              WHEN "fileSize" < 1073741824 THEN '100MB-1GB'
-              ELSE 'Over 1GB'
-            END as size_range,
-            COUNT(*)::int as count,
-            COALESCE(SUM("fileSize"), 0)::bigint as total_size
-          FROM "FileUpload"
-          WHERE "createdAt" >= ${startDate}
-          GROUP BY size_range
-          ORDER BY 
-            CASE size_range
-              WHEN 'Under 1MB' THEN 1
-              WHEN '1-10MB' THEN 2
-              WHEN '10-100MB' THEN 3
-              WHEN '100MB-1GB' THEN 4
-              WHEN 'Over 1GB' THEN 5
-            END
-        `;
+        const allUploads = await prisma.fileUpload.findMany({
+          where: {
+            createdAt: { gte: startDate }
+          },
+          select: {
+            fileSize: true
+          }
+        });
 
-        uploadAnalytics.distribution.fileSizes = (sizeDistribution as any[]).map((item: any) => ({
-          range: item.size_range,
-          count: Number(item.count),
-          totalSize: Number(item.total_size),
+        // Categorize file sizes in application logic
+        const sizeCategories = {
+          'Under 1MB': { count: 0, totalSize: 0 },
+          '1-10MB': { count: 0, totalSize: 0 },
+          '10-100MB': { count: 0, totalSize: 0 },
+          '100MB-1GB': { count: 0, totalSize: 0 },
+          'Over 1GB': { count: 0, totalSize: 0 }
+        };
+
+        allUploads.forEach(upload => {
+          const size = Number(upload.fileSize) || 0;
+          let category: keyof typeof sizeCategories;
+          
+          if (size < 1048576) category = 'Under 1MB';
+          else if (size < 10485760) category = '1-10MB';
+          else if (size < 104857600) category = '10-100MB';
+          else if (size < 1073741824) category = '100MB-1GB';
+          else category = 'Over 1GB';
+          
+          sizeCategories[category].count++;
+          sizeCategories[category].totalSize += size;
+        });
+
+        uploadAnalytics.distribution.fileSizes = Object.entries(sizeCategories).map(([range, data]) => ({
+          range,
+          count: data.count,
+          totalSize: data.totalSize,
         }));
       } catch (sizeDistError) {
         console.log('File size distribution not available:', sizeDistError);
@@ -335,35 +340,46 @@ export async function GET(request: NextRequest) {
         console.log('Top portals not available:', topPortalsError);
       }
 
-      // Get insights
+      // Get insights using Prisma aggregate
       try {
-        const averageFileSize = await prisma.$queryRaw`
-          SELECT COALESCE(AVG("fileSize"), 0)::bigint as avg_size
-          FROM "FileUpload"
-          WHERE "createdAt" >= ${startDate}
-        `;
-        const avgSize = (averageFileSize as any[])[0];
-        uploadAnalytics.insights.averageFileSize = avgSize ? 
-          Math.round(Number(avgSize.avg_size) / 1024) : 0; // in KB
+        const avgSizeResult = await prisma.fileUpload.aggregate({
+          where: {
+            createdAt: { gte: startDate }
+          },
+          _avg: {
+            fileSize: true
+          }
+        });
+        
+        uploadAnalytics.insights.averageFileSize = avgSizeResult._avg.fileSize ? 
+          Math.round(Number(avgSizeResult._avg.fileSize) / 1024) : 0; // in KB
       } catch (avgSizeError) {
         console.log('Average file size not available:', avgSizeError);
       }
 
       try {
-        const peakHours = await prisma.$queryRaw`
-          SELECT 
-            EXTRACT(HOUR FROM "createdAt")::int as hour,
-            COUNT(*)::int as upload_count
-          FROM "FileUpload"
-          WHERE "createdAt" >= ${startDate}
-          GROUP BY EXTRACT(HOUR FROM "createdAt")
-          ORDER BY upload_count DESC
-          LIMIT 5
-        `;
-        uploadAnalytics.insights.peakHours = (peakHours as any[]).map((hour: any) => ({
-          hour: Number(hour.hour),
-          uploadCount: Number(hour.upload_count),
-        }));
+        // Get peak hours using application logic
+        const allUploads = await prisma.fileUpload.findMany({
+          where: {
+            createdAt: { gte: startDate }
+          },
+          select: {
+            createdAt: true
+          }
+        });
+
+        // Count uploads by hour
+        const hourCounts = new Map<number, number>();
+        allUploads.forEach(upload => {
+          const hour = upload.createdAt.getHours();
+          hourCounts.set(hour, (hourCounts.get(hour) || 0) + 1);
+        });
+
+        // Convert to array and sort by count
+        uploadAnalytics.insights.peakHours = Array.from(hourCounts.entries())
+          .map(([hour, uploadCount]) => ({ hour, uploadCount }))
+          .sort((a, b) => b.uploadCount - a.uploadCount)
+          .slice(0, 5);
       } catch (peakHoursError) {
         console.log('Peak hours not available:', peakHoursError);
       }

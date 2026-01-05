@@ -257,8 +257,8 @@ Status: ${portal.isActive ? 'Active ✅' : 'Inactive ⏸️'}`
         if (emptyStateTab === "active") {
             return (
                 <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-card rounded-2xl border border-border border-dashed">
-                    <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mb-6">
-                        <Activity className="w-10 h-10 text-emerald-200" />
+                    <div className="w-20 h-20 bg-success/10 rounded-full flex items-center justify-center mb-6">
+                        <Activity className="w-10 h-10 text-success/60" />
                     </div>
                     <h3 className="text-xl font-bold text-foreground mb-2">No active portals</h3>
                     <p className="text-muted-foreground max-w-sm mb-8">
@@ -373,7 +373,7 @@ Status: ${portal.isActive ? 'Active ✅' : 'Inactive ⏸️'}`
                                 disabled={togglingId === portal.id}
                                 className={`absolute top-6 right-6 z-20 p-2 rounded-xl transition-all duration-200 flex-shrink-0 ${togglingId === portal.id ? 'opacity-60 cursor-not-allowed animate-pulse' : ''
                                     } ${portal.isActive
-                                        ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-500 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 shadow-sm hover:shadow-md'
+                                        ? 'bg-success/10 dark:bg-success/20 text-success hover:bg-success/20 dark:hover:bg-success/30 shadow-sm hover:shadow-md'
                                         : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
                                     }`}
                                 title={portal.isActive ? "Portal is live (Click to pause)" : "Portal is paused (Click to activate)"}
@@ -401,13 +401,13 @@ Status: ${portal.isActive ? 'Active ✅' : 'Inactive ⏸️'}`
                                     <dd className="text-lg font-bold text-foreground mt-1">{portal._count.uploads}</dd>
                                 </div>
                                 <div className={`px-4 py-3 rounded-2xl border transition-all ${portal.isActive
-                                    ? 'bg-emerald-50/50 border-emerald-100 text-emerald-900'
+                                    ? 'bg-success/10 border-success/20 text-success'
                                     : 'bg-muted border-border'
                                     }`}>
                                     <dt className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Status</dt>
                                     <dd className="flex items-center gap-1.5 mt-1">
-                                        <div className={`w-2 h-2 rounded-full ${portal.isActive ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground'}`} />
-                                        <span className={`text-xs font-bold ${portal.isActive ? 'text-emerald-700' : 'text-muted-foreground'}`}>
+                                        <div className={`w-2 h-2 rounded-full ${portal.isActive ? 'bg-success animate-pulse' : 'bg-muted-foreground'}`} />
+                                        <span className={`text-xs font-bold ${portal.isActive ? 'text-success' : 'text-muted-foreground'}`}>
                                             {portal.isActive ? 'Active' : 'Paused'}
                                         </span>
                                     </dd>
@@ -421,7 +421,7 @@ Status: ${portal.isActive ? 'Active ✅' : 'Inactive ⏸️'}`
                                 <button
                                     onClick={() => copyPortalLink(portal)}
                                     className={`p-2 rounded-xl border transition-all ${copiedSlug === portal.slug
-                                        ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                                        ? 'bg-success/10 text-success border-success/20'
                                         : 'text-muted-foreground hover:text-foreground hover:bg-card border-transparent hover:border-border'
                                         }`}
                                     title="Copy portal details"
@@ -548,7 +548,7 @@ Status: ${portal.isActive ? 'Active ✅' : 'Inactive ⏸️'}`
                                     <div className="bg-muted p-4 rounded-2xl border border-border">
                                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Status</p>
                                         <div className="flex items-center gap-2">
-                                            <div className={`w-2.5 h-2.5 rounded-full ${selectedPortal.isActive ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground'}`} />
+                                            <div className={`w-2.5 h-2.5 rounded-full ${selectedPortal.isActive ? 'bg-success animate-pulse' : 'bg-muted-foreground'}`} />
                                             <p className="text-xl font-bold text-foreground">{selectedPortal.isActive ? 'Active' : 'Hidden'}</p>
                                         </div>
                                     </div>

@@ -111,7 +111,7 @@ export default function ThemeSettings({ theme: initialTheme }: ThemeSettingsProp
         <motion.p
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
-          className={`text-sm font-medium ${message.type === 'error' ? "text-red-600" : "text-emerald-600"}`}
+          className={`text-sm font-medium ${message.type === 'error' ? "text-destructive" : "text-success"}`}
         >
           {message.text}
         </motion.p>

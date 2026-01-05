@@ -66,29 +66,29 @@ export default function StatsOverview({ initialStats, onStatsUpdate, disablePoll
       title: "Total Portals",
       value: stats.totalPortals,
       icon: FolderOpen,
-      color: "text-blue-500 dark:text-blue-400",
-      bg: "bg-blue-50 dark:bg-blue-950/30",
+      color: "text-primary",
+      bg: "bg-primary/10",
     },
     {
       title: "Active Portals",
       value: stats.activePortals,
       icon: Activity,
-      color: "text-emerald-500 dark:text-emerald-400",
-      bg: "bg-emerald-50 dark:bg-emerald-950/30",
+      color: "text-primary",
+      bg: "bg-primary/10",
     },
     {
       title: "Files Received",
       value: stats.totalUploads,
       icon: Inbox,
-      color: "text-purple-500 dark:text-purple-400",
-      bg: "bg-purple-50 dark:bg-purple-950/30",
+      color: "text-primary",
+      bg: "bg-primary/10",
     },
     {
       title: "Recent Activity",
       value: stats.recentUploads,
       icon: TrendingUp,
-      color: "text-amber-500 dark:text-amber-400",
-      bg: "bg-amber-50 dark:bg-amber-950/30",
+      color: "text-primary",
+      bg: "bg-primary/10",
     }
   ]
 

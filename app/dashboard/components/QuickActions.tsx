@@ -9,25 +9,25 @@ const quickActions = [
     title: "New Portal",
     href: "/dashboard/portals/new",
     icon: Plus,
-    color: "text-blue-600 dark:text-blue-400",
-    bg: "bg-blue-50 dark:bg-blue-950/30",
-    border: "group-hover:border-blue-200 dark:group-hover:border-blue-800"
+    color: "text-primary",
+    bg: "bg-primary/10",
+    border: "group-hover:border-primary/20"
   },
   {
     title: "All Portals",
     href: "/dashboard/portals",
     icon: FolderOpen,
-    color: "text-purple-600 dark:text-purple-400",
-    bg: "bg-purple-50 dark:bg-purple-950/30",
-    border: "group-hover:border-purple-200 dark:group-hover:border-purple-800"
+    color: "text-primary",
+    bg: "bg-primary/10",
+    border: "group-hover:border-primary/20"
   },
   {
     title: "Integrations",
     href: "/dashboard/integrations",
     icon: Cloud,
-    color: "text-emerald-600 dark:text-emerald-400",
-    bg: "bg-emerald-50 dark:bg-emerald-950/30",
-    border: "group-hover:border-emerald-200 dark:group-hover:border-emerald-800"
+    color: "text-primary",
+    bg: "bg-primary/10",
+    border: "group-hover:border-primary/20"
   },
   {
     title: "Settings",
