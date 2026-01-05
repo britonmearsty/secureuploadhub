@@ -117,13 +117,6 @@ export default function CreatePortalPage() {
     { label: "Audio (MP3, WAV)", value: "audio/*" },
   ]
 
-  const DEFAULT_LOGOS = [
-    { label: "No Logo", value: "" },
-    { label: "Secure Hub Logo", value: "https://via.placeholder.com/150x50/3b82f6/ffffff?text=Secure+Hub" },
-    { label: "Upload Icon", value: "https://via.placeholder.com/150x50/10b981/ffffff?text=Upload" },
-    { label: "Generic Logo", value: "https://via.placeholder.com/150x50/6b7280/ffffff?text=Logo" },
-  ]
-
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -568,10 +561,10 @@ export default function CreatePortalPage() {
                     )}
 
                     {activeTab === 'Branding' && (
-                      <div className="space-y-8">
+                      <div className="space-y-6">
                         <div>
                           <label className="block text-sm font-semibold text-foreground mb-2">
-                            Logo Source
+                            Logo URL
                           </label>
                           <input
                             type="url"
@@ -582,9 +575,9 @@ export default function CreatePortalPage() {
                           />
                         </div>
 
-                        <div className="bg-muted rounded-xl p-6 border border-border">
-                          <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-4">Color Palette</h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                          <h3 className="text-sm font-semibold text-foreground">Colors</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <ColorPicker
                               label="Primary Color"
                               value={formData.primaryColor}
@@ -599,7 +592,7 @@ export default function CreatePortalPage() {
 
                             <ColorPicker
                               label="Background"
-                              value={formData.backgroundColor || "hsl(var(--background))"}
+                              value={formData.backgroundColor || "#ffffff"}
                               onChange={(value) => setFormData({ ...formData, backgroundColor: value })}
                             />
 

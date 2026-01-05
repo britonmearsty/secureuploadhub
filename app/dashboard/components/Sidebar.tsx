@@ -66,7 +66,7 @@ const navItems: NavItem[] = [
   },
   {
     name: "Support",
-    href: "/support",
+    href: "/dashboard/support",
     icon: MessageSquare,
     description: "Help center, tickets, and feedback"
   },
