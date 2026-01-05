@@ -5,6 +5,8 @@ import { sendUploadNotification } from "@/lib/email-templates"
 import { jwtVerify } from "jose"
 import { invalidateCache, getUserDashboardKey, getUserUploadsKey, getUserStatsKey, getUserPortalsKey } from "@/lib/cache"
 import { assertUploadAllowed } from "@/lib/billing"
+import { getUploadRules } from "@/lib/storage/file-binding"
+import { StorageAccountStatus } from "@prisma/client"
 import type { ScanResult } from "@/lib/scanner"
 
 const JWT_SECRET = new TextEncoder().encode(
@@ -28,10 +30,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "File and portal ID are required" }, { status: 400 })
     }
 
-    // Get portal and validate (include user for storage access)
+    // Get portal and validate (include user and storage account for storage access)
     const portal = await prisma.uploadPortal.findUnique({
       where: { id: portalId },
-      include: { user: true }
+      include: { 
+        user: true,
+        storageAccount: true
+      }
     })
 
     if (!portal) {
@@ -41,6 +46,30 @@ export async function POST(request: NextRequest) {
     if (!portal.isActive) {
       return NextResponse.json({ error: "Portal is not active" }, { status: 400 })
     }
+
+    // STORAGE ACCOUNT VALIDATION - Check if portal can accept uploads
+    let resolvedStorageAccountId: string | null = null
+    
+    // Get user's storage accounts for validation
+    const userStorageAccounts = await prisma.storageAccount.findMany({
+      where: { userId: portal.userId },
+      select: { id: true, provider: true, status: true }
+    })
+
+    // Apply upload rules to determine storage account
+    const uploadRules = getUploadRules(
+      portal.storageAccountId,
+      portal.storageProvider,
+      userStorageAccounts
+    )
+
+    if (!uploadRules.canUpload) {
+      return NextResponse.json({ 
+        error: uploadRules.reason || "Portal cannot accept uploads at this time"
+      }, { status: 400 })
+    }
+
+    resolvedStorageAccountId = uploadRules.storageAccountId || null
 
     // Verify password protection
     if (portal.passwordHash) {
@@ -185,7 +214,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to upload file" }, { status: 500 })
     }
 
-    // Create file upload record
+    // Create file upload record with storage account binding
     const uploadedAt = new Date()
     const fileUpload = await prisma.fileUpload.create({
       data: {
@@ -199,6 +228,7 @@ export async function POST(request: NextRequest) {
         storageProvider,
         storageFileId: storageFileId || null,
         storagePath: storagePath || null,
+        storageAccountId: resolvedStorageAccountId, // CRITICAL: Bind file to storage account
         status: "uploaded",
         ipAddress: ipAddress.split(",")[0].trim(),
         userAgent: userAgent.substring(0, 500),

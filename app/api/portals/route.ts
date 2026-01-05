@@ -4,6 +4,8 @@ import prisma from "@/lib/prisma"
 import { hashPassword } from "@/lib/password"
 import { invalidateCache, getUserDashboardKey, getUserPortalsKey, getUserUploadsKey, getUserStatsKey } from "@/lib/cache"
 import { assertPortalLimit } from "@/lib/billing"
+import { validatePortalCreation } from "@/lib/storage/portal-locking"
+import { StorageAccountStatus } from "@prisma/client"
 
 // GET /api/portals - List all portals for the current user
 export async function GET() {
@@ -19,6 +21,15 @@ export async function GET() {
       include: {
         _count: {
           select: { uploads: true }
+        },
+        storageAccount: {
+          select: {
+            id: true,
+            status: true,
+            provider: true,
+            displayName: true,
+            email: true
+          }
         }
       },
       orderBy: { createdAt: "desc" }
@@ -51,6 +62,7 @@ export async function POST(request: NextRequest) {
       storageProvider,
       storageFolderId,
       storageFolderPath,
+      storageAccountId, // NEW: Optional storage account selection
       password,
       maxFileSize,
       allowedFileTypes,
@@ -85,7 +97,7 @@ export async function POST(request: NextRequest) {
       ? allowedFileTypes.filter((t) => typeof t === "string" && t.length > 0)
       : []
 
-    // If using cloud storage, verify user has connected account
+    // If using cloud storage, verify user has connected account and validate storage account selection
     const oauthProvider = provider === "google_drive" ? "google" : "dropbox"
     const account = await prisma.account.findFirst({
       where: {
@@ -99,6 +111,28 @@ export async function POST(request: NextRequest) {
         error: `Please connect your ${provider === "google_drive" ? "Google" : "Dropbox"} account first`
       }, { status: 400 })
     }
+
+    // STORAGE ACCOUNT VALIDATION - Validate portal creation with storage account
+    const userStorageAccounts = await prisma.storageAccount.findMany({
+      where: { userId: session.user.id },
+      select: { id: true, provider: true, status: true, userId: true }
+    })
+
+    const portalCreationRules = validatePortalCreation(
+      session.user.id,
+      provider,
+      storageAccountId || null,
+      userStorageAccounts
+    )
+
+    if (!portalCreationRules.canCreate) {
+      return NextResponse.json({
+        error: portalCreationRules.reason || "Cannot create portal with current storage configuration"
+      }, { status: 400 })
+    }
+
+    // Use validated storage account ID
+    const validatedStorageAccountId = portalCreationRules.requiredStorageAccountId || null
 
     // Check if slug is already taken
     const existingPortal = await prisma.uploadPortal.findUnique({
@@ -132,6 +166,7 @@ export async function POST(request: NextRequest) {
         storageProvider: provider,
         storageFolderId: storageFolderId || null,
         storageFolderPath: storageFolderPath || null,
+        storageAccountId: validatedStorageAccountId, // CRITICAL: Bind portal to storage account
         passwordHash,
         isActive: true,
         maxFileSize: safeMaxFileSize,

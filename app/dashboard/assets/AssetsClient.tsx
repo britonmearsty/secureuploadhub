@@ -34,6 +34,7 @@ import {
     RefreshCw
 } from "lucide-react"
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal"
+import { StorageWarningModal } from "@/components/ui/StorageWarningModal"
 
 interface FileUpload {
     id: string
@@ -42,6 +43,7 @@ interface FileUpload {
     mimeType: string
     storageProvider: string
     storagePath: string | null
+    storageAccountId?: string | null
     createdAt: string
     clientName: string | null
     clientEmail: string | null
@@ -50,6 +52,13 @@ interface FileUpload {
         slug: string
         primaryColor: string
     }
+    storageAccount?: {
+        id: string
+        status: string
+        provider: string
+        displayName: string
+        email?: string
+    } | null
 }
 
 interface AssetsClientProps {
@@ -68,6 +77,27 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
         title: "",
         message: ""
     })
+    
+    const [storageWarningModal, setStorageWarningModal] = useState<{
+        isOpen: boolean;
+        type: 'disconnected' | 'inactive' | 'error' | 'not_configured';
+        storageProvider?: string;
+        storageEmail?: string;
+        fileId?: string;
+    }>({
+        isOpen: false,
+        type: 'disconnected'
+    })
+
+    const handleStorageWarning = (warningData: any) => {
+        setStorageWarningModal({
+            isOpen: true,
+            type: warningData.type,
+            storageProvider: warningData.storageProvider,
+            storageEmail: warningData.storageEmail,
+            fileId: warningData.fileId
+        })
+    }
 
     const tabs = [
         { id: "all", name: "All Assets", icon: Database, description: "All uploaded files across all providers" },
@@ -318,7 +348,7 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                                         <div className={viewMode === "list" ? "divide-y divide-border" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6"}>
                                             {filteredUploads.length > 0 ? (
                                                 filteredUploads.map((file) => (
-                                                    <FileItem key={file.id} file={file} viewMode={viewMode} formatFileSize={formatFileSize} getProviderIcon={getProviderIcon} getFileIcon={getFileIcon} onDelete={handleDeleteRequest} />
+                                                    <FileItem key={file.id} file={file} viewMode={viewMode} formatFileSize={formatFileSize} getProviderIcon={getProviderIcon} getFileIcon={getFileIcon} onDelete={handleDeleteRequest} onStorageWarning={handleStorageWarning} />
                                                 ))
                                             ) : (
                                                 <div className="text-center py-24 px-6 col-span-full">
@@ -353,7 +383,7 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                                                         </div>
                                                         <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4" : "divide-y divide-border/50"}>
                                                             {providerFiles.map(file => (
-                                                                <FileItem key={file.id} file={file} viewMode={viewMode} formatFileSize={formatFileSize} getProviderIcon={getProviderIcon} getFileIcon={getFileIcon} onDelete={handleDeleteRequest} />
+                                                                <FileItem key={file.id} file={file} viewMode={viewMode} formatFileSize={formatFileSize} getProviderIcon={getProviderIcon} getFileIcon={getFileIcon} onDelete={handleDeleteRequest} onStorageWarning={handleStorageWarning} />
                                                             ))}
                                                         </div>
                                                     </div>
@@ -491,15 +521,57 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                 confirmText="OK"
                 variant="danger"
             />
+
+            {/* Storage Warning Modal */}
+            <StorageWarningModal
+                isOpen={storageWarningModal.isOpen}
+                onClose={() => setStorageWarningModal({ ...storageWarningModal, isOpen: false })}
+                type={storageWarningModal.type}
+                storageProvider={storageWarningModal.storageProvider}
+                storageEmail={storageWarningModal.storageEmail}
+                onSettings={() => {
+                    setStorageWarningModal({ ...storageWarningModal, isOpen: false })
+                    // Navigate to settings - you can implement this
+                    window.location.href = '/dashboard/settings'
+                }}
+                onReconnect={() => {
+                    setStorageWarningModal({ ...storageWarningModal, isOpen: false })
+                    // Navigate to integrations - you can implement this
+                    window.location.href = '/dashboard/integrations'
+                }}
+            />
         </div>
     )
 }
 
-function FileItem({ file, viewMode, formatFileSize, getProviderIcon, getFileIcon, onDelete }: any) {
+function FileItem({ file, viewMode, formatFileSize, getProviderIcon, getFileIcon, onDelete, onStorageWarning }: any) {
     const isGrid = viewMode === "grid"
 
     const handleDownload = (e: React.MouseEvent) => {
         e.stopPropagation()
+        
+        // Check storage account status before download
+        if (file.storageAccount) {
+            const status = file.storageAccount.status
+            if (status === 'DISCONNECTED') {
+                onStorageWarning?.({
+                    type: 'disconnected',
+                    storageProvider: file.storageAccount.provider,
+                    storageEmail: file.storageAccount.email,
+                    fileId: file.id
+                })
+                return
+            } else if (status === 'ERROR') {
+                onStorageWarning?.({
+                    type: 'error',
+                    storageProvider: file.storageAccount.provider,
+                    storageEmail: file.storageAccount.email,
+                    fileId: file.id
+                })
+                return
+            }
+        }
+        
         const link = document.createElement('a')
         link.href = `/api/uploads/${file.id}/download`
         link.download = file.fileName
@@ -511,6 +583,56 @@ function FileItem({ file, viewMode, formatFileSize, getProviderIcon, getFileIcon
     const handleDelete = (e: React.MouseEvent) => {
         e.stopPropagation()
         if (onDelete) onDelete(file)
+    }
+
+    const getStorageStatusIndicator = () => {
+        if (!file.storageAccount) {
+            return (
+                <div className="flex items-center gap-1" title="Legacy file - no storage account binding">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full" />
+                    <span className="text-xs text-gray-500">Legacy</span>
+                </div>
+            )
+        }
+
+        const status = file.storageAccount.status
+        switch (status) {
+            case 'ACTIVE':
+                return (
+                    <div className="flex items-center gap-1" title="Storage account connected">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        <span className="text-xs text-green-600">Connected</span>
+                    </div>
+                )
+            case 'INACTIVE':
+                return (
+                    <div className="flex items-center gap-1" title="Storage account inactive">
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full" />
+                        <span className="text-xs text-yellow-600">Inactive</span>
+                    </div>
+                )
+            case 'DISCONNECTED':
+                return (
+                    <div className="flex items-center gap-1" title="Storage account disconnected - file cannot be accessed">
+                        <div className="w-2 h-2 bg-red-500 rounded-full" />
+                        <span className="text-xs text-red-600">Disconnected</span>
+                    </div>
+                )
+            case 'ERROR':
+                return (
+                    <div className="flex items-center gap-1" title="Storage account has connection errors">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+                        <span className="text-xs text-orange-600">Error</span>
+                    </div>
+                )
+            default:
+                return (
+                    <div className="flex items-center gap-1" title="Unknown storage status">
+                        <div className="w-2 h-2 bg-gray-500 rounded-full" />
+                        <span className="text-xs text-gray-600">Unknown</span>
+                    </div>
+                )
+        }
     }
 
     const clientIdentifier = file.clientName || file.clientEmail || "Unknown Client"
@@ -539,6 +661,8 @@ function FileItem({ file, viewMode, formatFileSize, getProviderIcon, getFileIcon
                     <div className="flex items-center gap-1">
                         {getProviderIcon(file.storageProvider)}
                     </div>
+                    <span className="w-1 h-1 bg-border rounded-full" />
+                    {getStorageStatusIndicator()}
                 </div>
                 <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
                     <span className="text-[10px] font-bold px-2 py-0.5 bg-muted text-muted-foreground rounded-full truncate max-w-[100px]">
@@ -574,6 +698,10 @@ function FileItem({ file, viewMode, formatFileSize, getProviderIcon, getFileIcon
                         {getProviderIcon(file.storageProvider)}
                     </div>
                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Storage</span>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                    {getStorageStatusIndicator()}
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Status</span>
                 </div>
                 <div className="flex flex-col items-end gap-1">
                     <span className="text-xs font-semibold text-muted-foreground">{new Date(file.createdAt).toLocaleDateString()}</span>

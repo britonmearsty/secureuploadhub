@@ -6,6 +6,39 @@ datasource db {
   provider = "postgresql"
 }
 
+// Storage Account States
+enum StorageAccountStatus {
+  ACTIVE      // Can be used for new uploads, fully functional
+  INACTIVE    // Cannot be used for new uploads, existing data accessible
+  DISCONNECTED // OAuth revoked, existing data preserved but inaccessible
+  ERROR       // Connection issues, temporary state
+}
+
+model StorageAccount {
+  id                String              @id @default(cuid())
+  userId            String
+  provider          String              // "google_drive", "dropbox"
+  providerAccountId String              // External account ID from OAuth
+  displayName       String              // User-friendly name
+  email             String?             // Account email for identification
+  status            StorageAccountStatus @default(ACTIVE) // NEW: Account state
+  isActive          Boolean             @default(true)    // DEPRECATED: Use status instead
+  lastError         String?             // NEW: Last error message for ERROR state
+  lastAccessedAt    DateTime?           // NEW: Track last successful access
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  portals           UploadPortal[]
+  fileUploads       FileUpload[]
+  
+  @@unique([userId, providerAccountId, provider])
+  @@index([userId])
+  @@index([provider])
+  @@index([status])
+  @@index([isActive]) // Keep for backward compatibility
+}
+
 model User {
   id                String          @id @default(cuid())
   email             String          @unique
@@ -28,6 +61,7 @@ model User {
   syncSettings      SyncSettings?
   fileUploads       FileUpload[]
   auditLogs         AuditLog[]
+  storageAccounts   StorageAccount[]
   // Communication System Relations
   tickets           Ticket[]
   adminTickets      Ticket[]        @relation("AdminTickets")
@@ -115,6 +149,7 @@ model UploadPortal {
   storageProvider     String          @default("local")
   storageFolderId     String?
   storageFolderPath   String?
+  storageAccountId    String?         // NEW: Bind to specific storage account
   useClientFolders    Boolean         @default(false)
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
@@ -128,6 +163,7 @@ model UploadPortal {
   uploads             FileUpload[]
   chunkedUploads      ChunkedUpload[]
   user                User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storageAccount      StorageAccount? @relation(fields: [storageAccountId], references: [id], onDelete: SetNull)
 
   @@index([userId, createdAt])
 }
@@ -145,6 +181,7 @@ model FileUpload {
   storageProvider String
   storageFileId   String?
   storagePath     String?
+  storageAccountId String?        // NEW: Permanently bind to storage account
   status          String       @default("pending")
   errorMessage    String?
   ipAddress       String?
@@ -153,6 +190,7 @@ model FileUpload {
   uploadedAt      DateTime?
   portal          UploadPortal @relation(fields: [portalId], references: [id], onDelete: Cascade)
   user            User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  storageAccount  StorageAccount? @relation(fields: [storageAccountId], references: [id], onDelete: SetNull)
 
   @@index([portalId, createdAt])
   @@index([userId])

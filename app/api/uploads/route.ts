@@ -45,6 +45,15 @@ export async function GET(request: NextRequest) {
             slug: true,
             primaryColor: true,
           }
+        },
+        storageAccount: {
+          select: {
+            id: true,
+            status: true,
+            provider: true,
+            displayName: true,
+            email: true
+          }
         }
       },
       orderBy: { createdAt: "desc" },

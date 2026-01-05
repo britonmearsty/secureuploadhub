@@ -38,6 +38,14 @@ interface Portal {
     primaryColor: string
     createdAt: string
     passwordHash?: string | null
+    storageAccountId?: string | null
+    storageAccount?: {
+        id: string
+        status: string
+        provider: string
+        displayName: string
+        email?: string
+    } | null
     _count: {
         uploads: number
     }
@@ -400,16 +408,46 @@ Status: ${portal.isActive ? 'Active ✅' : 'Inactive ⏸️'}`
                                     <dt className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Uploads</dt>
                                     <dd className="text-lg font-bold text-foreground mt-1">{portal._count.uploads}</dd>
                                 </div>
-                                <div className={`px-4 py-3 rounded-2xl border transition-all ${portal.isActive
-                                    ? 'bg-success/10 border-success/20 text-success'
-                                    : 'bg-muted border-border'
-                                    }`}>
-                                    <dt className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Status</dt>
+                                
+                                {/* Storage Account Status */}
+                                <div className="bg-muted px-4 py-3 rounded-2xl border border-border hover:border-muted-foreground transition-colors group-hover:bg-card">
+                                    <dt className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Storage</dt>
                                     <dd className="flex items-center gap-1.5 mt-1">
-                                        <div className={`w-2 h-2 rounded-full ${portal.isActive ? 'bg-success animate-pulse' : 'bg-muted-foreground'}`} />
-                                        <span className={`text-xs font-bold ${portal.isActive ? 'text-success' : 'text-muted-foreground'}`}>
-                                            {portal.isActive ? 'Active' : 'Paused'}
-                                        </span>
+                                        {portal.storageAccount ? (
+                                            <>
+                                                {portal.storageAccount.status === 'ACTIVE' ? (
+                                                    <>
+                                                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                                                        <span className="text-xs font-medium text-green-600">Connected</span>
+                                                    </>
+                                                ) : portal.storageAccount.status === 'INACTIVE' ? (
+                                                    <>
+                                                        <div className="w-2 h-2 bg-yellow-500 rounded-full" />
+                                                        <span className="text-xs font-medium text-yellow-600">Inactive</span>
+                                                    </>
+                                                ) : portal.storageAccount.status === 'DISCONNECTED' ? (
+                                                    <>
+                                                        <div className="w-2 h-2 bg-red-500 rounded-full" />
+                                                        <span className="text-xs font-medium text-red-600">Disconnected</span>
+                                                    </>
+                                                ) : portal.storageAccount.status === 'ERROR' ? (
+                                                    <>
+                                                        <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+                                                        <span className="text-xs font-medium text-orange-600">Error</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <div className="w-2 h-2 bg-gray-500 rounded-full" />
+                                                        <span className="text-xs font-medium text-gray-600">Unknown</span>
+                                                    </>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="w-2 h-2 bg-gray-400 rounded-full" />
+                                                <span className="text-xs font-medium text-gray-500">Legacy</span>
+                                            </>
+                                        )}
                                     </dd>
                                 </div>
                             </dl>
