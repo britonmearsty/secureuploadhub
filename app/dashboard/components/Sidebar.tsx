@@ -22,6 +22,7 @@ import {
   MessageSquare,
   Star,
   Bell,
+  HelpCircle,
 } from "lucide-react"
 
 interface SidebarProps {
@@ -53,9 +54,15 @@ const navItems = [
   },
   {
     name: "Support",
+    href: "/support",
+    icon: HelpCircle,
+    description: "Help center and documentation"
+  },
+  {
+    name: "Communication",
     href: "/dashboard/communication",
     icon: MessageSquare,
-    description: "Get help and submit tickets",
+    description: "Tickets and feedback",
     subItems: [
       {
         name: "My Tickets",
