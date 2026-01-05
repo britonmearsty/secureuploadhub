@@ -180,12 +180,6 @@ export default function EditPortalPage() {
     { label: "Audio (MP3, WAV)", value: "audio/*" },
   ]
 
-  const DEFAULT_LOGOS = [
-    { label: "No Logo", value: "" },
-    { label: "Secure Hub Logo", value: "https://via.placeholder.com/150x50/3b82f6/ffffff?text=Secure+Hub" },
-    { label: "Upload Icon", value: "https://via.placeholder.com/150x50/10b981/ffffff?text=Upload" },
-    { label: "Generic Logo", value: "https://via.placeholder.com/150x50/6b7280/ffffff?text=Logo" },
-  ]
   const toggleFolder = (id: string) => {
     setExpandedFolders(prev => {
       const newSet = new Set(prev)
@@ -687,38 +681,27 @@ export default function EditPortalPage() {
                     )}
 
                     {activeTab === 'Branding' && (
-                      <div className="space-y-8">
+                      <div className="space-y-6">
                         <div>
-                          <label className="block text-sm font-semibold text-foreground mb-2">Logo Link</label>
-                          <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
-                            {DEFAULT_LOGOS.map((logo) => (
-                              logo.value && (
-                                <button
-                                  key={logo.value}
-                                  type="button"
-                                  onClick={() => setFormData({ ...formData, logoUrl: logo.value })}
-                                  className="px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-lg text-xs font-medium whitespace-nowrap transition-colors text-foreground"
-                                >
-                                  {logo.label}
-                                </button>
-                              )
-                            ))}
-                          </div>
+                          <label className="block text-sm font-semibold text-foreground mb-2">Logo URL</label>
                           <input
                             type="url"
                             value={formData.logoUrl}
                             onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
-                            placeholder="https://..."
+                            placeholder="https://your-brand.com/logo.png"
                             className="w-full px-4 py-3 bg-muted border border-border rounded-xl focus:bg-card focus:ring-2 focus:ring-ring transition-all outline-none font-medium text-foreground placeholder:text-muted-foreground"
                           />
                         </div>
 
-                        <div className="bg-muted rounded-xl p-6 border border-border">
-                          <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">Color Palette</h3>
-                          </div>
+                        <div className="space-y-4">
+                          <h3 className="text-sm font-semibold text-foreground">Colors</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <ColorPicker
+                              label="Primary Accent"
+                              value={formData.primaryColor}
+                              onChange={(value) => setFormData({ ...formData, primaryColor: value })}
+                            />
 
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <ColorPicker
                               label="Text Color"
                               value={formData.textColor}
@@ -727,7 +710,7 @@ export default function EditPortalPage() {
 
                             <ColorPicker
                               label="Background"
-                              value={formData.backgroundColor || "hsl(var(--background))"}
+                              value={formData.backgroundColor || "#ffffff"}
                               onChange={(value) => setFormData({ ...formData, backgroundColor: value })}
                             />
 
@@ -735,12 +718,6 @@ export default function EditPortalPage() {
                               label="Card Background"
                               value={formData.cardBackgroundColor}
                               onChange={(value) => setFormData({ ...formData, cardBackgroundColor: value })}
-                            />
-
-                            <ColorPicker
-                              label="Primary Accent"
-                              value={formData.primaryColor}
-                              onChange={(value) => setFormData({ ...formData, primaryColor: value })}
                             />
                           </div>
                         </div>
