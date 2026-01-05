@@ -57,10 +57,12 @@ async function main() {
         }
 
         // Create StorageAccount record
+        // Create StorageAccount record with correct provider mapping
+        const storageProvider = account.provider === "google" ? "google_drive" : "dropbox";
         const storageAccount = await prisma.storageAccount.create({
           data: {
             userId: account.userId,
-            provider: account.provider,
+            provider: storageProvider, // Use storage provider name, not OAuth provider name
             providerAccountId: account.providerAccountId,
             displayName: account.user.name || account.user.email || "Unknown",
             email: account.user.email,
