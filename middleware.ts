@@ -35,6 +35,18 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/auth/signin", request.url))
   }
 
+  // Prevent cross-contamination: ensure admin communication routes are separate from user communication
+  if (pathname.includes("/communication")) {
+    if (isOnAdmin && pathname.includes("/dashboard/communication")) {
+      console.log(`🚫 MIDDLEWARE: Preventing admin access to user communication routes`)
+      return NextResponse.redirect(new URL("/admin/communication", request.url))
+    }
+    if (isOnDashboard && pathname.includes("/admin/communication")) {
+      console.log(`🚫 MIDDLEWARE: Preventing user access to admin communication routes`)
+      return NextResponse.redirect(new URL("/dashboard/communication", request.url))
+    }
+  }
+
   // Redirect authenticated users away from auth pages
   // Default to dashboard, admin users can navigate to /admin manually
   if (isAuth && isOnAuthPage) {

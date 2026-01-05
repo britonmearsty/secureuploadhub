@@ -13,12 +13,15 @@ import {
   ShieldCheck,
   LogOut,
   ChevronLeft,
+  ChevronDown,
   Cloud,
   CreditCard,
   Users,
   Archive,
   Zap,
   MessageSquare,
+  Star,
+  Bell,
 } from "lucide-react"
 
 interface SidebarProps {
@@ -52,6 +55,24 @@ const navItems = [
     name: "Support",
     href: "/dashboard/communication",
     icon: MessageSquare,
+    description: "Get help and submit tickets",
+    subItems: [
+      {
+        name: "My Tickets",
+        href: "/dashboard/communication/tickets",
+        icon: MessageSquare,
+      },
+      {
+        name: "Feedback",
+        href: "/dashboard/communication/feedback",
+        icon: Star,
+      },
+      {
+        name: "Updates",
+        href: "/dashboard/communication/notifications",
+        icon: Bell,
+      },
+    ]
   },
   {
     name: "Integrations",
@@ -81,6 +102,7 @@ const SPRING_TRANSITION: Transition = {
 export default function Sidebar({ userName, userImage, signOutAction }: SidebarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [expandedItems, setExpandedItems] = useState<string[]>([])
   const pathname = usePathname()
 
   const isActive = (href: string) => {
@@ -89,6 +111,21 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
     }
     return pathname.startsWith(href)
   }
+
+  const toggleExpanded = (itemName: string) => {
+    setExpandedItems(prev => 
+      prev.includes(itemName) 
+        ? prev.filter(name => name !== itemName)
+        : [...prev, itemName]
+    )
+  }
+
+  // Auto-expand Support section if we're on a communication page
+  useEffect(() => {
+    if (pathname.startsWith('/dashboard/communication')) {
+      setExpandedItems(prev => prev.includes('Support') ? prev : [...prev, 'Support'])
+    }
+  }, [pathname])
 
   // Handle auto-collapse on smaller desktop screens
   useEffect(() => {
@@ -152,49 +189,152 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
         {navItems.map((item) => {
           const Icon = item.icon
           const active = isActive(item.href)
+          const hasSubItems = item.subItems && item.subItems.length > 0
+          const isExpanded = expandedItems.includes(item.name)
 
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors duration-200 ${active
-                ? "bg-muted text-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
-            >
-              <motion.div layout="position" className="flex-shrink-0">
-                <Icon className={`w-5 h-5 ${active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`} />
-              </motion.div>
+            <div key={item.href}>
+              {hasSubItems ? (
+                <button
+                  onClick={() => toggleExpanded(item.name)}
+                  className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors duration-200 w-full ${active
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                >
+                  <motion.div layout="position" className="flex-shrink-0">
+                    <Icon className={`w-5 h-5 ${active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`} />
+                  </motion.div>
 
-              <AnimatePresence>
-                {!isCollapsed && (
-                  <motion.span
-                    initial={{ opacity: 0, x: -5 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -5 }}
-                    transition={{ duration: 0.2 }}
-                    className="font-medium text-[0.9375rem] whitespace-nowrap"
-                  >
-                    {item.name}
-                  </motion.span>
-                )}
-              </AnimatePresence>
+                  <AnimatePresence>
+                    {!isCollapsed && (
+                      <motion.span
+                        initial={{ opacity: 0, x: -5 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -5 }}
+                        transition={{ duration: 0.2 }}
+                        className="font-medium text-[0.9375rem] whitespace-nowrap flex-1 text-left"
+                      >
+                        {item.name}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
 
-              {active && (
-                <motion.div
-                  layoutId="sidebar-active-indicator"
-                  className="absolute left-0 w-1 h-5 bg-primary rounded-r-full"
-                  transition={SPRING_TRANSITION}
-                />
+                  <AnimatePresence>
+                    {!isCollapsed && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1, rotate: isExpanded ? 180 : 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="flex-shrink-0"
+                      >
+                        <ChevronDown className="w-4 h-4" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {active && (
+                    <motion.div
+                      layoutId="sidebar-active-indicator"
+                      className="absolute left-0 w-1 h-5 bg-primary rounded-r-full"
+                      transition={SPRING_TRANSITION}
+                    />
+                  )}
+
+                  {isCollapsed && (
+                    <div className="absolute left-full ml-4 px-2 py-1 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-border shadow-md">
+                      {item.name}
+                    </div>
+                  )}
+                </button>
+              ) : (
+                <Link
+                  href={item.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors duration-200 ${active
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                >
+                  <motion.div layout="position" className="flex-shrink-0">
+                    <Icon className={`w-5 h-5 ${active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`} />
+                  </motion.div>
+
+                  <AnimatePresence>
+                    {!isCollapsed && (
+                      <motion.span
+                        initial={{ opacity: 0, x: -5 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -5 }}
+                        transition={{ duration: 0.2 }}
+                        className="font-medium text-[0.9375rem] whitespace-nowrap"
+                      >
+                        {item.name}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+
+                  {active && (
+                    <motion.div
+                      layoutId="sidebar-active-indicator"
+                      className="absolute left-0 w-1 h-5 bg-primary rounded-r-full"
+                      transition={SPRING_TRANSITION}
+                    />
+                  )}
+
+                  {isCollapsed && (
+                    <div className="absolute left-full ml-4 px-2 py-1 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-border shadow-md">
+                      {item.name}
+                    </div>
+                  )}
+                </Link>
               )}
 
-              {isCollapsed && (
-                <div className="absolute left-full ml-4 px-2 py-1 bg-popover text-popover-foreground text-xs font-medium rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 border border-border shadow-md">
-                  {item.name}
-                </div>
+              {/* Sub-items */}
+              {hasSubItems && !isCollapsed && (
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="ml-6 mt-1 space-y-1"
+                    >
+                      {item.subItems?.map((subItem) => {
+                        const SubIcon = subItem.icon
+                        const subActive = isActive(subItem.href)
+
+                        return (
+                          <Link
+                            key={subItem.href}
+                            href={subItem.href}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className={`group relative flex items-center gap-3 px-3 py-2 rounded-lg transition-colors duration-200 ${subActive
+                              ? "bg-primary/10 text-primary"
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                              }`}
+                          >
+                            <SubIcon className={`w-4 h-4 ${subActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`} />
+                            <span className="font-medium text-sm whitespace-nowrap">
+                              {subItem.name}
+                            </span>
+                            {subActive && (
+                              <motion.div
+                                layoutId="sidebar-sub-active-indicator"
+                                className="absolute left-0 w-0.5 h-4 bg-primary rounded-r-full"
+                                transition={SPRING_TRANSITION}
+                              />
+                            )}
+                          </Link>
+                        )
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               )}
-            </Link>
+            </div>
           )
         })}
       </nav>

@@ -48,6 +48,7 @@ const navItems = [
         name: "Communication",
         href: "/admin/communication",
         icon: MessageSquare,
+        description: "Manage user tickets and feedback"
     },
     {
         name: "Billing",
