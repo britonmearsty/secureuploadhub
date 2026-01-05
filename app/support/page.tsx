@@ -5,9 +5,9 @@ import SupportDashboard from "./SupportDashboard"
 export default async function SupportPage() {
   const session = await auth()
   
-  if (!session?.user) {
+  if (!session?.user || !session.user.id) {
     redirect("/auth/signin")
   }
 
-  return <SupportDashboard user={session.user} />
+  return <SupportDashboard user={session.user as { id: string; name: string | null; email: string | null; image: string | null }} />
 }

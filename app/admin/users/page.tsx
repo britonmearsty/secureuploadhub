@@ -2,6 +2,9 @@ import prisma from "@/lib/prisma"
 import EnhancedUsersManagementClient from "./EnhancedUsersManagementClient"
 import { AdminErrorBoundary } from "@/components/admin/AdminErrorBoundary"
 
+// Force dynamic rendering since this page requires database access
+export const dynamic = 'force-dynamic'
+
 export default async function AdminUsersPage() {
     // Authentication and authorization handled by AdminLayout
     // If this component renders, user is guaranteed to be an authenticated admin
