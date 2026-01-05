@@ -463,10 +463,10 @@ export async function GET(request: NextRequest) {
           analytics.recentActivity = recentUploads.map(upload => ({
             id: upload.id,
             action: 'FILE_UPLOAD',
-            resource: `File: ${upload.fileName}`,
+            resource: `File: [File Name Hidden]`, // Privacy: Hide actual file names from admin view
             user: upload.portal.user,
             createdAt: upload.createdAt,
-            details: { fileName: upload.fileName, fileSize: upload.fileSize }
+            details: { fileName: '[File Name Hidden]', fileSize: upload.fileSize } // Privacy: Hide file names in details
           }));
         }
       } catch (activityError) {

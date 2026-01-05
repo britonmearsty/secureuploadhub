@@ -62,7 +62,7 @@ export async function GET(
       where: { portalId: id },
       select: {
         id: true,
-        fileName: true,
+        fileName: false, // Privacy: Hide file names from admin view
         fileSize: true,
         status: true,
         clientName: true,

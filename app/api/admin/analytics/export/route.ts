@@ -131,7 +131,7 @@ export async function GET(request: NextRequest) {
 
       exportData.uploads = uploads.map(upload => ({
         id: upload.id,
-        fileName: upload.fileName,
+        fileName: '[File Name Hidden]', // Privacy: Hide actual file names from admin export
         fileSize: upload.fileSize,
         fileSizeGB: Math.round((upload.fileSize / (1024 * 1024 * 1024)) * 1000) / 1000,
         mimeType: upload.mimeType,
@@ -202,9 +202,9 @@ function convertToCSV(data: any, type: string): string {
   if (type === 'uploads' || type === 'all') {
     if (data.uploads && data.uploads.length > 0) {
       csv += 'Uploads Data\n';
-      csv += 'ID,File Name,File Size (bytes),File Size (GB),MIME Type,Client Name,Client Email,Status,Created At,Portal Name,Portal Owner Name,Portal Owner Email\n';
+      csv += 'ID,File Size (bytes),File Size (GB),MIME Type,Client Name,Client Email,Status,Created At,Portal Name,Portal Owner Name,Portal Owner Email\n';
       data.uploads.forEach((upload: any) => {
-        csv += `${upload.id},"${upload.fileName}",${upload.fileSize},${upload.fileSizeGB},"${upload.mimeType}","${upload.clientName || ''}","${upload.clientEmail || ''}",${upload.status},${upload.createdAt},"${upload.portalName}","${upload.portalOwnerName}","${upload.portalOwnerEmail}"\n`;
+        csv += `${upload.id},${upload.fileSize},${upload.fileSizeGB},"${upload.mimeType}","${upload.clientName || ''}","${upload.clientEmail || ''}",${upload.status},${upload.createdAt},"${upload.portalName}","${upload.portalOwnerName}","${upload.portalOwnerEmail}"\n`;
       });
     }
   }

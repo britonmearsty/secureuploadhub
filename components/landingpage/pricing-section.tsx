@@ -26,13 +26,13 @@ export function PricingSection({ onFreePlanClick }: PricingSectionProps) {
               </div>
               <ul className="space-y-4 mb-10 flex-1">
                 <li className="flex items-center gap-3 text-slate-600 text-sm font-medium">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" /> 1 portal
-                </li>
-                <li className="flex items-center gap-3 text-slate-600 text-sm font-medium">
                   <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" /> Basic uploads
                 </li>
                 <li className="flex items-center gap-3 text-slate-600 text-sm font-medium">
                   <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" /> Secure hosting
+                </li>
+                <li className="flex items-center gap-3 text-slate-600 text-sm font-medium">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" /> 1GB storage
                 </li>
               </ul>
               <Link href="/auth/signin" onClick={onFreePlanClick} className="block w-full py-4 rounded-xl border-2 border-slate-200 font-bold hover:border-slate-300 hover:bg-slate-50 transition-all text-center text-slate-900">Get started free</Link>
@@ -52,7 +52,7 @@ export function PricingSection({ onFreePlanClick }: PricingSectionProps) {
               </div>
               <ul className="space-y-4 mb-10 flex-1 relative z-10">
                 <li className="flex items-center gap-3 text-slate-200 text-sm font-medium">
-                  <div className="bg-white/10 p-1 rounded-full"><CheckCircle2 className="w-4 h-4 text-emerald-400" /></div> Unlimited portals
+                  <div className="bg-white/10 p-1 rounded-full"><CheckCircle2 className="w-4 h-4 text-emerald-400" /></div> Unlimited uploads
                 </li>
                 <li className="flex items-center gap-3 text-slate-200 text-sm font-medium">
                   <div className="bg-white/10 p-1 rounded-full"><CheckCircle2 className="w-4 h-4 text-emerald-400" /></div> Branded uploads

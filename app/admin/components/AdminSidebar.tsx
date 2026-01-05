@@ -44,11 +44,6 @@ const navItems = [
         icon: Users,
     },
     {
-        name: "Portals",
-        href: "/admin/portals",
-        icon: FolderOpen,
-    },
-    {
         name: "Billing",
         href: "/admin/billing",
         icon: CreditCard,

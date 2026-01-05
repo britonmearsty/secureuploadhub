@@ -177,7 +177,7 @@ export default function FormNavigation({
               </>
             ) : (
               <>
-                Create Portal
+                Create Upload Link
                 <Check className="w-4 h-4" />
               </>
             )}

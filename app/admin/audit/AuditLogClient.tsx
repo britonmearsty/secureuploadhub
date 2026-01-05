@@ -164,7 +164,6 @@ export default function AuditLogClient() {
   const getResourceIcon = (resource: string) => {
     switch (resource) {
       case 'user': return <User className="w-4 h-4" />;
-      case 'portal': return <Shield className="w-4 h-4" />;
       case 'billing_plan': 
       case 'subscription': 
       case 'payment': return <Activity className="w-4 h-4" />;
@@ -251,8 +250,6 @@ export default function AuditLogClient() {
               <option value="USER_CREATED">User Created</option>
               <option value="USER_DELETED">User Deleted</option>
               <option value="USER_ROLE_CHANGED">Role Changed</option>
-              <option value="PORTAL_CREATED">Portal Created</option>
-              <option value="PORTAL_DELETED">Portal Deleted</option>
               <option value="REFUND_PROCESSED">Refund Processed</option>
             </select>
           </div>
@@ -266,7 +263,6 @@ export default function AuditLogClient() {
             >
               <option value="all">All Resources</option>
               <option value="user">Users</option>
-              <option value="portal">Portals</option>
               <option value="subscription">Subscriptions</option>
               <option value="payment">Payments</option>
             </select>

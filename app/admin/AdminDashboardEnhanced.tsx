@@ -314,14 +314,6 @@ export default function AdminDashboardEnhanced() {
           color="blue"
         />
         <StatCard
-          title="Active Portals"
-          value={analytics.overview?.portals?.active?.toLocaleString() || '0'}
-          change={`${analytics.overview?.portals?.total || 0} total`}
-          icon={FolderOpen}
-          trend="neutral"
-          color="green"
-        />
-        <StatCard
           title="Total Uploads"
           value={analytics.overview?.uploads?.total?.toLocaleString() || '0'}
           change={`${analytics.overview?.uploads?.completed || 0} completed`}
@@ -410,9 +402,6 @@ export default function AdminDashboardEnhanced() {
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-medium text-slate-900">
-                    {user._count?.uploadPortals || 0} portals
-                  </p>
-                  <p className="text-sm text-slate-600">
                     {user._count?.fileUploads || 0} uploads
                   </p>
                 </div>
@@ -558,13 +547,6 @@ export default function AdminDashboardEnhanced() {
           >
             <Users className="w-5 h-5 text-blue-600" />
             <span className="font-medium text-blue-900">Manage Users</span>
-          </button>
-          <button 
-            onClick={() => router.push('/admin/portals')}
-            className="flex items-center space-x-3 p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors cursor-pointer"
-          >
-            <FolderOpen className="w-5 h-5 text-green-600" />
-            <span className="font-medium text-green-900">View Portals</span>
           </button>
           <button 
             onClick={() => router.push('/admin/billing')}

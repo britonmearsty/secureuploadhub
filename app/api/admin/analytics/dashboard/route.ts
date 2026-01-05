@@ -5,7 +5,7 @@ import { z } from 'zod';
 
 const querySchema = z.object({
   period: z.enum(['7d', '30d', '90d', '1y']).optional().default('30d'),
-  timezone: z.string().optional().default('UTC'),
+  timezone: z.string().optional().nullable().default('UTC'),
 });
 
 export async function GET(request: NextRequest) {
@@ -167,7 +167,7 @@ export async function GET(request: NextRequest) {
 
         dashboardData.recentActivity.uploads = recentUploads.map(upload => ({
           id: upload.id,
-          fileName: upload.fileName,
+          fileName: '[File Name Hidden]', // Privacy: Hide actual file names from admin view
           fileSize: upload.fileSize,
           portalName: upload.portal.name,
           clientName: upload.clientName || 'Unknown',

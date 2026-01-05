@@ -32,7 +32,7 @@ export async function GET(
         where: { userId: id },
         select: {
           id: true,
-          fileName: true,
+          fileName: false, // Privacy: Hide file names from admin view
           fileSize: true,
           createdAt: true,
           status: true,

@@ -5,7 +5,7 @@ import { z } from 'zod';
 
 const querySchema = z.object({
   period: z.enum(['1h', '24h', '7d', '30d']).optional().default('24h'),
-  endpoint: z.string().optional(),
+  endpoint: z.string().optional().nullable(),
 });
 
 export async function GET(request: NextRequest) {
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 
     const whereClause = {
       recordedAt: { gte: startDate },
-      ...(endpoint && { endpoint }),
+      ...(endpoint && endpoint !== null && { endpoint }),
     };
 
     const [
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
           AVG("responseTime") as avg_response_time
         FROM "PerformanceMetric"
         WHERE "recordedAt" >= ${startDate}
-        ${endpoint ? prisma.$queryRaw`AND "endpoint" = ${endpoint}` : prisma.$queryRaw``}
+        ${endpoint && endpoint !== null ? prisma.$queryRaw`AND "endpoint" = ${endpoint}` : prisma.$queryRaw``}
         GROUP BY response_range
         ORDER BY 
           CASE response_range
@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
           COUNT(CASE WHEN "statusCode" >= 400 THEN 1 END) as error_count
         FROM "PerformanceMetric"
         WHERE "recordedAt" >= ${startDate}
-        ${endpoint ? prisma.$queryRaw`AND "endpoint" = ${endpoint}` : prisma.$queryRaw``}
+        ${endpoint && endpoint !== null ? prisma.$queryRaw`AND "endpoint" = ${endpoint}` : prisma.$queryRaw``}
         GROUP BY DATE_TRUNC('hour', "recordedAt")
         ORDER BY hour ASC
       `,

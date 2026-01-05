@@ -1,11 +1,10 @@
 "use client"
 
-import { Users, FolderOpen, Upload } from "lucide-react"
+import { Users, Upload } from "lucide-react"
 
 interface AdminDashboardClientProps {
     stats: {
         totalUsers: number
-        totalPortals: number
         totalUploads: number
     }
     recentUsers: Array<{
@@ -27,12 +26,6 @@ export default function AdminDashboardClient({ stats, recentUsers }: AdminDashbo
             color: "bg-blue-500",
         },
         {
-            title: "Total Portals",
-            value: stats.totalPortals,
-            icon: FolderOpen,
-            color: "bg-purple-500",
-        },
-        {
             title: "Total Uploads",
             value: stats.totalUploads,
             icon: Upload,
@@ -48,7 +41,7 @@ export default function AdminDashboardClient({ stats, recentUsers }: AdminDashbo
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 {statCards.map((stat) => {
                     const Icon = stat.icon
                     return (

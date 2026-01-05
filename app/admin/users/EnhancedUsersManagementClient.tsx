@@ -292,10 +292,9 @@ export default function EnhancedUsersManagementClient({
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
-            className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg p-4 z-40"
+            className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40"
           >
-            <div className="flex items-center justify-center">
-              <div className="flex items-center gap-4 bg-white rounded-2xl shadow-lg border border-slate-200 px-6 py-4">
+            <div className="flex items-center gap-4 bg-white rounded-2xl shadow-lg border border-slate-200 px-6 py-4">
                 <div className="flex items-center gap-4">
                   <span className="text-sm font-medium text-slate-900">
                     {selectedUsers.size} users selected
@@ -352,7 +351,6 @@ export default function EnhancedUsersManagementClient({
                     Delete
                   </button>
                 </div>
-              </div>
             </div>
           </motion.div>
         )}
@@ -650,7 +648,7 @@ function UserDetailsModal({ user, onClose }: { user: User; onClose: () => void }
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 bg-black bg-opacity-25 backdrop-blur-sm flex items-center justify-center p-4 z-50"
       onClick={onClose}
     >
       <motion.div
@@ -867,7 +865,7 @@ function LoginHistoryModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center p-4 z-50"
       onClick={onClose}
     >
       <motion.div

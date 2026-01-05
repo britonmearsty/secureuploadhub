@@ -137,7 +137,7 @@ export async function GET(request: NextRequest) {
 
       dashboardData.recentActivity.uploads = recentUploads.map(upload => ({
         id: upload.id,
-        fileName: upload.fileName,
+        fileName: '[File Name Hidden]', // Privacy: Hide actual file names from admin view
         fileSize: upload.fileSize,
         portalName: upload.portal.name,
         clientName: upload.clientName || 'Unknown',

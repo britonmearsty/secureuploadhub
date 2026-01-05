@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
         recentUsers,
         uploadsWithPortals: uploadsWithPortals.map(u => ({
           id: u.id,
-          fileName: u.fileName,
+          fileName: '[File Name Hidden]', // Privacy: Hide actual file names from admin view
           portalName: u.portal.name
         }))
       },

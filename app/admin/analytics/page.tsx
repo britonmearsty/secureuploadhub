@@ -26,17 +26,14 @@ import { formatBytes, formatNumber } from '@/lib/utils';
 import { AnalyticsChart } from '@/components/admin/analytics/AnalyticsChart';
 import { MetricCard } from '@/components/admin/analytics/MetricCard';
 import { RecentActivity } from '@/components/admin/analytics/RecentActivity';
-import { TopPortals } from '@/components/admin/analytics/TopPortals';
 
 interface DashboardData {
   overview: {
     totalUsers: number;
-    totalPortals: number;
     totalUploads: number;
     totalStorageGB: number;
     activeUsers: number;
     newUsers: number;
-    newPortals: number;
     newUploads: number;
   };
   recentActivity: {
@@ -44,7 +41,6 @@ interface DashboardData {
       id: string;
       fileName: string;
       fileSize: number;
-      portalName: string;
       clientName: string;
       createdAt: string;
     }>;
@@ -81,7 +77,6 @@ interface UserAnalytics {
   activity: {
     total_users: number;
     active_users: number;
-    users_with_portals: number;
     users_with_uploads: number;
   };
   topUsers: Array<{
@@ -92,7 +87,6 @@ interface UserAnalytics {
     status: string;
     createdAt: string;
     stats: {
-      portals: number;
       uploads: number;
       sessions: number;
     };
@@ -186,12 +180,10 @@ function AnalyticsPageContent() {
         setDashboardData({
           overview: {
             totalUsers: 0,
-            totalPortals: 0,
             totalUploads: 0,
             totalStorageGB: 0,
             activeUsers: 0,
             newUsers: 0,
-            newPortals: 0,
             newUploads: 0,
           },
           recentActivity: { uploads: [] },
@@ -221,7 +213,6 @@ function AnalyticsPageContent() {
           activity: {
             total_users: 0,
             active_users: 0,
-            users_with_portals: 0,
             users_with_uploads: 0,
           },
           topUsers: [],
@@ -287,12 +278,10 @@ function AnalyticsPageContent() {
       setDashboardData({
         overview: {
           totalUsers: 0,
-          totalPortals: 0,
           totalUploads: 0,
           totalStorageGB: 0,
           activeUsers: 0,
           newUsers: 0,
-          newPortals: 0,
           newUploads: 0,
         },
         recentActivity: { uploads: [] },
@@ -312,7 +301,6 @@ function AnalyticsPageContent() {
         activity: {
           total_users: 0,
           active_users: 0,
-          users_with_portals: 0,
           users_with_uploads: 0,
         },
         topUsers: [],
@@ -523,21 +511,6 @@ function AnalyticsPageContent() {
 
             <div className="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-lg bg-green-50 text-green-600 border-green-100">
-                  <BarChart3 className="w-6 h-6" />
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-slate-900">{formatNumber(dashboardData?.overview.totalPortals || 0)}</p>
-                  <p className="text-sm text-slate-600">Total Portals</p>
-                </div>
-              </div>
-              <div className="text-sm text-slate-600">
-                +{dashboardData?.overview.newPortals || 0} this {period}
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-4">
                 <div className="p-3 rounded-lg bg-purple-50 text-purple-600 border-purple-100">
                   <Upload className="w-6 h-6" />
                 </div>
@@ -599,12 +572,9 @@ function AnalyticsPageContent() {
           </div>
 
           {/* Activity Tables */}
-          <div className="grid gap-8 md:grid-cols-2">
+          <div className="grid gap-8">
             <div className="bg-white rounded-xl border border-slate-200">
               <RecentActivity uploads={dashboardData?.recentActivity.uploads || []} />
-            </div>
-            <div className="bg-white rounded-xl border border-slate-200">
-              <TopPortals portals={dashboardData?.topPortals || []} />
             </div>
           </div>
         </TabsContent>
@@ -632,18 +602,6 @@ function AnalyticsPageContent() {
                 <div className="text-right">
                   <p className="text-2xl font-bold text-slate-900">{formatNumber(userAnalytics?.activity.active_users || 0)}</p>
                   <p className="text-sm text-slate-600">Active Users</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 rounded-lg bg-purple-50 text-purple-600 border-purple-100">
-                  <BarChart3 className="w-6 h-6" />
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-slate-900">{formatNumber(userAnalytics?.activity.users_with_portals || 0)}</p>
-                  <p className="text-sm text-slate-600">Users with Portals</p>
                 </div>
               </div>
             </div>
@@ -717,7 +675,6 @@ function AnalyticsPageContent() {
                       <p className="text-sm text-slate-600">{user.email}</p>
                     </div>
                     <div className="flex items-center space-x-4 text-sm">
-                      <span className="text-slate-700">{user.stats.portals} portals</span>
                       <span className="text-slate-700">{user.stats.uploads} uploads</span>
                       <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className={user.role === 'admin' ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-700'}>
                         {user.role}

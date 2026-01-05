@@ -23,7 +23,7 @@ export function HeroSection({ onCtaClick, onDemoVideoClick }: HeroSectionProps) 
                 Secure client uploads made simple
               </h1>
               <p className="text-xl text-muted-foreground leading-relaxed max-w-xl">
-                Create a professional upload portal in seconds. Clients send files without confusion. No logins, no fuss.
+                Create a professional upload link in seconds. Clients send files without confusion. No logins, no fuss.
               </p>
             </div>
 
@@ -33,7 +33,7 @@ export function HeroSection({ onCtaClick, onDemoVideoClick }: HeroSectionProps) 
                 onClick={onCtaClick}
                 className="bg-primary text-primary-foreground px-8 py-4 rounded-xl font-bold text-lg hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-95 flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start"
               >
-                Create Your Portal Link
+                Create Your Upload Link
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <button
