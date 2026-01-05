@@ -28,7 +28,7 @@ export const TicketReplyEmail = ({
   message = 'This is a test message',
   isAdminReply = true,
   senderName = 'Support Team',
-  dashboardUrl = 'https://app.secureuploadhub.com/support'
+  dashboardUrl = 'https://app.secureuploadhub.com/dashboard/support'
 }: TicketReplyEmailProps) => {
   const previewText = `New ${isAdminReply ? 'reply from support' : 'message'} on your ticket: ${subject}`
 

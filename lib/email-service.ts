@@ -6,7 +6,18 @@
 import { Resend } from 'resend';
 import { JSX } from 'react';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resend: Resend | null = null;
+
+function getResendClient(): Resend {
+  if (!resend) {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      throw new Error('Missing API key. Pass it to the constructor `new Resend("re_123")`');
+    }
+    resend = new Resend(apiKey);
+  }
+  return resend;
+}
 
 export interface SendEmailOptions {
   to: string | string[];
@@ -48,7 +59,8 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ success: b
   }
 
   try {
-    const response = await resend.emails.send({
+    const resendClient = getResendClient();
+    const response = await resendClient.emails.send({
       from: fromAddress,
       to: Array.isArray(options.to) ? options.to : options.to,
       subject: options.subject,
@@ -101,4 +113,4 @@ export async function sendBatchEmails(emails: SendEmailOptions[]): Promise<{ suc
   return { success: failed === 0, sent, failed };
 }
 
-export { resend };
+export { getResendClient as resend };
