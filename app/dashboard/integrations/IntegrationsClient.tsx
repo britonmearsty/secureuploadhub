@@ -258,7 +258,7 @@ export default function IntegrationsClient() {
                                                                     setSyncSettings({ ...syncSettings, syncInterval: parseInt(e.target.value) })
                                                                     if (syncError) setSyncError(null)
                                                                 }}
-                                                                className={`w-full px-4 py-2.5 bg-card border rounded-xl focus:ring-2 focus:ring-ring outline-none transition-all text-foreground ${syncError ? "border-red-500 bg-red-50/10" : "border-border"
+                                                                className={`w-full px-4 py-2.5 bg-card border rounded-xl focus:ring-2 focus:ring-ring outline-none transition-all text-foreground ${syncError ? "border-destructive bg-destructive/5" : "border-border"
                                                                     }`}
                                                             />
                                                         </div>
@@ -267,7 +267,7 @@ export default function IntegrationsClient() {
                                                             <motion.p
                                                                 initial={{ opacity: 0, y: -5 }}
                                                                 animate={{ opacity: 1, y: 0 }}
-                                                                className="text-xs font-medium text-red-500 mt-2 flex items-center gap-1.5"
+                                                                className="text-xs font-medium text-destructive mt-2 flex items-center gap-1.5"
                                                             >
                                                                 <AlertCircle className="w-3.5 h-3.5" />
                                                                 {syncError}
@@ -277,11 +277,11 @@ export default function IntegrationsClient() {
                                                 </div>
                                             </div>
 
-                                            <div className="p-6 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/50 flex gap-4">
-                                                <AlertCircle className="w-5 h-5 text-amber-500 dark:text-amber-400 shrink-0" />
+                                            <div className="p-6 rounded-2xl bg-muted border border-border flex gap-4">
+                                                <AlertCircle className="w-5 h-5 text-muted-foreground shrink-0" />
                                                 <div>
-                                                    <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">Storage Optimization Tip</p>
-                                                    <p className="text-xs text-amber-700 dark:text-amber-200 mt-1">
+                                                    <p className="text-sm font-semibold text-foreground">Storage Optimization Tip</p>
+                                                    <p className="text-xs text-muted-foreground mt-1">
                                                         Enable auto-sync with automatic deletion to maximize your storage capacity and ensure files are safely backed up to the cloud.
                                                     </p>
                                                 </div>
@@ -290,7 +290,7 @@ export default function IntegrationsClient() {
                                             <button
                                                 onClick={saveSyncSettings}
                                                 disabled={savingSettings}
-                                                className="w-full px-6 py-3 bg-foreground text-primary-foreground rounded-xl font-semibold hover:bg-primary active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                                                className="w-full px-6 py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                                             >
                                                 {savingSettings ? (
                                                     <>
@@ -334,9 +334,9 @@ function IntegrationCard({ name, description, icon, category, status, provider, 
                 {status === 'coming-soon' ? (
                     <span className="text-[10px] font-bold uppercase tracking-wider bg-muted text-muted-foreground px-2 py-1 rounded">Coming Soon</span>
                 ) : isConnected ? (
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 px-2 py-1 rounded">Connected</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary px-2 py-1 rounded">Connected</span>
                 ) : (
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-100 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 px-2 py-1 rounded">Available</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-muted text-muted-foreground px-2 py-1 rounded">Available</span>
                 )}
             </div>
             <h4 className="font-bold text-foreground">{name}</h4>
@@ -346,7 +346,7 @@ function IntegrationCard({ name, description, icon, category, status, provider, 
                 disabled={status === 'coming-soon' || configuringProvider === provider || isConnected}
                 className={`w-full py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${status === 'coming-soon' || isConnected
                     ? "bg-muted text-muted-foreground cursor-not-allowed border border-border"
-                    : "bg-foreground text-primary-foreground hover:bg-primary shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                     }`}
             >
                 {configuringProvider === provider ? (
@@ -369,7 +369,7 @@ function Switch({ checked, onChange }: { checked: boolean; onChange?: (value: bo
     return (
         <button
             onClick={() => onChange?.(!checked)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${checked ? 'bg-foreground' : 'bg-border'
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${checked ? 'bg-primary' : 'bg-border'
                 }`}
             type="button"
             role="switch"

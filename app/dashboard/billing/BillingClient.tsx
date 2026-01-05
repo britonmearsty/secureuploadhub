@@ -256,9 +256,9 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
 
             {banner && (
                 <div className={`mb-6 rounded-xl border px-4 py-3 text-sm ${banner.type === "success"
-                    ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200"
+                    ? "bg-success/10 border-success/20 text-success"
                     : banner.type === "error"
-                        ? "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200"
+                        ? "bg-destructive/10 border-destructive/20 text-destructive"
                         : "bg-muted border-border text-muted-foreground"
                     }`}>
                     {banner.message}
@@ -319,12 +319,12 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                     {activeTab === "overview" && (
                                         <div className="space-y-8">
                                             {/* Subscription Info */}
-                                            <div className="relative overflow-hidden rounded-2xl bg-foreground p-8 text-primary-foreground">
+                                            <div className="relative overflow-hidden rounded-2xl bg-muted border-2 border-border p-8">
                                                 <div className="relative z-10">
                                                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                                         <div>
                                                             <p className="text-muted-foreground text-sm font-medium uppercase tracking-wider mb-2">Current Plan</p>
-                                                            <h3 className="text-3xl font-bold mb-2">
+                                                            <h3 className="text-3xl font-bold text-foreground mb-2">
                                                                 {currentPlan.name}
                                                             </h3>
                                                             <p className="text-muted-foreground text-lg">
@@ -334,7 +334,7 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
 
                                                         {subscription && (
                                                             <div className="flex flex-col items-start md:items-end gap-2">
-                                                                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${subscription.status === 'active' ? 'bg-emerald-500/20 dark:bg-emerald-500/10 text-emerald-400 dark:text-emerald-300' : subscription.status === 'incomplete' ? 'bg-orange-500/20 dark:bg-orange-500/10 text-orange-400 dark:text-orange-300' : 'bg-red-500/20 dark:bg-red-500/10 text-red-400 dark:text-red-300'
+                                                                <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${subscription.status === 'active' ? 'bg-success/20 text-success' : subscription.status === 'incomplete' ? 'bg-warning/20 text-warning' : 'bg-destructive/20 text-destructive'
                                                                     }`}>
                                                                     <ShieldCheck className="w-3.5 h-3.5" />
                                                                     {subscription.status}
@@ -347,7 +347,7 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                                     <button
                                                                         onClick={checkSubscriptionStatus}
                                                                         disabled={checkingStatus}
-                                                                        className="text-xs px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors disabled:opacity-50"
+                                                                        className="text-xs px-2 py-1 bg-primary hover:bg-primary/80 text-primary-foreground rounded transition-colors disabled:opacity-50"
                                                                     >
                                                                         {checkingStatus ? "Checking..." : "Check Status"}
                                                                     </button>
@@ -361,7 +361,7 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                             <button
                                                                 onClick={handleCancelSubscription}
                                                                 disabled={canceling}
-                                                                className="px-6 py-2 bg-red-500 dark:bg-red-600 hover:bg-red-600 dark:hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+                                                                className="px-6 py-2 bg-destructive hover:bg-destructive/80 text-destructive-foreground rounded-lg text-sm font-medium transition-colors"
                                                             >
                                                                 {canceling ? "Processing..." : "Cancel Subscription"}
                                                             </button>
@@ -369,25 +369,25 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                     )}
 
                                                     {subscription?.cancelAtPeriodEnd && (
-                                                        <div className="mt-6 p-4 rounded-xl bg-orange-500/10 dark:bg-orange-500/5 border border-orange-500/20 dark:border-orange-500/10 flex items-center gap-3">
-                                                            <AlertCircle className="w-5 h-5 text-orange-400" />
-                                                            <p className="text-sm text-orange-200">
+                                                        <div className="mt-6 p-4 rounded-xl bg-warning/10 border border-warning/20 flex items-center gap-3">
+                                                            <AlertCircle className="w-5 h-5 text-warning" />
+                                                            <p className="text-sm text-warning">
                                                                 Your plan will be downgraded on {new Date(subscription.currentPeriodEnd).toLocaleDateString()}.
                                                             </p>
                                                         </div>
                                                     )}
 
                                                     {subscription?.status === 'incomplete' && (
-                                                        <div className="mt-6 p-4 rounded-xl bg-blue-500/10 dark:bg-blue-500/5 border border-blue-500/20 dark:border-blue-500/10 flex items-center gap-3">
-                                                            <AlertCircle className="w-5 h-5 text-blue-400" />
+                                                        <div className="mt-6 p-4 rounded-xl bg-primary/10 border border-primary/20 flex items-center gap-3">
+                                                            <AlertCircle className="w-5 h-5 text-primary" />
                                                             <div className="flex-1">
-                                                                <p className="text-sm text-blue-200 mb-2">
+                                                                <p className="text-sm text-foreground mb-2">
                                                                     Your subscription is being processed. If you've completed payment, it should activate shortly.
                                                                 </p>
                                                                 <button
                                                                     onClick={checkSubscriptionStatus}
                                                                     disabled={checkingStatus}
-                                                                    className="text-xs px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors disabled:opacity-50"
+                                                                    className="text-xs px-3 py-1 bg-primary hover:bg-primary/80 text-primary-foreground rounded transition-colors disabled:opacity-50"
                                                                 >
                                                                     {checkingStatus ? "Checking..." : "Check Status Now"}
                                                                 </button>
@@ -396,13 +396,13 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                     )}
                                                 </div>
                                                 {/* Decorative Gradient */}
-                                                <div className="absolute top-0 right-0 w-64 h-64 bg-muted rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 opacity-50" />
+                                                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 opacity-50" />
                                             </div>
 
                                             {/* Usage Section */}
                                             <div>
                                                 <div className="flex items-center gap-2 mb-4">
-                                                    <TrendingUp className="w-5 h-5 text-foreground" />
+                                                    <TrendingUp className="w-5 h-5 text-muted-foreground" />
                                                     <h3 className="text-lg font-semibold text-foreground">Current Usage</h3>
                                                 </div>
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -424,7 +424,7 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                                     <motion.div
                                                                         initial={{ width: 0 }}
                                                                         animate={{ width: `${percent}%` }}
-                                                                        className={`h-full ${percent > 90 ? 'bg-red-500 dark:bg-red-400' : 'bg-foreground'}`}
+                                                                        className={`h-full ${percent > 90 ? 'bg-destructive' : 'bg-primary'}`}
                                                                     />
                                                                 </div>
                                                             </div>
@@ -445,12 +445,12 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                     <div
                                                         key={plan.id}
                                                         className={`flex flex-col p-6 rounded-2xl border-2 transition-all duration-200 ${isCurrent
-                                                            ? "border-foreground bg-muted ring-4 ring-primary/5 relative"
+                                                            ? "border-primary bg-muted ring-4 ring-primary/5 relative"
                                                             : "border-border bg-card hover:border-muted-foreground"
                                                             }`}
                                                     >
                                                         {isCurrent && (
-                                                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-foreground text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
+                                                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
                                                                 Current Plan
                                                             </div>
                                                         )}
@@ -465,7 +465,7 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                         <ul className="space-y-4 mb-8 flex-1">
                                                             {plan.features.map((feature, i) => (
                                                                 <li key={i} className="flex items-start gap-3 text-sm text-muted-foreground">
-                                                                    <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                                                                    <CheckCircle2 className="w-5 h-5 text-success shrink-0" />
                                                                     {feature}
                                                                 </li>
                                                             ))}
@@ -475,7 +475,7 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                             disabled={isCurrent || subscribing === plan.id || isFreePlan}
                                                             className={`w-full py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${isCurrent || isFreePlan
                                                                 ? "bg-muted text-muted-foreground cursor-not-allowed"
-                                                                : "bg-foreground hover:bg-primary text-primary-foreground shadow-sm active:scale-95"
+                                                                : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm active:scale-95"
                                                                 }`}
                                                         >
                                                             {subscribing === plan.id ? (
@@ -517,9 +517,9 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                                     {p.currency} {p.amount.toFixed(2)}
                                                                 </td>
                                                                 <td className="py-4">
-                                                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${p.status === 'succeeded' ? 'bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400' :
-                                                                        p.status === 'pending' ? 'bg-orange-100 dark:bg-orange-950/30 text-orange-700 dark:text-orange-400' :
-                                                                            'bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400'
+                                                                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${p.status === 'succeeded' ? 'bg-success/20 text-success' :
+                                                                        p.status === 'pending' ? 'bg-warning/20 text-warning' :
+                                                                            'bg-destructive/20 text-destructive'
                                                                         }`}>
                                                                         {p.status}
                                                                     </span>

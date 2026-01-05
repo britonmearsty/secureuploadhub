@@ -66,29 +66,37 @@ export default function StatsOverview({ initialStats, onStatsUpdate, disablePoll
       title: "Total Portals",
       value: stats.totalPortals,
       icon: FolderOpen,
-      color: "text-primary",
-      bg: "bg-primary/10",
+      color: "text-blue-600 dark:text-blue-400",
+      bg: "bg-blue-100 dark:bg-blue-500/20",
+      label: "All Time",
+      labelColor: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400"
     },
     {
       title: "Active Portals",
       value: stats.activePortals,
       icon: Activity,
-      color: "text-primary",
-      bg: "bg-primary/10",
+      color: "text-emerald-600 dark:text-emerald-400",
+      bg: "bg-emerald-100 dark:bg-emerald-500/20",
+      label: "Live",
+      labelColor: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400"
     },
     {
       title: "Files Received",
       value: stats.totalUploads,
       icon: Inbox,
-      color: "text-primary",
-      bg: "bg-primary/10",
+      color: "text-violet-600 dark:text-violet-400",
+      bg: "bg-violet-100 dark:bg-violet-500/20",
+      label: "Total",
+      labelColor: "bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-400"
     },
     {
       title: "Recent Activity",
       value: stats.recentUploads,
       icon: TrendingUp,
-      color: "text-primary",
-      bg: "bg-primary/10",
+      color: "text-amber-600 dark:text-amber-400",
+      bg: "bg-amber-100 dark:bg-amber-500/20",
+      label: "7 Days",
+      labelColor: "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
     }
   ]
 
@@ -112,13 +120,16 @@ export default function StatsOverview({ initialStats, onStatsUpdate, disablePoll
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1, duration: 0.4 }}
-            className="group relative bg-card rounded-2xl border border-border p-6 hover:border-muted-foreground hover:shadow-xl hover:shadow-primary/5 transition-all duration-300"
+            className="relative bg-card rounded-2xl border border-border p-6"
           >
             <div className="flex flex-col gap-4 relative z-10">
               <div className="flex items-center justify-between">
-                <div className={`p-2.5 rounded-xl ${card.bg} ${card.color} bg-opacity-50`} aria-hidden="true">
+                <div className={`p-2.5 rounded-xl ${card.bg} ${card.color}`} aria-hidden="true">
                   <Icon className="w-5 h-5" />
                 </div>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${card.labelColor}`}>
+                  {card.label}
+                </span>
               </div>
 
               <div>
