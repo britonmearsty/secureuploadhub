@@ -4,6 +4,7 @@ import Sidebar from "./components/Sidebar"
 import { ThemeProvider } from "@/lib/theme-provider"
 import { ThemeSync } from "@/lib/theme-sync"
 import { getFreshUserData } from "@/lib/session-validation"
+import { getUserBillingContext } from "@/lib/billing"
 import AdminRedirect from "@/components/AdminRedirect"
 
 // Force dynamic rendering for authenticated routes
@@ -65,6 +66,9 @@ export default async function DashboardLayout({
     console.log(`🏠 DASHBOARD LAYOUT: Regular user ${freshUser.email}, rendering dashboard`)
     const userTheme = freshUser.theme || "system"
 
+    // Get user's subscription plan
+    const { plan } = await getUserBillingContext(session.user.id)
+
     return (
       <ThemeProvider defaultTheme={userTheme as "light" | "dark" | "system"}>
         <ThemeSync userTheme={userTheme} />
@@ -77,6 +81,7 @@ export default async function DashboardLayout({
             <Sidebar
               userName={session.user.name || freshUser.name}
               userImage={session.user.image}
+              subscriptionPlan={plan.name}
               signOutAction={handleSignOut}
             />
             <main className="flex-1 min-w-0 overflow-y-auto">

@@ -28,6 +28,7 @@ import {
 interface SidebarProps {
   userName?: string | null
   userImage?: string | null
+  subscriptionPlan?: string | null
   signOutAction: () => Promise<void>
 }
 
@@ -65,13 +66,7 @@ const navItems: NavItem[] = [
     icon: Users,
   },
   {
-    name: "Support",
-    href: "/dashboard/support",
-    icon: MessageSquare,
-    description: "Help center, tickets, and feedback"
-  },
-  {
-    name: "Integrations",
+    name: "Storage",
     href: "/dashboard/integrations",
     icon: Cloud,
   },
@@ -79,6 +74,12 @@ const navItems: NavItem[] = [
     name: "Billing",
     href: "/dashboard/billing",
     icon: CreditCard,
+  },
+  {
+    name: "Support",
+    href: "/dashboard/support",
+    icon: MessageSquare,
+    description: "Help center, tickets, and feedback"
   },
   {
     name: "Settings",
@@ -95,7 +96,7 @@ const SPRING_TRANSITION: Transition = {
   mass: 0.8,
 } as const
 
-export default function Sidebar({ userName, userImage, signOutAction }: SidebarProps) {
+export default function Sidebar({ userName, userImage, subscriptionPlan, signOutAction }: SidebarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [expandedItems, setExpandedItems] = useState<string[]>([])
@@ -330,9 +331,9 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
         })}
       </nav>
 
-      {/* Upgrade Placeholder */}
+      {/* Upgrade Banner - only show for free plan users */}
       <AnimatePresence>
-        {!isCollapsed && (
+        {!isCollapsed && (!subscriptionPlan || subscriptionPlan === "Free") && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -345,9 +346,12 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pro Plan</span>
               </div>
               <p className="text-xs text-muted-foreground mb-3">Higher limits and faster sharing.</p>
-              <button className="w-full py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold rounded-lg transition-all">
+              <Link
+                href="/dashboard/billing?tab=plans"
+                className="block w-full py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold rounded-lg transition-all text-center"
+              >
                 Upgrade
-              </button>
+              </Link>
             </div>
           </motion.div>
         )}
