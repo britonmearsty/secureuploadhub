@@ -64,34 +64,10 @@ const navItems: NavItem[] = [
     icon: Users,
   },
   {
-<<<<<<< HEAD
-    name: "Communication",
-    href: "/dashboard/communication",
-    icon: MessageSquare,
-    description: "Tickets and feedback",
-    subItems: [
-      {
-        name: "My Tickets",
-        href: "/dashboard/communication/tickets",
-        icon: MessageSquare,
-      },
-      {
-        name: "Feedback",
-        href: "/dashboard/communication/feedback",
-        icon: Star,
-      },
-      {
-        name: "Updates",
-        href: "/dashboard/communication/notifications",
-        icon: Bell,
-      },
-    ]
-=======
     name: "Support",
-    href: "/support",
-    icon: HelpCircle,
+    href: "/dashboard/support",
+    icon: MessageSquare,
     description: "Help center, tickets, and feedback"
->>>>>>> ba1202c64844ea02234ef7a151a9a44b30a6e9a1
   },
   {
     name: "Integrations",
@@ -139,16 +115,7 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
     )
   }
 
-<<<<<<< HEAD
-  // Auto-expand Communication section if we're on a communication page
-  useEffect(() => {
-    if (pathname.startsWith('/dashboard/communication')) {
-      setExpandedItems(prev => prev.includes('Communication') ? prev : [...prev, 'Communication'])
-    }
-  }, [pathname])
-=======
   // Auto-expand logic removed since communication is now consolidated into support
->>>>>>> ba1202c64844ea02234ef7a151a9a44b30a6e9a1
 
   // Handle auto-collapse on smaller desktop screens
   useEffect(() => {
