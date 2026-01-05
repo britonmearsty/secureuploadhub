@@ -15,7 +15,14 @@ export default function ColorPicker({
   label, 
   value, 
   onChange, 
-  presets = ["#0f172a", "#1e40af", "#dc2626", "#059669", "#7c3aed", "#ea580c"], 
+  presets = [
+    "hsl(var(--primary))", 
+    "hsl(var(--secondary))", 
+    "hsl(var(--destructive))", 
+    "hsl(var(--success))", 
+    "hsl(var(--warning))", 
+    "hsl(var(--accent))"
+  ], 
   className = "" 
 }: ColorPickerProps) {
   const [copied, setCopied] = useState(false)
@@ -113,7 +120,7 @@ export default function ColorPicker({
               className={`w-8 h-8 rounded-lg border-2 transition-all hover:scale-110 ${
                 value === preset 
                   ? "border-ring shadow-md" 
-                  : "border-white hover:border-border shadow-sm"
+                  : "border-card hover:border-border shadow-sm"
               }`}
               style={{ backgroundColor: preset }}
               title={preset}

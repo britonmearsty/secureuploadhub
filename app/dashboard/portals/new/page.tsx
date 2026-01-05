@@ -51,29 +51,29 @@ const FolderNode: React.FC<FolderNodeProps> = ({ folder, navigateToFolder, expan
 
   return (
     <div className="pl-4">
-      <div className="flex items-center justify-between py-2 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors group rounded-lg pr-2">
+      <div className="flex items-center justify-between py-2 hover:bg-muted/50 transition-colors group rounded-lg pr-2">
         <button
           type="button"
           onClick={() => navigateToFolder(folder)}
           className="flex items-center gap-2 text-left flex-1"
         >
-          <FolderOpen className="w-4 h-4 text-amber-500 flex-shrink-0" />
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-slate-100 truncate">{folder.name}</span>
+          <FolderOpen className="w-4 h-4 text-warning flex-shrink-0" />
+          <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground truncate">{folder.name}</span>
         </button>
 
         {subfolders.length > 0 && (
           <button
             type="button"
             onClick={() => toggleFolder(folder.id)}
-            className="p-1 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-md transition-colors"
+            className="p-1 hover:bg-muted rounded-md transition-colors"
           >
-            <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+            <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${isExpanded ? "rotate-90" : ""}`} />
           </button>
         )}
       </div>
 
       {isExpanded && subfolders.length > 0 && (
-        <div className="pl-4 border-l border-slate-100 dark:border-slate-700 ml-2">
+        <div className="pl-4 border-l border-border ml-2">
           {subfolders.map((sub: any) => (
             <FolderNode
               key={sub.id}
@@ -128,12 +128,12 @@ export default function CreatePortalPage() {
     name: "",
     slug: "",
     description: "",
-    primaryColor: "#3b82f6", // Default to blue-500
+    primaryColor: "hsl(var(--primary))", // Use CSS variable
     logoUrl: "",
     backgroundImageUrl: "",
     backgroundColor: "",
-    cardBackgroundColor: "#ffffff",
-    textColor: "#0f172a",
+    cardBackgroundColor: "hsl(var(--card))",
+    textColor: "hsl(var(--foreground))",
     welcomeMessage: "",
     submitButtonText: "Initialize Transfer",
     successMessage: "Transmission Verified",
@@ -408,7 +408,7 @@ export default function CreatePortalPage() {
     <div className="max-w-6xl mx-auto px-4 py-8">
       <Link
         href="/dashboard"
-        className="group inline-flex items-center gap-2 text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors font-medium text-sm mb-8"
+        className="group inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors font-medium text-sm mb-8"
       >
         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
         Back to Dashboard
@@ -418,8 +418,8 @@ export default function CreatePortalPage() {
         {/* Navigation Sidebar */}
         <aside className="lg:w-64 flex-shrink-0">
           <div className="mb-6 px-2">
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">New Portal</h1>
-            <p className="text-slate-500 text-sm mt-1">Create a secure space for your clients.</p>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">New Portal</h1>
+            <p className="text-muted-foreground text-sm mt-1">Create a secure space for your clients.</p>
           </div>
           <nav className="space-y-1">
             {[
@@ -437,11 +437,11 @@ export default function CreatePortalPage() {
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
-                    ? "bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100"
-                    : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100"
+                    ? "bg-card shadow-sm border border-border text-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                     }`}
                 >
-                  <Icon className={`w-5 h-5 ${isActive ? "text-slate-900 dark:text-slate-100" : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300"}`} />
+                  <Icon className={`w-5 h-5 ${isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`} />
                   <span className="font-medium text-sm">{tab.label}</span>
                   {isActive && (
                     <motion.div
@@ -450,7 +450,7 @@ export default function CreatePortalPage() {
                       initial={{ opacity: 0, x: -5 }}
                       animate={{ opacity: 1, x: 0 }}
                     >
-                      <ChevronRight className="w-4 h-4 text-slate-400" />
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
                     </motion.div>
                   )}
                 </button>
@@ -470,18 +470,18 @@ export default function CreatePortalPage() {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-                  <div className="p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-800/30 flex justify-between items-center">
+                <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
+                  <div className="p-6 border-b border-border bg-muted/30 flex justify-between items-center">
                     <div>
-                      <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                      <h2 className="text-xl font-semibold text-foreground">
                         {activeTab}
                       </h2>
-                      <p className="text-sm text-slate-500 mt-1">
+                      <p className="text-sm text-muted-foreground mt-1">
                         Manage settings for this section.
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
-                      {loading && <Loader2 className="w-5 h-5 animate-spin text-slate-400" />}
+                      {loading && <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />}
                       {activeTab !== 'Identity' && (
                         <button
                           type="button"
@@ -492,7 +492,7 @@ export default function CreatePortalPage() {
                               setActiveTab(tabs[currentIndex - 1])
                             }
                           }}
-                          className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                          className="p-2 hover:bg-muted rounded-lg transition-colors text-muted-foreground hover:text-foreground"
                           title="Return to Previous Section"
                         >
                           <ArrowLeft className="w-4 h-4" />
@@ -505,7 +505,7 @@ export default function CreatePortalPage() {
                     {activeTab === 'Identity' && (
                       <div className="space-y-6">
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                          <label className="block text-sm font-semibold text-foreground mb-2">
                             Portal Name
                           </label>
                           <input
@@ -513,17 +513,17 @@ export default function CreatePortalPage() {
                             value={formData.name}
                             onChange={(e) => handleNameChange(e.target.value)}
                             placeholder="e.g. Project Delivery Materials"
-                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-medium text-slate-900 dark:text-slate-100"
+                            className="w-full px-4 py-3 bg-muted border border-border rounded-xl focus:bg-card focus:ring-2 focus:ring-ring transition-all outline-none font-medium text-foreground"
                             required
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                          <label className="block text-sm font-semibold text-foreground mb-2">
                             Permanent Handle
                           </label>
                           <div className="flex items-stretch shadow-sm rounded-xl">
-                            <div className="px-4 flex items-center bg-slate-50 border border-r-0 border-slate-200 rounded-l-xl text-slate-500 text-sm font-medium">
+                            <div className="px-4 flex items-center bg-muted border border-r-0 border-border rounded-l-xl text-muted-foreground text-sm font-medium">
                               /p/
                             </div>
                             <input
@@ -538,7 +538,7 @@ export default function CreatePortalPage() {
                                 }
                               }}
                               placeholder="custom-address"
-                              className="flex-1 px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-r-xl focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-medium text-slate-900 dark:text-slate-100"
+                              className="flex-1 px-4 py-3 bg-card border border-border rounded-r-xl focus:ring-2 focus:ring-ring transition-all outline-none font-medium text-foreground"
                               pattern="[a-z0-9-]+"
                               required
                             />
@@ -551,14 +551,14 @@ export default function CreatePortalPage() {
                             <button
                               type="button"
                               onClick={() => setActiveTab('Messaging')}
-                              className="px-4 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-xl font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                              className="px-4 py-2.5 border border-border text-muted-foreground rounded-xl font-bold text-sm hover:bg-muted transition-colors"
                             >
                               Jump to Finish
                             </button>
                             <button
                               type="button"
                               onClick={() => setActiveTab('Branding')}
-                              className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
+                              className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-bold text-sm hover:bg-primary/90 transition-colors"
                             >
                               Next: Branding
                             </button>
@@ -570,7 +570,7 @@ export default function CreatePortalPage() {
                     {activeTab === 'Branding' && (
                       <div className="space-y-8">
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">
+                          <label className="block text-sm font-semibold text-foreground mb-2">
                             Logo Source
                           </label>
                           <input
@@ -578,96 +578,36 @@ export default function CreatePortalPage() {
                             value={formData.logoUrl}
                             onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
                             placeholder="https://your-brand.com/logo.png"
-                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                            className="w-full px-4 py-3 bg-muted border border-border rounded-xl focus:bg-card focus:ring-2 focus:ring-ring transition-all outline-none font-medium text-foreground placeholder:text-muted-foreground"
                           />
                         </div>
 
-                        <div className="bg-slate-50 rounded-xl p-6 border border-slate-100">
-                          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider mb-4">Color Palette</h3>
+                        <div className="bg-muted rounded-xl p-6 border border-border">
+                          <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-4">Color Palette</h3>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Primary Color</label>
-                              <div className="flex items-center gap-3">
-                                <div className="relative">
-                                  <input
-                                    type="color"
-                                    value={formData.primaryColor}
-                                    onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-                                    className="w-12 h-12 rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden shrink-0"
-                                  />
-                                  <div className="absolute inset-0 rounded-xl border border-slate-200 pointer-events-none" />
-                                </div>
-                                <input
-                                  type="text"
-                                  value={formData.primaryColor}
-                                  onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-                                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-mono text-sm uppercase text-slate-900 dark:text-slate-100"
-                                />
-                              </div>
-                            </div>
+                            <ColorPicker
+                              label="Primary Color"
+                              value={formData.primaryColor}
+                              onChange={(value) => setFormData({ ...formData, primaryColor: value })}
+                            />
 
-                            <div>
-                              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Text Color</label>
-                              <div className="flex items-center gap-3">
-                                <div className="relative">
-                                  <input
-                                    type="color"
-                                    value={formData.textColor}
-                                    onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
-                                    className="w-12 h-12 rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden shrink-0"
-                                  />
-                                  <div className="absolute inset-0 rounded-xl border border-slate-200 pointer-events-none" />
-                                </div>
-                                <input
-                                  type="text"
-                                  value={formData.textColor}
-                                  onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
-                                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-mono text-sm uppercase text-slate-900 dark:text-slate-100"
-                                />
-                              </div>
-                            </div>
+                            <ColorPicker
+                              label="Text Color"
+                              value={formData.textColor}
+                              onChange={(value) => setFormData({ ...formData, textColor: value })}
+                            />
 
-                            <div>
-                              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Background</label>
-                              <div className="flex items-center gap-3">
-                                <div className="relative">
-                                  <input
-                                    type="color"
-                                    value={formData.backgroundColor || "#ffffff"}
-                                    onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
-                                    className="w-12 h-12 rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden shrink-0"
-                                  />
-                                  <div className="absolute inset-0 rounded-xl border border-slate-200 pointer-events-none" />
-                                </div>
-                                <input
-                                  type="text"
-                                  value={formData.backgroundColor || ""}
-                                  onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
-                                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-mono text-sm uppercase text-slate-900 dark:text-slate-100"
-                                />
-                              </div>
-                            </div>
+                            <ColorPicker
+                              label="Background"
+                              value={formData.backgroundColor || "hsl(var(--background))"}
+                              onChange={(value) => setFormData({ ...formData, backgroundColor: value })}
+                            />
 
-                            <div>
-                              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Card Background</label>
-                              <div className="flex items-center gap-3">
-                                <div className="relative">
-                                  <input
-                                    type="color"
-                                    value={formData.cardBackgroundColor}
-                                    onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
-                                    className="w-12 h-12 rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden shrink-0"
-                                  />
-                                  <div className="absolute inset-0 rounded-xl border border-slate-200 pointer-events-none" />
-                                </div>
-                                <input
-                                  type="text"
-                                  value={formData.cardBackgroundColor}
-                                  onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
-                                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-mono text-sm uppercase text-slate-900 dark:text-slate-100"
-                                />
-                              </div>
-                            </div>
+                            <ColorPicker
+                              label="Card Background"
+                              value={formData.cardBackgroundColor}
+                              onChange={(value) => setFormData({ ...formData, cardBackgroundColor: value })}
+                            />
                           </div>
                         </div>
 
@@ -677,14 +617,14 @@ export default function CreatePortalPage() {
                             <button
                               type="button"
                               onClick={() => setActiveTab('Messaging')}
-                              className="px-4 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-xl font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                              className="px-4 py-2.5 border border-border text-muted-foreground rounded-xl font-bold text-sm hover:bg-muted transition-colors"
                             >
                               Jump to Finish
                             </button>
                             <button
                               type="button"
                               onClick={() => setActiveTab('Storage')}
-                              className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
+                              className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-bold text-sm hover:bg-primary/90 transition-colors"
                             >
                               Next: Storage
                             </button>
@@ -709,35 +649,35 @@ export default function CreatePortalPage() {
                                 disabled={provider.disabled}
                                 onClick={() => selectStorageProvider(provider.id as any)}
                                 className={`relative p-5 rounded-2xl border-2 transition-all flex flex-col items-center gap-3 ${isActive
-                                  ? "border-slate-900 bg-slate-50 dark:bg-slate-800 dark:border-slate-700"
-                                  : "border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-200 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700"
+                                  ? "border-primary bg-muted"
+                                  : "border-border bg-card hover:border-muted-foreground hover:bg-muted"
                                   } ${provider.disabled ? "opacity-40 grayscale cursor-not-allowed" : ""}`}
                               >
-                                <div className={`p-3 rounded-xl ${isActive ? "bg-slate-900 text-white shadow-md" : "bg-slate-100 dark:bg-slate-700 text-slate-400"}`}>
+                                <div className={`p-3 rounded-xl ${isActive ? "bg-primary text-primary-foreground shadow-md" : "bg-muted text-muted-foreground"}`}>
                                   <Icon className="w-6 h-6" />
                                 </div>
-                                <span className="font-bold text-sm text-slate-900 dark:text-slate-100">{provider.name}</span>
+                                <span className="font-bold text-sm text-foreground">{provider.name}</span>
                                 {isActive && (
-                                  <CheckCircle2 className="absolute top-3 right-3 w-5 h-5 text-slate-900 dark:text-slate-100" />
+                                  <CheckCircle2 className="absolute top-3 right-3 w-5 h-5 text-foreground" />
                                 )}
                               </button>
                             );
                           })}
                         </div>
 
-                        <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden">
-                          <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-800/50 flex flex-col gap-3">
+                        <div className="bg-muted border border-border rounded-2xl overflow-hidden">
+                          <div className="px-5 py-4 border-b border-border bg-muted/50 flex flex-col gap-3">
                             <div className="flex items-center justify-between">
-                              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Navigation Tree</span>
+                              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Navigation Tree</span>
                               <button
                                 type="button"
                                 onClick={() => {
                                   setIsCreatingFolder(true)
                                   setNewFolderName(formData.name || "New Portal Folder")
                                 }}
-                                className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-sm"
+                                className="flex items-center gap-1.5 px-3 py-1 bg-card border border-border rounded-lg text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground hover:border-muted-foreground transition-all shadow-sm"
                               >
-                                <FolderOpen className="w-3 h-3 text-amber-500" />
+                                <FolderOpen className="w-3 h-3 text-warning" />
                                 New Folder
                               </button>
                             </div>
@@ -747,19 +687,19 @@ export default function CreatePortalPage() {
                               <button
                                 type="button"
                                 onClick={() => selectStorageProvider(formData.storageProvider)}
-                                className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-md transition-colors"
+                                className="p-1.5 hover:bg-card rounded-md transition-colors"
                               >
-                                <Cloud className="w-3.5 h-3.5 text-slate-400" />
+                                <Cloud className="w-3.5 h-3.5 text-muted-foreground" />
                               </button>
                               {folderPath.map((folder, idx) => (
                                 <div key={folder.id} className="flex items-center gap-1 shrink-0">
-                                  <ChevronRight className="w-3 h-3 text-slate-300" />
+                                  <ChevronRight className="w-3 h-3 text-muted" />
                                   <button
                                     type="button"
                                     onClick={() => navigateToBreadcrumb(idx)}
                                     className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all ${idx === folderPath.length - 1
-                                      ? "bg-slate-900 text-white"
-                                      : "text-slate-500 hover:bg-white dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100"
+                                      ? "bg-primary text-primary-foreground"
+                                      : "text-muted-foreground hover:bg-card hover:text-foreground"
                                       }`}
                                   >
                                     {folder.name}
@@ -776,12 +716,12 @@ export default function CreatePortalPage() {
                                   initial={{ opacity: 0, y: -10 }}
                                   animate={{ opacity: 1, y: 0 }}
                                   exit={{ opacity: 0, y: -10 }}
-                                  className="absolute inset-x-0 top-0 z-10 p-4 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 shadow-xl"
+                                  className="absolute inset-x-0 top-0 z-10 p-4 bg-card border-b border-border shadow-xl"
                                 >
                                   <div className="flex flex-col gap-3">
                                     <div className="flex items-center justify-between">
-                                      <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Creation Module</h4>
-                                      <button onClick={() => setIsCreatingFolder(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                                      <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Creation Module</h4>
+                                      <button onClick={() => setIsCreatingFolder(false)} className="text-muted-foreground hover:text-foreground">
                                         <ArrowLeft className="w-3.5 h-3.5 rotate-90" />
                                       </button>
                                     </div>
@@ -791,13 +731,13 @@ export default function CreatePortalPage() {
                                         value={newFolderName}
                                         onChange={(e) => setNewFolderName(e.target.value)}
                                         placeholder="Enter folder identifier..."
-                                        className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 outline-none text-slate-900 dark:text-slate-100"
+                                        className="flex-1 px-3 py-2 bg-muted border border-border rounded-lg text-sm font-semibold focus:ring-2 focus:ring-ring outline-none text-foreground"
                                         onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
                                       />
                                       <button
                                         type="button"
                                         onClick={handleCreateFolder}
-                                        className="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-slate-800 transition-colors"
+                                        className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-primary/90 transition-colors"
                                       >
                                         Create
                                       </button>
@@ -807,18 +747,18 @@ export default function CreatePortalPage() {
                               )}
                             </AnimatePresence>
 
-                            <div className="max-h-72 overflow-y-auto p-2 bg-white dark:bg-slate-800">
+                            <div className="max-h-72 overflow-y-auto p-2 bg-card">
                               {loadingFolders ? (
                                 <div className="py-12 flex flex-col items-center justify-center gap-3">
-                                  <Loader2 className="w-6 h-6 animate-spin text-slate-200" />
-                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Syncing Directory...</p>
+                                  <Loader2 className="w-6 h-6 animate-spin text-muted" />
+                                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Syncing Directory...</p>
                                 </div>
                               ) : folders.length === 0 ? (
                                 <div className="py-12 flex flex-col items-center justify-center gap-2">
-                                  <div className="p-3 bg-slate-50 dark:bg-slate-700 rounded-full">
-                                    <FolderOpen className="w-5 h-5 text-slate-200" />
+                                  <div className="p-3 bg-muted rounded-full">
+                                    <FolderOpen className="w-5 h-5 text-muted" />
                                   </div>
-                                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest italic">Sector is empty</p>
+                                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest italic">Sector is empty</p>
                                 </div>
                               ) : (
                                 <div className="space-y-1">
@@ -836,7 +776,7 @@ export default function CreatePortalPage() {
                             </div>
                           </div>
 
-                          <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+                          <div className="px-5 py-3 border-t border-border bg-muted/50">
                             <label className="flex items-center gap-3 cursor-pointer group">
                               <div className="relative flex items-center">
                                 <input
@@ -845,12 +785,12 @@ export default function CreatePortalPage() {
                                   onChange={(e) => setFormData({ ...formData, useClientFolders: e.target.checked })}
                                   className="peer sr-only"
                                 />
-                                <div className="w-10 h-5 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:bg-slate-900 dark:peer-checked:bg-slate-400 transition-colors" />
-                                <div className="absolute left-1 top-1 w-3 h-3 bg-white rounded-full peer-checked:translate-x-5 transition-transform" />
+                                <div className="w-10 h-5 bg-muted-foreground/20 rounded-full peer peer-checked:bg-primary transition-colors" />
+                                <div className="absolute left-1 top-1 w-3 h-3 bg-card rounded-full peer-checked:translate-x-5 transition-transform" />
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider group-hover:text-slate-900 dark:group-hover:text-slate-100 transition-colors">Client Isolation Mode</span>
-                                <span className="text-[9px] text-slate-400 font-medium">Automatic sub-directory generation for each transmission</span>
+                                <span className="text-[11px] font-bold text-foreground uppercase tracking-wider group-hover:text-foreground transition-colors">Client Isolation Mode</span>
+                                <span className="text-[9px] text-muted-foreground font-medium">Automatic sub-directory generation for each transmission</span>
                               </div>
                             </label>
                           </div>
@@ -882,7 +822,7 @@ export default function CreatePortalPage() {
                       <div className="space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
-                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Max Payload (MB)</label>
+                            <label className="block text-sm font-semibold text-foreground mb-3">Max Payload (MB)</label>
                             
                             {/* File Size Templates */}
                             <div className="grid grid-cols-3 gap-2 mb-4">
@@ -903,8 +843,8 @@ export default function CreatePortalPage() {
                                   }}
                                   className={`p-3 rounded-xl border text-center transition-all ${
                                     formData.maxFileSize === template.size
-                                      ? "border-slate-900 bg-slate-900 text-white shadow-md"
-                                      : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600"
+                                      ? "border-primary bg-primary text-primary-foreground shadow-md"
+                                      : "border-border bg-card text-muted-foreground hover:border-muted-foreground"
                                   }`}
                                 >
                                   <div className="font-bold text-lg">{template.size}MB</div>
@@ -915,7 +855,7 @@ export default function CreatePortalPage() {
                             </div>
 
                             <div className="relative">
-                              <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                              <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                               <input
                                 type="number"
                                 value={formData.maxFileSize}
@@ -928,33 +868,33 @@ export default function CreatePortalPage() {
                                   }
                                 }}
                                 placeholder="Custom size..."
-                                className={`w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border rounded-xl focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-semibold text-slate-900 dark:text-slate-100 ${!formData.maxFileSize ? 'border-amber-300 dark:border-amber-600' : 'border-slate-200 dark:border-slate-700'}`}
+                                className={`w-full pl-10 pr-4 py-3 bg-card border rounded-xl focus:ring-2 focus:ring-ring transition-all outline-none font-semibold text-foreground ${!formData.maxFileSize ? 'border-warning' : 'border-border'}`}
                               />
                             </div>
                             {!formData.maxFileSize && (
-                              <p className="text-[10px] text-amber-600 font-bold uppercase tracking-wider mt-1.5 flex items-center gap-1">
+                              <p className="text-[10px] text-warning font-bold uppercase tracking-wider mt-1.5 flex items-center gap-1">
                                 <AlertCircle className="w-3 h-3" />
                                 Please specify a capacity limit
                               </p>
                             )}
                           </div>
                           <div>
-                            <label className="block text-sm font-semibold text-slate-700 mb-2">Access Passkey</label>
+                            <label className="block text-sm font-semibold text-foreground mb-2">Access Passkey</label>
                             <div className="relative">
-                              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                               <input
                                 type="password"
                                 value={formData.password}
                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                 placeholder="Set new key..."
-                                className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-semibold text-slate-900 dark:text-slate-100"
+                                className="w-full pl-10 pr-4 py-3 bg-card border border-border rounded-xl focus:ring-2 focus:ring-ring transition-all outline-none font-semibold text-foreground"
                               />
                             </div>
                           </div>
                         </div>
 
                         <div>
-                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Client Data Requirements</label>
+                          <label className="block text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Client Data Requirements</label>
                           <div className="flex gap-4">
                             {[
                               { id: 'name', label: 'Identity (Name)', key: 'requireClientName' },
@@ -965,8 +905,8 @@ export default function CreatePortalPage() {
                                 type="button"
                                 onClick={() => setFormData(prev => ({ ...prev, [req.key]: !prev[req.key as keyof typeof prev] }))}
                                 className={`flex-1 px-4 py-3 rounded-xl border font-bold text-sm transition-all ${formData[req.key as keyof typeof formData]
-                                  ? "border-slate-900 bg-slate-900 text-white shadow-md"
-                                  : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600"
+                                  ? "border-primary bg-primary text-primary-foreground shadow-md"
+                                  : "border-border bg-card text-muted-foreground hover:border-muted-foreground"
                                   }`}
                               >
                                 {req.label}
@@ -976,14 +916,14 @@ export default function CreatePortalPage() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">
+                          <label className="block text-sm font-semibold text-foreground mb-2">
                             Allowed File Types
                           </label>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-muted p-4 rounded-xl border border-border">
                             {FILE_TYPE_OPTIONS.map((opt) => {
                               const isSelected = formData.allowedFileTypes.includes(opt.value);
                               return (
-                                <label key={opt.value} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white dark:hover:bg-slate-700 cursor-pointer transition-colors">
+                                <label key={opt.value} className="flex items-center gap-3 p-2 rounded-lg hover:bg-card cursor-pointer transition-colors">
                                   <input
                                     type="checkbox"
                                     checked={isSelected}
@@ -995,9 +935,9 @@ export default function CreatePortalPage() {
                                           : [...prev.allowedFileTypes, opt.value],
                                       }))
                                     }
-                                    className="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                    className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
                                   />
-                                  <span className={`text-sm font-medium ${isSelected ? "text-slate-900" : "text-slate-500"}`}>
+                                  <span className={`text-sm font-medium ${isSelected ? "text-foreground" : "text-muted-foreground"}`}>
                                     {opt.label.split(' (')[0]}
                                   </span>
                                 </label>
@@ -1031,7 +971,7 @@ export default function CreatePortalPage() {
                     {activeTab === 'Messaging' && (
                       <div className="space-y-8">
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 mb-2">
+                          <label className="block text-sm font-semibold text-foreground mb-2">
                             Welcome Message
                           </label>
                           <textarea
@@ -1039,61 +979,61 @@ export default function CreatePortalPage() {
                             onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
                             placeholder="Welcome! Please upload your documents for review."
                             rows={3}
-                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none"
+                            className="w-full px-4 py-3 bg-muted border border-border rounded-xl focus:bg-card focus:ring-2 focus:ring-ring transition-all outline-none font-medium text-foreground placeholder:text-muted-foreground resize-none"
                           />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
-                            <label className="block text-sm font-semibold text-slate-700 mb-2">
+                            <label className="block text-sm font-semibold text-foreground mb-2">
                               Submit Button Label
                             </label>
                             <input
                               type="text"
                               value={formData.submitButtonText}
                               onChange={(e) => setFormData({ ...formData, submitButtonText: e.target.value })}
-                              className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-semibold text-slate-900 dark:text-slate-100"
+                              className="w-full px-4 py-3 bg-card border border-border rounded-xl focus:ring-2 focus:ring-ring transition-all outline-none font-semibold text-foreground"
                             />
                           </div>
 
                           <div>
-                            <label className="block text-sm font-semibold text-slate-700 mb-2">
+                            <label className="block text-sm font-semibold text-foreground mb-2">
                               Success Message
                             </label>
                             <input
                               type="text"
                               value={formData.successMessage}
                               onChange={(e) => setFormData({ ...formData, successMessage: e.target.value })}
-                              className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-400 transition-all outline-none font-semibold text-slate-900 dark:text-slate-100"
+                              className="w-full px-4 py-3 bg-card border border-border rounded-xl focus:ring-2 focus:ring-ring transition-all outline-none font-semibold text-foreground"
                             />
                           </div>
                         </div>
 
-                        <div className="bg-slate-900 rounded-xl p-6 text-white shadow-lg">
+                        <div className="bg-primary rounded-xl p-6 text-primary-foreground shadow-lg">
                           <div className="flex items-start gap-4">
-                            <div className="p-2 bg-white/10 dark:bg-white/10 rounded-lg">
+                            <div className="p-2 bg-primary-foreground/10 rounded-lg">
                               <CheckCircle2 className="w-6 h-6" />
                             </div>
                             <div>
                               <h4 className="font-bold text-lg">Ready to Create?</h4>
-                              <p className="text-slate-300 text-sm mt-1 leading-relaxed">
-                                Your new portal will be accessible at <strong className="text-white">/p/{formData.slug || "..."}</strong> and linked to your selected storage.
+                              <p className="text-primary-foreground/80 text-sm mt-1 leading-relaxed">
+                                Your new portal will be accessible at <strong className="text-primary-foreground">/p/{formData.slug || "..."}</strong> and linked to your selected storage.
                               </p>
                             </div>
                           </div>
                         </div>
 
-                        <div className="pt-6 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-3">
+                        <div className="pt-6 border-t border-border flex justify-end gap-3">
                           <Link
                             href="/dashboard"
-                            className="px-6 py-3 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all font-bold text-sm"
+                            className="px-6 py-3 border border-border rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all font-bold text-sm"
                           >
                             Cancel
                           </Link>
                           <button
                             type="submit"
                             disabled={loading}
-                            className="flex items-center gap-2 px-8 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-md active:scale-95 disabled:opacity-50 font-bold text-sm"
+                            className="flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all shadow-md active:scale-95 disabled:opacity-50 font-bold text-sm"
                           >
                             {loading ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
@@ -1114,7 +1054,7 @@ export default function CreatePortalPage() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-4 p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-600 text-sm font-bold"
+                className="mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded-xl flex items-center gap-3 text-destructive text-sm font-bold"
               >
                 <AlertCircle className="w-5 h-5" />
                 {error}

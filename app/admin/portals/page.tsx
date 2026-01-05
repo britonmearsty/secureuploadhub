@@ -84,13 +84,13 @@ function PortalsPageContent() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return 'bg-green-100 text-green-700';
+        return 'bg-success/10 text-success border-success/20';
       case 'inactive':
-        return 'bg-yellow-100 text-yellow-700';
+        return 'bg-warning/10 text-warning border-warning/20';
       case 'archived':
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-muted text-muted-foreground border-border';
       default:
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-muted text-muted-foreground border-border';
     }
   };
 
@@ -99,21 +99,21 @@ function PortalsPageContent() {
       <div className="p-8 space-y-8">
         <div className="flex items-center justify-between">
           <div className="animate-pulse">
-            <div className="h-8 bg-slate-200 rounded w-48 mb-2"></div>
-            <div className="h-4 bg-slate-200 rounded w-64"></div>
+            <div className="h-8 bg-muted rounded w-48 mb-2"></div>
+            <div className="h-4 bg-muted rounded w-64"></div>
           </div>
-          <div className="h-10 bg-slate-200 rounded w-32 animate-pulse"></div>
+          <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
         </div>
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="bg-white rounded-xl p-6 border border-slate-200 animate-pulse">
+            <div key={i} className="bg-card rounded-xl p-6 border border-border animate-pulse">
               <div className="flex items-center justify-between mb-4">
-                <div className="h-6 bg-slate-200 rounded w-48"></div>
-                <div className="h-6 bg-slate-200 rounded w-20"></div>
+                <div className="h-6 bg-muted rounded w-48"></div>
+                <div className="h-6 bg-muted rounded w-20"></div>
               </div>
               <div className="space-y-2">
-                <div className="h-4 bg-slate-200 rounded w-full"></div>
-                <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                <div className="h-4 bg-muted rounded w-full"></div>
+                <div className="h-4 bg-muted rounded w-3/4"></div>
               </div>
             </div>
           ))}
@@ -125,10 +125,10 @@ function PortalsPageContent() {
   if (error) {
     return (
       <div className="p-8">
-        <div className="text-center text-slate-600">
-          <FolderOpen className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-slate-900 mb-2">Unable to load portals</h3>
-          <p className="text-slate-500 mb-4">{error}</p>
+        <div className="text-center text-muted-foreground">
+          <FolderOpen className="w-12 h-12 text-muted mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-foreground mb-2">Unable to load portals</h3>
+          <p className="text-muted-foreground mb-4">{error}</p>
           <Button onClick={fetchPortals} variant="outline">
             Try Again
           </Button>
@@ -142,12 +142,12 @@ function PortalsPageContent() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Portal Management</h1>
-          <p className="text-slate-600 mt-1">
+          <h1 className="text-3xl font-bold text-foreground">Portal Management</h1>
+          <p className="text-muted-foreground mt-1">
             Manage upload portals and their configurations
           </p>
         </div>
-        <Button className="bg-slate-900 hover:bg-slate-800 text-white">
+        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
           <Plus className="h-4 w-4 mr-2" />
           Create Portal
         </Button>
@@ -156,7 +156,7 @@ function PortalsPageContent() {
       {/* Filters */}
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Search portals..."
             value={searchTerm}
@@ -181,15 +181,15 @@ function PortalsPageContent() {
       <div className="space-y-4">
         {portals.length === 0 ? (
           <div className="text-center py-12">
-            <FolderOpen className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-slate-900 mb-2">No portals found</h3>
-            <p className="text-slate-500 mb-4">
+            <FolderOpen className="w-12 h-12 text-muted mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">No portals found</h3>
+            <p className="text-muted-foreground mb-4">
               {searchTerm || statusFilter !== 'all' 
                 ? 'Try adjusting your search or filters'
                 : 'Create your first upload portal to get started'
               }
             </p>
-            <Button className="bg-slate-900 hover:bg-slate-800 text-white">
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
               <Plus className="h-4 w-4 mr-2" />
               Create Portal
             </Button>
@@ -200,12 +200,12 @@ function PortalsPageContent() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-slate-100 rounded-lg">
-                      <FolderOpen className="h-5 w-5 text-slate-600" />
+                    <div className="p-2 bg-muted rounded-lg">
+                      <FolderOpen className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-slate-900">{portal.name}</h3>
-                      <p className="text-sm text-slate-500">
+                      <h3 className="font-semibold text-foreground">{portal.name}</h3>
+                      <p className="text-sm text-muted-foreground">
                         Created {formatDistanceToNow(new Date(portal.createdAt), { addSuffix: true })}
                       </p>
                     </div>
@@ -221,11 +221,11 @@ function PortalsPageContent() {
                 </div>
 
                 {portal.description && (
-                  <p className="text-slate-600 mb-4">{portal.description}</p>
+                  <p className="text-muted-foreground mb-4">{portal.description}</p>
                 )}
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-6 text-sm text-slate-500">
+                  <div className="flex items-center gap-6 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Users className="h-4 w-4" />
                       <span>{portal.user.name || portal.user.email}</span>
@@ -246,7 +246,7 @@ function PortalsPageContent() {
                     <Button variant="ghost" size="sm">
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>

@@ -76,29 +76,29 @@ const FolderNode: React.FC<FolderNodeProps> = ({ folder, navigateToFolder, expan
 
   return (
     <div className="pl-4">
-      <div className="flex items-center justify-between py-2 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors group rounded-lg pr-2">
+      <div className="flex items-center justify-between py-2 hover:bg-muted/50 transition-colors group rounded-lg pr-2">
         <button
           type="button"
           onClick={() => navigateToFolder(folder)}
           className="flex items-center gap-2 text-left flex-1"
         >
-          <FolderOpen className="w-4 h-4 text-amber-500 flex-shrink-0" />
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-slate-100 truncate">{folder.name}</span>
+          <FolderOpen className="w-4 h-4 text-warning flex-shrink-0" />
+          <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground truncate">{folder.name}</span>
         </button>
 
         {subfolders.length > 0 && (
           <button
             type="button"
             onClick={() => toggleFolder(folder.id)}
-            className="p-1 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-md transition-colors"
+            className="p-1 hover:bg-muted rounded-md transition-colors"
           >
-            <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+            <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${isExpanded ? "rotate-90" : ""}`} />
           </button>
         )}
       </div>
 
       {isExpanded && subfolders.length > 0 && (
-        <div className="pl-4 border-l border-slate-100 dark:border-slate-700 ml-2">
+        <div className="pl-4 border-l border-border ml-2">
           {subfolders.map((sub) => (
             <FolderNode
               key={sub.id}
@@ -150,12 +150,12 @@ export default function EditPortalPage() {
     name: "",
     slug: "",
     description: "",
-    primaryColor: "#3b82f6",
+    primaryColor: "hsl(var(--primary))",
     logoUrl: "",
     backgroundImageUrl: "",
     backgroundColor: "",
-    cardBackgroundColor: "#ffffff",
-    textColor: "#0f172a",
+    cardBackgroundColor: "hsl(var(--card))",
+    textColor: "hsl(var(--foreground))",
     welcomeMessage: "",
     submitButtonText: "Initialize Transfer",
     successMessage: "Transmission Verified",
@@ -250,12 +250,12 @@ export default function EditPortalPage() {
           name: data.name,
           slug: data.slug,
           description: data.description || "",
-          primaryColor: data.primaryColor || "#0f172a",
+          primaryColor: data.primaryColor || "hsl(var(--primary))",
           logoUrl: data.logoUrl || "",
           backgroundImageUrl: data.backgroundImageUrl || "",
           backgroundColor: data.backgroundColor || "",
-          cardBackgroundColor: data.cardBackgroundColor || "#ffffff",
-          textColor: data.textColor || "#0f172a",
+          cardBackgroundColor: data.cardBackgroundColor || "hsl(var(--card))",
+          textColor: data.textColor || "hsl(var(--foreground))",
           welcomeMessage: data.welcomeMessage || "",
           submitButtonText: data.submitButtonText || "Initialize Transfer",
           successMessage: data.successMessage || "Transmission Verified",
@@ -689,7 +689,7 @@ export default function EditPortalPage() {
                     {activeTab === 'Branding' && (
                       <div className="space-y-8">
                         <div>
-                          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Logo Link</label>
+                          <label className="block text-sm font-semibold text-foreground mb-2">Logo Link</label>
                           <div className="flex gap-2 mb-3 overflow-x-auto pb-2">
                             {DEFAULT_LOGOS.map((logo) => (
                               logo.value && (
@@ -697,7 +697,7 @@ export default function EditPortalPage() {
                                   key={logo.value}
                                   type="button"
                                   onClick={() => setFormData({ ...formData, logoUrl: logo.value })}
-                                  className="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg text-xs font-medium whitespace-nowrap transition-colors text-slate-900 dark:text-slate-100"
+                                  className="px-3 py-1.5 bg-muted hover:bg-muted/80 rounded-lg text-xs font-medium whitespace-nowrap transition-colors text-foreground"
                                 >
                                   {logo.label}
                                 </button>
@@ -709,99 +709,39 @@ export default function EditPortalPage() {
                             value={formData.logoUrl}
                             onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
                             placeholder="https://..."
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-slate-900 transition-all outline-none font-medium text-slate-900 placeholder:text-slate-400"
+                            className="w-full px-4 py-3 bg-muted border border-border rounded-xl focus:bg-card focus:ring-2 focus:ring-ring transition-all outline-none font-medium text-foreground placeholder:text-muted-foreground"
                           />
                         </div>
 
-                        <div className="bg-slate-50 rounded-xl p-6 border border-slate-100">
+                        <div className="bg-muted rounded-xl p-6 border border-border">
                           <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Color Palette</h3>
+                            <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">Color Palette</h3>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Text Color</label>
-                              <div className="flex items-center gap-3">
-                                <div className="relative">
-                                  <input
-                                    type="color"
-                                    value={formData.textColor}
-                                    onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
-                                    className="w-12 h-12 rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden shrink-0"
-                                  />
-                                  <div className="absolute inset-0 rounded-xl border border-slate-200 pointer-events-none" />
-                                </div>
-                                <input
-                                  type="text"
-                                  value={formData.textColor}
-                                  onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
-                                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 transition-all outline-none font-mono text-sm uppercase"
-                                />
-                              </div>
-                            </div>
+                            <ColorPicker
+                              label="Text Color"
+                              value={formData.textColor}
+                              onChange={(value) => setFormData({ ...formData, textColor: value })}
+                            />
 
-                            <div>
-                              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Background</label>
-                              <div className="flex items-center gap-3">
-                                <div className="relative">
-                                  <input
-                                    type="color"
-                                    value={formData.backgroundColor || "#ffffff"}
-                                    onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
-                                    className="w-12 h-12 rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden shrink-0"
-                                  />
-                                  <div className="absolute inset-0 rounded-xl border border-slate-200 pointer-events-none" />
-                                </div>
-                                <input
-                                  type="text"
-                                  value={formData.backgroundColor || ""}
-                                  onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
-                                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 transition-all outline-none font-mono text-sm uppercase"
-                                />
-                              </div>
-                            </div>
+                            <ColorPicker
+                              label="Background"
+                              value={formData.backgroundColor || "hsl(var(--background))"}
+                              onChange={(value) => setFormData({ ...formData, backgroundColor: value })}
+                            />
 
-                            <div>
-                              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Card Background</label>
-                              <div className="flex items-center gap-3">
-                                <div className="relative">
-                                  <input
-                                    type="color"
-                                    value={formData.cardBackgroundColor}
-                                    onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
-                                    className="w-12 h-12 rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden shrink-0"
-                                  />
-                                  <div className="absolute inset-0 rounded-xl border border-slate-200 pointer-events-none" />
-                                </div>
-                                <input
-                                  type="text"
-                                  value={formData.cardBackgroundColor}
-                                  onChange={(e) => setFormData({ ...formData, cardBackgroundColor: e.target.value })}
-                                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 transition-all outline-none font-mono text-sm uppercase"
-                                />
-                              </div>
-                            </div>
+                            <ColorPicker
+                              label="Card Background"
+                              value={formData.cardBackgroundColor}
+                              onChange={(value) => setFormData({ ...formData, cardBackgroundColor: value })}
+                            />
 
-                            <div>
-                              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">Primary Accent</label>
-                              <div className="flex items-center gap-3">
-                                <div className="relative">
-                                  <input
-                                    type="color"
-                                    value={formData.primaryColor}
-                                    onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-                                    className="w-12 h-12 rounded-xl cursor-pointer border-2 border-white shadow-md overflow-hidden shrink-0"
-                                  />
-                                  <div className="absolute inset-0 rounded-xl border border-slate-200 pointer-events-none" />
-                                </div>
-                                <input
-                                  type="text"
-                                  value={formData.primaryColor}
-                                  onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-                                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 transition-all outline-none font-mono text-sm uppercase"
-                                />
-                              </div>
-                            </div>
+                            <ColorPicker
+                              label="Primary Accent"
+                              value={formData.primaryColor}
+                              onChange={(value) => setFormData({ ...formData, primaryColor: value })}
+                            />
                           </div>
                         </div>
 
