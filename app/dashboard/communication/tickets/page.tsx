@@ -1,10 +1,6 @@
-import { Suspense } from 'react'
-import TicketsPage from './TicketsPage'
+import { redirect } from 'next/navigation'
 
 export default function CommunicationTicketsPage() {
-  return (
-    <Suspense fallback={<div>Loading tickets...</div>}>
-      <TicketsPage />
-    </Suspense>
-  )
+  // Redirect to support page (consolidated communication functionality)
+  redirect('/support')
 }

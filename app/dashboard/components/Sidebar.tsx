@@ -31,7 +31,19 @@ interface SidebarProps {
   signOutAction: () => Promise<void>
 }
 
-const navItems = [
+interface NavItem {
+  name: string
+  href: string
+  icon: any
+  description?: string
+  subItems?: Array<{
+    name: string
+    href: string
+    icon: any
+  }>
+}
+
+const navItems: NavItem[] = [
   {
     name: "Dashboard",
     href: "/dashboard",
@@ -56,30 +68,7 @@ const navItems = [
     name: "Support",
     href: "/support",
     icon: HelpCircle,
-    description: "Help center and documentation"
-  },
-  {
-    name: "Communication",
-    href: "/dashboard/communication",
-    icon: MessageSquare,
-    description: "Tickets and feedback",
-    subItems: [
-      {
-        name: "My Tickets",
-        href: "/dashboard/communication/tickets",
-        icon: MessageSquare,
-      },
-      {
-        name: "Feedback",
-        href: "/dashboard/communication/feedback",
-        icon: Star,
-      },
-      {
-        name: "Updates",
-        href: "/dashboard/communication/notifications",
-        icon: Bell,
-      },
-    ]
+    description: "Help center, tickets, and feedback"
   },
   {
     name: "Integrations",
@@ -127,12 +116,7 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
     )
   }
 
-  // Auto-expand Support section if we're on a communication page
-  useEffect(() => {
-    if (pathname.startsWith('/dashboard/communication')) {
-      setExpandedItems(prev => prev.includes('Support') ? prev : [...prev, 'Support'])
-    }
-  }, [pathname])
+  // Auto-expand logic removed since communication is now consolidated into support
 
   // Handle auto-collapse on smaller desktop screens
   useEffect(() => {
@@ -196,7 +180,7 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
         {navItems.map((item) => {
           const Icon = item.icon
           const active = isActive(item.href)
-          const hasSubItems = item.subItems && item.subItems.length > 0
+          const hasSubItems = 'subItems' in item && item.subItems && item.subItems.length > 0
           const isExpanded = expandedItems.includes(item.name)
 
           return (
@@ -309,7 +293,7 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
                       transition={{ duration: 0.2 }}
                       className="ml-6 mt-1 space-y-1"
                     >
-                      {item.subItems?.map((subItem) => {
+                      {('subItems' in item && item.subItems) ? item.subItems.map((subItem) => {
                         const SubIcon = subItem.icon
                         const subActive = isActive(subItem.href)
 
@@ -336,7 +320,7 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
                             )}
                           </Link>
                         )
-                      })}
+                      }) : null}
                     </motion.div>
                   )}
                 </AnimatePresence>

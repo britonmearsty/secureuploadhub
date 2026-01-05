@@ -66,7 +66,7 @@ export async function sendTicketCreatedEmail(options: SendTicketCreatedEmailOpti
           subject={options.subject}
           category={options.category}
           priority={options.priority}
-          dashboardUrl={options.dashboardUrl || `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/communication`}
+          dashboardUrl={options.dashboardUrl || `${process.env.NEXT_PUBLIC_APP_URL}/support`}
         />
       )
     })
@@ -92,7 +92,7 @@ export async function sendTicketReplyEmail(options: SendTicketReplyEmailOptions)
           message={options.message}
           isAdminReply={options.isAdminReply}
           senderName={options.senderName}
-          dashboardUrl={options.dashboardUrl || `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/communication`}
+          dashboardUrl={options.dashboardUrl || `${process.env.NEXT_PUBLIC_APP_URL}/support`}
         />
       )
     })
@@ -118,7 +118,7 @@ export async function sendTicketStatusEmail(options: SendTicketStatusEmailOption
           oldStatus={options.oldStatus}
           newStatus={options.newStatus}
           adminName={options.adminName}
-          dashboardUrl={options.dashboardUrl || `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/communication`}
+          dashboardUrl={options.dashboardUrl || `${process.env.NEXT_PUBLIC_APP_URL}/support`}
         />
       )
     })
@@ -144,7 +144,7 @@ export async function sendFeedbackResponseEmail(options: SendFeedbackResponseEma
           rating={options.rating}
           status={options.status}
           adminNotes={options.adminNotes}
-          dashboardUrl={options.dashboardUrl || `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/communication`}
+          dashboardUrl={options.dashboardUrl || `${process.env.NEXT_PUBLIC_APP_URL}/support`}
         />
       )
     })

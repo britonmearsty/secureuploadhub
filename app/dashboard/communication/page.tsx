@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 
 export default function CommunicationPage() {
-  // Redirect to tickets by default
-  redirect('/dashboard/communication/tickets')
+  // Redirect to support page (consolidated communication functionality)
+  redirect('/support')
 }
