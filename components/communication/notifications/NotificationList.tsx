@@ -27,12 +27,12 @@ const notificationIcons = {
 }
 
 const notificationColors = {
-  TICKET_CREATED: 'bg-blue-100 text-blue-800',
-  TICKET_UPDATED: 'bg-yellow-100 text-yellow-800',
-  TICKET_RESOLVED: 'bg-green-100 text-green-800',
-  MESSAGE_RECEIVED: 'bg-purple-100 text-purple-800',
-  FEEDBACK_RESPONSE: 'bg-orange-100 text-orange-800',
-  SYSTEM_ANNOUNCEMENT: 'bg-red-100 text-red-800'
+  TICKET_CREATED: 'bg-primary/10 text-primary',
+  TICKET_UPDATED: 'bg-warning/10 text-warning',
+  TICKET_RESOLVED: 'bg-success/10 text-success',
+  MESSAGE_RECEIVED: 'bg-primary/10 text-primary',
+  FEEDBACK_RESPONSE: 'bg-warning/10 text-warning',
+  SYSTEM_ANNOUNCEMENT: 'bg-destructive/10 text-destructive'
 }
 
 export default function NotificationList() {
@@ -98,11 +98,11 @@ export default function NotificationList() {
     return (
       <div className="space-y-3">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="animate-pulse flex items-start gap-3 p-3 border rounded-lg">
-            <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+          <div key={i} className="animate-pulse flex items-start gap-3 p-3 border border-border rounded-lg">
+            <div className="w-8 h-8 bg-muted rounded-full"></div>
             <div className="flex-1 space-y-2">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-4 bg-muted rounded w-3/4"></div>
+              <div className="h-3 bg-muted rounded w-1/2"></div>
             </div>
           </div>
         ))}
@@ -113,8 +113,8 @@ export default function NotificationList() {
   if (error) {
     return (
       <div className="text-center py-8">
-        <p className="text-red-600 mb-4">{error}</p>
-        <Button onClick={fetchNotifications} variant="outline">
+        <p className="text-destructive mb-4">{error}</p>
+        <Button onClick={fetchNotifications} variant="outline" className="border-border hover:bg-muted">
           Try Again
         </Button>
       </div>
@@ -127,12 +127,12 @@ export default function NotificationList() {
       {notifications.length > 0 && (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Bell className="h-5 w-5 text-gray-600" />
-            <span className="font-medium">
+            <Bell className="h-5 w-5 text-muted-foreground" />
+            <span className="font-medium text-foreground">
               {notifications.length} notification{notifications.length !== 1 ? 's' : ''}
             </span>
             {unreadCount > 0 && (
-              <Badge variant="secondary">
+              <Badge variant="secondary" className="bg-primary/10 text-primary">
                 {unreadCount} unread
               </Badge>
             )}
@@ -142,6 +142,7 @@ export default function NotificationList() {
               variant="outline" 
               size="sm"
               onClick={markAllAsRead}
+              className="border-border hover:bg-muted"
             >
               <CheckCheck className="h-4 w-4 mr-2" />
               Mark all read
@@ -152,10 +153,12 @@ export default function NotificationList() {
 
       {/* Notifications */}
       {notifications.length === 0 ? (
-        <div className="text-center py-8">
-          <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications</h3>
-          <p className="text-gray-500">You're all caught up! New notifications will appear here.</p>
+        <div className="text-center py-12">
+          <div className="p-4 bg-muted rounded-full w-fit mx-auto mb-4">
+            <Bell className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold text-foreground mb-2">No notifications</h3>
+          <p className="text-muted-foreground">You're all caught up! New notifications will appear here.</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -165,30 +168,30 @@ export default function NotificationList() {
             return (
               <div
                 key={notification.id}
-                className={`flex items-start gap-3 p-3 border rounded-lg transition-colors ${
+                className={`flex items-start gap-3 p-4 border rounded-xl transition-all duration-200 ${
                   notification.read 
-                    ? 'bg-white border-gray-200' 
-                    : 'bg-blue-50 border-blue-200'
+                    ? 'bg-card border-border' 
+                    : 'bg-primary/5 border-primary/20 shadow-sm'
                 }`}
               >
-                <div className={`p-2 rounded-full ${notificationColors[notification.type]}`}>
+                <div className={`p-2 rounded-xl ${notificationColors[notification.type]}`}>
                   <Icon className="h-4 w-4" />
                 </div>
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
-                      <h4 className={`text-sm font-medium ${
-                        notification.read ? 'text-gray-900' : 'text-gray-900'
+                      <h4 className={`text-sm font-semibold ${
+                        notification.read ? 'text-foreground' : 'text-foreground'
                       }`}>
                         {notification.title}
                       </h4>
                       <p className={`text-sm mt-1 ${
-                        notification.read ? 'text-gray-600' : 'text-gray-700'
+                        notification.read ? 'text-muted-foreground' : 'text-muted-foreground'
                       }`}>
                         {notification.content}
                       </p>
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="text-xs text-muted-foreground mt-2">
                         {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
                       </p>
                     </div>
@@ -198,7 +201,7 @@ export default function NotificationList() {
                         variant="ghost"
                         size="sm"
                         onClick={() => markAsRead(notification.id)}
-                        className="text-blue-600 hover:text-blue-700"
+                        className="text-primary hover:text-primary/80 hover:bg-primary/10"
                       >
                         <Check className="h-4 w-4" />
                       </Button>

@@ -74,18 +74,18 @@ interface TicketDetailsProps {
 }
 
 const statusColors = {
-  OPEN: 'bg-blue-100 text-blue-800',
-  IN_PROGRESS: 'bg-yellow-100 text-yellow-800',
-  WAITING_FOR_USER: 'bg-orange-100 text-orange-800',
-  RESOLVED: 'bg-green-100 text-green-800',
-  CLOSED: 'bg-gray-100 text-gray-800'
+  OPEN: 'bg-primary/10 text-primary border-primary/20',
+  IN_PROGRESS: 'bg-warning/10 text-warning border-warning/20',
+  WAITING_FOR_USER: 'bg-warning/10 text-warning border-warning/20',
+  RESOLVED: 'bg-success/10 text-success border-success/20',
+  CLOSED: 'bg-muted text-muted-foreground border-border'
 }
 
 const priorityColors = {
-  LOW: 'bg-gray-100 text-gray-800',
-  MEDIUM: 'bg-blue-100 text-blue-800',
-  HIGH: 'bg-orange-100 text-orange-800',
-  URGENT: 'bg-red-100 text-red-800'
+  LOW: 'bg-muted text-muted-foreground border-border',
+  MEDIUM: 'bg-primary/10 text-primary border-primary/20',
+  HIGH: 'bg-warning/10 text-warning border-warning/20',
+  URGENT: 'bg-destructive/10 text-destructive border-destructive/20'
 }
 
 export default function TicketDetails({ ticketId, onTicketUpdate }: TicketDetailsProps) {
@@ -147,14 +147,14 @@ export default function TicketDetails({ ticketId, onTicketUpdate }: TicketDetail
 
   if (loading) {
     return (
-      <Card>
+      <Card className="border-border">
         <CardContent className="p-6">
           <div className="animate-pulse space-y-4">
-            <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            <div className="h-6 bg-muted rounded w-3/4"></div>
+            <div className="h-4 bg-muted rounded w-1/2"></div>
             <div className="space-y-2">
-              <div className="h-4 bg-gray-200 rounded"></div>
-              <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+              <div className="h-4 bg-muted rounded"></div>
+              <div className="h-4 bg-muted rounded w-5/6"></div>
             </div>
           </div>
         </CardContent>
@@ -164,10 +164,10 @@ export default function TicketDetails({ ticketId, onTicketUpdate }: TicketDetail
 
   if (error || !ticket) {
     return (
-      <Card>
+      <Card className="border-border">
         <CardContent className="p-6 text-center">
-          <p className="text-red-600 mb-4">{error || 'Ticket not found'}</p>
-          <Button onClick={fetchTicket} variant="outline">
+          <p className="text-destructive mb-4">{error || 'Ticket not found'}</p>
+          <Button onClick={fetchTicket} variant="outline" className="border-border hover:bg-muted">
             Try Again
           </Button>
         </CardContent>
@@ -186,13 +186,13 @@ export default function TicketDetails({ ticketId, onTicketUpdate }: TicketDetail
   return (
     <div className="space-y-6">
       {/* Ticket Header */}
-      <Card>
-        <CardHeader>
+      <Card className="border-border">
+        <CardHeader className="pb-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <CardTitle className="text-xl mb-2">{ticket.subject}</CardTitle>
-              <p className="text-gray-600 mb-4">{ticket.description}</p>
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+              <CardTitle className="text-xl mb-2 text-foreground">{ticket.subject}</CardTitle>
+              <p className="text-muted-foreground mb-4">{ticket.description}</p>
+              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 <span>Created {format(new Date(ticket.createdAt), 'MMM d, yyyy')}</span>
                 <span className="capitalize">{ticket.category}</span>
                 {ticket.admin && (
@@ -204,10 +204,10 @@ export default function TicketDetails({ ticketId, onTicketUpdate }: TicketDetail
               </div>
             </div>
             <div className="flex flex-col items-end gap-2">
-              <Badge className={statusColors[ticket.status]}>
+              <Badge className={`border ${statusColors[ticket.status]}`}>
                 {ticket.status.replace('_', ' ')}
               </Badge>
-              <Badge variant="outline" className={priorityColors[ticket.priority]}>
+              <Badge className={`border ${priorityColors[ticket.priority]}`}>
                 {ticket.priority}
               </Badge>
             </div>
@@ -216,16 +216,16 @@ export default function TicketDetails({ ticketId, onTicketUpdate }: TicketDetail
       </Card>
 
       {/* Messages */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <Card className="border-border">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <MessageSquare className="h-5 w-5" />
             Messages ({ticket._count.messages})
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {ticket.messages.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No messages yet. Start the conversation!</p>
+            <p className="text-muted-foreground text-center py-8">No messages yet. Start the conversation!</p>
           ) : (
             <div className="space-y-4">
               {ticket.messages.map((message) => (
@@ -235,16 +235,16 @@ export default function TicketDetails({ ticketId, onTicketUpdate }: TicketDetail
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={message.sender.image || undefined} />
-                    <AvatarFallback>
+                    <AvatarFallback className="bg-muted text-muted-foreground">
                       {message.sender.name.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className={`flex-1 max-w-[80%] ${message.isAdmin ? 'text-left' : 'text-right'}`}>
                     <div
-                      className={`rounded-lg p-3 ${
+                      className={`rounded-xl p-4 ${
                         message.isAdmin
-                          ? 'bg-gray-100 text-gray-900'
-                          : 'bg-blue-600 text-white'
+                          ? 'bg-muted text-foreground'
+                          : 'bg-primary text-primary-foreground'
                       }`}
                     >
                       <p className="whitespace-pre-wrap">{message.content}</p>
@@ -269,12 +269,12 @@ export default function TicketDetails({ ticketId, onTicketUpdate }: TicketDetail
                         </div>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                    <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                       <span>{message.sender.name}</span>
                       <span>•</span>
                       <span>{formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}</span>
                       {message.isAdmin && (
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className="text-xs bg-primary/10 text-primary">
                           Support
                         </Badge>
                       )}
@@ -287,7 +287,7 @@ export default function TicketDetails({ ticketId, onTicketUpdate }: TicketDetail
 
           {/* Message Input */}
           {ticket.status !== 'CLOSED' && (
-            <form onSubmit={sendMessage} className="border-t pt-4 mt-6">
+            <form onSubmit={sendMessage} className="border-t border-border pt-4 mt-6">
               <div className="space-y-3">
                 <Textarea
                   placeholder="Type your message..."
@@ -295,12 +295,17 @@ export default function TicketDetails({ ticketId, onTicketUpdate }: TicketDetail
                   onChange={(e) => setNewMessage(e.target.value)}
                   rows={3}
                   disabled={sendingMessage}
+                  className="bg-card border-border focus:ring-ring resize-none"
                 />
                 <div className="flex justify-end">
-                  <Button type="submit" disabled={!newMessage.trim() || sendingMessage}>
+                  <Button 
+                    type="submit" 
+                    disabled={!newMessage.trim() || sendingMessage}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                  >
                     {sendingMessage ? (
                       <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
                         Sending...
                       </>
                     ) : (
@@ -316,8 +321,8 @@ export default function TicketDetails({ ticketId, onTicketUpdate }: TicketDetail
           )}
 
           {ticket.status === 'CLOSED' && (
-            <div className="border-t pt-4 mt-6 text-center">
-              <p className="text-gray-500">This ticket has been closed. Contact support to reopen if needed.</p>
+            <div className="border-t border-border pt-4 mt-6 text-center">
+              <p className="text-muted-foreground">This ticket has been closed. Contact support to reopen if needed.</p>
             </div>
           )}
         </CardContent>

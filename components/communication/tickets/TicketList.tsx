@@ -45,18 +45,18 @@ interface TicketListProps {
 }
 
 const statusColors = {
-  OPEN: 'bg-blue-100 text-blue-800',
-  IN_PROGRESS: 'bg-yellow-100 text-yellow-800',
-  WAITING_FOR_USER: 'bg-orange-100 text-orange-800',
-  RESOLVED: 'bg-green-100 text-green-800',
-  CLOSED: 'bg-gray-100 text-gray-800'
+  OPEN: 'bg-primary/10 text-primary border-primary/20',
+  IN_PROGRESS: 'bg-warning/10 text-warning border-warning/20',
+  WAITING_FOR_USER: 'bg-warning/10 text-warning border-warning/20',
+  RESOLVED: 'bg-success/10 text-success border-success/20',
+  CLOSED: 'bg-muted text-muted-foreground border-border'
 }
 
 const priorityColors = {
-  LOW: 'bg-gray-100 text-gray-800',
-  MEDIUM: 'bg-blue-100 text-blue-800',
-  HIGH: 'bg-orange-100 text-orange-800',
-  URGENT: 'bg-red-100 text-red-800'
+  LOW: 'bg-muted text-muted-foreground border-border',
+  MEDIUM: 'bg-primary/10 text-primary border-primary/20',
+  HIGH: 'bg-warning/10 text-warning border-warning/20',
+  URGENT: 'bg-destructive/10 text-destructive border-destructive/20'
 }
 
 export default function TicketList({ onTicketSelect, selectedTicketId }: TicketListProps) {
@@ -118,10 +118,10 @@ export default function TicketList({ onTicketSelect, selectedTicketId }: TicketL
     return (
       <div className="space-y-4">
         {[...Array(3)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
+          <Card key={i} className="animate-pulse border-border">
             <CardContent className="p-4">
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+              <div className="h-3 bg-muted rounded w-1/2"></div>
             </CardContent>
           </Card>
         ))}
@@ -131,10 +131,10 @@ export default function TicketList({ onTicketSelect, selectedTicketId }: TicketL
 
   if (error) {
     return (
-      <Card>
+      <Card className="border-border">
         <CardContent className="p-6 text-center">
-          <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={fetchTickets} variant="outline">
+          <p className="text-destructive mb-4">{error}</p>
+          <Button onClick={fetchTickets} variant="outline" className="border-border hover:bg-muted">
             Try Again
           </Button>
         </CardContent>
@@ -145,22 +145,22 @@ export default function TicketList({ onTicketSelect, selectedTicketId }: TicketL
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <Card>
+      <Card className="border-border">
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   placeholder="Search tickets..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 bg-card border-border"
                 />
               </div>
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-40">
+              <SelectTrigger className="w-full sm:w-40 bg-card border-border">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -173,7 +173,7 @@ export default function TicketList({ onTicketSelect, selectedTicketId }: TicketL
               </SelectContent>
             </Select>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full sm:w-40">
+              <SelectTrigger className="w-full sm:w-40 bg-card border-border">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
@@ -190,11 +190,13 @@ export default function TicketList({ onTicketSelect, selectedTicketId }: TicketL
 
       {/* Tickets */}
       {tickets.length === 0 ? (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No tickets found</h3>
-            <p className="text-gray-500">Create your first support ticket to get started.</p>
+        <Card className="border-dashed border-2 border-muted-foreground/20">
+          <CardContent className="p-12 text-center">
+            <div className="p-4 bg-muted rounded-full w-fit mx-auto mb-4">
+              <MessageSquare className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-2">No tickets found</h3>
+            <p className="text-muted-foreground">Create your first support ticket to get started.</p>
           </CardContent>
         </Card>
       ) : (
@@ -206,32 +208,32 @@ export default function TicketList({ onTicketSelect, selectedTicketId }: TicketL
             return (
               <Card 
                 key={ticket.id} 
-                className={`cursor-pointer transition-colors hover:bg-gray-50 ${
-                  isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+                className={`cursor-pointer transition-all duration-200 hover:shadow-md border-border ${
+                  isSelected ? 'ring-2 ring-primary bg-primary/5' : 'hover:bg-muted/50'
                 }`}
                 onClick={() => onTicketSelect?.(ticket)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900 truncate">
+                      <h3 className="font-semibold text-foreground truncate">
                         {ticket.subject}
                       </h3>
-                      <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                         {ticket.description}
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-2 ml-4">
-                      <Badge className={statusColors[ticket.status]}>
+                      <Badge className={`border ${statusColors[ticket.status]}`}>
                         {ticket.status.replace('_', ' ')}
                       </Badge>
-                      <Badge variant="outline" className={priorityColors[ticket.priority]}>
+                      <Badge className={`border ${priorityColors[ticket.priority]}`}>
                         {ticket.priority}
                       </Badge>
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between text-sm text-gray-500">
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <div className="flex items-center gap-4">
                       <span className="flex items-center gap-1">
                         <MessageSquare className="h-4 w-4" />
@@ -249,7 +251,7 @@ export default function TicketList({ onTicketSelect, selectedTicketId }: TicketL
                       <Clock className="h-4 w-4" />
                       <span>{lastActivity.time}</span>
                       {lastActivity.isAdmin && (
-                        <Badge variant="secondary" className="ml-2 text-xs">
+                        <Badge variant="secondary" className="ml-2 text-xs bg-primary/10 text-primary">
                           Admin replied
                         </Badge>
                       )}
@@ -269,16 +271,18 @@ export default function TicketList({ onTicketSelect, selectedTicketId }: TicketL
             variant="outline"
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
+            className="border-border hover:bg-muted"
           >
             Previous
           </Button>
-          <span className="flex items-center px-4 text-sm text-gray-600">
+          <span className="flex items-center px-4 text-sm text-muted-foreground">
             Page {page} of {totalPages}
           </span>
           <Button
             variant="outline"
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
+            className="border-border hover:bg-muted"
           >
             Next
           </Button>
