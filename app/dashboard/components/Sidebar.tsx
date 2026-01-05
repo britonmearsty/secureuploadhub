@@ -30,7 +30,19 @@ interface SidebarProps {
   signOutAction: () => Promise<void>
 }
 
-const navItems = [
+interface NavItem {
+  name: string
+  href: string
+  icon: any
+  description?: string
+  subItems?: Array<{
+    name: string
+    href: string
+    icon: any
+  }>
+}
+
+const navItems: NavItem[] = [
   {
     name: "Dashboard",
     href: "/dashboard",
@@ -52,6 +64,7 @@ const navItems = [
     icon: Users,
   },
   {
+<<<<<<< HEAD
     name: "Communication",
     href: "/dashboard/communication",
     icon: MessageSquare,
@@ -73,6 +86,12 @@ const navItems = [
         icon: Bell,
       },
     ]
+=======
+    name: "Support",
+    href: "/support",
+    icon: HelpCircle,
+    description: "Help center, tickets, and feedback"
+>>>>>>> ba1202c64844ea02234ef7a151a9a44b30a6e9a1
   },
   {
     name: "Integrations",
@@ -120,12 +139,16 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
     )
   }
 
+<<<<<<< HEAD
   // Auto-expand Communication section if we're on a communication page
   useEffect(() => {
     if (pathname.startsWith('/dashboard/communication')) {
       setExpandedItems(prev => prev.includes('Communication') ? prev : [...prev, 'Communication'])
     }
   }, [pathname])
+=======
+  // Auto-expand logic removed since communication is now consolidated into support
+>>>>>>> ba1202c64844ea02234ef7a151a9a44b30a6e9a1
 
   // Handle auto-collapse on smaller desktop screens
   useEffect(() => {
@@ -189,7 +212,7 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
         {navItems.map((item) => {
           const Icon = item.icon
           const active = isActive(item.href)
-          const hasSubItems = item.subItems && item.subItems.length > 0
+          const hasSubItems = 'subItems' in item && item.subItems && item.subItems.length > 0
           const isExpanded = expandedItems.includes(item.name)
 
           return (
@@ -302,7 +325,7 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
                       transition={{ duration: 0.2 }}
                       className="ml-6 mt-1 space-y-1"
                     >
-                      {item.subItems?.map((subItem) => {
+                      {('subItems' in item && item.subItems) ? item.subItems.map((subItem) => {
                         const SubIcon = subItem.icon
                         const subActive = isActive(subItem.href)
 
@@ -329,7 +352,7 @@ export default function Sidebar({ userName, userImage, signOutAction }: SidebarP
                             )}
                           </Link>
                         )
-                      })}
+                      }) : null}
                     </motion.div>
                   )}
                 </AnimatePresence>

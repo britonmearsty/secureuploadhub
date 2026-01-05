@@ -9,5 +9,10 @@ export default async function SupportPage() {
     redirect("/auth/signin")
   }
 
-  return <SupportDashboard user={session.user as { id: string; name: string | null; email: string | null; image: string | null }} />
+  return <SupportDashboard user={{
+    id: session.user.id,
+    name: session.user.name || null,
+    email: session.user.email || null,
+    image: session.user.image || null
+  }} />
 }

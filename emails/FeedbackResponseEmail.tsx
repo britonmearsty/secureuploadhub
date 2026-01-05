@@ -28,7 +28,7 @@ export const FeedbackResponseEmail = ({
   rating = 5,
   status = 'REVIEWED',
   adminNotes,
-  dashboardUrl = 'https://app.secureuploadhub.com/dashboard/communication'
+  dashboardUrl = 'https://app.secureuploadhub.com/support'
 }: FeedbackResponseEmailProps) => {
   const previewText = `Thank you for your feedback! We've ${status.toLowerCase()} your submission.`
 

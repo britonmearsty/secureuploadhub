@@ -26,7 +26,7 @@ export const TicketCreatedEmail = ({
   subject = 'Test Ticket',
   category = 'general',
   priority = 'MEDIUM',
-  dashboardUrl = 'https://app.secureuploadhub.com/dashboard/communication'
+  dashboardUrl = 'https://app.secureuploadhub.com/support'
 }: TicketCreatedEmailProps) => {
   const previewText = `Your support ticket has been created: ${subject}`
 

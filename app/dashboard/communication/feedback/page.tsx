@@ -1,10 +1,6 @@
-import { Suspense } from 'react'
-import FeedbackPage from './FeedbackPage'
+import { redirect } from 'next/navigation'
 
 export default function CommunicationFeedbackPage() {
-  return (
-    <Suspense fallback={<div>Loading feedback...</div>}>
-      <FeedbackPage />
-    </Suspense>
-  )
+  // Redirect to support page (consolidated communication functionality)
+  redirect('/support')
 }

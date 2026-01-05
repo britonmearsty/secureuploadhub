@@ -28,7 +28,7 @@ export const TicketStatusEmail = ({
   oldStatus = 'OPEN',
   newStatus = 'RESOLVED',
   adminName,
-  dashboardUrl = 'https://app.secureuploadhub.com/dashboard/communication'
+  dashboardUrl = 'https://app.secureuploadhub.com/support'
 }: TicketStatusEmailProps) => {
   const previewText = `Your ticket status has been updated to: ${newStatus.replace('_', ' ')}`
 
