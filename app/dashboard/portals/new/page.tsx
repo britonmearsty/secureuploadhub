@@ -171,7 +171,9 @@ export default function CreatePortalPage() {
       if (!formData.storageProvider || (!loadingFolders && folders.length === 0 && folderPath.length === 0)) {
         const firstAccount = accounts[0]
         if (firstAccount) {
-          selectStorageProvider(firstAccount.provider as "google_drive" | "dropbox")
+          // Map OAuth provider names to storage provider names
+          const storageProvider = firstAccount.provider === "google" ? "google_drive" : "dropbox"
+          selectStorageProvider(storageProvider)
         }
       }
     }
@@ -376,8 +378,17 @@ export default function CreatePortalPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.error || "Failed to create portal")
-        posthog.captureException(new Error(data.error || "Failed to create portal"));
+        const errorMessage = data.error || "Failed to create portal"
+        setError(errorMessage)
+        
+        // If it's a storage-related error, redirect to Storage section
+        if (errorMessage.toLowerCase().includes('storage') || 
+            errorMessage.toLowerCase().includes('account') ||
+            errorMessage.toLowerCase().includes('connect')) {
+          setActiveTab('Storage')
+        }
+        
+        posthog.captureException(new Error(errorMessage));
         return
       }
 

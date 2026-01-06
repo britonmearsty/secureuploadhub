@@ -174,9 +174,24 @@ export function validatePortalCreation(
   )
 
   if (providerAccounts.length === 0) {
-    return {
-      canCreate: false,
-      reason: `No ${storageProvider} storage account connected`
+    // Check if user has any storage accounts at all
+    const anyStorageAccounts = userStorageAccounts.filter(acc => acc.userId === userId)
+    
+    if (anyStorageAccounts.length === 0) {
+      // No storage accounts at all - user needs to connect one
+      return {
+        canCreate: false,
+        reason: `No storage accounts connected. Please connect a ${storageProvider === "google_drive" ? "Google Drive" : "Dropbox"} account first.`
+      }
+    } else {
+      // User has storage accounts but not for this provider
+      const availableProviders = [...new Set(anyStorageAccounts.map(acc => acc.provider))]
+      const friendlyProviders = availableProviders.map(p => p === "google_drive" ? "Google Drive" : "Dropbox").join(", ")
+      
+      return {
+        canCreate: false,
+        reason: `No ${storageProvider === "google_drive" ? "Google Drive" : "Dropbox"} account connected. You have: ${friendlyProviders}. Please connect a ${storageProvider === "google_drive" ? "Google Drive" : "Dropbox"} account or select a different storage provider.`
+      }
     }
   }
 
