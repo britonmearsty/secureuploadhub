@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
       { hostname: "us.i.posthog.com" },
       { hostname: "us-assets.i.posthog.com" },
       { hostname: "lh3.googleusercontent.com" },
+      { hostname: "res.cloudinary.com" },
     ],
   },
   async rewrites() {

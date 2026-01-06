@@ -24,6 +24,7 @@ import {
   ChevronDown
 } from "lucide-react"
 import ColorPicker from "@/components/ui/ColorPicker"
+import ImageUpload from "@/components/ui/ImageUpload"
 
 interface ConnectedAccount {
   provider: "google" | "dropbox"
@@ -574,15 +575,15 @@ export default function CreatePortalPage() {
                     {activeTab === 'Branding' && (
                       <div className="space-y-6">
                         <div>
-                          <label className="block text-sm font-semibold text-foreground mb-2">
-                            Logo URL
+                          <label className="block text-sm font-semibold text-foreground mb-4">
+                            Portal Logo
                           </label>
-                          <input
-                            type="url"
-                            value={formData.logoUrl}
-                            onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
-                            placeholder="https://your-brand.com/logo.png"
-                            className="w-full px-4 py-3 bg-muted border border-border rounded-xl focus:bg-card focus:ring-2 focus:ring-ring transition-all outline-none font-medium text-foreground placeholder:text-muted-foreground"
+                          <ImageUpload
+                            currentImage={formData.logoUrl}
+                            onImageChange={(url) => setFormData({ ...formData, logoUrl: url })}
+                            type="logo"
+                            size="lg"
+                            className="mb-2"
                           />
                         </div>
 

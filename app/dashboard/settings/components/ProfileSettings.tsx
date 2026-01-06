@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import { updateProfile } from "../actions"
-import { Loader2, Mail, User as UserIcon, Camera } from "lucide-react"
+import { Loader2, Mail, User as UserIcon } from "lucide-react"
 import { motion } from "framer-motion"
+import ImageUpload from "@/components/ui/ImageUpload"
 
 interface ProfileSettingsProps {
   user: {
@@ -15,6 +16,7 @@ interface ProfileSettingsProps {
 
 export default function ProfileSettings({ user }: ProfileSettingsProps) {
   const [name, setName] = useState(user.name || "")
+  const [image, setImage] = useState(user.image || "")
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null)
 
@@ -24,7 +26,7 @@ export default function ProfileSettings({ user }: ProfileSettingsProps) {
     setMessage(null)
 
     try {
-      await updateProfile({ name })
+      await updateProfile({ name, image })
       setMessage({ text: "Profile updated successfully", type: 'success' })
     } catch (_) {
       setMessage({ text: "Failed to update profile", type: 'error' })
@@ -38,24 +40,15 @@ export default function ProfileSettings({ user }: ProfileSettingsProps) {
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Profile Picture Section */}
         <div className="flex items-center gap-6">
-          <div className="relative group">
-            <div className="w-24 h-24 rounded-2xl bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden transition-colors group-hover:bg-muted/80 group-hover:border-muted-foreground">
-              {user.image ? (
-                <img src={user.image} alt={name} className="w-full h-full object-cover" />
-              ) : (
-                <UserIcon className="w-10 h-10 text-muted-foreground" />
-              )}
-            </div>
-            <button
-              type="button"
-              className="absolute -bottom-2 -right-2 p-2 bg-card rounded-lg shadow-md border border-border text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Camera className="w-4 h-4" />
-            </button>
-          </div>
+          <ImageUpload
+            currentImage={image}
+            onImageChange={setImage}
+            type="profile"
+            size="lg"
+          />
           <div>
             <h4 className="font-medium text-foreground">Profile Picture</h4>
-            <p className="text-sm text-muted-foreground mt-1">PNG, JPG or GIF up to 10MB.</p>
+            <p className="text-sm text-muted-foreground mt-1">This will be displayed on your profile and in comments.</p>
           </div>
         </div>
 
