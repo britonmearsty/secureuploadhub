@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     }
 
     // Reactivate storage accounts for this provider
-    const storageProvider = provider === "google" ? "GOOGLE_DRIVE" : "DROPBOX"
+    const storageProvider = provider === "google" ? "google_drive" : "dropbox"
     const result = await prisma.storageAccount.updateMany({
       where: {
         userId: session.user.id,
