@@ -6,6 +6,7 @@ import prisma from "@/lib/prisma"
 import { getPostHogClient } from "@/lib/posthog-server"
 import { sendSignInNotification, sendWelcomeEmail } from "@/lib/email-templates"
 import { headers } from "next/headers"
+import { createStorageAccountForOAuth } from "@/lib/storage/auto-create"
 
 // Consolidated auth configuration with database sessions
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -115,36 +116,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 id_token: account.id_token,
               },
             })
-
-            // Create corresponding storage account for cloud storage providers
-            if (account.provider === "google" || account.provider === "dropbox") {
-              const { StorageAccountStatus } = await import("./lib/storage/account-states")
-              const storageProvider = account.provider === "google" ? "GOOGLE_DRIVE" : "DROPBOX"
-              
-              // Check if storage account already exists
-              const existingStorageAccount = await prisma.storageAccount.findFirst({
-                where: {
-                  userId: existingUser.id,
-                  provider: storageProvider,
-                  providerAccountId: account.providerAccountId
-                }
-              })
-
-              if (!existingStorageAccount) {
-                await prisma.storageAccount.create({
-                  data: {
-                    userId: existingUser.id,
-                    provider: storageProvider,
-                    providerAccountId: account.providerAccountId,
-                    status: StorageAccountStatus.ACTIVE,
-                    displayName: `${account.provider} Account`,
-                    email: null, // Will be populated by health check
-                    createdAt: new Date(),
-                    updatedAt: new Date()
-                  }
-                })
-              }
-            }
+            // Note: StorageAccount will be created by the linkAccount event
           }
         } else {
           isNewUser = true;
@@ -218,6 +190,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         } catch (error) {
           console.error("Failed to send sign-in notification:", error);
         }
+      }
+    },
+    async linkAccount({ user, account }) {
+      // This event fires when an OAuth account is linked to a user
+      // This handles both new user creation and linking additional accounts
+      if (user.id && account && ["google", "dropbox"].includes(account.provider)) {
+        await createStorageAccountForOAuth(
+          user.id,
+          {
+            provider: account.provider,
+            providerAccountId: account.providerAccountId
+          },
+          user.email ?? null,
+          user.name ?? null
+        )
       }
     },
   },

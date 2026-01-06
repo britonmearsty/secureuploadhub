@@ -38,13 +38,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description,
       keywords: `secure file upload, ${portal.name}, file collection, document upload, ${portal.user?.name || 'professional'} files`,
       alternates: {
-        canonical: `https://secureuploadhub.com/p/${portal.slug}`,
+        canonical: `https://secureuploadhub.com/p/${slug}`,
       },
       openGraph: {
         title,
         description,
         type: 'website',
-        url: `https://secureuploadhub.com/p/${portal.slug}`,
+        url: `https://secureuploadhub.com/p/${slug}`,
         siteName: 'SecureUploadHub',
         images: [
           {
