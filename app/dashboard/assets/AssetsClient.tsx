@@ -73,20 +73,6 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
     const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
     const [isHealthChecking, setIsHealthChecking] = useState(false)
     
-    // Run health check on component mount
-    useEffect(() => {
-        const runInitialHealthCheck = async () => {
-            try {
-                await fetch('/api/storage/health-check', { method: 'POST' })
-                // Silently update storage statuses without showing toast
-            } catch (error) {
-                // Silently fail - don't show error to user on page load
-            }
-        }
-        
-        runInitialHealthCheck()
-    }, [])
-    
     // Modal states
     const [errorModal, setErrorModal] = useState<{ isOpen: boolean; title: string; message: string }>({
         isOpen: false,
@@ -279,6 +265,27 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
         }
     }
 
+    const handleResetStatus = async () => {
+        try {
+            const res = await fetch('/api/storage/reset-status', {
+                method: 'POST',
+            })
+            
+            if (res.ok) {
+                const data = await res.json()
+                
+                // Refresh the page data to show updated storage statuses
+                window.location.reload()
+                
+                showToast('success', 'Storage Status Reset', data.message)
+            } else {
+                showToast('error', 'Reset Failed', 'Failed to reset storage account status.')
+            }
+        } catch (error) {
+            showToast('error', 'Reset Error', 'Error resetting storage account status.')
+        }
+    }
+
     // Update filtered uploads to use local state 'uploads' instead of prop 'initialUploads'
     const filteredUploads = uploads.filter(u =>
         u.fileName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -385,6 +392,14 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                             />
                         </div>
                         <div className="flex items-center gap-3">
+                            <button
+                                onClick={handleResetStatus}
+                                className="flex items-center gap-2 px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm font-medium"
+                                title="Reset disconnected storage accounts to active"
+                            >
+                                <RefreshCw className="w-4 h-4" />
+                                Reset Status
+                            </button>
                             <button
                                 onClick={handleHealthCheck}
                                 disabled={isHealthChecking}

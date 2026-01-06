@@ -2,14 +2,15 @@ import { Metadata } from 'next';
 import prisma from '@/lib/prisma';
 
 interface Props {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
   children: React.ReactNode;
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   try {
+    const { slug } = await params;
     const portal = await prisma.uploadPortal.findUnique({
-      where: { slug: params.slug },
+      where: { slug },
       include: { 
         user: { 
           select: { name: true, email: true } 

@@ -26,6 +26,7 @@ export default async function SettingsPage() {
     notificationEmail: user.notificationEmail,
     marketingEmail: user.marketingEmail,
     theme: user.theme || "system",
+    showConnectedFilesOnly: user.showConnectedFilesOnly ?? true,
   }
 
   return <SettingsClient user={userData} />
