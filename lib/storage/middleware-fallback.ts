@@ -92,30 +92,46 @@ export async function ensureStorageForPortalOperation(
   hasRequiredProvider: boolean
   errors: string[]
 }> {
+  console.log(`🔍 ensureStorageForPortalOperation: Starting for userId=${userId}, requiredProvider=${requiredProvider}`)
+  
   try {
     const result = await ensureStorageAccountsForUser(userId)
+    console.log(`🔍 ensureStorageForPortalOperation: ensureStorageAccountsForUser result:`, result)
     
     let hasRequiredProvider = true
     
     if (requiredProvider) {
-      // Check if user has the required provider after ensuring accounts
-      const { PrismaClient } = require('@prisma/client')
-      const prisma = new PrismaClient()
+      // Use the existing prisma instance instead of creating a new one
+      const prisma = (await import('@/lib/prisma')).default
       
-      try {
-        const storageAccount = await prisma.storageAccount.findFirst({
-          where: {
-            userId,
-            provider: requiredProvider,
-            status: "ACTIVE"
-          }
+      console.log(`🔍 ensureStorageForPortalOperation: Checking for provider=${requiredProvider}`)
+      
+      const storageAccount = await prisma.storageAccount.findFirst({
+        where: {
+          userId,
+          provider: requiredProvider,
+          status: "ACTIVE"
+        }
+      })
+      
+      console.log(`🔍 ensureStorageForPortalOperation: Found storage account:`, !!storageAccount)
+      if (storageAccount) {
+        console.log(`🔍 ensureStorageForPortalOperation: Storage account details:`, {
+          id: storageAccount.id,
+          provider: storageAccount.provider,
+          status: storageAccount.status
         })
-        
-        hasRequiredProvider = !!storageAccount
-      } finally {
-        await prisma.$disconnect()
       }
+      
+      hasRequiredProvider = !!storageAccount
     }
+    
+    console.log(`🔍 ensureStorageForPortalOperation: Final result:`, {
+      success: true,
+      created: result.created,
+      hasRequiredProvider,
+      errors: result.errors
+    })
     
     return {
       success: true,
@@ -125,6 +141,7 @@ export async function ensureStorageForPortalOperation(
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error(`❌ ensureStorageForPortalOperation: Error:`, errorMessage)
     return {
       success: false,
       created: 0,

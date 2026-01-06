@@ -100,14 +100,18 @@ export async function POST(request: NextRequest) {
 
     // ENHANCED STORAGE ACCOUNT VALIDATION - Multiple layers of protection
     // Layer 1: Comprehensive fallback mechanism with provider-specific validation
+    console.log(`🔍 PORTAL_CREATION: Starting validation for userId=${session.user.id}, provider=${provider}`)
+    
     try {
       const fallbackResult = await ensureStorageForPortalOperation(session.user.id, provider)
+      console.log(`🔍 PORTAL_CREATION: Fallback result:`, fallbackResult)
       
       if (fallbackResult.created > 0) {
         console.log(`✅ PORTAL_CREATION: Created ${fallbackResult.created} missing StorageAccount(s) for user ${session.user.id}`)
       }
       
       if (!fallbackResult.hasRequiredProvider) {
+        console.log(`❌ PORTAL_CREATION: Missing required provider ${provider}`)
         return NextResponse.json({
           error: `No active ${provider === "google_drive" ? "Google Drive" : "Dropbox"} storage account available. Please connect your ${provider === "google_drive" ? "Google Drive" : "Dropbox"} account first.`,
           code: "MISSING_STORAGE_PROVIDER",
@@ -119,7 +123,7 @@ export async function POST(request: NextRequest) {
         console.warn(`⚠️ PORTAL_CREATION: Storage fallback had errors:`, fallbackResult.errors)
       }
     } catch (error) {
-      console.error("Failed to ensure StorageAccounts during portal creation:", error)
+      console.error("❌ PORTAL_CREATION: Failed to ensure StorageAccounts during portal creation:", error)
       // Continue with portal creation - the validation below will catch any remaining issues
     }
 
