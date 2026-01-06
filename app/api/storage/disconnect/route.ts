@@ -3,7 +3,7 @@ import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
 import { StorageAccountStatus } from "@/lib/storage/account-states"
 
-// POST /api/storage/disconnect - Disconnect a storage account
+// POST /api/storage/disconnect - Disconnect a storage account (NOT authentication)
 export async function POST(request: Request) {
   try {
     const session = await auth()
@@ -18,21 +18,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid provider" }, { status: 400 })
     }
 
-    // Use a transaction to ensure all operations succeed or fail together
-    const result = await prisma.$transaction(async (tx) => {
-      // Delete the OAuth account connection
-      const deleteResult = await tx.account.deleteMany({
-        where: {
-          userId: session.user.id,
-          provider
-        }
-      })
-
-      if (deleteResult.count === 0) {
-        throw new Error("Account not found")
+    // Check if this is the user's login method
+    const hasOtherLoginMethods = await prisma.account.count({
+      where: {
+        userId: session.user.id,
+        provider: { not: provider }
       }
+    })
 
-      // Update corresponding storage accounts to DISCONNECTED status
+    // Prevent disconnecting if it's the only login method
+    if (hasOtherLoginMethods === 0) {
+      return NextResponse.json({ 
+        error: "Cannot disconnect your only login method. Please add another login method first.",
+        cannotDisconnect: true
+      }, { status: 400 })
+    }
+
+    // Use a transaction to update storage accounts only (keep OAuth for login)
+    const result = await prisma.$transaction(async (tx) => {
+      // Update storage accounts to DISCONNECTED (but keep OAuth account for login)
       const storageProvider = provider === "google" ? "GOOGLE_DRIVE" : "DROPBOX"
       const storageUpdateResult = await tx.storageAccount.updateMany({
         where: {
@@ -41,7 +45,7 @@ export async function POST(request: Request) {
         },
         data: {
           status: StorageAccountStatus.DISCONNECTED,
-          lastError: "Account disconnected by user",
+          lastError: "Storage access disabled by user",
           updatedAt: new Date()
         }
       })
@@ -60,13 +64,12 @@ export async function POST(request: Request) {
       })
 
       return {
-        deletedAccounts: deleteResult.count,
         updatedStorageAccounts: storageUpdateResult.count,
         affectedPortals
       }
     })
 
-    let message = `Disconnected from ${provider}. Files from this account will now show as unavailable.`
+    let message = `Disconnected ${provider} storage access. You can still log in with ${provider}, but files won't be stored there.`
     
     if (result.affectedPortals.length > 0) {
       const portalNames = result.affectedPortals.map(p => p.name).join(", ")
@@ -76,15 +79,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ 
       success: true, 
       message,
-      affectedPortals: result.affectedPortals.length
+      affectedPortals: result.affectedPortals.length,
+      storageDisconnected: true,
+      authPreserved: true
     })
   } catch (error) {
-    console.error("Error disconnecting account:", error)
-    
-    if (error instanceof Error && error.message === "Account not found") {
-      return NextResponse.json({ error: "Account not found" }, { status: 404 })
-    }
-    
+    console.error("Error disconnecting storage:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

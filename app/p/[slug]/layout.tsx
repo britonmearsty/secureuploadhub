@@ -79,6 +79,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 }
 
-export default function PortalLayout({ children }: Props) {
+export default function PortalLayout({ params, children }: Props) {
   return children;
 }

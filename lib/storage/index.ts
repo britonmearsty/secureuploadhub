@@ -135,9 +135,11 @@ export async function getValidAccessToken(
 
 /**
  * Get all connected storage accounts for a user
+ * This checks both OAuth accounts AND storage account status
  */
 export async function getConnectedAccounts(userId: string) {
-  const accounts = await prisma.account.findMany({
+  // Get OAuth accounts (for authentication)
+  const oauthAccounts = await prisma.account.findMany({
     where: {
       userId,
       provider: { in: ["google", "dropbox"] },
@@ -150,27 +152,54 @@ export async function getConnectedAccounts(userId: string) {
     },
   })
 
+  // Get storage accounts (for file storage)
+  const storageAccounts = await prisma.storageAccount.findMany({
+    where: {
+      userId,
+      provider: { in: ["GOOGLE_DRIVE", "DROPBOX"] }
+    },
+    select: {
+      id: true,
+      provider: true,
+      providerAccountId: true,
+      status: true,
+      email: true,
+      displayName: true
+    }
+  })
+
   const result: Array<{
     provider: "google" | "dropbox"
     providerAccountId: string
     email?: string
     name?: string
     isConnected: boolean
+    storageAccountId?: string
+    storageStatus?: string
+    isAuthAccount: boolean // Indicates if this is used for login
+    hasValidOAuth: boolean // NEW: Separate OAuth status from storage status
   }> = []
 
-  for (const account of accounts) {
-    if (!account.access_token) continue
+  for (const oauthAccount of oauthAccounts) {
+    if (!oauthAccount.access_token) continue
 
-    const storageProvider = account.provider === "google" ? "google_drive" : "dropbox"
-    const service = getStorageService(storageProvider)
+    const storageProvider = oauthAccount.provider === "google" ? "GOOGLE_DRIVE" : "DROPBOX"
+    
+    // Find corresponding storage account
+    const storageAccount = storageAccounts.find(sa => 
+      sa.provider === storageProvider && 
+      sa.providerAccountId === oauthAccount.providerAccountId
+    )
+
+    const service = getStorageService(oauthAccount.provider === "google" ? "google_drive" : "dropbox")
 
     let email: string | undefined
     let name: string | undefined
-    let isConnected = true
+    let hasValidOAuth = true
 
     if (service) {
       try {
-        const tokenResult = await getValidAccessToken(userId, account.provider as "google" | "dropbox")
+        const tokenResult = await getValidAccessToken(userId, oauthAccount.provider as "google" | "dropbox")
         if (tokenResult) {
           if (service.getAccountInfo) {
             const info = await service.getAccountInfo(tokenResult.accessToken)
@@ -178,19 +207,27 @@ export async function getConnectedAccounts(userId: string) {
             name = info.name
           }
         } else {
-          isConnected = false
+          hasValidOAuth = false
         }
       } catch {
-        isConnected = false
+        hasValidOAuth = false
       }
     }
 
+    // FIXED LOGIC: Separate OAuth status from storage status
+    const storageIsActive = storageAccount?.status === "ACTIVE"
+    const isConnected = hasValidOAuth && storageIsActive
+
     result.push({
-      provider: account.provider as "google" | "dropbox",
-      providerAccountId: account.providerAccountId,
-      email,
+      provider: oauthAccount.provider as "google" | "dropbox",
+      providerAccountId: oauthAccount.providerAccountId,
+      email: email || storageAccount?.email || undefined,
       name,
-      isConnected,
+      isConnected, // Now properly reflects both OAuth AND storage status
+      storageAccountId: storageAccount?.id,
+      storageStatus: storageAccount?.status,
+      isAuthAccount: true, // This OAuth account is used for login
+      hasValidOAuth // NEW: Shows if OAuth itself is working
     })
   }
 
@@ -376,7 +413,6 @@ export async function downloadFromCloudStorage(
   // Fallback: If fileId is missing or empty but we're on Google Drive, try to find it by name
   let effectiveFileId = fileId
   if ((!effectiveFileId || effectiveFileId === "") && provider === "google_drive") {
-    const { googleDriveService } = await import("./google-drive")
     // In this context, storagePath (fileId passed here) might be empty if it was invalid, 
     // but the API route passes storageId which we want to be reliable.
     // However, if we're here and fileId is empty, we might need more info.

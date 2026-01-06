@@ -219,6 +219,20 @@ export default function IntegrationsClient() {
 
                                     {activeTab === "connected" && (
                                         <div className="space-y-6">
+                                            <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                                                <div className="flex items-start gap-3">
+                                                    <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center mt-0.5">
+                                                        <span className="text-white text-xs font-bold">i</span>
+                                                    </div>
+                                                    <div>
+                                                        <h5 className="font-medium text-blue-900 dark:text-blue-100">Authentication vs Storage</h5>
+                                                        <p className="text-sm text-blue-800 dark:text-blue-200 mt-1">
+                                                            Your login method (authentication) is separate from storage access. Disabling storage won't affect your ability to log in.
+                                                            You can safely disconnect storage accounts while keeping your login active.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
                                             <ConnectedAccounts />
                                         </div>
                                     )}

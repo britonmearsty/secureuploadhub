@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { signIn } from "next-auth/react"
-import { Cloud, CheckCircle2, XCircle, Loader2, ArrowRight, LogOut } from "lucide-react"
+import { Cloud, CheckCircle2, Loader2, LogOut } from "lucide-react"
 import { motion } from "framer-motion"
 import { ToastComponent } from "@/components/ui/Toast"
 
@@ -12,6 +11,10 @@ interface ConnectedAccount {
     email?: string
     name?: string
     isConnected: boolean
+    storageAccountId?: string
+    storageStatus?: string
+    isAuthAccount: boolean // Indicates if this is used for login
+    hasValidOAuth: boolean // Separate OAuth status from storage status
 }
 
 export default function ConnectedAccounts() {
@@ -57,6 +60,32 @@ export default function ConnectedAccounts() {
         }
     }
 
+    async function handleReconnect(provider: string) {
+        try {
+            const res = await fetch('/api/storage/reconnect', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ provider })
+            })
+
+            if (res.ok) {
+                const data = await res.json()
+                showToast('success', 'Storage Reconnected', data.message)
+                
+                // Refresh accounts
+                fetchAccounts()
+            } else {
+                const errorData = await res.json()
+                if (errorData.needsOAuth) {
+                    showToast('info', 'OAuth Required', errorData.error)
+                } else {
+                    showToast('error', 'Reconnection Failed', errorData.error)
+                }
+            }
+        } catch (error) {
+            showToast('error', 'Connection Error', 'An unexpected error occurred')
+        }
+    }
     async function handleDisconnect(provider: string) {
         setDisconnecting(provider)
         try {
@@ -68,13 +97,19 @@ export default function ConnectedAccounts() {
 
             if (res.ok) {
                 const data = await res.json()
-                setAccounts(accounts.filter(a => a.provider !== provider))
                 
                 // Show success message
                 showToast('success', 'Storage Disconnected', data.message)
+                
+                // Refresh accounts to show updated status
+                fetchAccounts()
             } else {
                 const errorData = await res.json()
-                showToast('error', 'Disconnection Failed', errorData.error || 'Failed to disconnect storage account')
+                if (errorData.cannotDisconnect) {
+                    showToast('warning', 'Cannot Disconnect', errorData.error)
+                } else {
+                    showToast('error', 'Disconnection Failed', errorData.error || 'Failed to disconnect storage account')
+                }
             }
         } catch (error) {
             console.error("Error disconnecting account:", error)
@@ -144,32 +179,76 @@ export default function ConnectedAccounts() {
                                 {provider.icon}
                             </div>
                             <div>
-                                <h4 className="font-semibold text-foreground">{provider.name}</h4>
-                                <div className="flex items-center gap-2 mt-1">
+                                <div className="flex items-center gap-2">
+                                    <h4 className="font-semibold text-foreground">{provider.name}</h4>
+                                    {account.isAuthAccount && (
+                                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
+                                            Login Method
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2">
                                     <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
                                     <span className="text-sm text-muted-foreground font-medium">{account.email}</span>
+                                </div>
+                                <div className="flex items-center gap-4 mt-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-2 h-2 rounded-full ${account.hasValidOAuth ? 'bg-green-500' : 'bg-red-500'}`} />
+                                        <span className="text-xs text-muted-foreground">
+                                            Login: {account.hasValidOAuth ? 'Active' : 'Issues'}
+                                        </span>
+                                    </div>
+                                    {account.storageStatus && (
+                                        <div className="flex items-center gap-2">
+                                            <div className={`w-2 h-2 rounded-full ${
+                                                account.storageStatus === 'ACTIVE' ? 'bg-green-500' : 
+                                                account.storageStatus === 'DISCONNECTED' ? 'bg-red-500' : 'bg-yellow-500'
+                                            }`} />
+                                            <span className="text-xs text-muted-foreground">
+                                                Storage: {account.storageStatus === 'ACTIVE' ? 'Connected' : 
+                                                         account.storageStatus === 'DISCONNECTED' ? 'Disconnected' : 'Inactive'}
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
 
-                        <button
-                            onClick={() => handleDisconnect(account.provider)}
-                            disabled={disconnecting === account.provider}
-                            className="px-5 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all active:scale-95 bg-card border border-destructive/30 text-destructive hover:bg-destructive/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="Remove this storage connection. Files from this account will become unavailable until reconnected."
-                        >
-                            {disconnecting === account.provider ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    Disconnecting...
-                                </>
+                        <div className="flex items-center gap-2">
+                            {account.storageStatus === 'DISCONNECTED' ? (
+                                <button
+                                    onClick={() => handleReconnect(account.provider)}
+                                    className="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all active:scale-95 bg-green-500 hover:bg-green-600 text-white"
+                                    title="Reactivate storage access for this account"
+                                >
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    Reconnect Storage
+                                </button>
+                            ) : account.storageStatus === 'ACTIVE' ? (
+                                <button
+                                    onClick={() => handleDisconnect(account.provider)}
+                                    disabled={disconnecting === account.provider}
+                                    className="px-5 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all active:scale-95 bg-card border border-destructive/30 text-destructive hover:bg-destructive/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="Disable storage access (login method will be preserved)"
+                                >
+                                    {disconnecting === account.provider ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            Disconnecting...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <LogOut className="w-4 h-4" />
+                                            Disable Storage
+                                        </>
+                                    )}
+                                </button>
                             ) : (
-                                <>
-                                    <LogOut className="w-4 h-4" />
-                                    Disconnect
-                                </>
+                                <div className="px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground bg-muted border border-border">
+                                    Storage Inactive
+                                </div>
                             )}
-                        </button>
+                        </div>
                     </motion.div>
                 )
             })}
