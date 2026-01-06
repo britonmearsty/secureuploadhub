@@ -25,7 +25,8 @@ import {
   Type,
   ExternalLink,
   Copy,
-  Info
+  Info,
+  RefreshCw
 } from "lucide-react"
 import ColorPicker from "@/components/ui/ColorPicker"
 import ImageUpload from "@/components/ui/ImageUpload"
@@ -57,6 +58,9 @@ interface ConnectedAccount {
   providerAccountId: string
   email?: string
   isConnected: boolean
+  storageAccountId?: string
+  storageStatus?: "ACTIVE" | "INACTIVE" | "DISCONNECTED" | "ERROR"
+  hasValidOAuth: boolean
 }
 
 interface StorageFolder {
@@ -136,6 +140,10 @@ export default function EditPortalPage() {
   const [success, setSuccess] = useState("")
   const [showDeleteModal, setShowDeleteModal] = useState(false)
 
+  // Storage health check state
+  const [isRunningHealthCheck, setIsRunningHealthCheck] = useState(false)
+  const [healthCheckResults, setHealthCheckResults] = useState<any>(null)
+
   // Connected accounts
   const [accounts, setAccounts] = useState<ConnectedAccount[]>([])
 
@@ -190,6 +198,35 @@ export default function EditPortalPage() {
     })
   }
 
+  async function runStorageHealthCheck() {
+    setIsRunningHealthCheck(true)
+    setHealthCheckResults(null)
+
+    try {
+      const response = await fetch("/api/storage/health-check", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+
+      const data = await response.json()
+      setHealthCheckResults(data)
+      
+      if (data.success && data.createdAccounts > 0) {
+        // Refresh accounts after health check creates new ones
+        await fetchAccounts()
+      }
+    } catch (error) {
+      setHealthCheckResults({
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error"
+      })
+    } finally {
+      setIsRunningHealthCheck(false)
+    }
+  }
+
 
   useEffect(() => {
     fetchPortal()
@@ -227,7 +264,13 @@ export default function EditPortalPage() {
       const res = await fetch("/api/storage/accounts")
       if (res.ok) {
         const data = await res.json()
-        setAccounts(data.accounts.filter((a: ConnectedAccount) => a.isConnected))
+        const connectedAccounts = data.accounts.filter((a: ConnectedAccount) => a.isConnected)
+        setAccounts(connectedAccounts)
+        
+        // Log storage account status for debugging
+        connectedAccounts.forEach((account: ConnectedAccount) => {
+          console.log(`Storage Account: ${account.provider} - Status: ${account.storageStatus} - OAuth: ${account.hasValidOAuth}`)
+        })
       }
     } catch (error) {
       console.error("Error fetching accounts:", error)
@@ -755,13 +798,62 @@ export default function EditPortalPage() {
 
                     {activeTab === 'Storage & Files' && (
                       <div className="space-y-8">
+                        {/* Storage Account Status Warning */}
+                        {accounts.length > 0 && accounts.some(a => a.storageStatus !== 'ACTIVE') && (
+                          <div className="bg-warning/10 border border-warning/20 rounded-xl p-4">
+                            <div className="flex items-start gap-3">
+                              <AlertCircle className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
+                              <div>
+                                <h4 className="font-semibold text-foreground mb-1">Storage Account Issues Detected</h4>
+                                <p className="text-sm text-muted-foreground mb-3">
+                                  Some of your storage accounts have connection issues. This may affect portal functionality.
+                                </p>
+                                <div className="space-y-2">
+                                  {accounts.filter(a => a.storageStatus !== 'ACTIVE').map(account => (
+                                    <div key={account.provider} className="flex items-center gap-2 text-sm">
+                                      <div className={`w-2 h-2 rounded-full ${
+                                        account.storageStatus === 'DISCONNECTED' ? 'bg-red-500' :
+                                        account.storageStatus === 'ERROR' ? 'bg-orange-500 animate-pulse' :
+                                        'bg-yellow-500'
+                                      }`} />
+                                      <span className="font-medium">{account.provider === 'google' ? 'Google Drive' : 'Dropbox'}:</span>
+                                      <span className="text-muted-foreground">
+                                        {account.storageStatus === 'DISCONNECTED' ? 'Disconnected - needs reconnection' :
+                                         account.storageStatus === 'ERROR' ? 'Connection error - may resolve automatically' :
+                                         'Inactive - not available for new uploads'}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                                <div className="mt-3 pt-3 border-t border-warning/20">
+                                  <button
+                                    type="button"
+                                    onClick={runStorageHealthCheck}
+                                    disabled={isRunningHealthCheck}
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-warning/10 hover:bg-warning/20 border border-warning/30 rounded-lg text-xs font-medium text-warning-foreground transition-colors disabled:opacity-50"
+                                  >
+                                    <RefreshCw className={`w-3 h-3 ${isRunningHealthCheck ? 'animate-spin' : ''}`} />
+                                    {isRunningHealthCheck ? 'Running Health Check...' : 'Run Storage Health Check'}
+                                  </button>
+                                  <p className="text-xs text-muted-foreground mt-2">
+                                    Visit <strong>Settings → Connected Accounts</strong> to fix these issues, or use the Storage Health Check tool.
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
                         <div className="grid grid-cols-2 gap-4">
                           {[
-                            { id: "google_drive", name: "Google Drive", icon: Cloud, disabled: !accounts.find(a => a.provider === "google") },
-                            { id: "dropbox", name: "Dropbox", icon: Cloud, disabled: !accounts.find(a => a.provider === "dropbox") }
+                            { id: "google_drive", name: "Google Drive", icon: Cloud, disabled: !accounts.find(a => a.provider === "google" && a.storageStatus === "ACTIVE") },
+                            { id: "dropbox", name: "Dropbox", icon: Cloud, disabled: !accounts.find(a => a.provider === "dropbox" && a.storageStatus === "ACTIVE") }
                           ].map((provider) => {
                             const Icon = provider.icon;
                             const isActive = formData.storageProvider === provider.id;
+                            const account = accounts.find(a => (a.provider === "google" ? "google_drive" : "dropbox") === provider.id);
+                            const hasAccount = !!account;
+                            
                             return (
                               <button
                                 key={provider.id}
@@ -776,7 +868,33 @@ export default function EditPortalPage() {
                                 <div className={`p-3 rounded-xl ${isActive ? "bg-primary text-primary-foreground shadow-md" : "bg-muted text-muted-foreground"}`}>
                                   <Icon className="w-6 h-6" />
                                 </div>
-                                <span className="font-bold text-sm text-foreground">{provider.name}</span>
+                                <div className="text-center">
+                                  <span className="font-bold text-sm text-foreground block">{provider.name}</span>
+                                  {hasAccount && (
+                                    <div className="flex items-center justify-center gap-1 mt-1">
+                                      <div className={`w-1.5 h-1.5 rounded-full ${
+                                        account.storageStatus === 'ACTIVE' ? 'bg-green-500' :
+                                        account.storageStatus === 'DISCONNECTED' ? 'bg-red-500' :
+                                        account.storageStatus === 'ERROR' ? 'bg-orange-500 animate-pulse' :
+                                        'bg-yellow-500'
+                                      }`} />
+                                      <span className={`text-xs font-medium ${
+                                        account.storageStatus === 'ACTIVE' ? 'text-green-600' :
+                                        account.storageStatus === 'DISCONNECTED' ? 'text-red-600' :
+                                        account.storageStatus === 'ERROR' ? 'text-orange-600' :
+                                        'text-yellow-600'
+                                      }`}>
+                                        {account.storageStatus === 'ACTIVE' ? 'Ready' :
+                                         account.storageStatus === 'DISCONNECTED' ? 'Disconnected' :
+                                         account.storageStatus === 'ERROR' ? 'Error' :
+                                         'Inactive'}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {!hasAccount && (
+                                    <span className="text-xs text-muted-foreground mt-1 block">Not connected</span>
+                                  )}
+                                </div>
                                 {isActive && (
                                   <CheckCircle2 className="absolute top-3 right-3 w-5 h-5 text-foreground" />
                                 )}
@@ -784,6 +902,39 @@ export default function EditPortalPage() {
                             );
                           })}
                         </div>
+
+                        {/* Health Check Results */}
+                        {healthCheckResults && (
+                          <div className={`rounded-xl p-4 border ${
+                            healthCheckResults.success 
+                              ? 'bg-success/10 border-success/20' 
+                              : 'bg-destructive/10 border-destructive/20'
+                          }`}>
+                            <div className="flex items-start gap-3">
+                              {healthCheckResults.success ? (
+                                <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                              ) : (
+                                <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                              )}
+                              <div>
+                                <h4 className="font-semibold text-foreground mb-1">
+                                  {healthCheckResults.success ? 'Health Check Complete' : 'Health Check Failed'}
+                                </h4>
+                                {healthCheckResults.success ? (
+                                  <p className="text-sm text-muted-foreground">
+                                    Checked {healthCheckResults.checkedAccounts || 0} accounts, 
+                                    created {healthCheckResults.createdAccounts || 0} new accounts.
+                                    {healthCheckResults.createdAccounts > 0 && ' Storage accounts have been automatically created.'}
+                                  </p>
+                                ) : (
+                                  <p className="text-sm text-muted-foreground">
+                                    {healthCheckResults.error || 'Unknown error occurred during health check.'}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
 
                         <div className="bg-muted border border-border rounded-2xl overflow-hidden">
                           <div className="px-5 py-4 border-b border-border bg-muted/50 flex flex-col gap-3">
