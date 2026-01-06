@@ -115,6 +115,36 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 id_token: account.id_token,
               },
             })
+
+            // Create corresponding storage account for cloud storage providers
+            if (account.provider === "google" || account.provider === "dropbox") {
+              const { StorageAccountStatus } = await import("./lib/storage/account-states")
+              const storageProvider = account.provider === "google" ? "GOOGLE_DRIVE" : "DROPBOX"
+              
+              // Check if storage account already exists
+              const existingStorageAccount = await prisma.storageAccount.findFirst({
+                where: {
+                  userId: existingUser.id,
+                  provider: storageProvider,
+                  providerAccountId: account.providerAccountId
+                }
+              })
+
+              if (!existingStorageAccount) {
+                await prisma.storageAccount.create({
+                  data: {
+                    userId: existingUser.id,
+                    provider: storageProvider,
+                    providerAccountId: account.providerAccountId,
+                    status: StorageAccountStatus.ACTIVE,
+                    displayName: `${account.provider} Account`,
+                    email: null, // Will be populated by health check
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                  }
+                })
+              }
+            }
           }
         } else {
           isNewUser = true;

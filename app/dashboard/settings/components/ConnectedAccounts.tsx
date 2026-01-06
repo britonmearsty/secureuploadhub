@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { signIn } from "next-auth/react"
 import { Cloud, CheckCircle2, XCircle, Loader2, ArrowRight, LogOut } from "lucide-react"
 import { motion } from "framer-motion"
+import { ToastComponent } from "@/components/ui/Toast"
 
 interface ConnectedAccount {
     provider: "google" | "dropbox"
@@ -17,6 +18,26 @@ export default function ConnectedAccounts() {
     const [accounts, setAccounts] = useState<ConnectedAccount[]>([])
     const [loading, setLoading] = useState(true)
     const [disconnecting, setDisconnecting] = useState<string | null>(null)
+    const [toast, setToast] = useState<{
+        isOpen: boolean;
+        type: 'error' | 'success' | 'warning' | 'info';
+        title: string;
+        message: string;
+    }>({
+        isOpen: false,
+        type: 'success',
+        title: '',
+        message: ''
+    })
+
+    const showToast = (type: 'error' | 'success' | 'warning' | 'info', title: string, message: string) => {
+        setToast({
+            isOpen: true,
+            type,
+            title,
+            message
+        })
+    }
 
     useEffect(() => {
         fetchAccounts()
@@ -46,12 +67,18 @@ export default function ConnectedAccounts() {
             })
 
             if (res.ok) {
+                const data = await res.json()
                 setAccounts(accounts.filter(a => a.provider !== provider))
+                
+                // Show success message
+                showToast('success', 'Storage Disconnected', data.message)
             } else {
-                console.error("Failed to disconnect account")
+                const errorData = await res.json()
+                showToast('error', 'Disconnection Failed', errorData.error || 'Failed to disconnect storage account')
             }
         } catch (error) {
             console.error("Error disconnecting account:", error)
+            showToast('error', 'Connection Error', 'An unexpected error occurred while disconnecting')
         } finally {
             setDisconnecting(null)
         }
@@ -129,6 +156,7 @@ export default function ConnectedAccounts() {
                             onClick={() => handleDisconnect(account.provider)}
                             disabled={disconnecting === account.provider}
                             className="px-5 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all active:scale-95 bg-card border border-destructive/30 text-destructive hover:bg-destructive/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Remove this storage connection. Files from this account will become unavailable until reconnected."
                         >
                             {disconnecting === account.provider ? (
                                 <>
@@ -154,6 +182,15 @@ export default function ConnectedAccounts() {
                     <p className="text-sm font-medium text-foreground">Automatic sync is active for {connectedAccounts.length} account{connectedAccounts.length > 1 ? 's' : ''}</p>
                 </div>
             )}
+
+            {/* Toast Notification */}
+            <ToastComponent
+                isOpen={toast.isOpen}
+                onClose={() => setToast({ ...toast, isOpen: false })}
+                type={toast.type}
+                title={toast.title}
+                message={toast.message}
+            />
         </div>
     )
 }

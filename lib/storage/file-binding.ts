@@ -99,21 +99,34 @@ export function getUploadRules(
   }
 
   // Rule 2: Portal has no storage account, find active account for provider
-  const activeAccount = userStorageAccounts.find(acc => 
+  const preferredAccount = userStorageAccounts.find(acc => 
     acc.provider === portalStorageProvider && 
     canCreateUploads(acc.status)
   )
 
-  if (!activeAccount) {
+  if (preferredAccount) {
     return {
-      canUpload: false,
-      reason: `No active ${portalStorageProvider} storage account available`
+      canUpload: true,
+      storageAccountId: preferredAccount.id
     }
   }
 
+  // Rule 3: Fallback - if preferred provider not available, use any active account
+  const anyActiveAccount = userStorageAccounts.find(acc => 
+    canCreateUploads(acc.status)
+  )
+
+  if (anyActiveAccount) {
+    return {
+      canUpload: true,
+      storageAccountId: anyActiveAccount.id
+    }
+  }
+
+  // Rule 4: No active accounts available
   return {
-    canUpload: true,
-    storageAccountId: activeAccount.id
+    canUpload: false,
+    reason: `No active storage accounts available. Please connect a cloud storage provider.`
   }
 }
 
