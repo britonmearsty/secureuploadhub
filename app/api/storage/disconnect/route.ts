@@ -127,8 +127,26 @@ export async function POST(request: Request) {
 
     console.log('✅ STORAGE_DISCONNECT: Success:', {
       updatedAccounts: result.updatedStorageAccounts,
-      affectedPortals: result.affectedPortals.length
+      affectedPortals: result.affectedPortals.length,
+      updatedAccountsDetails: result.updatedAccounts
     })
+
+    // CRITICAL: Let's verify the update actually happened
+    const verificationAccounts = await prisma.storageAccount.findMany({
+      where: {
+        userId: session.user.id,
+        provider: provider === "google" ? "google_drive" : "dropbox"
+      },
+      select: {
+        id: true,
+        provider: true,
+        status: true,
+        lastError: true,
+        updatedAt: true
+      }
+    })
+    
+    console.log('🔍 STORAGE_DISCONNECT: Verification check after transaction:', verificationAccounts)
 
     return NextResponse.json({ 
       success: true, 
