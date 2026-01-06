@@ -104,6 +104,18 @@ export async function createStorageAccountForOAuth(
             existingStatus: existingStorageAccount.status,
             userEmail
           })
+          
+          // IMPORTANT: Don't recreate DISCONNECTED accounts
+          // Users intentionally disconnected these, so respect their choice
+          if (existingStorageAccount.status === StorageAccountStatus.DISCONNECTED) {
+            logStorageOperation('RESPECTING_DISCONNECTED_STATUS', {
+              userId,
+              provider: storageProvider,
+              storageAccountId: existingStorageAccount.id,
+              userEmail
+            })
+          }
+          
           return false
         }
 
