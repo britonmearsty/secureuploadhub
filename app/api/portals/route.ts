@@ -6,6 +6,7 @@ import { invalidateCache, getUserDashboardKey, getUserPortalsKey, getUserUploads
 import { assertPortalLimit } from "@/lib/billing"
 import { validatePortalCreation } from "@/lib/storage/portal-locking"
 import { ensureStorageForPortalOperation } from "@/lib/storage/middleware-fallback"
+import { validateSlug } from "@/lib/slug-validation"
 import { StorageAccountStatus } from "@prisma/client"
 
 // GET /api/portals - List all portals for the current user
@@ -81,6 +82,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Name and slug are required" }, { status: 400 })
     }
 
+    // Validate slug format and content
+    const slugValidation = validateSlug(slug)
+    if (!slugValidation.isValid) {
+      return NextResponse.json({ 
+        error: slugValidation.error,
+        code: "INVALID_SLUG"
+      }, { status: 400 })
+    }
+
+    // Use the sanitized slug
+    const validatedSlug = slugValidation.sanitized!
+
     // Validate storage provider
     const validProviders = ["google_drive", "dropbox"]
     const provider = validProviders.includes(storageProvider) ? storageProvider : "google_drive"
@@ -150,11 +163,14 @@ export async function POST(request: NextRequest) {
 
     // Check if slug is already taken
     const existingPortal = await prisma.uploadPortal.findUnique({
-      where: { slug }
+      where: { slug: validatedSlug }
     })
 
     if (existingPortal) {
-      return NextResponse.json({ error: "This URL slug is already taken" }, { status: 400 })
+      return NextResponse.json({ 
+        error: "This URL slug is already taken. Please choose a different one.",
+        code: "SLUG_TAKEN"
+      }, { status: 400 })
     }
 
     // Enforce plan portal limits
@@ -171,7 +187,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId: session.user.id,
         name,
-        slug,
+        slug: validatedSlug,
         description: description || null,
         primaryColor: primaryColor || "#4F46E5",
         logoUrl: logoUrl || null,

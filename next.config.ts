@@ -13,6 +13,32 @@ const nextConfig: NextConfig = {
       { hostname: "res.cloudinary.com" },
     ],
   },
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+          // Enable HTTP/2 Server Push hints
+          {
+            key: 'Link',
+            value: '</static/css/app.css>; rel=preload; as=style, </static/js/app.js>; rel=preload; as=script',
+          },
+        ],
+      },
+    ];
+  },
   async rewrites() {
     return [
       {
@@ -27,17 +53,9 @@ const nextConfig: NextConfig = {
   },
   // This is required to support PostHog trailing slash API requests
   skipTrailingSlashRedirect: true,
-  // Optimize upload performance
+  // Optimize for HTTP/2 performance
   httpAgentOptions: {
     keepAlive: true,
-    // keepAliveMsecs: 30000, // Keep-alive probe every 30s
-    // maxSockets: 128, // Increased max sockets for parallel uploads
-    // maxFreeSockets: 64,
-    // freeSocketTimeout: 30000, // Close idle sockets after 30s
-  },
-  onDemandEntries: {
-    maxInactiveAge: 60 * 1000, // Keep compiled pages for 60s
-    pagesBufferLength: 5,
   },
   // Increase server timeout for large uploads
   experimental: {

@@ -87,11 +87,13 @@ export async function uploadFileInChunks(
         ...clientInfo,
         token: accessToken,
       }),
+    }).catch(err => {
+      throw new Error(`Failed to connect to upload server: ${err.message}`)
     })
 
     if (!sessionRes.ok) {
-      const error = await sessionRes.json()
-      return { success: false, error: error.error || "Failed to initialize chunked upload" }
+      const error = await sessionRes.json().catch(() => ({ error: `HTTP ${sessionRes.status}: ${sessionRes.statusText}` }))
+      return { success: false, error: error.error || `Failed to initialize upload (${sessionRes.status})` }
     }
 
     const session = await sessionRes.json()
@@ -150,11 +152,13 @@ export async function uploadFileInChunks(
         mimeType: uploadFile.type,
         token: accessToken,
       }),
+    }).catch(err => {
+      throw new Error(`Failed to connect to upload server: ${err.message}`)
     })
 
     if (!completeRes.ok) {
-      const error = await completeRes.json()
-      return { success: false, error: error.error || "Failed to finalize upload" }
+      const error = await completeRes.json().catch(() => ({ error: `HTTP ${completeRes.status}: ${completeRes.statusText}` }))
+      return { success: false, error: error.error || `Failed to complete upload (${completeRes.status})` }
     }
 
     const finalResult = await completeRes.json()
@@ -187,7 +191,11 @@ async function uploadChunk(
     const xhr = new XMLHttpRequest()
 
     xhr.onerror = () => {
-      reject(new Error(`Network error uploading chunk ${chunkIndex}`))
+      reject(new Error(`Network error uploading chunk ${chunkIndex}. Please check your internet connection and try again.`))
+    }
+
+    xhr.ontimeout = () => {
+      reject(new Error(`Upload timeout for chunk ${chunkIndex}. The file may be too large or your connection is slow.`))
     }
 
     xhr.onload = () => {
@@ -197,9 +205,9 @@ async function uploadChunk(
         const error = (() => {
           try {
             const data = JSON.parse(xhr.responseText)
-            return data.error || `Chunk upload failed: ${xhr.status}`
+            return data.error || `Chunk upload failed: HTTP ${xhr.status} ${xhr.statusText}`
           } catch {
-            return `Chunk upload failed: ${xhr.status}`
+            return `Chunk upload failed: HTTP ${xhr.status} ${xhr.statusText}`
           }
         })()
         reject(new Error(error))
@@ -213,6 +221,7 @@ async function uploadChunk(
     formData.append("chunk", chunk, fileName)
 
     xhr.open("POST", "/api/upload/chunked/chunk")
+    xhr.timeout = 60000 // 60 second timeout for chunk uploads
     if (accessToken) {
       xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`)
     }
@@ -244,8 +253,8 @@ async function uploadSingleChunk(
   })
 
   if (!res.ok) {
-    const error = await res.json().catch(() => ({}))
-    return { success: false, error: error.error || "Upload failed" }
+    const error = await res.json().catch(() => ({ error: `HTTP ${res.status}: ${res.statusText}` }))
+    return { success: false, error: error.error || `Upload failed (${res.status})` }
   }
 
   const result = await res.json()

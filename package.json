@@ -2,7 +2,7 @@
   "name": "secureuploadhub",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
+    "scripts": {
     "dev": "next dev",
     "build": "prisma generate && cross-env NEXT_TURBOPACK=0 next build",
     "start": "next start",
@@ -19,8 +19,9 @@
     "seed-audit-logs": "tsx scripts/seed-audit-logs.ts",
     "seed-system-settings": "tsx scripts/seed-system-settings.ts",
     "db:seed": "prisma db seed",
-    "analytics:health": "tsx scripts/analytics-health-check.ts",
-    "analytics:test": "node scripts/test-analytics.js"
+    "check-http2": "node scripts/check-http2.js",
+    "analytics:test": "node scripts/test-analytics.js",
+    "analytics:health": "tsx scripts/analytics-health-check.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "2.7.4",

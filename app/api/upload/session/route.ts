@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma"
 import { getStorageService, getValidAccessToken, StorageProvider } from "@/lib/storage"
 import { jwtVerify } from "jose"
 import { assertUploadAllowed } from "@/lib/billing"
+import { validateFileType } from "@/lib/file-validation"
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.PORTAL_PASSWORD_SECRET || process.env.NEXTAUTH_SECRET || "default-secret-change-me"
@@ -82,12 +83,10 @@ export async function POST(request: NextRequest) {
 
     // Validate file type
     if (portal.allowedFileTypes && portal.allowedFileTypes.length > 0) {
-      const isAllowed = portal.allowedFileTypes.some((allowedType: string) => {
-        if (allowedType.endsWith("/*")) {
-          const mainType = allowedType.split("/")[0]
-          return mimeType.startsWith(mainType + "/")
-        }
-        return mimeType === allowedType
+      const isAllowed = validateFileType({
+        allowedTypes: portal.allowedFileTypes,
+        fileName,
+        mimeType
       })
 
       if (!isAllowed) {
@@ -154,6 +153,9 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error("Error creating upload session:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
+    return NextResponse.json({ 
+      error: `Failed to create upload session: ${errorMessage}` 
+    }, { status: 500 })
   }
 }

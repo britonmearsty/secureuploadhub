@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma"
 import { getPortalWithCache, getPortalWithUser } from "@/lib/portal-cache"
 import { jwtVerify } from "jose"
 import { assertUploadAllowed } from "@/lib/billing"
+import { validateFileType } from "@/lib/file-validation"
 import crypto from "crypto"
 
 const JWT_SECRET = new TextEncoder().encode(
@@ -91,12 +92,10 @@ export async function POST(request: NextRequest) {
 
     // Validate file type
     if (portalCache.allowedFileTypes && portalCache.allowedFileTypes.length > 0) {
-      const isAllowed = portalCache.allowedFileTypes.some((allowedType: string) => {
-        if (allowedType.endsWith("/*")) {
-          const mainType = allowedType.split("/")[0]
-          return mimeType.startsWith(mainType + "/")
-        }
-        return mimeType === allowedType
+      const isAllowed = validateFileType({
+        allowedTypes: portalCache.allowedFileTypes,
+        fileName,
+        mimeType
       })
 
       if (!isAllowed) {
@@ -132,6 +131,9 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error("Error initializing chunked upload:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
+    return NextResponse.json({ 
+      error: `Failed to initialize upload: ${errorMessage}` 
+    }, { status: 500 })
   }
 }

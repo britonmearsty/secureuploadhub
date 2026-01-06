@@ -26,6 +26,7 @@ import {
 } from "lucide-react"
 import ColorPicker from "@/components/ui/ColorPicker"
 import ImageUpload from "@/components/ui/ImageUpload"
+import { validateSlug, sanitizeSlug } from "@/lib/slug-validation"
 
 interface ConnectedAccount {
   provider: "google" | "dropbox"
@@ -361,13 +362,7 @@ export default function CreatePortalPage() {
   }
 
   function handleNameChange(name: string) {
-    const slug = name
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-      .slice(0, 50)
-
+    const slug = sanitizeSlug(name)
     setFormData({ ...formData, name, slug })
     
     // Clear error if name is now valid
@@ -389,6 +384,12 @@ export default function CreatePortalPage() {
     
     if (!formData.slug.trim()) {
       validationErrors.push({ field: 'slug', tab: 'Identity', message: 'Portal handle is required' })
+    } else {
+      // Validate slug format and content
+      const slugValidation = validateSlug(formData.slug)
+      if (!slugValidation.isValid) {
+        validationErrors.push({ field: 'slug', tab: 'Identity', message: slugValidation.error || 'Invalid portal handle' })
+      }
     }
     
     if (!formData.storageProvider || !formData.storageFolderId) {
@@ -425,8 +426,12 @@ export default function CreatePortalPage() {
         const errorMessage = data.error || "Failed to create portal"
         setError(errorMessage)
         
-        // If it's a storage-related error, redirect to Storage section
-        if (errorMessage.toLowerCase().includes('storage') || 
+        // Handle specific error types and redirect to appropriate sections
+        if (data.code === 'INVALID_SLUG' || data.code === 'SLUG_TAKEN' || 
+            errorMessage.toLowerCase().includes('slug') ||
+            errorMessage.toLowerCase().includes('handle')) {
+          setActiveTab('Identity')
+        } else if (errorMessage.toLowerCase().includes('storage') || 
             errorMessage.toLowerCase().includes('account') ||
             errorMessage.toLowerCase().includes('connect')) {
           setActiveTab('Storage')
@@ -578,19 +583,34 @@ export default function CreatePortalPage() {
                               type="text"
                               value={formData.slug}
                               onChange={(e) => {
-                                const newSlug = e.target.value.toLowerCase()
+                                const newSlug = sanitizeSlug(e.target.value)
                                 setFormData({ ...formData, slug: newSlug })
                                 // Clear error if slug is now valid
-                                if (newSlug.trim() && error.includes("Portal handle is required")) {
+                                const validation = validateSlug(newSlug)
+                                if (validation.isValid && error.includes("Portal handle")) {
                                   setError("")
                                 }
                               }}
                               placeholder="custom-address"
-                              className="flex-1 px-4 py-3 bg-card border border-border rounded-r-xl focus:ring-2 focus:ring-ring transition-all outline-none font-medium text-foreground"
+                              className={`flex-1 px-4 py-3 bg-card border border-border rounded-r-xl focus:ring-2 focus:ring-ring transition-all outline-none font-medium text-foreground ${
+                                formData.slug && !validateSlug(formData.slug).isValid ? 'border-red-300 focus:ring-red-500' : ''
+                              }`}
                               pattern="[a-z0-9-]+"
                               required
                             />
                           </div>
+                          {formData.slug && !validateSlug(formData.slug).isValid && (
+                            <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                              <AlertCircle className="w-4 h-4" />
+                              {validateSlug(formData.slug).error}
+                            </p>
+                          )}
+                          {formData.slug && validateSlug(formData.slug).isValid && (
+                            <p className="mt-2 text-sm text-green-600 flex items-center gap-1">
+                              <CheckCircle2 className="w-4 h-4" />
+                              Valid portal handle
+                            </p>
+                          )}
                         </div>
 
                         <div className="pt-4 flex justify-between">

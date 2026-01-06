@@ -32,6 +32,7 @@ import {
     FileType,
 } from "lucide-react"
 import { getFileIcon, getFileIconColor } from "@/lib/file-icons"
+import { validateFileType, getFileTypeDisplayName } from "@/lib/file-validation"
 import Head from "next/head"
 
 interface Portal {
@@ -87,6 +88,7 @@ export default function PublicUploadPage() {
         totalSize: 0,
         uploadedSize: 0
     })
+    const [showDebugInfo, setShowDebugInfo] = useState(false)
 
     // Password protection state
     const [isUnlocked, setIsUnlocked] = useState(false)
@@ -178,11 +180,10 @@ export default function PublicUploadPage() {
             }
 
             if (allowedTypes.length > 0) {
-                const isAllowed = allowedTypes.some((allowed) => {
-                    if (allowed.endsWith("/*")) {
-                        return file.type.startsWith(allowed.split("/")[0] + "/")
-                    }
-                    return file.type === allowed
+                const isAllowed = validateFileType({
+                    allowedTypes,
+                    fileName: file.name,
+                    mimeType: file.type || "application/octet-stream"
                 })
 
                 if (!isAllowed) {
@@ -281,7 +282,7 @@ export default function PublicUploadPage() {
                 },
                 accessToken,
                 (progress) => {
-                    console.log(`Upload progress: ${progress.percentComplete}% (${progress.chunkIndex + 1}/${progress.totalChunks} chunks)`);
+                    console.log(`Upload progress for ${uploadFile.file.name}: ${progress.percentComplete}% (${progress.chunkIndex + 1}/${progress.totalChunks} chunks)`);
                     setFiles(prev => prev.map(f =>
                         f.id === uploadFile.id ? { ...f, progress: progress.percentComplete } : f
                     ))
@@ -301,7 +302,35 @@ export default function PublicUploadPage() {
                 file_name: uploadFile.file.name,
             });
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : "Handshake failure"
+            console.error(`Upload failed for ${uploadFile.file.name}:`, err)
+            
+            // Extract more detailed error information
+            let errorMessage = "Upload failed"
+            if (err instanceof Error) {
+                errorMessage = err.message
+                
+                // Provide more user-friendly error messages for common issues
+                if (errorMessage.includes("Network error") || errorMessage.includes("Failed to fetch")) {
+                    errorMessage = "Network connection lost. Please check your internet connection and try again."
+                } else if (errorMessage.includes("413") || errorMessage.includes("too large")) {
+                    errorMessage = "File is too large for upload. Please try a smaller file."
+                } else if (errorMessage.includes("401") || errorMessage.includes("403")) {
+                    errorMessage = "Authentication failed. Please refresh the page and try again."
+                } else if (errorMessage.includes("429")) {
+                    errorMessage = "Too many upload attempts. Please wait a moment and try again."
+                } else if (errorMessage.includes("500") || errorMessage.includes("Internal server error")) {
+                    errorMessage = "Server error occurred. Please try again in a few moments."
+                } else if (errorMessage.includes("storage") || errorMessage.includes("Google Drive") || errorMessage.includes("Dropbox")) {
+                    errorMessage = "Cloud storage connection issue. Please try again or contact support."
+                } else if (errorMessage.includes("malware") || errorMessage.includes("Security")) {
+                    errorMessage = "File was rejected by security scan. Please ensure the file is safe."
+                } else if (errorMessage.includes("file type") || errorMessage.includes("not allowed")) {
+                    errorMessage = "File type not allowed for this portal."
+                }
+            } else {
+                errorMessage = "Unknown upload error occurred"
+            }
+            
             setFiles(prev => prev.map(f =>
                 f.id === uploadFile.id ? { ...f, status: "error" as const, error: errorMessage } : f
             ))
@@ -309,6 +338,9 @@ export default function PublicUploadPage() {
                 portal_id: portal!.id,
                 portal_slug: slug,
                 error: errorMessage,
+                original_error: err instanceof Error ? err.message : String(err),
+                file_name: uploadFile.file.name,
+                file_size: uploadFile.file.size,
             });
             throw err
         }
@@ -348,9 +380,21 @@ export default function PublicUploadPage() {
             pendingFiles.map(uploadFile => uploadSingleFile(uploadFile))
         )
 
-        // Update final stats
+        // Update final stats and collect error details
         const completed = results.filter(r => r.status === "fulfilled").length
         const failed = results.filter(r => r.status === "rejected").length
+        const failedResults = results.filter(r => r.status === "rejected") as PromiseRejectedResult[]
+
+        // Log detailed error information for debugging
+        if (failed > 0) {
+            console.error("Upload failures:", failedResults.map(r => r.reason))
+            
+            // Set a general upload error if there were failures but no specific error is shown
+            const filesWithErrors = files.filter(f => f.status === "error")
+            if (failed > filesWithErrors.length) {
+                setUploadError(`${failed} file(s) failed to upload. Please check individual file errors below and try again.`)
+            }
+        }
 
         setUploadStats(prev => ({
             ...prev,
@@ -802,27 +846,11 @@ export default function PublicUploadPage() {
                                         <div className="flex-1">
                                             <p className="text-sm font-medium text-blue-900 mb-2">Accepted file types:</p>
                                             <div className="flex flex-wrap gap-2">
-                                                {portal.allowedFileTypes.map((type) => {
-                                                    // Convert MIME types to user-friendly names
-                                                    const getTypeName = (mimeType: string) => {
-                                                        if (mimeType.startsWith('image/')) return 'Images'
-                                                        if (mimeType.startsWith('video/')) return 'Videos'
-                                                        if (mimeType.startsWith('audio/')) return 'Audio'
-                                                        if (mimeType === 'application/pdf') return 'PDF'
-                                                        if (mimeType.includes('document') || mimeType.includes('word')) return 'Documents'
-                                                        if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return 'Spreadsheets'
-                                                        if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'Presentations'
-                                                        if (mimeType.includes('zip') || mimeType.includes('archive')) return 'Archives'
-                                                        if (mimeType === 'text/plain') return 'Text files'
-                                                        return mimeType.split('/')[1]?.toUpperCase() || mimeType
-                                                    }
-                                                    
-                                                    return (
-                                                        <span key={type} className="px-3 py-1 bg-white border border-blue-200 rounded-lg text-sm font-medium text-blue-800">
-                                                            {getTypeName(type)}
-                                                        </span>
-                                                    )
-                                                })}
+                                                {portal.allowedFileTypes.map((type) => (
+                                                    <span key={type} className="px-3 py-1 bg-white border border-blue-200 rounded-lg text-sm font-medium text-blue-800">
+                                                        {getFileTypeDisplayName(type)}
+                                                    </span>
+                                                ))}
                                             </div>
                                         </div>
                                     </div>
@@ -832,7 +860,17 @@ export default function PublicUploadPage() {
                             {uploadError && (
                                 <div className="flex items-center gap-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
                                     <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                                    <span>{uploadError}</span>
+                                    <div className="flex-1">
+                                        <span>{uploadError}</span>
+                                        {process.env.NODE_ENV === 'development' && (
+                                            <button
+                                                onClick={() => setShowDebugInfo(!showDebugInfo)}
+                                                className="ml-2 text-xs underline opacity-75 hover:opacity-100"
+                                            >
+                                                {showDebugInfo ? 'Hide' : 'Show'} Debug Info
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             )}
 
@@ -903,10 +941,10 @@ export default function PublicUploadPage() {
                                                                 <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
                                                                     <motion.div
                                                                         className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full relative"
-                                                                        initial={{ width: 0 }}
-                                                                        animate={{ width: `${uploadFile.progress}%` }}
+                                                                        initial={{ width: "0%" }}
+                                                                        animate={{ width: `${Math.max(0, Math.min(100, uploadFile.progress))}%` }}
                                                                         transition={{ 
-                                                                            duration: 0.3,
+                                                                            duration: 0.2,
                                                                             ease: "easeOut"
                                                                         }}
                                                                     >
@@ -922,14 +960,6 @@ export default function PublicUploadPage() {
                                                                         />
                                                                     </motion.div>
                                                                 </div>
-                                                                <div className="flex justify-between items-center">
-                                                                    <span className="text-xs text-blue-600 font-medium">
-                                                                        Uploading... {Math.round(uploadFile.progress)}%
-                                                                    </span>
-                                                                    <span className="text-xs font-bold text-slate-700">
-                                                                        {Math.round(uploadFile.progress)}%
-                                                                    </span>
-                                                                </div>
                                                             </motion.div>
                                                         )}
 
@@ -944,19 +974,51 @@ export default function PublicUploadPage() {
                                                                 <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
                                                                     <motion.div 
                                                                         className="h-full bg-slate-300 rounded-full"
+                                                                        style={{ width: "100%" }}
                                                                         animate={{ opacity: [0.5, 1, 0.5] }}
                                                                         transition={{ repeat: Infinity, duration: 1.5 }}
                                                                     />
-                                                                </div>
-                                                                <div className="flex justify-between items-center">
-                                                                    <span className="text-xs text-slate-500">Waiting...</span>
-                                                                    <span className="text-xs text-slate-500">0%</span>
                                                                 </div>
                                                             </motion.div>
                                                         )}
 
                                                         {uploadFile.status === 'error' && uploadFile.error && (
-                                                            <p className="text-xs text-red-600 mt-1">{uploadFile.error}</p>
+                                                            <motion.div 
+                                                                initial={{ opacity: 0, height: 0 }}
+                                                                animate={{ opacity: 1, height: "auto" }}
+                                                                className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg"
+                                                            >
+                                                                <div className="flex items-start gap-2">
+                                                                    <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                                                                    <div className="flex-1">
+                                                                        <p className="text-sm font-medium text-red-700 mb-1">Upload Failed</p>
+                                                                        <p className="text-xs text-red-600 leading-relaxed">{uploadFile.error}</p>
+                                                                        {showDebugInfo && process.env.NODE_ENV === 'development' && (
+                                                                            <details className="mt-2">
+                                                                                <summary className="text-xs text-red-500 cursor-pointer">Technical Details</summary>
+                                                                                <div className="mt-1 p-2 bg-red-100 rounded text-xs font-mono text-red-800 whitespace-pre-wrap">
+                                                                                    File: {uploadFile.file.name}{'\n'}
+                                                                                    Size: {formatFileSize(uploadFile.file.size)}{'\n'}
+                                                                                    Type: {uploadFile.file.type || 'unknown'}{'\n'}
+                                                                                    Portal: {portal?.id}{'\n'}
+                                                                                    Error: {uploadFile.error}
+                                                                                </div>
+                                                                            </details>
+                                                                        )}
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                // Retry the upload
+                                                                                setFiles(prev => prev.map(f =>
+                                                                                    f.id === uploadFile.id ? { ...f, status: "pending" as const, error: undefined } : f
+                                                                                ))
+                                                                            }}
+                                                                            className="mt-2 text-xs font-medium text-red-700 hover:text-red-800 underline"
+                                                                        >
+                                                                            Try Again
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </motion.div>
                                                         )}
                                                     </div>
 
@@ -986,7 +1048,6 @@ export default function PublicUploadPage() {
                                                                 >
                                                                     <Loader2 className="w-3 h-3" />
                                                                 </motion.div>
-                                                                {Math.round(uploadFile.progress)}%
                                                             </div>
                                                         )}
                                                         {uploadFile.status === "complete" && (

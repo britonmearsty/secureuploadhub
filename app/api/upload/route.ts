@@ -7,6 +7,7 @@ import { invalidateCache, getUserDashboardKey, getUserUploadsKey, getUserStatsKe
 import { assertUploadAllowed } from "@/lib/billing"
 import { getUploadRules } from "@/lib/storage/file-binding"
 import { StorageAccountStatus } from "@prisma/client"
+import { validateFileType } from "@/lib/file-validation"
 import type { ScanResult } from "@/lib/scanner"
 
 const JWT_SECRET = new TextEncoder().encode(
@@ -113,12 +114,10 @@ export async function POST(request: NextRequest) {
     // Validate file type if restrictions are configured
     const mimeType = file.type || "application/octet-stream"
     if (portal.allowedFileTypes && portal.allowedFileTypes.length > 0) {
-      const isAllowed = portal.allowedFileTypes.some((allowedType: string) => {
-        if (allowedType.endsWith("/*")) {
-          const mainType = allowedType.split("/")[0]
-          return mimeType.startsWith(mainType + "/")
-        }
-        return mimeType === allowedType
+      const isAllowed = validateFileType({
+        allowedTypes: portal.allowedFileTypes,
+        fileName: file.name,
+        mimeType
       })
 
       if (!isAllowed) {
@@ -271,7 +270,10 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error("Error handling upload:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
+    return NextResponse.json({ 
+      error: `Upload failed: ${errorMessage}` 
+    }, { status: 500 })
   }
 }
 
