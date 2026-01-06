@@ -5,7 +5,7 @@ import { hashPassword } from "@/lib/password"
 import { invalidateCache, getUserDashboardKey, getUserPortalsKey, getUserUploadsKey, getUserStatsKey } from "@/lib/cache"
 import { assertPortalLimit } from "@/lib/billing"
 import { validatePortalCreation } from "@/lib/storage/portal-locking"
-import { ensureStorageAccountsForUser } from "@/lib/storage/auto-create"
+import { ensureStorageForPortalOperation } from "@/lib/storage/middleware-fallback"
 import { StorageAccountStatus } from "@prisma/client"
 
 // GET /api/portals - List all portals for the current user
@@ -98,16 +98,29 @@ export async function POST(request: NextRequest) {
       ? allowedFileTypes.filter((t) => typeof t === "string" && t.length > 0)
       : []
 
-    // STORAGE ACCOUNT VALIDATION - Validate portal creation with storage account
-    // First, ensure StorageAccount records exist for all OAuth accounts (fallback mechanism)
+    // ENHANCED STORAGE ACCOUNT VALIDATION - Multiple layers of protection
+    // Layer 1: Comprehensive fallback mechanism with provider-specific validation
     try {
-      const { created } = await ensureStorageAccountsForUser(session.user.id)
-      if (created > 0) {
-        console.log(`✅ Created ${created} missing StorageAccount(s) for user ${session.user.id}`)
+      const fallbackResult = await ensureStorageForPortalOperation(session.user.id, provider)
+      
+      if (fallbackResult.created > 0) {
+        console.log(`✅ PORTAL_CREATION: Created ${fallbackResult.created} missing StorageAccount(s) for user ${session.user.id}`)
+      }
+      
+      if (!fallbackResult.hasRequiredProvider) {
+        return NextResponse.json({
+          error: `No active ${provider === "google_drive" ? "Google Drive" : "Dropbox"} storage account available. Please connect your ${provider === "google_drive" ? "Google Drive" : "Dropbox"} account first.`,
+          code: "MISSING_STORAGE_PROVIDER",
+          requiredProvider: provider
+        }, { status: 400 })
+      }
+      
+      if (fallbackResult.errors.length > 0) {
+        console.warn(`⚠️ PORTAL_CREATION: Storage fallback had errors:`, fallbackResult.errors)
       }
     } catch (error) {
       console.error("Failed to ensure StorageAccounts during portal creation:", error)
-      // Continue with portal creation even if this fails
+      // Continue with portal creation - the validation below will catch any remaining issues
     }
 
     const userStorageAccounts = await prisma.storageAccount.findMany({

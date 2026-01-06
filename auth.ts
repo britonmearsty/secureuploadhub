@@ -6,7 +6,7 @@ import prisma from "@/lib/prisma"
 import { getPostHogClient } from "@/lib/posthog-server"
 import { sendSignInNotification, sendWelcomeEmail } from "@/lib/email-templates"
 import { headers } from "next/headers"
-import { createStorageAccountForOAuth } from "@/lib/storage/auto-create"
+import { createStorageAccountForOAuth, ensureStorageAccountsForUser } from "@/lib/storage/auto-create"
 
 // Consolidated auth configuration with database sessions
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -102,21 +102,45 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           if (!existingAccount) {
             // Link the new provider to the existing user
-            await prisma.account.create({
-              data: {
-                userId: existingUser.id,
-                type: account.type,
-                provider: account.provider,
-                providerAccountId: account.providerAccountId,
-                access_token: account.access_token,
-                refresh_token: account.refresh_token,
-                expires_at: account.expires_at,
-                token_type: account.token_type,
-                scope: account.scope,
-                id_token: account.id_token,
-              },
-            })
-            // Note: StorageAccount will be created by the linkAccount event
+            try {
+              await prisma.account.create({
+                data: {
+                  userId: existingUser.id,
+                  type: account.type,
+                  provider: account.provider,
+                  providerAccountId: account.providerAccountId,
+                  access_token: account.access_token,
+                  refresh_token: account.refresh_token,
+                  expires_at: account.expires_at,
+                  token_type: account.token_type,
+                  scope: account.scope,
+                  id_token: account.id_token,
+                },
+              })
+              
+              // IMMEDIATE StorageAccount creation for account linking
+              // This ensures StorageAccount is created even if linkAccount event fails
+              if (["google", "dropbox"].includes(account.provider)) {
+                try {
+                  await createStorageAccountForOAuth(
+                    existingUser.id,
+                    {
+                      provider: account.provider,
+                      providerAccountId: account.providerAccountId
+                    },
+                    existingUser.email,
+                    existingUser.name
+                  )
+                  console.log(`✅ IMMEDIATE: Created StorageAccount during account linking for ${account.provider}`)
+                } catch (error) {
+                  console.error(`❌ IMMEDIATE: Failed to create StorageAccount during account linking:`, error)
+                  // Don't block signin - linkAccount event will retry
+                }
+              }
+            } catch (error) {
+              console.error("Failed to link account during signin:", error)
+              // Don't block signin if account linking fails
+            }
           }
         } else {
           isNewUser = true;
@@ -195,16 +219,54 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async linkAccount({ user, account }) {
       // This event fires when an OAuth account is linked to a user
       // This handles both new user creation and linking additional accounts
+      console.log(`🔗 LINK_ACCOUNT EVENT: userId=${user.id}, provider=${account?.provider}, providerAccountId=${account?.providerAccountId}`)
+      
       if (user.id && account && ["google", "dropbox"].includes(account.provider)) {
-        await createStorageAccountForOAuth(
-          user.id,
-          {
-            provider: account.provider,
-            providerAccountId: account.providerAccountId
-          },
-          user.email ?? null,
-          user.name ?? null
-        )
+        try {
+          const success = await createStorageAccountForOAuth(
+            user.id,
+            {
+              provider: account.provider,
+              providerAccountId: account.providerAccountId
+            },
+            user.email ?? null,
+            user.name ?? null
+          )
+          
+          if (success) {
+            console.log(`✅ LINK_ACCOUNT: Successfully created StorageAccount for ${account.provider}`)
+          } else {
+            console.log(`ℹ️ LINK_ACCOUNT: StorageAccount already exists or creation skipped for ${account.provider}`)
+          }
+        } catch (error) {
+          console.error(`❌ LINK_ACCOUNT: Failed to create StorageAccount for ${account.provider}:`, error)
+          // Don't throw error - we don't want to break OAuth flow
+          // The fallback mechanisms in API endpoints will catch this
+        }
+      } else {
+        console.log(`ℹ️ LINK_ACCOUNT: Skipped - not a storage provider or missing data`)
+      }
+    },
+    
+    // NEW: Additional event handlers for comprehensive coverage
+    async createUser({ user }) {
+      // This event fires when a new user is created
+      console.log(`👤 CREATE_USER EVENT: userId=${user.id}, email=${user.email}`)
+      
+      // Note: At this point, OAuth accounts haven't been created yet
+      // StorageAccount creation will happen in linkAccount event
+    },
+    
+    async updateUser({ user }) {
+      // This event fires when user data is updated
+      // We can use this to ensure StorageAccounts are still consistent
+      console.log(`🔄 UPDATE_USER EVENT: userId=${user.id}, email=${user.email}`)
+      
+      // Perform a quick consistency check (non-blocking)
+      if (user.id) {
+        ensureStorageAccountsForUser(user.id).catch(error => {
+          console.error(`❌ UPDATE_USER: Failed to ensure StorageAccounts for user ${user.id}:`, error)
+        })
       }
     },
   },

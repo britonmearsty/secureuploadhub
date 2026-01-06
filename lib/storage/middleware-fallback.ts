@@ -1,0 +1,169 @@
+/**
+ * Storage Account Middleware Fallback
+ * 
+ * This module provides middleware-level fallback mechanisms to ensure
+ * StorageAccount records exist before critical operations.
+ * 
+ * Used as a safety net in API routes that depend on storage accounts.
+ */
+
+import { auth } from "@/auth"
+import { ensureStorageAccountsForUser } from "./auto-create"
+
+/**
+ * Middleware function to ensure StorageAccounts exist for the current user
+ * Call this at the beginning of API routes that require storage accounts
+ */
+export async function ensureUserStorageAccounts(): Promise<{
+  userId: string | null
+  ensured: boolean
+  created: number
+  errors: string[]
+}> {
+  const session = await auth()
+  
+  if (!session?.user?.id) {
+    return {
+      userId: null,
+      ensured: false,
+      created: 0,
+      errors: ["No authenticated user"]
+    }
+  }
+
+  try {
+    const result = await ensureStorageAccountsForUser(session.user.id)
+    
+    if (result.created > 0) {
+      console.log(`🛡️ MIDDLEWARE_FALLBACK: Created ${result.created} missing StorageAccount(s) for user ${session.user.id}`)
+    }
+    
+    return {
+      userId: session.user.id,
+      ensured: true,
+      created: result.created,
+      errors: result.errors
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error(`❌ MIDDLEWARE_FALLBACK: Failed to ensure StorageAccounts for user ${session.user.id}:`, errorMessage)
+    
+    return {
+      userId: session.user.id,
+      ensured: false,
+      created: 0,
+      errors: [errorMessage]
+    }
+  }
+}
+
+/**
+ * Higher-order function that wraps API route handlers with storage account fallback
+ */
+export function withStorageAccountFallback<T extends any[], R>(
+  handler: (...args: T) => Promise<R>
+) {
+  return async (...args: T): Promise<R> => {
+    // Ensure storage accounts exist before executing the handler
+    const fallbackResult = await ensureUserStorageAccounts()
+    
+    if (fallbackResult.created > 0) {
+      console.log(`🛡️ WRAPPER: Auto-created ${fallbackResult.created} StorageAccount(s) before API execution`)
+    }
+    
+    if (fallbackResult.errors.length > 0) {
+      console.warn(`⚠️ WRAPPER: StorageAccount fallback had errors:`, fallbackResult.errors)
+    }
+    
+    // Execute the original handler
+    return handler(...args)
+  }
+}
+
+/**
+ * Specific fallback for portal-related operations
+ */
+export async function ensureStorageForPortalOperation(
+  userId: string,
+  requiredProvider?: string
+): Promise<{
+  success: boolean
+  created: number
+  hasRequiredProvider: boolean
+  errors: string[]
+}> {
+  try {
+    const result = await ensureStorageAccountsForUser(userId)
+    
+    let hasRequiredProvider = true
+    
+    if (requiredProvider) {
+      // Check if user has the required provider after ensuring accounts
+      const { PrismaClient } = require('@prisma/client')
+      const prisma = new PrismaClient()
+      
+      try {
+        const storageAccount = await prisma.storageAccount.findFirst({
+          where: {
+            userId,
+            provider: requiredProvider,
+            status: "ACTIVE"
+          }
+        })
+        
+        hasRequiredProvider = !!storageAccount
+      } finally {
+        await prisma.$disconnect()
+      }
+    }
+    
+    return {
+      success: true,
+      created: result.created,
+      hasRequiredProvider,
+      errors: result.errors
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    return {
+      success: false,
+      created: 0,
+      hasRequiredProvider: false,
+      errors: [errorMessage]
+    }
+  }
+}
+
+/**
+ * Background task to periodically check and fix storage account issues
+ * This can be called from a cron job or scheduled task
+ */
+export async function performBackgroundStorageAccountMaintenance(): Promise<{
+  usersProcessed: number
+  issuesFixed: number
+  errors: string[]
+}> {
+  console.log('🔧 BACKGROUND_MAINTENANCE: Starting storage account maintenance...')
+  
+  try {
+    const { ensureStorageAccountsForAllUsers } = await import('./auto-create')
+    const result = await ensureStorageAccountsForAllUsers()
+    
+    console.log(`✅ BACKGROUND_MAINTENANCE: Completed - processed ${result.usersProcessed} users, created ${result.accountsCreated} accounts, reactivated ${result.accountsReactivated} accounts`)
+    
+    return {
+      usersProcessed: result.usersProcessed,
+      issuesFixed: result.accountsCreated + result.accountsReactivated,
+      errors: result.errors
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error('❌ BACKGROUND_MAINTENANCE: Failed:', errorMessage)
+    
+    return {
+      usersProcessed: 0,
+      issuesFixed: 0,
+      errors: [errorMessage]
+    }
+  }
+}

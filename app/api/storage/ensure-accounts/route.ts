@@ -6,9 +6,7 @@ import { ensureStorageAccountsForUser, ensureStorageAccountsForAllUsers } from "
 /**
  * POST /api/storage/ensure-accounts - Ensure StorageAccount records exist for OAuth accounts
  * 
- * This endpoint can be used to:
- * 1. Fix missing StorageAccount records for the current user
- * 2. Fix missing StorageAccount records for all users (admin only)
+ * ENHANCED VERSION: Better error handling and comprehensive reporting
  */
 export async function POST(request: NextRequest) {
   try {
@@ -31,7 +29,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Admin access required" }, { status: 403 })
       }
 
-      // Process all users
+      // Process all users with enhanced reporting
       const result = await ensureStorageAccountsForAllUsers()
       
       return NextResponse.json({
@@ -39,16 +37,20 @@ export async function POST(request: NextRequest) {
         message: "Processed all users",
         usersProcessed: result.usersProcessed,
         accountsCreated: result.accountsCreated,
-        errors: result.errors
+        accountsReactivated: result.accountsReactivated,
+        errors: result.errors,
+        summary: result.summary
       })
     } else {
-      // Process current user only
+      // Process current user only with enhanced reporting
       const result = await ensureStorageAccountsForUser(session.user.id)
       
       return NextResponse.json({
         success: true,
         message: "Processed current user",
         accountsCreated: result.created,
+        accountsValidated: result.validated,
+        accountsReactivated: result.reactivated,
         errors: result.errors
       })
     }
