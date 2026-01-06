@@ -507,6 +507,103 @@ export async function deleteFromCloudStorage(
 }
 
 /**
+ * Delete a file from cloud storage and remove from database (cascade deletion)
+ * This function handles both cloud storage deletion and database cleanup
+ */
+export async function deleteFromCloudStorageWithCascade(
+  userId: string,
+  provider: StorageProvider,
+  fileId: string,
+  databaseFileId?: string
+): Promise<{ success: boolean; error?: string; deletedFromCloud: boolean; deletedFromDatabase: boolean }> {
+  let deletedFromCloud = false
+  let deletedFromDatabase = false
+  let cloudError: string | undefined
+  let dbError: string | undefined
+
+  // Step 1: Try to delete from cloud storage
+  try {
+    await deleteFromCloudStorage(userId, provider, fileId)
+    deletedFromCloud = true
+    console.log(`✅ Successfully deleted file ${fileId} from ${provider}`)
+  } catch (error) {
+    cloudError = error instanceof Error ? error.message : "Unknown cloud storage error"
+    console.error(`❌ Failed to delete file ${fileId} from ${provider}:`, cloudError)
+    
+    // If cloud deletion fails due to file not found, we still want to clean up the database
+    const isFileNotFound = cloudError.includes('404') || 
+                          cloudError.includes('not found') || 
+                          cloudError.includes('not_found') ||
+                          cloudError.includes('path_not_found')
+    
+    if (!isFileNotFound) {
+      // If it's not a "file not found" error, don't proceed with database deletion
+      return { 
+        success: false, 
+        error: cloudError, 
+        deletedFromCloud: false, 
+        deletedFromDatabase: false 
+      }
+    }
+    
+    console.log(`ℹ️ File ${fileId} not found in ${provider}, proceeding with database cleanup`)
+  }
+
+  // Step 2: Remove from database if we have the database file ID
+  if (databaseFileId) {
+    try {
+      await prisma.fileUpload.delete({
+        where: { id: databaseFileId }
+      })
+      deletedFromDatabase = true
+      console.log(`✅ Successfully deleted file record ${databaseFileId} from database`)
+    } catch (error) {
+      dbError = error instanceof Error ? error.message : "Unknown database error"
+      console.error(`❌ Failed to delete file record ${databaseFileId} from database:`, dbError)
+    }
+  } else {
+    // Try to find the file in database by storage file ID and delete it
+    try {
+      const fileRecord = await prisma.fileUpload.findFirst({
+        where: {
+          OR: [
+            { storageFileId: fileId },
+            { storagePath: fileId }
+          ],
+          portal: {
+            userId: userId
+          }
+        }
+      })
+
+      if (fileRecord) {
+        await prisma.fileUpload.delete({
+          where: { id: fileRecord.id }
+        })
+        deletedFromDatabase = true
+        console.log(`✅ Successfully found and deleted file record ${fileRecord.id} from database`)
+      } else {
+        console.log(`ℹ️ No database record found for storage file ID ${fileId}`)
+      }
+    } catch (error) {
+      dbError = error instanceof Error ? error.message : "Unknown database error"
+      console.error(`❌ Failed to find/delete file record for storage ID ${fileId}:`, dbError)
+    }
+  }
+
+  // Determine overall success
+  const success = deletedFromCloud || deletedFromDatabase
+  const errors = [cloudError, dbError].filter(Boolean)
+  
+  return {
+    success,
+    error: errors.length > 0 ? errors.join('; ') : undefined,
+    deletedFromCloud,
+    deletedFromDatabase
+  }
+}
+
+/**
  * Validate storage connection by testing if we can get account info
  * Only marks as invalid if there are clear OAuth/authentication errors
  */

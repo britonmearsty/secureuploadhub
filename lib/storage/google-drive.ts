@@ -391,6 +391,15 @@ export class GoogleDriveService implements CloudStorageService {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
+        
+        // Handle file not found as a special case
+        if (response.status === 404) {
+          return { 
+            success: true, // Consider it successful since the file is already gone
+            error: "File not found in Google Drive (already deleted)" 
+          }
+        }
+        
         return { 
           success: false, 
           error: errorData.error?.message || `Failed to delete file: ${response.statusText}` 

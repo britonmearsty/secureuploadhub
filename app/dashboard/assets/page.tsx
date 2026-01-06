@@ -24,14 +24,16 @@ export default async function AssetsPage() {
 
   const showConnectedFilesOnly = user?.showConnectedFilesOnly ?? true
 
-  // Build the query based on user preference
+  // FIXED: Always show all files, let the UI handle status display
+  // The previous logic was incorrectly filtering out files based on storage account status
+  // This caused Dropbox files to disappear when Google Drive was disconnected
   const whereClause: any = {
     portal: {
       userId: session.user.id,
     },
   }
 
-  // If user wants to see only connected files, filter by storage account status
+  // Only apply filtering if user specifically wants to hide disconnected files
   if (showConnectedFilesOnly) {
     whereClause.OR = [
       // Files without storage account (legacy files)

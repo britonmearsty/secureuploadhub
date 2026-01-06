@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
-import { deleteFromCloudStorage } from "@/lib/storage"
+import { deleteFromCloudStorage, deleteFromCloudStorageWithCascade } from "@/lib/storage"
 import { invalidateCache, getUserDashboardKey, getUserUploadsKey, getUserStatsKey } from "@/lib/cache"
 import { StorageAccountStatus } from "@prisma/client"
 
@@ -69,19 +69,45 @@ export async function DELETE(
       const storageId = upload.storageFileId || upload.storagePath
       if (storageId) {
         try {
-          await deleteFromCloudStorage(
+          const deleteResult = await deleteFromCloudStorageWithCascade(
             session.user.id,
             upload.storageProvider,
-            storageId
+            storageId,
+            upload.id // Pass the database ID for direct deletion
           )
+          
+          console.log('Cloud storage deletion result:', deleteResult)
+          
+          // If database was already deleted by cascade function, we're done
+          if (deleteResult.deletedFromDatabase) {
+            // Invalidate caches
+            await Promise.all([
+              invalidateCache(getUserDashboardKey(session.user.id)),
+              invalidateCache(getUserUploadsKey(session.user.id)),
+              invalidateCache(getUserStatsKey(session.user.id))
+            ])
+            
+            return NextResponse.json({ 
+              success: true,
+              message: deleteResult.deletedFromCloud 
+                ? "File deleted from cloud storage and database"
+                : "File removed from database (was already deleted from cloud storage)"
+            })
+          }
+          
+          // If cloud deletion failed but it's not a critical error, continue with DB deletion
+          if (!deleteResult.success && !deleteResult.error?.includes('not found')) {
+            console.error("Cloud storage deletion failed:", deleteResult.error)
+            // Continue with database deletion anyway - user initiated this action
+          }
         } catch (error) {
-          console.error("Error deleting from cloud storage:", error)
+          console.error("Error in cascade deletion:", error)
           // Continue with DB deletion even if cloud deletion fails
         }
       }
     }
 
-    // Delete from database
+    // Delete from database (fallback if cascade deletion didn't handle it)
     await prisma.fileUpload.delete({
       where: { id }
     })

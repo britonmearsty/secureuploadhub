@@ -164,15 +164,27 @@ export default function IntegrationsClient() {
                                 <div className="p-8">
                                     {activeTab === "available" && (
                                         <div className="space-y-8">
-                                            <div className="relative">
-                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                                <input
-                                                    type="text"
-                                                    placeholder="Search integrations..."
-                                                    value={searchQuery}
-                                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                                    className="w-full pl-10 pr-4 py-2.5 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-ring focus:bg-card transition-all outline-none text-foreground"
-                                                />
+                                            <div className="flex gap-3">
+                                                <div className="relative flex-1">
+                                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Search integrations..."
+                                                        value={searchQuery}
+                                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                                        className="w-full pl-10 pr-4 py-2.5 bg-muted border border-border rounded-xl focus:ring-2 focus:ring-ring focus:bg-card transition-all outline-none text-foreground"
+                                                    />
+                                                </div>
+                                                <button
+                                                    onClick={() => window.location.reload()}
+                                                    className="px-4 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 active:scale-95 transition-all flex items-center gap-2"
+                                                    title="Refresh to sync latest connections"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                    </svg>
+                                                    Refresh
+                                                </button>
                                             </div>
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
