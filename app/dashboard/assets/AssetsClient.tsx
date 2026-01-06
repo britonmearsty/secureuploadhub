@@ -141,6 +141,46 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
     const [fileToDelete, setFileToDelete] = useState<FileUpload | null>(null)
     const [isDeleting, setIsDeleting] = useState(false)
     const [uploads, setUploads] = useState(initialUploads)
+    const [autoSyncStatus, setAutoSyncStatus] = useState<Record<string, boolean>>({})
+
+    // Auto-sync function
+    const runAutoSync = async (provider: "google_drive" | "dropbox") => {
+        setAutoSyncStatus(prev => ({ ...prev, [provider]: true }))
+        
+        try {
+            const response = await fetch('/api/storage/auto-sync', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ provider })
+            })
+
+            const result = await response.json()
+            
+            if (result.success && result.deletedFiles > 0) {
+                // Refresh the uploads list by removing deleted files
+                setUploads(prev => prev.filter(upload => 
+                    upload.storageProvider !== provider || 
+                    !result.orphanedFileIds?.includes(upload.id)
+                ))
+                
+                showToast('success', 'Auto-Sync Complete', 
+                    `Removed ${result.deletedFiles} files that were deleted from ${provider.replace('_', ' ')}`
+                )
+            } else if (result.success) {
+                showToast('info', 'Auto-Sync Complete', 
+                    `All ${provider.replace('_', ' ')} files are in sync`
+                )
+            } else {
+                showToast('error', 'Auto-Sync Failed', result.error || 'Unknown error')
+            }
+        } catch (error) {
+            showToast('error', 'Auto-Sync Failed', 'Network error occurred')
+        } finally {
+            setAutoSyncStatus(prev => ({ ...prev, [provider]: false }))
+        }
+    }
 
     const handleDeleteRequest = (file: FileUpload) => {
         // Check storage account status before showing delete modal
@@ -303,6 +343,38 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                                 <RefreshCw className="w-4 h-4" />
                                 Refresh
                             </button>
+                            
+                            {/* Auto-sync buttons */}
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => runAutoSync("google_drive")}
+                                    disabled={autoSyncStatus.google_drive}
+                                    className="flex items-center gap-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm font-medium disabled:opacity-50"
+                                    title="Sync Google Drive files (remove files deleted from Drive)"
+                                >
+                                    {autoSyncStatus.google_drive ? (
+                                        <RefreshCw className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <div className="w-4 h-4 bg-white rounded-sm"></div>
+                                    )}
+                                    Sync Drive
+                                </button>
+                                
+                                <button
+                                    onClick={() => runAutoSync("dropbox")}
+                                    disabled={autoSyncStatus.dropbox}
+                                    className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium disabled:opacity-50"
+                                    title="Sync Dropbox files (remove files deleted from Dropbox)"
+                                >
+                                    {autoSyncStatus.dropbox ? (
+                                        <RefreshCw className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <div className="w-4 h-4 bg-white rounded-sm"></div>
+                                    )}
+                                    Sync Dropbox
+                                </button>
+                            </div>
+                            
                             <div className="flex items-center gap-2 p-1 bg-muted border border-border rounded-xl w-fit">
                                 <button
                                     onClick={() => setViewMode("grid")}

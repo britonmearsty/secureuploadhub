@@ -115,11 +115,49 @@ export async function GET(
         session.user.id,
         upload.storageProvider,
         storageId || ""
-      ).catch((err: any) => {
-        console.error("Catch in API route:", err)
+      ).catch(async (err: any) => {
+        console.error("Download failed:", err)
         
-        // If download fails and file has storage account, mark account as ERROR
-        if (upload.storageAccountId && upload.storageAccount) {
+        // Check if this is a "file not found" error (cascade deletion trigger)
+        const isFileNotFound = err.message?.includes('404') || 
+                              err.message?.includes('not found') || 
+                              err.message?.includes('not_found') ||
+                              err.message?.includes('path_not_found') ||
+                              err.message?.includes('File not found')
+        
+        if (isFileNotFound) {
+          console.log(`🗑️ File ${upload.fileName} not found in ${upload.storageProvider}, triggering cascade deletion`)
+          
+          try {
+            // CASCADE DELETE: Remove from database since file doesn't exist in cloud storage
+            await prisma.fileUpload.delete({
+              where: { id: upload.id }
+            })
+            
+            // Invalidate caches
+            if (session.user?.id) {
+              await Promise.all([
+                invalidateCache(getUserDashboardKey(session.user.id)),
+                invalidateCache(getUserUploadsKey(session.user.id)),
+                invalidateCache(getUserStatsKey(session.user.id))
+              ])
+            }
+            
+            console.log(`✅ Cascade deletion completed for file ${upload.fileName}`)
+            
+            // Throw a special error to indicate cascade deletion occurred
+            const cascadeError = new Error("This file was deleted from your cloud storage and has been automatically removed from the app.")
+            ;(cascadeError as any).cascadeDeleted = true
+            throw cascadeError
+            
+          } catch (deleteErr) {
+            console.error("Failed to cascade delete file:", deleteErr)
+            // Fall through to normal error handling
+          }
+        }
+        
+        // If not a file-not-found error, mark storage account as ERROR
+        if (!isFileNotFound && upload.storageAccountId && upload.storageAccount) {
           prisma.storageAccount.update({
             where: { id: upload.storageAccountId },
             data: { 
@@ -132,24 +170,14 @@ export async function GET(
           })
         }
         
-        return null
+        throw err // Re-throw the original error
       })
 
       if (!fileData) {
-        // Provide specific error messages based on context
-        if (upload.storageAccountId && upload.storageAccount) {
-          return NextResponse.json({
-            error: "Failed to download file from cloud storage",
-            details: `Unable to access file from your ${upload.storageAccount.provider} account. This may be due to expired tokens or the file being moved/deleted.`,
-            storageAccount: upload.storageAccount.email,
-            requiresReconnection: true
-          }, { status: 500 })
-        } else {
-          return NextResponse.json({
-            error: "Failed to download file from cloud storage",
-            details: "Check server logs for more information. This usually means the cloud provider rejected the request (e.g. invalid file ID or expired token)."
-          }, { status: 500 })
-        }
+        return NextResponse.json({
+          error: "Failed to download file from cloud storage",
+          details: "File could not be accessed from cloud storage."
+        }, { status: 500 })
       }
 
       // Update storage account last accessed time on successful download
@@ -172,8 +200,18 @@ export async function GET(
     }
 
     return NextResponse.json({ error: "Unknown storage provider" }, { status: 500 })
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error downloading file:", error)
+    
+    // Handle cascade deletion
+    if (error.cascadeDeleted) {
+      return NextResponse.json({
+        error: "File no longer exists",
+        details: error.message,
+        cascadeDeleted: true
+      }, { status: 410 }) // 410 Gone - resource no longer exists
+    }
+    
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
