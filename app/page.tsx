@@ -84,7 +84,7 @@ export default function LandingPage() {
 
           <FadeIn delay={0.2}>
             <p className="text-xl text-slate-500 mb-10 max-w-2xl mx-auto leading-relaxed">
-              Stop chasing email attachments. Create a branded upload portal in seconds and let clients send you files securely.
+              Professional file upload portal for accountants, lawyers, and consultants. Stop chasing email attachments - create a branded, secure upload portal in seconds.
             </p>
           </FadeIn>
 
@@ -117,6 +117,22 @@ export default function LandingPage() {
                 {['Acme Corp', 'Global Inc', 'NextGen', 'Stark Ind'].map((company, i) => (
                   <div key={i} className="text-lg font-bold text-slate-400 select-none block">{company}</div>
                 ))}
+              </div>
+              
+              {/* Security Trust Signals */}
+              <div className="flex items-center justify-center gap-8 mt-8 pt-6 border-t border-slate-100">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-green-600" />
+                  <span className="text-sm font-medium text-slate-600">AES-256 Encrypted</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Lock className="w-5 h-5 text-green-600" />
+                  <span className="text-sm font-medium text-slate-600">GDPR Compliant</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+                  <span className="text-sm font-medium text-slate-600">SOC 2 Type II</span>
+                </div>
               </div>
             </div>
           </FadeIn>

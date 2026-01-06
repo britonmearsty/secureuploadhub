@@ -3,35 +3,57 @@ import { ChevronDown } from 'lucide-react';
 
 const FAQ_ITEMS = [
   {
-    question: "Do clients need an account?",
-    answer: "No. Clients upload files without signing up."
+    question: "Is SecureUploadHub secure for sensitive documents?",
+    answer: "Yes, all files are encrypted with AES-256 encryption and stored securely in your connected cloud storage. We're GDPR compliant and follow SOC 2 Type II security standards."
   },
   {
-    question: "How large can files be?",
-    answer: "Large files are supported without email limits."
+    question: "Do clients need to create an account?",
+    answer: "No, clients can upload files directly through your branded portal without creating any accounts. This removes friction and makes the process seamless for your clients."
   },
   {
-    question: "Is it secure?",
-    answer: "Yes. All uploads are encrypted and access-controlled."
+    question: "How large can uploaded files be?",
+    answer: "Unlike email attachments, there are no size limits. Clients can upload large files, presentations, videos, and entire project folders without restrictions."
   },
   {
-    question: "Where are files stored?",
-    answer: "Files sync directly to your connected storage."
+    question: "Where are the uploaded files stored?",
+    answer: "Files are stored in your connected cloud storage (Google Drive, Dropbox, OneDrive) or in our secure servers. You maintain full control and ownership of all uploaded files."
   },
   {
-    question: "Can I brand the upload page?",
-    answer: "Yes. Logos, colors, and instructions are customizable."
+    question: "Can I customize the upload portal?",
+    answer: "Yes, you can fully brand your upload portal with your logo, colors, custom messages, and specific file type requirements to match your professional brand."
+  },
+  {
+    question: "How does SecureUploadHub compare to email attachments?",
+    answer: "SecureUploadHub eliminates email attachment size limits, provides better security, organizes files automatically, and gives you a professional branded experience instead of messy email threads."
   }
 ];
 
 export function FAQSection() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
+  // Structured data for FAQ
+  const faqSchema = {
+    "@type": "FAQPage",
+    "mainEntity": FAQ_ITEMS.map(faq => ({
+      "@type": "Question",
+      "name": faq.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.answer
+      }
+    }))
+  };
+
   return (
     <section id="faq" className="py-32 bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4 tracking-tight">Frequently asked questions</h2>
+          <p className="text-lg text-muted-foreground">Everything you need to know about secure file collection</p>
         </div>
 
         <div className="space-y-4">

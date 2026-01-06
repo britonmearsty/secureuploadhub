@@ -32,6 +32,7 @@ import {
     FileType,
 } from "lucide-react"
 import { getFileIcon, getFileIconColor } from "@/lib/file-icons"
+import Head from "next/head"
 
 interface Portal {
     id: string
