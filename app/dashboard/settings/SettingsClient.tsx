@@ -2,10 +2,11 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { User as UserIcon, Bell, Monitor, ChevronRight } from "lucide-react"
+import { User as UserIcon, Bell, Monitor, ChevronRight, Files } from "lucide-react"
 import ProfileSettings from "./components/ProfileSettings"
 import NotificationSettings from "./components/NotificationSettings"
 import ThemeSettings from "./components/ThemeSettings"
+import FileSettings from "./components/FileSettings"
 
 interface User {
     id: string
@@ -15,6 +16,7 @@ interface User {
     notificationEmail: boolean
     marketingEmail: boolean
     theme: string
+    showConnectedFilesOnly: boolean
 }
 
 interface SettingsClientProps {
@@ -26,6 +28,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
 
     const tabs = [
         { id: "profile", name: "Profile", icon: UserIcon, description: "Manage your personal information" },
+        { id: "files", name: "Files", icon: Files, description: "Control file visibility and display options" },
         { id: "notifications", name: "Notifications", icon: Bell, description: "Manage how we contact you" },
         { id: "appearance", name: "Appearance", icon: Monitor, description: "Customize the interface" },
     ]
@@ -94,6 +97,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                                 <div className="p-8">
                                     {/* We need to pass the user prop correctly to the components */}
                                     {activeTab === "profile" && <ProfileSettings user={user} />}
+                                    {activeTab === "files" && <FileSettings showConnectedFilesOnly={user.showConnectedFilesOnly} />}
                                     {activeTab === "notifications" && (
                                         <NotificationSettings
                                             notificationEmail={user.notificationEmail}

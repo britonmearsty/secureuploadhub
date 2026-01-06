@@ -71,21 +71,6 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
     const [searchQuery, setSearchQuery] = useState("")
     const [viewMode, setViewMode] = useState<"grid" | "list">("list")
     const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
-    const [isHealthChecking, setIsHealthChecking] = useState(false)
-    
-    // Run health check on component mount
-    useEffect(() => {
-        const runInitialHealthCheck = async () => {
-            try {
-                await fetch('/api/storage/health-check', { method: 'POST' })
-                // Silently update storage statuses without showing toast
-            } catch (error) {
-                // Silently fail - don't show error to user on page load
-            }
-        }
-        
-        runInitialHealthCheck()
-    }, [])
     
     // Modal states
     const [errorModal, setErrorModal] = useState<{ isOpen: boolean; title: string; message: string }>({
@@ -254,31 +239,6 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
         }
     }
 
-    const handleHealthCheck = async () => {
-        setIsHealthChecking(true)
-        try {
-            const res = await fetch('/api/storage/health-check', {
-                method: 'POST',
-            })
-            
-            if (res.ok) {
-                const data = await res.json()
-                
-                // Refresh the page data to show updated storage statuses
-                window.location.reload()
-                
-                showToast('success', 'Storage Health Check Complete', 
-                    `Checked ${data.checkedAccounts} storage account(s). Status updated for any disconnected accounts.`)
-            } else {
-                showToast('error', 'Health Check Failed', 'Failed to check storage account health.')
-            }
-        } catch (error) {
-            showToast('error', 'Health Check Error', 'Error checking storage account health.')
-        } finally {
-            setIsHealthChecking(false)
-        }
-    }
-
     // Update filtered uploads to use local state 'uploads' instead of prop 'initialUploads'
     const filteredUploads = uploads.filter(u =>
         u.fileName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -386,13 +346,12 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                         </div>
                         <div className="flex items-center gap-3">
                             <button
-                                onClick={handleHealthCheck}
-                                disabled={isHealthChecking}
-                                className="flex items-center gap-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-400 text-white rounded-lg transition-colors text-sm font-medium"
-                                title="Check storage account connectivity"
+                                onClick={() => window.location.reload()}
+                                className="flex items-center gap-2 px-3 py-2 bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground rounded-lg transition-colors text-sm font-medium border border-border"
+                                title="Refresh page to update file status"
                             >
-                                <RefreshCw className={`w-4 h-4 ${isHealthChecking ? 'animate-spin' : ''}`} />
-                                {isHealthChecking ? 'Checking...' : 'Health Check'}
+                                <RefreshCw className="w-4 h-4" />
+                                Refresh
                             </button>
                             <div className="flex items-center gap-2 p-1 bg-muted border border-border rounded-xl w-fit">
                                 <button

@@ -432,6 +432,7 @@ export async function deleteFromCloudStorage(
 
 /**
  * Validate storage connection by testing if we can get account info
+ * Only marks as invalid if there are clear OAuth/authentication errors
  */
 export async function validateStorageConnection(
   userId: string,
@@ -444,10 +445,11 @@ export async function validateStorageConnection(
     if (!tokenResult) {
       return { isValid: false, error: "No valid token available" }
     }
-
+    
     const service = getStorageService(provider)
     if (!service || !service.getAccountInfo) {
-      return { isValid: false, error: "Service not available" }
+      // Don't mark as invalid if service is not available - this might be a temporary issue
+      return { isValid: true }
     }
 
     // Test the connection by getting account info
@@ -455,7 +457,18 @@ export async function validateStorageConnection(
     return { isValid: true }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error"
-    return { isValid: false, error: errorMessage }
+    
+    // Only mark as invalid if it's clearly an OAuth/authentication error
+    if (errorMessage.includes('401') || 
+        errorMessage.includes('unauthorized') || 
+        errorMessage.includes('invalid_token') ||
+        errorMessage.includes('token_expired') ||
+        errorMessage.includes('access_denied')) {
+      return { isValid: false, error: errorMessage }
+    }
+    
+    // For other errors (network, temporary API issues, etc.), assume connection is still valid
+    return { isValid: true }
   }
 }
 

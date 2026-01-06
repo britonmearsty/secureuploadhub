@@ -52,6 +52,7 @@ model User {
   theme             String          @default("system")
   role              String          @default("user")
   status            String          @default("active")
+  showConnectedFilesOnly Boolean    @default(true)
   accounts          Account[]
   Authenticator     Authenticator[]
   payments          Payment[]

@@ -20,6 +20,7 @@ export async function updateSettings(data: {
   notificationEmail?: boolean
   marketingEmail?: boolean
   theme?: string
+  showConnectedFilesOnly?: boolean
 }) {
   const session = await auth()
   if (!session?.user?.id) throw new Error("Unauthorized")
@@ -30,4 +31,5 @@ export async function updateSettings(data: {
   })
 
   revalidatePath("/dashboard/settings")
+  revalidatePath("/dashboard/assets")
 }
