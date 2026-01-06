@@ -89,24 +89,32 @@ export default function ConnectedAccounts() {
         }
     }
     async function handleDisconnect(provider: string) {
+        console.log('🔍 FRONTEND: Starting disconnect for provider:', provider)
         setDisconnecting(provider)
         try {
+            console.log('🔍 FRONTEND: Calling disconnect API...')
             const res = await fetch(`/api/storage/disconnect`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ provider })
             })
 
+            console.log('🔍 FRONTEND: API response status:', res.status)
+            console.log('🔍 FRONTEND: API response ok:', res.ok)
+
             if (res.ok) {
                 const data = await res.json()
+                console.log('🔍 FRONTEND: Success response data:', data)
                 
                 // Show success message
                 showToast('success', 'Storage Disconnected', data.message)
                 
                 // Refresh accounts to show updated status
+                console.log('🔍 FRONTEND: Refreshing accounts...')
                 fetchAccounts()
             } else {
                 const errorData = await res.json()
+                console.log('🔍 FRONTEND: Error response data:', errorData)
                 if (errorData.cannotDisconnect) {
                     showToast('warning', 'Cannot Disconnect', errorData.error)
                 } else {
@@ -114,7 +122,7 @@ export default function ConnectedAccounts() {
                 }
             }
         } catch (error) {
-            console.error("Error disconnecting account:", error)
+            console.error("🔍 FRONTEND: Error disconnecting account:", error)
             showToast('error', 'Connection Error', 'An unexpected error occurred while disconnecting')
         } finally {
             setDisconnecting(null)
