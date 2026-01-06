@@ -265,7 +265,7 @@ export default function PublicUploadPage() {
     // Upload single file using chunked upload
     async function uploadSingleFile(uploadFile: UploadFile) {
         setFiles(prev => prev.map(f =>
-            f.id === uploadFile.id ? { ...f, status: "uploading" as const } : f
+            f.id === uploadFile.id ? { ...f, status: "uploading" as const, progress: 0 } : f
         ))
 
         try {
@@ -858,7 +858,9 @@ export default function PublicUploadPage() {
                                                         ? 'bg-green-50 border-green-200'
                                                         : uploadFile.status === 'error'
                                                             ? 'bg-red-50 border-red-200'
-                                                            : 'bg-white border-slate-200'
+                                                            : uploadFile.status === 'uploading'
+                                                                ? 'bg-blue-50 border-blue-200 shadow-sm'
+                                                                : 'bg-white border-slate-200'
                                                         }`}
                                                 >
                                                     {/* File Icon with Status */}
@@ -892,23 +894,65 @@ export default function PublicUploadPage() {
 
                                                         {/* Enhanced Progress Bar */}
                                                         {uploadFile.status === 'uploading' && (
-                                                            <div className="space-y-1">
+                                                            <motion.div 
+                                                                className="space-y-2"
+                                                                initial={{ opacity: 0, height: 0 }}
+                                                                animate={{ opacity: 1, height: "auto" }}
+                                                                transition={{ duration: 0.3 }}
+                                                            >
                                                                 <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
                                                                     <motion.div
-                                                                        className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
+                                                                        className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full relative"
                                                                         initial={{ width: 0 }}
                                                                         animate={{ width: `${uploadFile.progress}%` }}
                                                                         transition={{ 
                                                                             duration: 0.3,
                                                                             ease: "easeOut"
                                                                         }}
+                                                                    >
+                                                                        {/* Animated shimmer effect */}
+                                                                        <motion.div
+                                                                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                                                                            animate={{ x: ['-100%', '100%'] }}
+                                                                            transition={{ 
+                                                                                repeat: Infinity, 
+                                                                                duration: 1.5,
+                                                                                ease: "linear"
+                                                                            }}
+                                                                        />
+                                                                    </motion.div>
+                                                                </div>
+                                                                <div className="flex justify-between items-center">
+                                                                    <span className="text-xs text-blue-600 font-medium">
+                                                                        Uploading... {Math.round(uploadFile.progress)}%
+                                                                    </span>
+                                                                    <span className="text-xs font-bold text-slate-700">
+                                                                        {Math.round(uploadFile.progress)}%
+                                                                    </span>
+                                                                </div>
+                                                            </motion.div>
+                                                        )}
+
+                                                        {/* Show progress for pending files that will be uploaded */}
+                                                        {uploadFile.status === 'pending' && isUploading && (
+                                                            <motion.div 
+                                                                className="space-y-2"
+                                                                initial={{ opacity: 0 }}
+                                                                animate={{ opacity: 1 }}
+                                                                transition={{ duration: 0.3 }}
+                                                            >
+                                                                <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+                                                                    <motion.div 
+                                                                        className="h-full bg-slate-300 rounded-full"
+                                                                        animate={{ opacity: [0.5, 1, 0.5] }}
+                                                                        transition={{ repeat: Infinity, duration: 1.5 }}
                                                                     />
                                                                 </div>
                                                                 <div className="flex justify-between items-center">
-                                                                    <span className="text-xs text-slate-500">Uploading...</span>
-                                                                    <span className="text-xs font-medium text-slate-700">{uploadFile.progress}%</span>
+                                                                    <span className="text-xs text-slate-500">Waiting...</span>
+                                                                    <span className="text-xs text-slate-500">0%</span>
                                                                 </div>
-                                                            </div>
+                                                            </motion.div>
                                                         )}
 
                                                         {uploadFile.status === 'error' && uploadFile.error && (
@@ -928,9 +972,21 @@ export default function PublicUploadPage() {
                                                                 <X className="w-4 h-4 text-slate-400 hover:text-red-500" />
                                                             </button>
                                                         )}
+                                                        {uploadFile.status === "pending" && isUploading && (
+                                                            <div className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-lg">
+                                                                Queued
+                                                            </div>
+                                                        )}
                                                         {uploadFile.status === "uploading" && (
-                                                            <div className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-lg">
-                                                                Uploading
+                                                            <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-lg">
+                                                                <motion.div
+                                                                    animate={{ rotate: 360 }}
+                                                                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                                                    className="w-3 h-3"
+                                                                >
+                                                                    <Loader2 className="w-3 h-3" />
+                                                                </motion.div>
+                                                                {Math.round(uploadFile.progress)}%
                                                             </div>
                                                         )}
                                                         {uploadFile.status === "complete" && (
@@ -975,13 +1031,30 @@ export default function PublicUploadPage() {
                                 <div className="relative z-10 flex items-center justify-center gap-3">
                                     {isUploading ? (
                                         <>
-                                            <Loader2 className="w-5 h-5 animate-spin" />
-                                            <span>
-                                                Uploading {files.filter(f => f.status === 'complete').length} of {files.length} files...
-                                            </span>
-                                            <span className="font-bold">
-                                                {Math.round((files.filter(f => f.status === 'complete').length / files.length) * 100)}%
-                                            </span>
+                                            <motion.div
+                                                animate={{ rotate: 360 }}
+                                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                            >
+                                                <Loader2 className="w-5 h-5" />
+                                            </motion.div>
+                                            <div className="flex flex-col items-center gap-1">
+                                                <span className="text-sm">
+                                                    Uploading {files.filter(f => f.status === 'complete').length} of {files.length} files
+                                                </span>
+                                                <div className="flex items-center gap-2 text-xs opacity-90">
+                                                    <span>
+                                                        Overall: {Math.round((files.filter(f => f.status === 'complete').length / files.length) * 100)}%
+                                                    </span>
+                                                    {(() => {
+                                                        const currentUploading = files.find(f => f.status === 'uploading')
+                                                        return currentUploading ? (
+                                                            <span>
+                                                                • Current: {Math.round(currentUploading.progress)}%
+                                                            </span>
+                                                        ) : null
+                                                    })()}
+                                                </div>
+                                            </div>
                                         </>
                                     ) : (
                                         <>
