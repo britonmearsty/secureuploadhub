@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/next";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SecureUploadHub | The Professional Way to Collect Client Files",
-  description: "Professional secure file collection platform for accountants, lawyers, and consultants. Stop chasing email attachments - create a branded upload portal in seconds.",
+  title: "SecureUploadHub | Professional Client File Collection",
+  description: "Secure file collection platform for accountants, lawyers & consultants. Stop chasing email attachments - create branded upload portals in seconds.",
   keywords: "secure file upload, client file collection, professional file sharing, branded upload portal, accountant file collection, lawyer document portal, consultant file sharing, GDPR compliant file upload, secure file transfer, business file collection",
   authors: [{ name: "SecureUploadHub" }],
   creator: "SecureUploadHub",
@@ -34,8 +34,8 @@ export const metadata: Metadata = {
     canonical: "https://secureuploadhub.com",
   },
   openGraph: {
-    title: "SecureUploadHub | The Professional Way to Collect Client Files",
-    description: "Professional secure file collection platform for accountants, lawyers, and consultants. Stop chasing email attachments - create a branded upload portal in seconds.",
+    title: "SecureUploadHub | Professional Client File Collection",
+    description: "Secure file collection platform for accountants, lawyers & consultants. Stop chasing email attachments - create branded upload portals in seconds.",
     type: "website",
     url: "https://secureuploadhub.com",
     siteName: "SecureUploadHub",
@@ -51,8 +51,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "SecureUploadHub | The Professional Way to Collect Client Files",
-    description: "Professional secure file collection platform for accountants, lawyers, and consultants. Stop chasing email attachments - create a branded upload portal in seconds.",
+    title: "SecureUploadHub | Professional Client File Collection",
+    description: "Secure file collection platform for accountants, lawyers & consultants. Stop chasing email attachments - create branded upload portals in seconds.",
     images: ["https://8qlc5jjyt0.ufs.sh/f/0kCONu1c57kgA4GOd2yySTBbnfrYeasU8tq4QAowVDXME5Ic"],
     creator: "@secureuploadhub",
   },

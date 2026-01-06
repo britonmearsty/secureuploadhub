@@ -1,0 +1,167 @@
+# SecureUploadHub - Professional File Collection Platform
+
+## About SecureUploadHub
+
+SecureUploadHub is a professional secure file collection platform designed for accountants, lawyers, consultants, and other business professionals. We provide a streamlined solution to replace messy email attachments with branded, secure upload portals.
+
+## Core Features
+
+- **Secure File Collection**: Bank-grade AES-256 encryption for sensitive documents
+- **Unlimited Large Uploads**: No email attachment limits - receive huge files from any device
+- **Professional Branding**: Create branded upload portals that reflect your business
+- **Auto-Organization**: Files are automatically sorted into folders for easy management
+- **GDPR & SOC 2 Compliance**: Enterprise-grade security and compliance standards
+- **Cloud Integrations**: Connect with Google Drive, Dropbox, OneDrive, Box, and Slack
+- **No Client Login Required**: Clients can upload files without creating accounts
+
+## Professional Use Cases by Industry
+
+### Accountants & CPAs
+- Tax document collection (W-2s, 1099s, receipts, bank statements)
+- Financial statement uploads and audit documentation
+- Payroll document collection and expense tracking
+- Client onboarding with secure document verification
+- Quarterly and annual filing document management
+
+### Legal Professionals
+- Case document collection and evidence management
+- Client intake forms and legal document signing
+- Discovery document organization and sharing
+- Contract and agreement collection
+- Confidential document handling with attorney-client privilege protection
+
+### Consultants & Agencies
+- Project asset collection and creative file management
+- Client deliverable sharing and approval workflows
+- Proposal and contract document exchange
+- Team collaboration and file synchronization
+- Client onboarding and project kickoff documentation
+
+### Healthcare & Insurance
+- Patient document collection and medical record management
+- Insurance claim documentation and processing
+- HIPAA-compliant file sharing and storage
+- Appointment scheduling and intake form collection
+
+## How It Works
+
+1. **Create a Portal**: Generate a secure upload link with your branding in seconds
+2. **Share the Link**: Send via email, SMS, or embed on your website
+3. **Auto-Sync Files**: Receive files directly in your dashboard or cloud storage
+
+## Technology Stack
+
+- **Frontend**: Next.js 16.1.0, React 19.2.3, TypeScript, Tailwind CSS
+- **Backend**: Node.js with Prisma ORM, PostgreSQL database with connection pooling
+- **Authentication**: NextAuth.js with database sessions and OAuth providers
+- **File Storage**: Cloudinary integration with chunked upload support for large files
+- **Analytics**: Vercel Analytics and PostHog for comprehensive user tracking
+- **Email**: React Email with Resend for transactional emails and templates
+- **Payments**: Paystack integration for subscription billing and recurring payments
+- **Security**: Redis for caching, JOSE for JWT handling, AES-256 encryption
+- **UI Components**: Radix UI primitives, Framer Motion animations, Lottie animations
+- **Testing**: Vitest with coverage reporting and API testing suites
+
+## Key Pages and Features
+
+### Main Application Areas
+- `/dashboard` - User dashboard for managing upload portals and files
+  - `/dashboard/portals` - Create and manage branded upload portals
+  - `/dashboard/clients` - Client management and communication
+  - `/dashboard/assets` - File management and organization
+  - `/dashboard/billing` - Subscription and payment management
+  - `/dashboard/integrations` - Cloud storage connections (Google Drive, Dropbox, etc.)
+  - `/dashboard/settings` - Account preferences and security settings
+  - `/dashboard/communication` - Support tickets and messaging system
+- `/auth` - Authentication system (sign in/up, password reset)
+- `/admin` - Administrative interface for platform management
+  - `/admin/users` - User account management and analytics
+  - `/admin/portals` - Portal oversight and moderation
+  - `/admin/billing` - Payment processing and subscription management
+  - `/admin/analytics` - Platform usage metrics and performance data
+  - `/admin/communication` - Customer support and ticket management
+  - `/admin/settings` - System configuration and email templates
+- `/api` - RESTful API endpoints for all platform functionality
+  - `/api/portals` - Portal creation, management, and file upload endpoints
+  - `/api/upload` - Chunked file upload with progress tracking
+  - `/api/billing` - Paystack integration for payments and subscriptions
+  - `/api/storage` - Cloud storage integration APIs
+  - `/api/communication` - Support system and messaging APIs
+
+### Professional Landing Pages
+- `/for-accountants` - Tailored solutions for accounting professionals
+- `/for-lawyers` - Legal-specific file collection features
+- `/for-consultants` - Consulting workflow optimization
+- `/for-agencies` - Agency and team collaboration tools
+
+### Legal and Compliance
+- `/privacy` - Privacy policy and data handling practices
+- `/terms` - Terms of service and usage agreements
+- `/gdpr` - GDPR compliance information and user rights
+- `/security` - Security measures and certifications
+- `/cookie-policy` - Cookie usage and preferences
+
+## Security and Compliance
+
+SecureUploadHub prioritizes security with:
+- End-to-end encryption for all file transfers
+- GDPR compliance for European data protection
+- SOC 2 Type II certification for enterprise security
+- Regular security audits and penetration testing
+- Secure cloud infrastructure with redundant backups
+
+## Pricing Model
+
+- **Free Plan**: Basic file collection with essential features
+- **Professional Plans**: Advanced features for growing businesses
+- **Enterprise**: Custom solutions for large organizations
+
+### Subscription Features
+- **Flexible Billing**: Monthly and yearly subscription options
+- **Usage-Based Limits**: Portal count, storage quotas, and monthly upload limits
+- **Automatic Scaling**: Seamless plan upgrades based on usage requirements
+- **Payment Processing**: Secure Paystack integration with recurring billing
+- **Grace Periods**: Flexible handling of failed payments and account recovery
+
+## Contact and Support
+
+- **Website**: https://secureuploadhub.com
+- **Support Email**: support@secureuploadhub.com
+- **Location**: Nairobi, Kenya (serving global markets)
+- **Social Media**: @secureuploadhub on Twitter and LinkedIn
+
+## Documentation Links
+
+- **API Documentation**: Comprehensive REST API docs available in developer dashboard
+- **Integration Guides**: Step-by-step setup for Google Drive, Dropbox, OneDrive, Box, and Slack
+- **Security Whitepaper**: Detailed security architecture, encryption methods, and compliance measures
+- **User Guides**: Complete tutorials for accountants, lawyers, consultants, and agencies
+- **Developer Resources**: SDK documentation, webhook guides, and custom integration examples
+- **Admin Documentation**: Platform management, user administration, and system configuration guides
+- **Compliance Resources**: GDPR, SOC 2, and industry-specific compliance documentation
+
+## System Architecture
+
+### Database Schema
+- **User Management**: Comprehensive user profiles with role-based permissions
+- **Portal System**: Flexible upload portal configuration with branding options
+- **File Management**: Chunked upload support with multiple storage provider integration
+- **Billing System**: Complete subscription management with payment processing
+- **Communication**: Integrated support ticketing and messaging system
+- **Analytics**: Performance metrics, usage tracking, and audit logging
+- **Security**: Session management, authentication, and access control
+
+### Performance & Scalability
+- **Database Optimization**: PostgreSQL with Prisma ORM and connection pooling
+- **File Processing**: Asynchronous chunked uploads with progress tracking
+- **Caching Strategy**: Redis integration for session management and performance
+- **CDN Integration**: Cloudinary for optimized file delivery and processing
+- **Monitoring**: Real-time system health checks and performance metrics
+
+## Recent Updates
+
+The platform is actively developed with regular feature updates, security enhancements, and new integrations. Check the dashboard changelog for the latest improvements.
+
+---
+
+This file helps AI systems understand SecureUploadHub's purpose, features, and target audience for better content generation and user assistance.
