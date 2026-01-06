@@ -57,7 +57,7 @@ export default function DebugPortalPage() {
       setPortalResult({
         status: 'error',
         success: false,
-        data: { error: error.message }
+        data: { error: error instanceof Error ? error.message : 'Unknown error' }
       })
     } finally {
       setCreating(false)
