@@ -49,6 +49,22 @@ export async function POST(request: Request) {
       // Update storage accounts to DISCONNECTED (but keep OAuth account for login)
       const storageProvider = provider === "google" ? "google_drive" : "dropbox"
       console.log('🔍 STORAGE_DISCONNECT: Updating storage provider:', storageProvider)
+      console.log('🔍 STORAGE_DISCONNECT: User ID:', session.user.id)
+      
+      // First, let's see what storage accounts exist for this user
+      const existingAccounts = await tx.storageAccount.findMany({
+        where: {
+          userId: session.user.id
+        },
+        select: {
+          id: true,
+          provider: true,
+          status: true,
+          providerAccountId: true
+        }
+      })
+      
+      console.log('🔍 STORAGE_DISCONNECT: Existing storage accounts:', existingAccounts)
       
       const storageUpdateResult = await tx.storageAccount.updateMany({
         where: {
@@ -63,6 +79,22 @@ export async function POST(request: Request) {
       })
       
       console.log('🔍 STORAGE_DISCONNECT: Storage accounts updated:', storageUpdateResult.count)
+      
+      // Let's also check what the accounts look like after update
+      const updatedAccounts = await tx.storageAccount.findMany({
+        where: {
+          userId: session.user.id,
+          provider: storageProvider
+        },
+        select: {
+          id: true,
+          provider: true,
+          status: true,
+          lastError: true
+        }
+      })
+      
+      console.log('🔍 STORAGE_DISCONNECT: Accounts after update:', updatedAccounts)
 
       // Check for affected portals that might become non-functional
       const affectedPortals = await tx.uploadPortal.findMany({
@@ -81,7 +113,8 @@ export async function POST(request: Request) {
 
       return {
         updatedStorageAccounts: storageUpdateResult.count,
-        affectedPortals
+        affectedPortals,
+        updatedAccounts
       }
     })
 
