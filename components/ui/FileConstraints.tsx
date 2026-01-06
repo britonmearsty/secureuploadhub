@@ -19,7 +19,9 @@ const FILE_TYPE_PRESETS = [
   { id: "archives", label: "Archives", types: ["application/zip", "application/x-rar-compressed", "application/x-7z-compressed"], icon: "🗜️" },
   { id: "videos", label: "Videos", types: ["video/*"], icon: "🎥" },
   { id: "audio", label: "Audio", types: ["audio/*"], icon: "🎵" },
-  { id: "code", label: "Code Files", types: ["text/javascript", "text/typescript", "text/css", "text/html", "application/json"], icon: "💻" }
+  { id: "code", label: "Code Files", types: ["text/javascript", "text/typescript", "text/css", "text/html", "application/json", "text/x-python", "text/x-java-source", "text/x-c", "text/x-c++", "text/x-csharp", "text/x-php", "text/x-ruby", "text/x-go", "text/x-rust"], icon: "💻" },
+  { id: "text", label: "Text & Markdown", types: ["text/plain", "text/markdown", "text/xml", "text/yaml", "text/x-yaml"], icon: "📝" },
+  { id: "config", label: "Config Files", types: ["application/toml", "text/x-ini", "text/x-properties", "text/x-dockerfile"], icon: "⚙️" }
 ]
 
 const FILE_SIZE_PRESETS = [
