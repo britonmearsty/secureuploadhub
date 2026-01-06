@@ -324,6 +324,14 @@ export class DropboxService implements CloudStorageService {
         let errorMessage = errorData.error_summary ||
           `Failed to delete file: ${response.status} ${response.statusText}`
 
+        // Handle file not found as a special case
+        if (errorData.error?.[".tag"] === "path_not_found" || response.status === 409) {
+          return { 
+            success: true, // Consider it successful since the file is already gone
+            error: "File not found in Dropbox (already deleted)" 
+          }
+        }
+
         if (errorMessage.includes("missing_scope")) {
           errorMessage = "Your Dropbox connection is missing required permissions. Please reconnect your account."
         }
