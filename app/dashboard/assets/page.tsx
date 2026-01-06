@@ -32,12 +32,22 @@ export default async function AssetsPage() {
       clientEmail: true,
       storageProvider: true,
       storagePath: true,
+      storageAccountId: true,
       createdAt: true,
       portal: {
         select: {
           name: true,
           slug: true,
           primaryColor: true,
+        },
+      },
+      storageAccount: {
+        select: {
+          id: true,
+          status: true,
+          provider: true,
+          displayName: true,
+          email: true,
         },
       },
     },
