@@ -304,27 +304,17 @@ export async function ensureStorageAccountsForUser(userId: string): Promise<{
           }
         }
       } else if (storageAccount.status === StorageAccountStatus.DISCONNECTED) {
-        // StorageAccount is disconnected but OAuth exists - try to reactivate
-        try {
-          await prisma.storageAccount.update({
-            where: { id: storageAccount.id },
-            data: {
-              status: StorageAccountStatus.ACTIVE,
-              lastError: null,
-              lastAccessedAt: new Date(),
-              updatedAt: new Date()
-            }
-          })
-          
-          result.reactivated++
-          logStorageOperation('ACCOUNT_REACTIVATED', {
-            userId,
-            storageAccountId: storageAccount.id,
-            provider: storageAccount.provider
-          })
-        } catch (error) {
-          result.errors.push(`Failed to reactivate account: ${error instanceof Error ? error.message : 'Unknown error'}`)
-        }
+        // StorageAccount is disconnected but OAuth exists
+        // IMPORTANT: Don't automatically reactivate DISCONNECTED accounts
+        // Users may have intentionally disconnected them, so respect their choice
+        logStorageOperation('RESPECTING_USER_DISCONNECT', {
+          userId,
+          storageAccountId: storageAccount.id,
+          provider: storageAccount.provider,
+          message: "Account is DISCONNECTED but OAuth exists - respecting user's disconnect choice"
+        })
+        
+        // Don't reactivate - let users manually reconnect if they want to
       }
     }
 
