@@ -62,7 +62,7 @@ export default function IntegrationsClient() {
                 const res = await fetch("/api/storage/accounts")
                 if (res.ok) {
                     const data = await res.json()
-                    const connected = data.filter((a: any) => a.isConnected).map((a: any) => a.provider)
+                    const connected = data.accounts.filter((a: any) => a.isConnected).map((a: any) => a.provider)
                     setConnectedAccounts(connected)
                 }
             } catch (error) {

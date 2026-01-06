@@ -51,7 +51,7 @@ export default function ConnectedAccounts() {
             const res = await fetch("/api/storage/accounts")
             if (res.ok) {
                 const data = await res.json()
-                setAccounts(data)
+                setAccounts(data.accounts)
             }
         } catch (error) {
             console.error("Error fetching accounts:", error)

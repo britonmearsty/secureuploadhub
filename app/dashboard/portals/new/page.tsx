@@ -195,7 +195,7 @@ export default function CreatePortalPage() {
       const res = await fetch("/api/storage/accounts")
       if (res.ok) {
         const data = await res.json()
-        setAccounts(data.filter((a: ConnectedAccount) => a.isConnected))
+        setAccounts(data.accounts.filter((a: ConnectedAccount) => a.isConnected))
       }
     } catch (error) {
       console.error("Error fetching accounts:", error)
