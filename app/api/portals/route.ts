@@ -97,21 +97,6 @@ export async function POST(request: NextRequest) {
       ? allowedFileTypes.filter((t) => typeof t === "string" && t.length > 0)
       : []
 
-    // If using cloud storage, verify user has connected account and validate storage account selection
-    const oauthProvider = provider === "google_drive" ? "google" : "dropbox"
-    const account = await prisma.account.findFirst({
-      where: {
-        userId: session.user.id,
-        provider: oauthProvider,
-      },
-    })
-
-    if (!account) {
-      return NextResponse.json({
-        error: `Please connect your ${provider === "google_drive" ? "Google" : "Dropbox"} account first`
-      }, { status: 400 })
-    }
-
     // STORAGE ACCOUNT VALIDATION - Validate portal creation with storage account
     const userStorageAccounts = await prisma.storageAccount.findMany({
       where: { userId: session.user.id },
