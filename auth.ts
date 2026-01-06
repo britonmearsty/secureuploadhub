@@ -6,6 +6,7 @@ import prisma from "@/lib/prisma"
 import { getPostHogClient } from "@/lib/posthog-server"
 import { sendSignInNotification, sendWelcomeEmail } from "@/lib/email-templates"
 import { headers } from "next/headers"
+import { createStorageAccountForOAuth } from "@/lib/storage/auto-create"
 
 // Consolidated auth configuration with database sessions
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -115,6 +116,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 id_token: account.id_token,
               },
             })
+            // Note: StorageAccount will be created by the linkAccount event
           }
         } else {
           isNewUser = true;
@@ -188,6 +190,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         } catch (error) {
           console.error("Failed to send sign-in notification:", error);
         }
+      }
+    },
+    async linkAccount({ user, account }) {
+      // This event fires when an OAuth account is linked to a user
+      // This handles both new user creation and linking additional accounts
+      if (user.id && account && ["google", "dropbox"].includes(account.provider)) {
+        await createStorageAccountForOAuth(
+          user.id,
+          {
+            provider: account.provider,
+            providerAccountId: account.providerAccountId
+          },
+          user.email ?? null,
+          user.name ?? null
+        )
       }
     },
   },

@@ -5,6 +5,7 @@ import { hashPassword } from "@/lib/password"
 import { invalidateCache, getUserDashboardKey, getUserPortalsKey, getUserUploadsKey, getUserStatsKey } from "@/lib/cache"
 import { assertPortalLimit } from "@/lib/billing"
 import { validatePortalCreation } from "@/lib/storage/portal-locking"
+import { ensureStorageAccountsForUser } from "@/lib/storage/auto-create"
 import { StorageAccountStatus } from "@prisma/client"
 
 // GET /api/portals - List all portals for the current user
@@ -98,6 +99,17 @@ export async function POST(request: NextRequest) {
       : []
 
     // STORAGE ACCOUNT VALIDATION - Validate portal creation with storage account
+    // First, ensure StorageAccount records exist for all OAuth accounts (fallback mechanism)
+    try {
+      const { created } = await ensureStorageAccountsForUser(session.user.id)
+      if (created > 0) {
+        console.log(`✅ Created ${created} missing StorageAccount(s) for user ${session.user.id}`)
+      }
+    } catch (error) {
+      console.error("Failed to ensure StorageAccounts during portal creation:", error)
+      // Continue with portal creation even if this fails
+    }
+
     const userStorageAccounts = await prisma.storageAccount.findMany({
       where: { userId: session.user.id },
       select: { id: true, provider: true, status: true, userId: true }
