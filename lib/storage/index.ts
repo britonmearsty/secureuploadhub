@@ -21,7 +21,7 @@ async function updateStorageAccountStatusOnTokenFailure(
     const storageAccounts = await prisma.storageAccount.findMany({
       where: {
         userId,
-        provider: provider === "google" ? "GOOGLE_DRIVE" : "DROPBOX",
+        provider: provider === "google" ? "google_drive" : "dropbox",
         status: { not: StorageAccountStatus.DISCONNECTED } // Only update if not already disconnected
       }
     })
@@ -138,6 +138,8 @@ export async function getValidAccessToken(
  * This checks both OAuth accounts AND storage account status
  */
 export async function getConnectedAccounts(userId: string) {
+  console.log('🔍 getConnectedAccounts: Starting for userId:', userId)
+  
   // Get OAuth accounts (for authentication)
   const oauthAccounts = await prisma.account.findMany({
     where: {
@@ -151,12 +153,14 @@ export async function getConnectedAccounts(userId: string) {
       expires_at: true,
     },
   })
+  
+  console.log('🔍 getConnectedAccounts: Found OAuth accounts:', oauthAccounts.length)
 
   // Get storage accounts (for file storage)
   const storageAccounts = await prisma.storageAccount.findMany({
     where: {
       userId,
-      provider: { in: ["GOOGLE_DRIVE", "DROPBOX"] }
+      provider: { in: ["google_drive", "dropbox"] }
     },
     select: {
       id: true,
@@ -167,6 +171,8 @@ export async function getConnectedAccounts(userId: string) {
       displayName: true
     }
   })
+  
+  console.log('🔍 getConnectedAccounts: Found storage accounts:', storageAccounts.length)
 
   const result: Array<{
     provider: "google" | "dropbox"
@@ -181,15 +187,25 @@ export async function getConnectedAccounts(userId: string) {
   }> = []
 
   for (const oauthAccount of oauthAccounts) {
-    if (!oauthAccount.access_token) continue
+    console.log(`🔍 getConnectedAccounts: Processing ${oauthAccount.provider} account`)
+    
+    if (!oauthAccount.access_token) {
+      console.log(`⚠️ getConnectedAccounts: No access token for ${oauthAccount.provider}`)
+      continue
+    }
 
-    const storageProvider = oauthAccount.provider === "google" ? "GOOGLE_DRIVE" : "DROPBOX"
+    const storageProvider = oauthAccount.provider === "google" ? "google_drive" : "dropbox"
     
     // Find corresponding storage account
     const storageAccount = storageAccounts.find(sa => 
       sa.provider === storageProvider && 
       sa.providerAccountId === oauthAccount.providerAccountId
     )
+    
+    console.log(`🔍 getConnectedAccounts: Storage account found for ${oauthAccount.provider}:`, !!storageAccount)
+    if (storageAccount) {
+      console.log(`🔍 getConnectedAccounts: Storage status: ${storageAccount.status}`)
+    }
 
     const service = getStorageService(oauthAccount.provider === "google" ? "google_drive" : "dropbox")
 
@@ -199,24 +215,41 @@ export async function getConnectedAccounts(userId: string) {
 
     if (service) {
       try {
+        console.log(`🔍 getConnectedAccounts: Testing token for ${oauthAccount.provider}`)
         const tokenResult = await getValidAccessToken(userId, oauthAccount.provider as "google" | "dropbox")
         if (tokenResult) {
+          console.log(`✅ getConnectedAccounts: Valid token for ${oauthAccount.provider}`)
           if (service.getAccountInfo) {
-            const info = await service.getAccountInfo(tokenResult.accessToken)
-            email = info.email
-            name = info.name
+            try {
+              const info = await service.getAccountInfo(tokenResult.accessToken)
+              email = info.email
+              name = info.name
+              console.log(`✅ getConnectedAccounts: Got account info for ${oauthAccount.provider}`)
+            } catch (infoError) {
+              console.log(`⚠️ getConnectedAccounts: Failed to get account info for ${oauthAccount.provider}:`, infoError)
+            }
           }
         } else {
+          console.log(`❌ getConnectedAccounts: No valid token for ${oauthAccount.provider}`)
           hasValidOAuth = false
         }
-      } catch {
+      } catch (tokenError) {
+        console.log(`❌ getConnectedAccounts: Token error for ${oauthAccount.provider}:`, tokenError)
         hasValidOAuth = false
       }
+    } else {
+      console.log(`❌ getConnectedAccounts: No service found for ${oauthAccount.provider}`)
     }
 
     // FIXED LOGIC: Separate OAuth status from storage status
     const storageIsActive = storageAccount?.status === "ACTIVE"
     const isConnected = hasValidOAuth && storageIsActive
+    
+    console.log(`🔍 getConnectedAccounts: Final status for ${oauthAccount.provider}:`, {
+      hasValidOAuth,
+      storageIsActive,
+      isConnected
+    })
 
     result.push({
       provider: oauthAccount.provider as "google" | "dropbox",
@@ -230,6 +263,13 @@ export async function getConnectedAccounts(userId: string) {
       hasValidOAuth // NEW: Shows if OAuth itself is working
     })
   }
+
+  console.log('🔍 getConnectedAccounts: Final result:', result.map(r => ({
+    provider: r.provider,
+    isConnected: r.isConnected,
+    hasValidOAuth: r.hasValidOAuth,
+    storageStatus: r.storageStatus
+  })))
 
   return result
 }

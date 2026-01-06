@@ -88,13 +88,11 @@ export async function createStorageAccountForOAuth(
       // Use transaction to prevent race conditions
       return await prisma.$transaction(async (tx) => {
         // Check if StorageAccount already exists (with proper unique constraint)
-        const existingStorageAccount = await tx.storageAccount.findUnique({
+        const existingStorageAccount = await tx.storageAccount.findFirst({
           where: {
-            userId_providerAccountId_provider: {
-              userId,
-              providerAccountId: account.providerAccountId,
-              provider: storageProvider
-            }
+            userId,
+            providerAccountId: account.providerAccountId,
+            provider: storageProvider
           }
         })
 
