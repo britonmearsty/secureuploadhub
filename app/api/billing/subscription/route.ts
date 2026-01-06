@@ -180,23 +180,39 @@ export async function POST(request: NextRequest) {
         // No existing authorization - need to redirect user to payment
         // Create a payment initialization for the first payment
         const paystack = await import('@/lib/billing').then(m => m.getPaystack());
+        const reference = `sub_${subscription.id}_${Date.now()}`; // Unique reference
         
         const initializeResponse = await (paystack as any).transaction.initialize({
           email: user.email,
           amount: convertToPaystackSubunit(plan.price, paystackCurrency),
           currency: paystackCurrency,
-          callback_url: `${PAYSTACK_CONFIG.baseUrl}/dashboard?subscription_setup=success`,
+          reference: reference,
+          callback_url: `${PAYSTACK_CONFIG.baseUrl}/dashboard/billing?status=success&subscription_id=${subscription.id}`,
           metadata: {
             subscription_id: subscription.id,
             plan_id: plan.id,
             user_id: session.user.id,
-            type: 'subscription_setup'
+            type: 'subscription_setup',
+            user_email: user.email
           }
         });
 
         if (!initializeResponse.status) {
           throw new Error(`Failed to initialize payment: ${initializeResponse.message}`);
         }
+
+        // Create a pending payment record so webhook can find it
+        await prisma.payment.create({
+          data: {
+            subscriptionId: subscription.id,
+            userId: session.user.id,
+            amount: plan.price,
+            currency: plan.currency,
+            status: "pending",
+            providerPaymentRef: reference,
+            description: `Initial payment for ${plan.name}`,
+          }
+        });
 
         return NextResponse.json({
           subscription: subscription,

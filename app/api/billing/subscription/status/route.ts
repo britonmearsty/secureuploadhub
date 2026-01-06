@@ -1,14 +1,15 @@
-import { auth } from "@/auth"
 import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
-import { SUBSCRIPTION_STATUS, PAYMENT_STATUS } from "@/lib/billing-constants"
 import { getPaystackSubscription } from "@/lib/paystack-subscription"
+import { SUBSCRIPTION_STATUS, mapPaystackSubscriptionStatus } from "@/lib/billing-constants"
+import { createAuditLog, AUDIT_ACTIONS } from "@/lib/audit-log"
 
 export const dynamic = 'force-dynamic'
 
 /**
- * Check and update subscription status by verifying with Paystack
- * This endpoint can be used as a fallback when webhooks fail
+ * Check and update subscription status from Paystack
+ * This endpoint can be called to manually sync subscription status
  */
 export async function POST(request: NextRequest) {
   try {
@@ -23,36 +24,34 @@ export async function POST(request: NextRequest) {
         userId: session.user.id,
         status: { in: ["incomplete", "active", "past_due"] }
       },
-      include: {
-        plan: true,
-        payments: {
-          orderBy: { createdAt: "desc" },
-          take: 1
-        }
-      }
+      include: { plan: true },
+      orderBy: { createdAt: 'desc' }
     })
 
     if (!subscription) {
-      return NextResponse.json({ error: "No subscription found" }, { status: 404 })
+      return NextResponse.json({ 
+        error: "No subscription found" 
+      }, { status: 404 })
     }
 
     let updated = false
-    let statusMessage = "Subscription status is up to date"
+    let message = "Subscription status is up to date"
 
-    // If subscription is incomplete, check if there's a recent successful payment
-    if (subscription.status === "incomplete") {
-      const recentSuccessfulPayment = await prisma.payment.findFirst({
+    // If subscription is incomplete, check for recent successful payments
+    if (subscription.status === 'incomplete') {
+      const recentPayment = await prisma.payment.findFirst({
         where: {
           subscriptionId: subscription.id,
-          status: PAYMENT_STATUS.SUCCEEDED,
+          status: 'succeeded',
           createdAt: {
             gte: new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
           }
-        }
+        },
+        orderBy: { createdAt: 'desc' }
       })
 
-      if (recentSuccessfulPayment) {
-        // Payment succeeded but subscription is still incomplete - update it
+      if (recentPayment) {
+        // Activate subscription based on successful payment
         const now = new Date()
         const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000) // 30 days
 
@@ -77,48 +76,46 @@ export async function POST(request: NextRequest) {
               action: "activated",
               oldValue: JSON.stringify({ status: subscription.status }),
               newValue: JSON.stringify({ status: SUBSCRIPTION_STATUS.ACTIVE }),
-              reason: "Manual status sync - payment found",
+              reason: "Activated based on successful payment found",
             }
           })
         })
 
+        await createAuditLog({
+          userId: session.user.id,
+          action: AUDIT_ACTIONS.SUBSCRIPTION_UPDATED,
+          resource: "subscription",
+          resourceId: subscription.id,
+          details: { 
+            action: "manual_activation", 
+            paymentId: recentPayment.id,
+            previousStatus: subscription.status 
+          }
+        })
+
         updated = true
-        statusMessage = "Subscription activated - payment was successful"
+        message = "Subscription activated based on successful payment"
       }
     }
 
-    // If subscription has a Paystack subscription ID, verify status with Paystack
+    // If subscription has Paystack subscription ID, check Paystack status
     if (subscription.providerSubscriptionId && !updated) {
       try {
         const paystackSub = await getPaystackSubscription(subscription.providerSubscriptionId)
         
         if (paystackSub) {
-          let shouldUpdate = false
-          let newStatus = subscription.status
-
-          // Map Paystack status to internal status
-          if (paystackSub.status === "active" && subscription.status !== SUBSCRIPTION_STATUS.ACTIVE) {
-            newStatus = SUBSCRIPTION_STATUS.ACTIVE
-            shouldUpdate = true
-          } else if (paystackSub.status === "cancelled" && subscription.status !== SUBSCRIPTION_STATUS.CANCELED) {
-            newStatus = SUBSCRIPTION_STATUS.CANCELED
-            shouldUpdate = true
-          }
-
-          if (shouldUpdate) {
-            const now = new Date()
-            const nextPaymentDate = paystackSub.next_payment_date ? new Date(paystackSub.next_payment_date) : null
-
+          const paystackStatus = mapPaystackSubscriptionStatus(paystackSub.status)
+          
+          if (paystackStatus !== subscription.status) {
             await prisma.$transaction(async (tx) => {
               await tx.subscription.update({
                 where: { id: subscription.id },
                 data: {
-                  status: newStatus,
-                  ...(nextPaymentDate && { nextBillingDate: nextPaymentDate }),
-                  ...(newStatus === SUBSCRIPTION_STATUS.ACTIVE && {
+                  status: paystackStatus,
+                  ...(paystackStatus === SUBSCRIPTION_STATUS.ACTIVE && {
+                    cancelAtPeriodEnd: false,
                     retryCount: 0,
                     gracePeriodEnd: null,
-                    lastPaymentAttempt: now,
                   })
                 }
               })
@@ -128,14 +125,27 @@ export async function POST(request: NextRequest) {
                   subscriptionId: subscription.id,
                   action: "status_changed",
                   oldValue: JSON.stringify({ status: subscription.status }),
-                  newValue: JSON.stringify({ status: newStatus }),
-                  reason: "Manual status sync with Paystack",
+                  newValue: JSON.stringify({ status: paystackStatus }),
+                  reason: "Status synced from Paystack",
                 }
               })
             })
 
+            await createAuditLog({
+              userId: session.user.id,
+              action: AUDIT_ACTIONS.SUBSCRIPTION_UPDATED,
+              resource: "subscription",
+              resourceId: subscription.id,
+              details: { 
+                action: "status_sync", 
+                oldStatus: subscription.status,
+                newStatus: paystackStatus,
+                paystackSubscriptionId: subscription.providerSubscriptionId
+              }
+            })
+
             updated = true
-            statusMessage = `Subscription status updated to ${newStatus} based on Paystack`
+            message = `Subscription status updated from ${subscription.status} to ${paystackStatus}`
           }
         }
       } catch (error) {
@@ -144,28 +154,73 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Fetch updated subscription
-    const updatedSubscription = await prisma.subscription.findUnique({
-      where: { id: subscription.id },
-      include: {
-        plan: true,
-        payments: {
-          orderBy: { createdAt: "desc" },
-          take: 5
-        }
-      }
-    })
-
     return NextResponse.json({
-      subscription: updatedSubscription,
       updated,
-      message: statusMessage
+      message,
+      subscription: {
+        id: subscription.id,
+        status: updated ? (subscription.status === 'incomplete' ? SUBSCRIPTION_STATUS.ACTIVE : subscription.status) : subscription.status,
+        plan: subscription.plan
+      }
     })
 
   } catch (error) {
     console.error("Error checking subscription status:", error)
     return NextResponse.json(
       { error: "Failed to check subscription status" },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * Get current subscription status
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const subscription = await prisma.subscription.findFirst({
+      where: {
+        userId: session.user.id,
+        status: { in: ["incomplete", "active", "past_due", "canceled"] }
+      },
+      include: { 
+        plan: true,
+        payments: {
+          orderBy: { createdAt: 'desc' },
+          take: 1
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+
+    if (!subscription) {
+      return NextResponse.json({ 
+        subscription: null,
+        message: "No subscription found"
+      })
+    }
+
+    return NextResponse.json({
+      subscription: {
+        id: subscription.id,
+        status: subscription.status,
+        plan: subscription.plan,
+        currentPeriodStart: subscription.currentPeriodStart,
+        currentPeriodEnd: subscription.currentPeriodEnd,
+        cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+        lastPayment: subscription.payments[0] || null
+      }
+    })
+
+  } catch (error) {
+    console.error("Error fetching subscription status:", error)
+    return NextResponse.json(
+      { error: "Failed to fetch subscription status" },
       { status: 500 }
     )
   }
