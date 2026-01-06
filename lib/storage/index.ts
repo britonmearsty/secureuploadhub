@@ -4,8 +4,47 @@ import prisma from "@/lib/prisma"
 import { googleDriveService } from "./google-drive"
 import { dropboxService } from "./dropbox"
 import { CloudStorageService, StorageProvider, UploadResult, StorageFolder } from "./types"
+import { StorageAccountStatus } from "./account-states"
 
 export * from "./types"
+
+/**
+ * Update storage account status when OAuth token operations fail
+ */
+async function updateStorageAccountStatusOnTokenFailure(
+  userId: string,
+  provider: "google" | "dropbox",
+  errorMessage: string
+): Promise<void> {
+  try {
+    // Find storage accounts for this user and provider
+    const storageAccounts = await prisma.storageAccount.findMany({
+      where: {
+        userId,
+        provider: provider === "google" ? "GOOGLE_DRIVE" : "DROPBOX",
+        status: { not: StorageAccountStatus.DISCONNECTED } // Only update if not already disconnected
+      }
+    })
+
+    if (storageAccounts.length > 0) {
+      // Update all matching storage accounts to DISCONNECTED
+      await prisma.storageAccount.updateMany({
+        where: {
+          id: { in: storageAccounts.map(sa => sa.id) }
+        },
+        data: {
+          status: StorageAccountStatus.DISCONNECTED,
+          lastError: errorMessage,
+          updatedAt: new Date()
+        }
+      })
+
+      console.log(`Updated ${storageAccounts.length} storage account(s) to DISCONNECTED for user ${userId} (${provider})`)
+    }
+  } catch (error) {
+    console.error("Failed to update storage account status on token failure:", error)
+  }
+}
 
 /**
  * Get the appropriate cloud storage service for a provider
@@ -74,12 +113,20 @@ export async function getValidAccessToken(
       return { accessToken, providerAccountId: account.providerAccountId }
     } catch (error) {
       console.error(`Failed to refresh ${provider} token for user ${userId}:`, error)
+      
+      // Update storage account status to DISCONNECTED when token refresh fails
+      await updateStorageAccountStatusOnTokenFailure(userId, provider, error instanceof Error ? error.message : "Token refresh failed")
+      
       return null
     }
   }
 
   if (isExpired && !account.refresh_token) {
     console.warn(`Token for ${provider} is expired and no refresh token is available for user ${userId}`)
+    
+    // Update storage account status to DISCONNECTED when no refresh token available
+    await updateStorageAccountStatusOnTokenFailure(userId, provider, "No refresh token available")
+    
     return null
   }
 
@@ -380,6 +427,35 @@ export async function deleteFromCloudStorage(
   const result = await service.deleteFile(tokenResult.accessToken, fileId)
   if (!result.success) {
     throw new Error(result.error || "Failed to delete file")
+  }
+}
+
+/**
+ * Validate storage connection by testing if we can get account info
+ */
+export async function validateStorageConnection(
+  userId: string,
+  provider: StorageProvider
+): Promise<{ isValid: boolean; error?: string }> {
+  try {
+    const oauthProvider = provider === "google_drive" ? "google" : "dropbox"
+    const tokenResult = await getValidAccessToken(userId, oauthProvider)
+
+    if (!tokenResult) {
+      return { isValid: false, error: "No valid token available" }
+    }
+
+    const service = getStorageService(provider)
+    if (!service || !service.getAccountInfo) {
+      return { isValid: false, error: "Service not available" }
+    }
+
+    // Test the connection by getting account info
+    await service.getAccountInfo(tokenResult.accessToken)
+    return { isValid: true }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error"
+    return { isValid: false, error: errorMessage }
   }
 }
 

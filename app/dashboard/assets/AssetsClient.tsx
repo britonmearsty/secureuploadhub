@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
     Database,
@@ -71,6 +71,21 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
     const [searchQuery, setSearchQuery] = useState("")
     const [viewMode, setViewMode] = useState<"grid" | "list">("list")
     const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
+    const [isHealthChecking, setIsHealthChecking] = useState(false)
+    
+    // Run health check on component mount
+    useEffect(() => {
+        const runInitialHealthCheck = async () => {
+            try {
+                await fetch('/api/storage/health-check', { method: 'POST' })
+                // Silently update storage statuses without showing toast
+            } catch (error) {
+                // Silently fail - don't show error to user on page load
+            }
+        }
+        
+        runInitialHealthCheck()
+    }, [])
     
     // Modal states
     const [errorModal, setErrorModal] = useState<{ isOpen: boolean; title: string; message: string }>({
@@ -239,6 +254,31 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
         }
     }
 
+    const handleHealthCheck = async () => {
+        setIsHealthChecking(true)
+        try {
+            const res = await fetch('/api/storage/health-check', {
+                method: 'POST',
+            })
+            
+            if (res.ok) {
+                const data = await res.json()
+                
+                // Refresh the page data to show updated storage statuses
+                window.location.reload()
+                
+                showToast('success', 'Storage Health Check Complete', 
+                    `Checked ${data.checkedAccounts} storage account(s). Status updated for any disconnected accounts.`)
+            } else {
+                showToast('error', 'Health Check Failed', 'Failed to check storage account health.')
+            }
+        } catch (error) {
+            showToast('error', 'Health Check Error', 'Error checking storage account health.')
+        } finally {
+            setIsHealthChecking(false)
+        }
+    }
+
     // Update filtered uploads to use local state 'uploads' instead of prop 'initialUploads'
     const filteredUploads = uploads.filter(u =>
         u.fileName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -344,19 +384,30 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                                 className="w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-2xl focus:ring-2 focus:ring-ring transition-all outline-none text-sm text-foreground"
                             />
                         </div>
-                        <div className="flex items-center gap-2 p-1 bg-muted border border-border rounded-xl w-fit">
+                        <div className="flex items-center gap-3">
                             <button
-                                onClick={() => setViewMode("grid")}
-                                className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                                onClick={handleHealthCheck}
+                                disabled={isHealthChecking}
+                                className="flex items-center gap-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-400 text-white rounded-lg transition-colors text-sm font-medium"
+                                title="Check storage account connectivity"
                             >
-                                <LayoutGrid className="w-4 h-4" />
+                                <RefreshCw className={`w-4 h-4 ${isHealthChecking ? 'animate-spin' : ''}`} />
+                                {isHealthChecking ? 'Checking...' : 'Health Check'}
                             </button>
-                            <button
-                                onClick={() => setViewMode("list")}
-                                className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                            >
-                                <ListIcon className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-2 p-1 bg-muted border border-border rounded-xl w-fit">
+                                <button
+                                    onClick={() => setViewMode("grid")}
+                                    className={`p-2 rounded-lg transition-all ${viewMode === "grid" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                                >
+                                    <LayoutGrid className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => setViewMode("list")}
+                                    className={`p-2 rounded-lg transition-all ${viewMode === "list" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                                >
+                                    <ListIcon className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
                     </div>
 
