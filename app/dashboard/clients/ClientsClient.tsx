@@ -19,13 +19,11 @@ import {
     Mail,
     Filter,
     RefreshCw,
-    FileImage,
-    FileVideo,
-    FileAudio,
-    File as FileIcon,
     Copy,
     Check
 } from "lucide-react"
+import { FileList } from "@/components/assets"
+import { formatFileSize, getFileIcon } from "@/lib/file-utils"
 
 interface Client {
     key: string
@@ -106,14 +104,6 @@ export default function ClientsClient({ clients: initialClients }: ClientsClient
         navigator.clipboard.writeText(text)
         setCopiedEmail(true)
         setTimeout(() => setCopiedEmail(false), 2000)
-    }
-
-    const getFileIcon = (mimeType: string = "") => {
-        if (mimeType.startsWith("image/")) return <FileImage className="w-5 h-5 text-indigo-500" />
-        if (mimeType.startsWith("video/")) return <FileVideo className="w-5 h-5 text-pink-500" />
-        if (mimeType.startsWith("audio/")) return <FileAudio className="w-5 h-5 text-amber-500" />
-        if (mimeType.includes("pdf")) return <FileText className="w-5 h-5 text-red-500" />
-        return <FileIcon className="w-5 h-5 text-muted-foreground" />
     }
 
     return (
@@ -384,38 +374,23 @@ export default function ClientsClient({ clients: initialClients }: ClientsClient
                                     Shared Documents
                                 </h4>
 
-                                <div className="space-y-3 max-h-[40vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-200">
+                                <div className="max-h-[40vh] overflow-y-auto">
                                     {isLoadingFiles ? (
                                         <div className="py-12 text-center">
                                             <RefreshCw className="w-8 h-8 text-muted-foreground animate-spin mx-auto mb-2" />
                                             <p className="text-muted-foreground text-sm italic">Retrieving file history...</p>
                                         </div>
-                                    ) : files.length > 0 ? (
-                                        files.map((file) => (
-                                            <div key={file.id} className="p-4 rounded-2xl border border-border hover:border-muted-foreground hover:bg-muted/50 transition-all flex items-center justify-between group">
-                                                <div className="flex items-center gap-3 min-w-0">
-                                                    <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center border border-border group-hover:bg-card group-hover:shadow-sm transition-all shrink-0">
-                                                        {getFileIcon(file.mimeType)}
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <p className="text-sm font-bold text-foreground truncate">{file.fileName}</p>
-                                                        <p className="text-xs text-muted-foreground mt-0.5">
-                                                            {formatFileSize(file.fileSize)} · {new Date(file.createdAt).toLocaleDateString()}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <a
-                                                    href={`/api/uploads/${file.id}/download`}
-                                                    className="w-10 h-10 bg-card shadow-sm border border-border rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-muted-foreground transition-all group-hover:scale-105 shrink-0"
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                >
-                                                    <Download className="w-4 h-4" />
-                                                </a>
-                                            </div>
-                                        ))
                                     ) : (
-                                        <p className="text-center py-8 text-muted-foreground italic text-sm">No documents found.</p>
+                                        <FileList
+                                            files={files}
+                                            showActions={false}
+                                            showDownloadOnly={true}
+                                            showPortal={false}
+                                            compact={true}
+                                            emptyMessage="No documents found"
+                                            emptyDescription="This client hasn't uploaded any files yet."
+                                            viewMode="list"
+                                        />
                                     )}
                                 </div>
                             </div>

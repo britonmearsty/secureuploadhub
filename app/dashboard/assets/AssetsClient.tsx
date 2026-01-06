@@ -22,13 +22,6 @@ import {
     ExternalLink,
     ChevronDown,
     Inbox,
-    FileText,
-    FileJson,
-    FileCode,
-    FileImage,
-    Music,
-    Video,
-    Archive,
     Trash2,
     X,
     RefreshCw
@@ -36,6 +29,8 @@ import {
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal"
 import { StorageWarningModal } from "@/components/ui/StorageWarningModal"
 import { ToastComponent } from "@/components/ui/Toast"
+import { FileList } from "@/components/assets"
+import { formatFileSize, getFileIcon, getProviderIcon } from "@/lib/file-utils"
 
 interface FileUpload {
     id: string
@@ -130,52 +125,7 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
 
 
 
-    const formatFileSize = (bytes: number) => {
-        if (bytes === 0) return '0 Bytes'
-        const k = 1024
-        const sizes = ['Bytes', 'KB', 'MB', 'GB']
-        const i = Math.floor(Math.log(bytes) / Math.log(k))
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-    }
 
-    const getProviderIcon = (provider: string) => {
-        switch (provider.toLowerCase()) {
-            case 'dropbox': return <Cloud className="w-5 h-5 text-blue-500" />
-            case 'google_drive': return <HardDrive className="w-5 h-5 text-emerald-500" />
-            default: return <Server className="w-5 h-5 text-muted-foreground" />
-        }
-    }
-
-    const getFileIcon = (fileName: string, mimeType: string) => {
-        const ext = fileName.split('.').pop()?.toLowerCase() || ''
-        const iconProps = "w-5 h-5"
-
-        // Check mime types first
-        if (mimeType?.startsWith('image/')) return <FileImage className={`${iconProps} text-pink-500`} />
-        if (mimeType?.startsWith('audio/')) return <Music className={`${iconProps} text-cyan-500`} />
-        if (mimeType?.startsWith('video/')) return <Video className={`${iconProps} text-indigo-500`} />
-        if (mimeType === 'application/pdf') return <File className={`${iconProps} text-red-500`} />
-        if (mimeType?.includes('spreadsheet') || mimeType?.includes('excel') || mimeType?.includes('csv'))
-            return <FileText className={`${iconProps} text-green-500`} />
-        if (mimeType?.includes('presentation') || mimeType?.includes('powerpoint'))
-            return <FileText className={`${iconProps} text-orange-500`} />
-        if (mimeType?.includes('word') || mimeType?.includes('document'))
-            return <FileText className={`${iconProps} text-blue-500`} />
-        if (mimeType?.includes('json') || mimeType?.includes('xml'))
-            return <FileJson className={`${iconProps} text-yellow-600`} />
-        if (mimeType?.includes('zip') || mimeType?.includes('compressed') || mimeType?.includes('tar') || mimeType?.includes('archive'))
-            return <Archive className={`${iconProps} text-amber-600`} />
-
-        // Fallback to extensions
-        if (['doc', 'docx'].includes(ext)) return <FileText className={`${iconProps} text-blue-500`} />
-        if (['xls', 'xlsx', 'csv'].includes(ext)) return <FileText className={`${iconProps} text-green-500`} />
-        if (['ppt', 'pptx'].includes(ext)) return <FileText className={`${iconProps} text-orange-500`} />
-
-        if (['py', 'js', 'ts', 'tsx', 'jsx', 'java', 'cpp', 'c', 'cs', 'rb', 'php', 'go', 'rs', 'sh', 'bash', 'html', 'css', 'scss'].includes(ext))
-            return <FileCode className={`${iconProps} text-purple-500`} />
-
-        return <File className={`${iconProps} text-muted-foreground`} />
-    }
 
     const toggleFolder = (path: string) => {
         setExpandedFolders(prev => {
@@ -390,23 +340,16 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
 
                                 <div className="p-0">
                                     {activeTab === "all" && (
-                                        <div className={viewMode === "list" ? "divide-y divide-border" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6"}>
-                                            {filteredUploads.length > 0 ? (
-                                                filteredUploads.map((file) => (
-                                                    <FileItem key={file.id} file={file} viewMode={viewMode} formatFileSize={formatFileSize} getProviderIcon={getProviderIcon} getFileIcon={getFileIcon} onDelete={handleDeleteRequest} onStorageWarning={handleStorageWarning} showToast={showToast} />
-                                                ))
-                                            ) : (
-                                                <div className="text-center py-24 px-6 col-span-full">
-                                                    <div className="p-4 bg-muted rounded-full w-fit mx-auto mb-4">
-                                                        <Inbox className="w-8 h-8 text-muted-foreground" />
-                                                    </div>
-                                                    <h4 className="text-foreground font-bold mb-1 text-lg">No Assets Found</h4>
-                                                    <p className="text-muted-foreground text-sm max-w-xs mx-auto">
-                                                        Your vault is empty or no files match your current search criteria.
-                                                    </p>
-                                                </div>
-                                            )}
-                                        </div>
+                                        <FileList
+                                            files={filteredUploads}
+                                            onDelete={handleDeleteRequest}
+                                            showToast={showToast}
+                                            showActions={true}
+                                            showPortal={true}
+                                            emptyMessage="No Assets Found"
+                                            emptyDescription="Your vault is empty or no files match your current search criteria."
+                                            viewMode={viewMode}
+                                        />
                                     )}
 
                                     {activeTab === "storage" && (
@@ -426,10 +369,17 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                                                             </div>
                                                             <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{providerFiles.length} items</span>
                                                         </div>
-                                                        <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4" : "divide-y divide-border/50"}>
-                                                            {providerFiles.map(file => (
-                                                                <FileItem key={file.id} file={file} viewMode={viewMode} formatFileSize={formatFileSize} getProviderIcon={getProviderIcon} getFileIcon={getFileIcon} onDelete={handleDeleteRequest} onStorageWarning={handleStorageWarning} showToast={showToast} />
-                                                            ))}
+                                                        <div className="p-4">
+                                                            <FileList
+                                                                files={providerFiles}
+                                                                onDelete={handleDeleteRequest}
+                                                                showToast={showToast}
+                                                                showActions={true}
+                                                                showPortal={false}
+                                                                emptyMessage="No files"
+                                                                emptyDescription="No files found for this provider."
+                                                                viewMode={viewMode}
+                                                            />
                                                         </div>
                                                     </div>
                                                 )
@@ -594,185 +544,6 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                 title={toast.title}
                 message={toast.message}
             />
-        </div>
-    )
-}
-
-function FileItem({ file, viewMode, formatFileSize, getProviderIcon, getFileIcon, onDelete, onStorageWarning, showToast }: any) {
-    const isGrid = viewMode === "grid"
-
-    const handleDownload = (e: React.MouseEvent) => {
-        e.stopPropagation()
-        
-        // Check storage account status before download
-        if (file.storageAccount) {
-            const status = file.storageAccount.status
-            if (status === 'DISCONNECTED') {
-                showToast?.('error', 'File Unavailable', `Cannot download file. Your ${file.storageAccount.provider} storage account is disconnected.`)
-                return
-            } else if (status === 'ERROR') {
-                showToast?.('error', 'File Unavailable', `Cannot download file. There are connection issues with your ${file.storageAccount.provider} storage account.`)
-                return
-            }
-        }
-        
-        const link = document.createElement('a')
-        link.href = `/api/uploads/${file.id}/download`
-        link.download = file.fileName
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-    }
-
-    const handleDelete = (e: React.MouseEvent) => {
-        e.stopPropagation()
-        
-        // Check storage account status before delete
-        if (file.storageAccount) {
-            const status = file.storageAccount.status
-            if (status === 'DISCONNECTED') {
-                showToast?.('error', 'File Unavailable', `Cannot delete file. Your ${file.storageAccount.provider} storage account is disconnected.`)
-                return
-            } else if (status === 'ERROR') {
-                showToast?.('error', 'File Unavailable', `Cannot delete file. There are connection issues with your ${file.storageAccount.provider} storage account.`)
-                return
-            }
-        }
-        
-        if (onDelete) onDelete(file)
-    }
-
-    const getStorageStatusIndicator = () => {
-        if (!file.storageAccount) {
-            return (
-                <div className="flex items-center gap-1" title="Legacy file - no storage account binding">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full" />
-                    <span className="text-xs text-gray-500">Legacy</span>
-                </div>
-            )
-        }
-
-        const status = file.storageAccount.status
-        switch (status) {
-            case 'ACTIVE':
-                return (
-                    <div className="flex items-center gap-1" title="Storage account connected">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                        <span className="text-xs text-green-600">Connected</span>
-                    </div>
-                )
-            case 'INACTIVE':
-                return (
-                    <div className="flex items-center gap-1" title="Storage account inactive">
-                        <div className="w-2 h-2 bg-yellow-500 rounded-full" />
-                        <span className="text-xs text-yellow-600">Inactive</span>
-                    </div>
-                )
-            case 'DISCONNECTED':
-                return (
-                    <div className="flex items-center gap-1" title="Storage account disconnected - file unavailable">
-                        <div className="w-2 h-2 bg-red-500 rounded-full" />
-                        <span className="text-xs text-red-600">Unavailable</span>
-                    </div>
-                )
-            case 'ERROR':
-                return (
-                    <div className="flex items-center gap-1" title="Storage account has connection errors - file unavailable">
-                        <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
-                        <span className="text-xs text-orange-600">Unavailable</span>
-                    </div>
-                )
-            default:
-                return (
-                    <div className="flex items-center gap-1" title="Unknown storage status">
-                        <div className="w-2 h-2 bg-gray-500 rounded-full" />
-                        <span className="text-xs text-gray-600">Unknown</span>
-                    </div>
-                )
-        }
-    }
-
-    const clientIdentifier = file.clientName || file.clientEmail || "Unknown Client"
-
-    if (isGrid) {
-        return (
-            <div className="group bg-card rounded-2xl border border-border p-4 hover:border-muted-foreground hover:shadow-xl hover:shadow-muted/40 transition-all">
-                <div className="flex justify-between items-start mb-4">
-                    <div className="p-3 bg-muted rounded-xl border border-border group-hover:bg-card transition-colors">
-                        {getFileIcon(file.fileName, file.mimeType)}
-                    </div>
-                    <div className="flex gap-1">
-                        <button onClick={handleDownload} className="p-2 text-muted-foreground hover:text-foreground hover:bg-card rounded-lg transition-all">
-                            <Download className="w-4 h-4" />
-                        </button>
-                        <button onClick={handleDelete} className="p-2 text-muted-foreground hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-all">
-                            <Trash2 className="w-4 h-4" />
-                        </button>
-                    </div>
-                </div>
-                <h4 className="font-bold text-foreground truncate text-sm" title={file.fileName}>{file.fileName}</h4>
-                <div className="text-xs text-muted-foreground truncate mt-1" title={clientIdentifier}>{clientIdentifier}</div>
-                <div className="flex items-center gap-2 mt-2">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase">{formatFileSize(file.fileSize)}</span>
-                    <span className="w-1 h-1 bg-border rounded-full" />
-                    <div className="flex items-center gap-1">
-                        {getProviderIcon(file.storageProvider)}
-                    </div>
-                    <span className="w-1 h-1 bg-border rounded-full" />
-                    {getStorageStatusIndicator()}
-                </div>
-                <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
-                    <span className="text-[10px] font-bold px-2 py-0.5 bg-muted text-muted-foreground rounded-full truncate max-w-[100px]">
-                        {file.portal.name}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">{new Date(file.createdAt).toLocaleDateString()}</span>
-                </div>
-            </div>
-        )
-    }
-
-    return (
-        <div className="flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors group">
-            <div className="w-10 h-10 bg-muted rounded-xl flex items-center justify-center text-muted-foreground group-hover:bg-card border border-transparent group-hover:border-border transition-all shrink-0">
-                {getFileIcon(file.fileName, file.mimeType)}
-            </div>
-            <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-bold text-foreground truncate" title={file.fileName}>{file.fileName}</h4>
-                <div className="flex items-center gap-3 mt-0.5">
-                    <span className="text-xs text-muted-foreground">{clientIdentifier}</span>
-                    <span className="w-1 h-1 bg-border rounded-full" />
-                    <span className="text-xs text-muted-foreground">{formatFileSize(file.fileSize)}</span>
-                    <span className="w-1 h-1 bg-border rounded-full" />
-                    <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                        <Layout className="w-3 h-3" />
-                        {file.portal.name}
-                    </span>
-                </div>
-            </div>
-            <div className="hidden md:flex items-center gap-6 px-4">
-                <div className="flex flex-col items-end gap-1">
-                    <div className="flex items-center gap-1.5 scale-75 origin-right">
-                        {getProviderIcon(file.storageProvider)}
-                    </div>
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Storage</span>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                    {getStorageStatusIndicator()}
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Status</span>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                    <span className="text-xs font-semibold text-muted-foreground">{new Date(file.createdAt).toLocaleDateString()}</span>
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Added</span>
-                </div>
-            </div>
-            <div className="flex items-center gap-1">
-                <button onClick={handleDownload} className="p-2 text-muted-foreground hover:text-foreground hover:bg-card rounded-xl border border-transparent hover:border-border transition-all">
-                    <Download className="w-4 h-4" />
-                </button>
-                <button onClick={handleDelete} className="p-2 text-muted-foreground hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl border border-transparent hover:border-red-200 dark:hover:border-red-800 transition-all">
-                    <Trash2 className="w-4 h-4" />
-                </button>
-            </div>
         </div>
     )
 }
