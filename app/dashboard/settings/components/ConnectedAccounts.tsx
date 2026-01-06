@@ -51,7 +51,9 @@ export default function ConnectedAccounts() {
             const res = await fetch("/api/storage/accounts")
             if (res.ok) {
                 const data = await res.json()
-                setAccounts(data.accounts)
+                console.log("🔍 DEBUG: Storage accounts API response:", data)
+                console.log("🔍 DEBUG: Accounts array:", data.accounts)
+                setAccounts(data.accounts || [])
             }
         } catch (error) {
             console.error("Error fetching accounts:", error)
@@ -121,6 +123,16 @@ export default function ConnectedAccounts() {
 
     // Only show connected accounts in the connected tab
     const connectedAccounts = accounts.filter(a => a.isConnected)
+    
+    console.log("🔍 DEBUG: All accounts:", accounts)
+    console.log("🔍 DEBUG: Connected accounts:", connectedAccounts)
+    console.log("🔍 DEBUG: Account details:", accounts.map(a => ({
+        provider: a.provider,
+        isConnected: a.isConnected,
+        hasValidOAuth: a.hasValidOAuth,
+        storageStatus: a.storageStatus,
+        storageAccountId: a.storageAccountId
+    })))
 
     if (loading) {
         return (
