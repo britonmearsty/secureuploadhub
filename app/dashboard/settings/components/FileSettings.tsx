@@ -150,14 +150,14 @@ export default function FileSettings({ showConnectedFilesOnly: initialSetting }:
         </div>
       </div>
 
-      <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-xl border border-blue-200 dark:border-blue-800">
+      <div className="mt-6 p-4 bg-muted rounded-xl border border-border">
         <div className="flex items-start gap-3">
-          <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center mt-0.5">
-            <span className="text-white text-xs font-bold">i</span>
+          <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center mt-0.5">
+            <span className="text-primary-foreground text-xs font-bold">i</span>
           </div>
           <div>
-            <h5 className="font-medium text-blue-900 dark:text-blue-100">How this works</h5>
-            <p className="text-sm text-blue-800 dark:text-blue-200 mt-1">
+            <h5 className="font-medium text-foreground">How this works</h5>
+            <p className="text-sm text-muted-foreground mt-1">
               When "Show Connected Files Only" is enabled, files from disconnected storage accounts are filtered out of your assets view. 
               This helps keep your file list clean and focused on accessible files. You can always change this setting to view all files when needed.
             </p>
