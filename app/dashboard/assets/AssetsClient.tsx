@@ -35,6 +35,7 @@ import {
 } from "lucide-react"
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal"
 import { StorageWarningModal } from "@/components/ui/StorageWarningModal"
+import { ToastComponent } from "@/components/ui/Toast"
 
 interface FileUpload {
     id: string
@@ -89,6 +90,19 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
         type: 'disconnected'
     })
 
+    // Toast notification state
+    const [toast, setToast] = useState<{
+        isOpen: boolean;
+        type: 'error' | 'success' | 'warning' | 'info';
+        title: string;
+        message: string;
+    }>({
+        isOpen: false,
+        type: 'error',
+        title: '',
+        message: ''
+    })
+
     const handleStorageWarning = (warningData: any) => {
         setStorageWarningModal({
             isOpen: true,
@@ -96,6 +110,15 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
             storageProvider: warningData.storageProvider,
             storageEmail: warningData.storageEmail,
             fileId: warningData.fileId
+        })
+    }
+
+    const showToast = (type: 'error' | 'success' | 'warning' | 'info', title: string, message: string) => {
+        setToast({
+            isOpen: true,
+            type,
+            title,
+            message
         })
     }
 
@@ -170,6 +193,18 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
     const [uploads, setUploads] = useState(initialUploads)
 
     const handleDeleteRequest = (file: FileUpload) => {
+        // Check storage account status before showing delete modal
+        if (file.storageAccount) {
+            const status = file.storageAccount.status
+            if (status === 'DISCONNECTED') {
+                showToast('error', 'File Unavailable', `Cannot delete file. Your ${file.storageAccount.provider} storage account is disconnected.`)
+                return
+            } else if (status === 'ERROR') {
+                showToast('error', 'File Unavailable', `Cannot delete file. There are connection issues with your ${file.storageAccount.provider} storage account.`)
+                return
+            }
+        }
+        
         setFileToDelete(file)
         setShowDeleteModal(true)
     }
@@ -348,7 +383,7 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                                         <div className={viewMode === "list" ? "divide-y divide-border" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6"}>
                                             {filteredUploads.length > 0 ? (
                                                 filteredUploads.map((file) => (
-                                                    <FileItem key={file.id} file={file} viewMode={viewMode} formatFileSize={formatFileSize} getProviderIcon={getProviderIcon} getFileIcon={getFileIcon} onDelete={handleDeleteRequest} onStorageWarning={handleStorageWarning} />
+                                                    <FileItem key={file.id} file={file} viewMode={viewMode} formatFileSize={formatFileSize} getProviderIcon={getProviderIcon} getFileIcon={getFileIcon} onDelete={handleDeleteRequest} onStorageWarning={handleStorageWarning} showToast={showToast} />
                                                 ))
                                             ) : (
                                                 <div className="text-center py-24 px-6 col-span-full">
@@ -383,7 +418,7 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                                                         </div>
                                                         <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4" : "divide-y divide-border/50"}>
                                                             {providerFiles.map(file => (
-                                                                <FileItem key={file.id} file={file} viewMode={viewMode} formatFileSize={formatFileSize} getProviderIcon={getProviderIcon} getFileIcon={getFileIcon} onDelete={handleDeleteRequest} onStorageWarning={handleStorageWarning} />
+                                                                <FileItem key={file.id} file={file} viewMode={viewMode} formatFileSize={formatFileSize} getProviderIcon={getProviderIcon} getFileIcon={getFileIcon} onDelete={handleDeleteRequest} onStorageWarning={handleStorageWarning} showToast={showToast} />
                                                             ))}
                                                         </div>
                                                     </div>
@@ -540,11 +575,20 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                     window.location.href = '/dashboard/integrations'
                 }}
             />
+
+            {/* Toast Notification */}
+            <ToastComponent
+                isOpen={toast.isOpen}
+                onClose={() => setToast({ ...toast, isOpen: false })}
+                type={toast.type}
+                title={toast.title}
+                message={toast.message}
+            />
         </div>
     )
 }
 
-function FileItem({ file, viewMode, formatFileSize, getProviderIcon, getFileIcon, onDelete, onStorageWarning }: any) {
+function FileItem({ file, viewMode, formatFileSize, getProviderIcon, getFileIcon, onDelete, onStorageWarning, showToast }: any) {
     const isGrid = viewMode === "grid"
 
     const handleDownload = (e: React.MouseEvent) => {
@@ -554,20 +598,10 @@ function FileItem({ file, viewMode, formatFileSize, getProviderIcon, getFileIcon
         if (file.storageAccount) {
             const status = file.storageAccount.status
             if (status === 'DISCONNECTED') {
-                onStorageWarning?.({
-                    type: 'disconnected',
-                    storageProvider: file.storageAccount.provider,
-                    storageEmail: file.storageAccount.email,
-                    fileId: file.id
-                })
+                showToast?.('error', 'File Unavailable', `Cannot download file. Your ${file.storageAccount.provider} storage account is disconnected.`)
                 return
             } else if (status === 'ERROR') {
-                onStorageWarning?.({
-                    type: 'error',
-                    storageProvider: file.storageAccount.provider,
-                    storageEmail: file.storageAccount.email,
-                    fileId: file.id
-                })
+                showToast?.('error', 'File Unavailable', `Cannot download file. There are connection issues with your ${file.storageAccount.provider} storage account.`)
                 return
             }
         }
@@ -582,6 +616,19 @@ function FileItem({ file, viewMode, formatFileSize, getProviderIcon, getFileIcon
 
     const handleDelete = (e: React.MouseEvent) => {
         e.stopPropagation()
+        
+        // Check storage account status before delete
+        if (file.storageAccount) {
+            const status = file.storageAccount.status
+            if (status === 'DISCONNECTED') {
+                showToast?.('error', 'File Unavailable', `Cannot delete file. Your ${file.storageAccount.provider} storage account is disconnected.`)
+                return
+            } else if (status === 'ERROR') {
+                showToast?.('error', 'File Unavailable', `Cannot delete file. There are connection issues with your ${file.storageAccount.provider} storage account.`)
+                return
+            }
+        }
+        
         if (onDelete) onDelete(file)
     }
 
@@ -613,16 +660,16 @@ function FileItem({ file, viewMode, formatFileSize, getProviderIcon, getFileIcon
                 )
             case 'DISCONNECTED':
                 return (
-                    <div className="flex items-center gap-1" title="Storage account disconnected - file cannot be accessed">
+                    <div className="flex items-center gap-1" title="Storage account disconnected - file unavailable">
                         <div className="w-2 h-2 bg-red-500 rounded-full" />
-                        <span className="text-xs text-red-600">Disconnected</span>
+                        <span className="text-xs text-red-600">Unavailable</span>
                     </div>
                 )
             case 'ERROR':
                 return (
-                    <div className="flex items-center gap-1" title="Storage account has connection errors">
+                    <div className="flex items-center gap-1" title="Storage account has connection errors - file unavailable">
                         <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
-                        <span className="text-xs text-orange-600">Error</span>
+                        <span className="text-xs text-orange-600">Unavailable</span>
                     </div>
                 )
             default:

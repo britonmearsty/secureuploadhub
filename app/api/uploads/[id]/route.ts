@@ -3,6 +3,7 @@ import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
 import { deleteFromCloudStorage } from "@/lib/storage"
 import { invalidateCache, getUserDashboardKey, getUserUploadsKey, getUserStatsKey } from "@/lib/cache"
+import { StorageAccountStatus } from "@prisma/client"
 
 // DELETE /api/uploads/[id] - Delete a file
 export async function DELETE(
@@ -25,6 +26,14 @@ export async function DELETE(
           select: {
             userId: true,
           }
+        },
+        storageAccount: {
+          select: {
+            id: true,
+            provider: true,
+            status: true,
+            email: true
+          }
         }
       }
     })
@@ -35,6 +44,24 @@ export async function DELETE(
 
     if (upload.portal.userId !== session.user.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
+    }
+
+    // Check storage account status before allowing delete
+    if (upload.storageAccount) {
+      const status = upload.storageAccount.status
+      if (status === StorageAccountStatus.DISCONNECTED) {
+        return NextResponse.json({
+          error: "File unavailable",
+          details: `Cannot delete file. Your ${upload.storageAccount.provider} storage account is disconnected.`,
+          requiresReconnection: true
+        }, { status: 403 })
+      } else if (status === StorageAccountStatus.ERROR) {
+        return NextResponse.json({
+          error: "File unavailable", 
+          details: "Cannot delete file. There are connection issues with your storage account.",
+          isTemporary: true
+        }, { status: 503 })
+      }
     }
 
     // Delete from cloud storage if applicable
