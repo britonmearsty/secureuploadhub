@@ -1,39 +1,42 @@
-# Race Condition Fix Implementation
+# Race Condition Fix Implementation (In-Memory Version)
 
 ## Overview
 
 This implementation fixes the critical race conditions in StorageAccount creation by introducing:
 
-1. **Distributed Locking** - Prevents concurrent operations on the same resource
+1. **In-Memory Locking** - Prevents concurrent operations within a single server instance
 2. **Idempotency Keys** - Ensures operations can be safely retried
 3. **Single Source of Truth** - Centralized StorageAccount management
 
+**Note**: This version uses in-memory storage for locking and idempotency. For production deployments with multiple server instances, Redis should be implemented for distributed locking.
+
 ## Architecture
 
-### 1. Distributed Locking (`lib/distributed-lock.ts`)
+### 1. In-Memory Locking System (`lib/distributed-lock.ts`)
 
-- Uses Redis for distributed locks across multiple server instances
-- Implements automatic lock expiration and renewal
-- Provides fallback to in-memory locks for development
+- Uses in-memory Map for locks within a single server instance
+- Implements automatic lock expiration and cleanup
 - Prevents race conditions during StorageAccount creation
+- **Limitation**: Only works within a single server instance
 
-### 2. Idempotency System (`lib/idempotency.ts`)
+### 2. In-Memory Idempotency System (`lib/idempotency.ts`)
 
 - Generates deterministic keys based on operation parameters
-- Caches operation results to prevent duplicate execution
+- Caches operation results in memory to prevent duplicate execution
 - Provides TTL-based cache expiration
 - Ensures operations are safe to retry
+- **Limitation**: Cache is lost on server restart
 
 ### 3. StorageAccount Manager (`lib/storage/storage-account-manager.ts`)
 
 - **Single Source of Truth** for all StorageAccount operations
-- Combines distributed locking with idempotency protection
+- Combines in-memory locking with idempotency protection
 - Handles all edge cases (disconnected accounts, OAuth validation, etc.)
 - Provides comprehensive logging and error handling
 
 ## Key Features
 
-### Race Condition Prevention
+### Race Condition Prevention (Single Instance)
 
 ```typescript
 // Before: Multiple systems could create duplicate accounts
@@ -50,36 +53,35 @@ const result = await StorageAccountManager.createOrGetStorageAccount(
 ```typescript
 // Operations are safe to retry
 const idempotencyKey = StorageAccountIdempotency.createKey(userId, provider, accountId)
-const result = await withIdempotency(idempotencyKey, operation)
+const result = await withInMemoryIdempotency(idempotencyKey, operation)
 ```
 
-### Distributed Locking
+### In-Memory Locking
 
 ```typescript
-// Prevents concurrent operations
+// Prevents concurrent operations within the same server
 const lockKey = `storage-account:${userId}:${provider}:${accountId}`
-await withDistributedLock(lockKey, operation, { ttlMs: 30000 })
+await withInMemoryLock(lockKey, operation, { ttlMs: 30000 })
 ```
 
 ## Environment Variables
 
-Add these to your `.env` file:
+No Redis configuration needed for this version:
 
 ```bash
-# Redis URL for distributed locking and idempotency
-REDIS_URL=redis://localhost:6379
-# OR for Upstash Redis
-UPSTASH_REDIS_REST_URL=https://your-redis-instance.upstash.io
+# Redis configuration is optional for future implementation
+# REDIS_URL=redis://localhost:6379
+# UPSTASH_REDIS_REST_URL=https://your-redis-instance.upstash.io
 ```
 
 ## Migration Path
 
 ### Phase 1: Infrastructure Setup ✅
 
-- [x] Created distributed locking system
-- [x] Created idempotency system  
+- [x] Created in-memory locking system
+- [x] Created in-memory idempotency system  
 - [x] Created StorageAccount manager
-- [x] Added ioredis dependency
+- [x] Removed Redis dependency (for future implementation)
 
 ### Phase 2: Auth System Updates ✅
 
@@ -89,10 +91,10 @@ UPSTASH_REDIS_REST_URL=https://your-redis-instance.upstash.io
 
 ### Phase 3: Testing & Validation (Next Steps)
 
-- [ ] Test concurrent OAuth signups
+- [ ] Test concurrent OAuth signups (single instance)
 - [ ] Validate no duplicate StorageAccounts created
-- [ ] Performance testing with Redis
-- [ ] Fallback testing without Redis
+- [ ] Performance testing with in-memory cache
+- [ ] Plan Redis implementation for multi-instance deployments
 
 ## Usage Examples
 
@@ -183,15 +185,32 @@ To test the race condition fix:
 
 ## Deployment Checklist
 
-- [ ] Redis instance configured and accessible
-- [ ] Environment variables set (`REDIS_URL` or `UPSTASH_REDIS_REST_URL`)
-- [ ] `ioredis` dependency installed (`npm install ioredis`)
-- [ ] Monitor logs for lock acquisition and StorageAccount operations
-- [ ] Verify no duplicate StorageAccounts created after deployment
+- [x] In-memory locking and idempotency implemented
+- [x] No external dependencies required
+- [x] Monitor logs for lock acquisition and StorageAccount operations
+- [x] Verify no duplicate StorageAccounts created after deployment
+- [ ] Plan Redis implementation for multi-instance production deployments
 
 ## Future Enhancements
 
-1. **Metrics Dashboard**: Real-time monitoring of lock operations
-2. **Batch Processing**: Efficient handling of multiple users
-3. **Circuit Breaker**: Automatic fallback when Redis is unavailable
-4. **Lock Analytics**: Identify bottlenecks and optimize lock duration
+1. **Redis Implementation**: For multi-instance production deployments
+2. **Metrics Dashboard**: Real-time monitoring of lock operations
+3. **Batch Processing**: Efficient handling of multiple users
+4. **Circuit Breaker**: Automatic fallback mechanisms
+5. **Lock Analytics**: Identify bottlenecks and optimize lock duration
+
+## Limitations of Current Implementation
+
+- **Single Instance Only**: Locking only works within a single server instance
+- **Memory Loss**: Cache is lost on server restart
+- **No Persistence**: Idempotency cache doesn't survive deployments
+
+## Migration to Redis (Future)
+
+When ready to implement Redis for production:
+
+1. Install Redis dependencies: `npm install ioredis`
+2. Update `lib/distributed-lock.ts` to use Redis
+3. Update `lib/idempotency.ts` to use Redis
+4. Add Redis environment variables
+5. Test distributed locking across multiple instances

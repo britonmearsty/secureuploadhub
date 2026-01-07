@@ -1,53 +1,67 @@
 /**
  * Distributed Locking System
  * Prevents race conditions in StorageAccount creation and other critical operations
+ * 
+ * NOTE: This version uses in-memory locking as Redis is not yet implemented.
+ * For production with multiple server instances, Redis should be implemented.
  */
 
-import { Redis } from 'ioredis'
-
-// Redis client for distributed locking
-let redis: Redis | null = null
-
-function getRedisClient(): Redis {
-  if (!redis) {
-    const redisUrl = process.env.REDIS_URL || process.env.UPSTASH_REDIS_REST_URL
+// In-memory locking for single-instance deployments
+class InMemoryLock {
+  private static locks = new Map<string, { value: string; expiresAt: number }>()
+  
+  static acquire(key: string, value: string, ttlMs: number): boolean {
+    const now = Date.now()
     
-    if (!redisUrl) {
-      // Fallback to in-memory locking for development
-      console.warn('⚠️ DISTRIBUTED_LOCK: No Redis URL found, using in-memory locks (not suitable for production)')
-      throw new Error('Redis URL required for distributed locking')
+    // Clean up expired locks
+    for (const [lockKey, lock] of this.locks.entries()) {
+      if (lock.expiresAt <= now) {
+        this.locks.delete(lockKey)
+      }
     }
 
-    redis = new Redis(redisUrl, {
-      retryDelayOnFailover: 100,
-      maxRetriesPerRequest: 3,
-      lazyConnect: true
-    })
+    // Try to acquire lock
+    if (!this.locks.has(key)) {
+      this.locks.set(key, {
+        value,
+        expiresAt: now + ttlMs
+      })
+      return true
+    }
 
-    redis.on('error', (error) => {
-      console.error('❌ DISTRIBUTED_LOCK: Redis connection error:', error)
-    })
-
-    redis.on('connect', () => {
-      console.log('✅ DISTRIBUTED_LOCK: Redis connected')
-    })
+    return false
   }
 
-  return redis
+  static release(key: string, value: string): boolean {
+    const lock = this.locks.get(key)
+    if (lock && lock.value === value) {
+      this.locks.delete(key)
+      return true
+    }
+    return false
+  }
+
+  static extend(key: string, value: string, additionalMs: number): boolean {
+    const lock = this.locks.get(key)
+    if (lock && lock.value === value) {
+      lock.expiresAt = Date.now() + additionalMs
+      return true
+    }
+    return false
+  }
 }
 
 /**
- * Distributed lock implementation using Redis
+ * Distributed lock implementation using in-memory storage
+ * TODO: Replace with Redis implementation for production multi-instance deployments
  */
 export class DistributedLock {
-  private redis: Redis
   private lockKey: string
   private lockValue: string
   private ttlMs: number
   private acquired: boolean = false
 
   constructor(lockKey: string, ttlMs: number = 30000) {
-    this.redis = getRedisClient()
     this.lockKey = `lock:${lockKey}`
     this.lockValue = `${Date.now()}-${Math.random().toString(36).substring(2)}`
     this.ttlMs = ttlMs
@@ -58,16 +72,7 @@ export class DistributedLock {
    */
   async acquire(): Promise<boolean> {
     try {
-      // Use SET with NX (only if not exists) and PX (expire in milliseconds)
-      const result = await this.redis.set(
-        this.lockKey,
-        this.lockValue,
-        'PX',
-        this.ttlMs,
-        'NX'
-      )
-
-      this.acquired = result === 'OK'
+      this.acquired = InMemoryLock.acquire(this.lockKey, this.lockValue, this.ttlMs)
       
       if (this.acquired) {
         console.log(`🔒 DISTRIBUTED_LOCK: Acquired lock ${this.lockKey}`)
@@ -91,23 +96,7 @@ export class DistributedLock {
     }
 
     try {
-      // Use Lua script to ensure we only delete our own lock
-      const luaScript = `
-        if redis.call("GET", KEYS[1]) == ARGV[1] then
-          return redis.call("DEL", KEYS[1])
-        else
-          return 0
-        end
-      `
-
-      const result = await this.redis.eval(
-        luaScript,
-        1,
-        this.lockKey,
-        this.lockValue
-      ) as number
-
-      const released = result === 1
+      const released = InMemoryLock.release(this.lockKey, this.lockValue)
       
       if (released) {
         console.log(`🔓 DISTRIBUTED_LOCK: Released lock ${this.lockKey}`)
@@ -132,24 +121,7 @@ export class DistributedLock {
     }
 
     try {
-      // Use Lua script to extend TTL only if we own the lock
-      const luaScript = `
-        if redis.call("GET", KEYS[1]) == ARGV[1] then
-          return redis.call("PEXPIRE", KEYS[1], ARGV[2])
-        else
-          return 0
-        end
-      `
-
-      const result = await this.redis.eval(
-        luaScript,
-        1,
-        this.lockKey,
-        this.lockValue,
-        additionalMs.toString()
-      ) as number
-
-      const extended = result === 1
+      const extended = InMemoryLock.extend(this.lockKey, this.lockValue, additionalMs)
       
       if (extended) {
         console.log(`⏰ DISTRIBUTED_LOCK: Extended lock ${this.lockKey} by ${additionalMs}ms`)
@@ -207,63 +179,12 @@ export async function withDistributedLock<T>(
 }
 
 /**
- * In-memory fallback for development/testing
- */
-class InMemoryLock {
-  private static locks = new Map<string, { value: string; expiresAt: number }>()
-  
-  static acquire(key: string, value: string, ttlMs: number): boolean {
-    const now = Date.now()
-    
-    // Clean up expired locks
-    for (const [lockKey, lock] of this.locks.entries()) {
-      if (lock.expiresAt <= now) {
-        this.locks.delete(lockKey)
-      }
-    }
-
-    // Try to acquire lock
-    if (!this.locks.has(key)) {
-      this.locks.set(key, {
-        value,
-        expiresAt: now + ttlMs
-      })
-      return true
-    }
-
-    return false
-  }
-
-  static release(key: string, value: string): boolean {
-    const lock = this.locks.get(key)
-    if (lock && lock.value === value) {
-      this.locks.delete(key)
-      return true
-    }
-    return false
-  }
-}
-
-/**
- * Fallback distributed lock for development
+ * Fallback distributed lock for development (same as main implementation for now)
  */
 export async function withInMemoryLock<T>(
   lockKey: string,
   fn: () => Promise<T>,
   ttlMs: number = 30000
 ): Promise<T> {
-  const lockValue = `${Date.now()}-${Math.random().toString(36).substring(2)}`
-  const fullKey = `lock:${lockKey}`
-  
-  const acquired = InMemoryLock.acquire(fullKey, lockValue, ttlMs)
-  
-  if (!acquired) {
-    throw new Error(`Failed to acquire in-memory lock '${lockKey}'`)
-  }
-
-  try {
-    return await fn()
-  } finally {
-    InMemoryLock.release(fullKey, lockValue)
-  }
+  return withDistributedLock(lockKey, fn, { ttlMs, retryAttempts: 1 })
 }

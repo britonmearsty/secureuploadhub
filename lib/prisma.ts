@@ -13,8 +13,11 @@ function createPrismaClient() {
   // during the build process for pages that don't actually need the DB at build time.
   if (!connectionString) {
     console.warn('DATABASE_URL not found, creating basic Prisma client');
-    // Return a basic client that won't be used in production
-    return new PrismaClient();
+    // Return a basic client with a dummy adapter that won't be used in production
+    const dummyAdapter = new PrismaPg({
+      connectionString: 'postgresql://dummy:dummy@localhost:5432/dummy',
+    })
+    return new PrismaClient({ adapter: dummyAdapter });
   }
 
   const adapter = new PrismaPg({

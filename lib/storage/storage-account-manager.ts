@@ -113,25 +113,8 @@ export class StorageAccountManager {
         )
       }
 
-      // Try distributed lock first, fallback to in-memory for development
-      let result: StorageAccountCreationResult
-      try {
-        result = await withDistributedLock(lockKey, lockOperation, {
-          ttlMs: 30000,
-          retryAttempts: 3,
-          retryDelayMs: 1000
-        })
-      } catch (lockError) {
-        logStorageOperation('DISTRIBUTED_LOCK_FAILED', {
-          userId,
-          provider: storageProvider,
-          error: lockError instanceof Error ? lockError.message : 'Unknown error',
-          fallbackToInMemory: true
-        })
-
-        // Fallback to in-memory lock for development
-        result = await withInMemoryLock(lockKey, lockOperation, 30000)
-      }
+      // Use in-memory locking (Redis not implemented yet)
+      const result = await withInMemoryLock(lockKey, lockOperation, 30000)
 
       logStorageOperation('CREATE_OR_GET_COMPLETE', {
         userId,
@@ -198,11 +181,11 @@ export class StorageAccountManager {
     }
 
     try {
-      // Use idempotency protection
-      const idempotencyResult = await withIdempotency(
+      // Use idempotency protection (in-memory for now)
+      const idempotencyResult = await withInMemoryIdempotency(
         idempotencyKey,
         operation,
-        { ttlSeconds: 300, skipCache: forceCreate } // 5 minute cache
+        300 // 5 minute cache
       )
 
       return {
@@ -546,13 +529,13 @@ export class StorageAccountManager {
     }
 
     try {
-      // Use distributed locking with idempotency
+      // Use distributed locking with idempotency (in-memory for now)
       const lockOperation = async () => {
         try {
-          const idempotencyResult = await withIdempotency(
+          const idempotencyResult = await withInMemoryIdempotency(
             idempotencyKey,
             operation,
-            { ttlSeconds: 300, skipCache: forceCreate }
+            300 // 5 minutes
           )
           return idempotencyResult.result
         } catch (idempotencyError) {
@@ -564,20 +547,8 @@ export class StorageAccountManager {
         }
       }
 
-      let result
-      try {
-        result = await withDistributedLock(lockKey, lockOperation, {
-          ttlMs: 60000, // 1 minute for user operations
-          retryAttempts: 3,
-          retryDelayMs: 1000
-        })
-      } catch (lockError) {
-        logStorageOperation('DISTRIBUTED_LOCK_FAILED_FALLBACK', {
-          userId,
-          error: lockError instanceof Error ? lockError.message : 'Unknown error'
-        })
-        result = await withInMemoryLock(lockKey, lockOperation, 60000)
-      }
+      // Use in-memory locking (Redis not implemented yet)
+      const result = await withInMemoryLock(lockKey, lockOperation, 60000)
 
       logStorageOperation('ENSURE_USER_COMPLETE', {
         userId,

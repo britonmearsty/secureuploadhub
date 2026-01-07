@@ -10,6 +10,17 @@
  * 4. Fallback mechanisms work when Redis is unavailable
  */
 
+// Load environment variables FIRST before any other imports
+require('dotenv').config()
+
+// Verify DATABASE_URL is loaded
+if (!process.env.DATABASE_URL) {
+  console.error('❌ DATABASE_URL not found in environment variables')
+  process.exit(1)
+}
+
+console.log('✅ Environment variables loaded successfully')
+
 import { StorageAccountManager } from "../lib/storage/storage-account-manager"
 import prisma from "../lib/prisma"
 
@@ -207,7 +218,7 @@ class RaceConditionTester {
       const account = user.accounts[0]
 
       // Make the same request multiple times rapidly
-      const results = []
+      const results: any[] = []
       for (let i = 0; i < 5; i++) {
         const result = await StorageAccountManager.createOrGetStorageAccount(
           user.id,
