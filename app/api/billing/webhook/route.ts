@@ -8,12 +8,6 @@ import { addMonths } from "date-fns"
 
 export const dynamic = 'force-dynamic'
 
-const addMonthsLocal = (date: Date, months: number) => {
-  const copy = new Date(date)
-  copy.setMonth(copy.getMonth() + months)
-  return copy
-}
-
 const verifySignature = (rawBody: string, signature: string | null) => {
   if (!signature) return false
   const hash = crypto
@@ -128,8 +122,8 @@ async function handleSubscriptionEnable(data: any) {
 
   if (subscription) {
     const now = new Date()
-    const periodEnd = nextPaymentDate ? new Date(nextPaymentDate) : addMonthsLocal(now, 1)
-    const nextBilling = nextPaymentDate ? new Date(nextPaymentDate) : addMonthsLocal(now, 1)
+    const periodEnd = nextPaymentDate ? new Date(nextPaymentDate) : addMonths(now, 1)
+    const nextBilling = nextPaymentDate ? new Date(nextPaymentDate) : addMonths(now, 1)
 
     await prisma.$transaction(async (tx) => {
       await tx.subscription.update({
@@ -305,8 +299,8 @@ async function handleInvoicePaymentSucceeded(data: any) {
 
   if (subscription) {
     const now = new Date()
-    const periodEnd = addMonthsLocal(now, 1)
-    const nextBilling = addMonthsLocal(now, 1)
+    const periodEnd = addMonths(now, 1)
+    const nextBilling = addMonths(now, 1)
 
     await prisma.$transaction(async (tx) => {
       // Update subscription
@@ -385,6 +379,14 @@ async function handleChargeSuccess(data: any) {
     return
   }
 
+  console.log("Processing charge.success webhook:", {
+    reference,
+    paymentId,
+    amount,
+    currency,
+    metadata
+  })
+
   // Check if this is a subscription setup payment
   if (metadata?.type === 'subscription_setup') {
     await handleSubscriptionSetupPayment(data)
@@ -392,24 +394,35 @@ async function handleChargeSuccess(data: any) {
   }
 
   // Find existing payment record by reference
-  const existingPayment = await prisma.payment.findFirst({
+  let existingPayment = await prisma.payment.findFirst({
     where: { providerPaymentRef: reference },
     include: { subscription: { include: { plan: true, user: true } } }
   })
 
+  // If payment not found, try alternative approaches
   if (!existingPayment) {
-    console.error("Payment not found for reference:", reference)
+    console.log("Payment not found by reference, trying alternative approaches...")
     
-    // Check if this might be a subscription setup payment without proper metadata
-    if (metadata?.subscription_id || metadata?.user_id) {
-      console.log("Attempting to handle as subscription setup payment")
-      await handleSubscriptionSetupPayment(data)
-      return
+    // Approach 1: Check if this might be a subscription setup payment with metadata
+    if (metadata?.subscription_id) {
+      console.log("Found subscription_id in metadata:", metadata.subscription_id)
+      
+      const subscription = await prisma.subscription.findUnique({
+        where: { id: metadata.subscription_id },
+        include: { plan: true, user: true }
+      })
+      
+      if (subscription && subscription.status === SUBSCRIPTION_STATUS.INCOMPLETE) {
+        console.log("Found incomplete subscription, activating:", subscription.id)
+        await activateSubscriptionFromPayment(subscription, data)
+        return
+      }
     }
     
-    // Try to find incomplete subscription by user email if available
+    // Approach 2: Try to find incomplete subscription by user email
     if (data.customer?.email) {
       console.log("Attempting to find incomplete subscription by user email:", data.customer.email)
+      
       const user = await prisma.user.findUnique({
         where: { email: data.customer.email }
       })
@@ -418,24 +431,58 @@ async function handleChargeSuccess(data: any) {
         const incompleteSubscription = await prisma.subscription.findFirst({
           where: {
             userId: user.id,
-            status: 'incomplete'
+            status: SUBSCRIPTION_STATUS.INCOMPLETE
           },
-          include: { plan: true },
-          orderBy: { createdAt: 'desc' }
+          include: { plan: true, user: true },
+          orderBy: { createdAt: 'desc' } // Get the most recent one
         })
         
         if (incompleteSubscription) {
-          console.log("Found incomplete subscription, activating:", incompleteSubscription.id)
+          console.log("Found incomplete subscription by email, activating:", incompleteSubscription.id)
           await activateSubscriptionFromPayment(incompleteSubscription, data)
           return
         }
       }
     }
     
-    console.error("Could not handle charge success - no matching payment or subscription found")
+    // Approach 3: Try to find by payment amount and user (if we have user info)
+    if (data.customer?.email && amount) {
+      const user = await prisma.user.findUnique({
+        where: { email: data.customer.email }
+      })
+      
+      if (user) {
+        const matchingSubscription = await prisma.subscription.findFirst({
+          where: {
+            userId: user.id,
+            status: SUBSCRIPTION_STATUS.INCOMPLETE,
+            plan: {
+              // Convert amount from kobo to naira for comparison
+              price: (amount || 0) / 100
+            }
+          },
+          include: { plan: true, user: true },
+          orderBy: { createdAt: 'desc' }
+        })
+        
+        if (matchingSubscription) {
+          console.log("Found incomplete subscription by amount match, activating:", matchingSubscription.id)
+          await activateSubscriptionFromPayment(matchingSubscription, data)
+          return
+        }
+      }
+    }
+    
+    console.error("Could not handle charge success - no matching payment or subscription found", {
+      reference,
+      customerEmail: data.customer?.email,
+      metadata,
+      amount
+    })
     return
   }
 
+  // Handle existing payment
   if (existingPayment.status === PAYMENT_STATUS.SUCCEEDED) {
     console.log("Duplicate webhook for payment:", reference)
     return // Duplicate webhook
@@ -443,7 +490,7 @@ async function handleChargeSuccess(data: any) {
 
   const subscription = existingPayment.subscription
   const now = new Date()
-  const periodEnd = subscription ? addMonthsLocal(now, 1) : null
+  const periodEnd = subscription ? addMonths(now, 1) : null
 
   await prisma.$transaction(async (tx) => {
     // Update payment
@@ -451,7 +498,7 @@ async function handleChargeSuccess(data: any) {
       where: { id: existingPayment.id },
       data: {
         status: PAYMENT_STATUS.SUCCEEDED,
-        providerPaymentId: paymentId.toString(),
+        providerPaymentId: paymentId?.toString(),
         amount: (amount || 0) / 100,
         currency: currency || existingPayment.currency,
         description: existingPayment.description ?? `Payment for ${subscription?.plan?.name ?? "plan"}`,
@@ -467,6 +514,7 @@ async function handleChargeSuccess(data: any) {
         providerCustomerId: data.customer?.id?.toString() || subscription.providerCustomerId,
         currentPeriodStart: now,
         currentPeriodEnd: periodEnd,
+        nextBillingDate: periodEnd,
         cancelAtPeriodEnd: false,
         retryCount: 0, // Reset retry count on successful payment
         gracePeriodEnd: null, // Clear grace period
@@ -482,12 +530,14 @@ async function handleChargeSuccess(data: any) {
       await tx.subscriptionHistory.create({
         data: {
           subscriptionId: subscription.id,
-          action: subscription.status === 'incomplete' ? 'activated' : 'renewed',
+          action: subscription.status === SUBSCRIPTION_STATUS.INCOMPLETE ? 'activated' : 'renewed',
           oldValue: JSON.stringify({ status: subscription.status }),
           newValue: JSON.stringify({ status: SUBSCRIPTION_STATUS.ACTIVE }),
-          reason: subscription.status === 'incomplete' ? 'Initial payment succeeded' : 'Payment succeeded',
+          reason: subscription.status === SUBSCRIPTION_STATUS.INCOMPLETE ? 'Initial payment succeeded' : 'Payment succeeded',
         }
       })
+
+      console.log(`Subscription ${subscription.id} activated/renewed via webhook`)
     }
   })
 
@@ -535,7 +585,7 @@ async function handleSubscriptionSetupPayment(data: any) {
   }
 
   const now = new Date()
-  const periodEnd = addMonthsLocal(now, 1)
+  const periodEnd = addMonths(now, 1)
 
   await prisma.$transaction(async (tx) => {
     // Check if payment record already exists
@@ -728,7 +778,7 @@ async function handleChargeFailed(data: any) {
 async function activateSubscriptionFromPayment(subscription: any, paymentData: any) {
   const { reference, id: paymentId, amount, currency, authorization } = paymentData
   const now = new Date()
-  const periodEnd = addMonthsLocal(now, 1)
+  const periodEnd = addMonths(now, 1)
 
   await prisma.$transaction(async (tx) => {
     // Create payment record

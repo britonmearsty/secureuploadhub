@@ -17,6 +17,7 @@ import { config } from 'dotenv'
 import prisma from '../lib/prisma'
 import { SUBSCRIPTION_STATUS, PAYMENT_STATUS } from '../lib/billing-constants'
 import { createAuditLog, AUDIT_ACTIONS } from '../lib/audit-log'
+import { addMonths } from 'date-fns'
 
 // Load environment variables
 config()
@@ -98,7 +99,7 @@ async function fixIncompleteSubscriptions(): Promise<FixResult[]> {
 
       // Activate the subscription
       const now = new Date()
-      const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000) // 30 days
+      const periodEnd = addMonths(now, 1) // Use proper date calculation
 
       await prisma.$transaction(async (tx) => {
         // Update subscription to active

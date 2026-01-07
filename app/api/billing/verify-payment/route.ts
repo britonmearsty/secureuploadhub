@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPaystack } from '@/lib/billing'
 import prisma from '@/lib/prisma'
+import { PAYMENT_STATUS, SUBSCRIPTION_STATUS } from '@/lib/billing-constants'
+import { addMonths } from 'date-fns'
 
 export async function GET(request: NextRequest) {
   try {
@@ -49,29 +51,48 @@ export async function GET(request: NextRequest) {
     // Check if payment was successful
     if (paystackData.status === 'success') {
       // Update payment status if not already updated
-      if (payment.status !== 'completed') {
+      if (payment.status !== PAYMENT_STATUS.SUCCEEDED) {
         await prisma.payment.update({
           where: { id: payment.id },
           data: {
-            status: 'completed',
+            status: PAYMENT_STATUS.SUCCEEDED,
+            providerPaymentId: paystackData.id?.toString(),
             providerResponse: JSON.stringify(paystackData)
           }
         })
       }
 
       // Update subscription status if not already active
-      if (payment.subscription && payment.subscription.status !== 'active') {
+      if (payment.subscription && payment.subscription.status !== SUBSCRIPTION_STATUS.ACTIVE) {
         const now = new Date()
-        const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000) // 30 days
+        const periodEnd = addMonths(now, 1) // Use proper date calculation
 
         await prisma.subscription.update({
           where: { id: payment.subscription.id },
           data: {
-            status: 'active',
+            status: SUBSCRIPTION_STATUS.ACTIVE,
             currentPeriodStart: now,
-            currentPeriodEnd: periodEnd
+            currentPeriodEnd: periodEnd,
+            nextBillingDate: periodEnd,
+            cancelAtPeriodEnd: false,
+            retryCount: 0,
+            gracePeriodEnd: null,
+            lastPaymentAttempt: now,
           }
         })
+
+        // Create subscription history entry
+        await prisma.subscriptionHistory.create({
+          data: {
+            subscriptionId: payment.subscription.id,
+            action: "activated",
+            oldValue: JSON.stringify({ status: payment.subscription.status }),
+            newValue: JSON.stringify({ status: SUBSCRIPTION_STATUS.ACTIVE }),
+            reason: "Payment verified and subscription activated",
+          }
+        })
+
+        console.log(`Subscription ${payment.subscription.id} activated via payment verification`)
       }
 
       return NextResponse.json({
@@ -81,11 +102,11 @@ export async function GET(request: NextRequest) {
           id: payment.id,
           amount: payment.amount,
           currency: payment.currency,
-          status: 'completed'
+          status: PAYMENT_STATUS.SUCCEEDED
         },
         subscription: payment.subscription ? {
           id: payment.subscription.id,
-          status: 'active',
+          status: SUBSCRIPTION_STATUS.ACTIVE,
           plan: payment.subscription.plan
         } : null
       })
@@ -94,7 +115,7 @@ export async function GET(request: NextRequest) {
       await prisma.payment.update({
         where: { id: payment.id },
         data: {
-          status: 'failed',
+          status: PAYMENT_STATUS.FAILED,
           providerResponse: JSON.stringify(paystackData)
         }
       })
@@ -104,7 +125,7 @@ export async function GET(request: NextRequest) {
         message: 'Payment was not successful',
         payment: {
           id: payment.id,
-          status: 'failed'
+          status: PAYMENT_STATUS.FAILED
         }
       })
     }
