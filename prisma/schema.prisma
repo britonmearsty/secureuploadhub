@@ -287,6 +287,7 @@ model Payment {
   description        String?
   providerPaymentId  String?
   providerPaymentRef String?
+  providerResponse   String?       // JSON string of provider response data
   authorizationCode  String?       // Paystack authorization code for recurring payments
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt

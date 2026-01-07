@@ -188,12 +188,31 @@ export async function POST(request: NextRequest) {
           currency: paystackCurrency,
           reference: reference,
           callback_url: `${PAYSTACK_CONFIG.baseUrl}/dashboard/billing?status=success&subscription_id=${subscription.id}`,
+          // Customize available payment channels
+          channels: ['card', 'bank', 'ussd', 'bank_transfer'], // Remove unwanted options
+          // Add custom fields that appear on checkout
+          custom_fields: [
+            {
+              display_name: "Plan Type",
+              variable_name: "plan_type",
+              value: plan.name
+            },
+            {
+              display_name: "Billing Period", 
+              variable_name: "billing_period",
+              value: "Monthly"
+            }
+          ],
           metadata: {
             subscription_id: subscription.id,
             plan_id: plan.id,
             user_id: session.user.id,
             type: 'subscription_setup',
-            user_email: user.email
+            user_email: user.email,
+            // Add more metadata for tracking
+            source: 'web_app',
+            plan_name: plan.name,
+            customer_name: user.name || user.email.split('@')[0]
           }
         });
 
