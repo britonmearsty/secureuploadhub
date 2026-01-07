@@ -73,6 +73,7 @@ export async function POST(request: Request) {
         },
         data: {
           status: StorageAccountStatus.DISCONNECTED,
+          isActive: false, // Keep deprecated field in sync
           lastError: "Storage access disabled by user",
           updatedAt: new Date()
         }

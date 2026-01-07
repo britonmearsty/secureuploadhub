@@ -14,6 +14,7 @@
     "test:api:coverage": "vitest __tests__/api --coverage",
     "test:all": "vitest --run",
     "test:race-conditions": "tsx scripts/test-race-condition-fix.ts",
+    "fix:data-integrity": "tsx scripts/fix-data-integrity.ts",
     "lint": "eslint",
     "email": "email dev",
     "create-admin": "tsx scripts/create-admin.ts",

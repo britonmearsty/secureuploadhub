@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { getConnectedAccounts } from "@/lib/storage"
-import { ensureUserStorageAccounts } from "@/lib/storage/middleware-fallback"
+import { StorageAccountManager } from "@/lib/storage/storage-account-manager"
+import { getActiveStorageAccountsForUser } from "@/lib/storage/data-integrity-helpers"
 
 // GET /api/storage/accounts - Get connected storage accounts
 export async function GET() {
@@ -20,8 +21,11 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Enhanced fallback mechanism with comprehensive reporting
-    const fallbackResult = await ensureUserStorageAccounts()
+    // Enhanced fallback mechanism using the new StorageAccountManager
+    const fallbackResult = await StorageAccountManager.ensureStorageAccountsForUser(
+      session.user.id,
+      { forceCreate: false, respectDisconnected: true }
+    )
     
     if (fallbackResult.created > 0) {
       console.log(`✅ STORAGE_ACCOUNTS_API: Created ${fallbackResult.created} missing StorageAccount(s) for user ${session.user.id}`)
@@ -44,10 +48,16 @@ export async function GET() {
       }))
     })
 
+    // Also get the clean storage accounts using new helper
+    const activeStorageAccounts = await getActiveStorageAccountsForUser(session.user.id)
+
     const response = {
       accounts,
+      activeStorageAccounts,
       fallbackInfo: {
         accountsCreated: fallbackResult.created,
+        accountsReactivated: fallbackResult.reactivated,
+        accountsValidated: fallbackResult.validated,
         errors: fallbackResult.errors
       }
     }

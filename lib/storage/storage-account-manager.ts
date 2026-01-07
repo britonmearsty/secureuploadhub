@@ -279,7 +279,7 @@ export class StorageAccountManager {
                 where: { id: existingStorageAccount.id },
                 data: {
                   status: StorageAccountStatus.ACTIVE,
-                  isActive: true,
+                  isActive: true, // Keep deprecated field in sync
                   lastError: null,
                   lastAccessedAt: new Date(),
                   updatedAt: new Date()
@@ -361,7 +361,7 @@ export class StorageAccountManager {
             displayName: userName || userEmail || `${storageProvider} Account`,
             email: userEmail,
             status: StorageAccountStatus.ACTIVE,
-            isActive: true,
+            isActive: true, // Keep deprecated field in sync
             createdAt: oauthAccount.createdAt || new Date(),
             updatedAt: new Date(),
             lastAccessedAt: new Date(),

@@ -21,10 +21,10 @@ model StorageAccount {
   providerAccountId String              // External account ID from OAuth
   displayName       String              // User-friendly name
   email             String?             // Account email for identification
-  status            StorageAccountStatus @default(ACTIVE) // NEW: Account state
-  isActive          Boolean             @default(true)    // DEPRECATED: Use status instead
-  lastError         String?             // NEW: Last error message for ERROR state
-  lastAccessedAt    DateTime?           // NEW: Track last successful access
+  status            StorageAccountStatus @default(ACTIVE) // Primary status field
+  isActive          Boolean             @default(true)    // DEPRECATED: Use status instead, kept for backward compatibility
+  lastError         String?             // Last error message for ERROR state
+  lastAccessedAt    DateTime?           // Track last successful access
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   
@@ -149,10 +149,10 @@ model UploadPortal {
   requireClientName   Boolean         @default(true)
   requireClientEmail  Boolean         @default(false)
   passwordHash        String?
-  storageProvider     String          @default("local")
+  storageProvider     String          @default("local") // DEPRECATED: Use storageAccount.provider instead
   storageFolderId     String?
   storageFolderPath   String?
-  storageAccountId    String?         // NEW: Bind to specific storage account
+  storageAccountId    String?         // Primary: Bind to specific storage account
   useClientFolders    Boolean         @default(false)
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
@@ -169,6 +169,7 @@ model UploadPortal {
   storageAccount      StorageAccount? @relation(fields: [storageAccountId], references: [id], onDelete: SetNull)
 
   @@index([userId, createdAt])
+  @@index([storageAccountId])
 }
 
 model FileUpload {
@@ -181,10 +182,10 @@ model FileUpload {
   clientName      String?
   clientEmail     String?
   clientMessage   String?
-  storageProvider String
+  storageProvider String       // DEPRECATED: Use storageAccount.provider instead
   storageFileId   String?
   storagePath     String?
-  storageAccountId String?        // NEW: Permanently bind to storage account
+  storageAccountId String?     // Primary: Permanently bind to storage account
   status          String       @default("pending")
   errorMessage    String?
   ipAddress       String?
@@ -199,6 +200,7 @@ model FileUpload {
   @@index([userId])
   @@index([clientEmail])
   @@index([clientName])
+  @@index([storageAccountId])
 }
 
 model ChunkedUpload {
