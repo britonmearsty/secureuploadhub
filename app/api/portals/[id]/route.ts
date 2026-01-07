@@ -3,6 +3,7 @@ import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
 import { hashPassword } from "@/lib/password"
 import { invalidateCache, getUserDashboardKey, getUserUploadsKey, getUserStatsKey, getUserPortalsKey } from "@/lib/cache"
+import { StorageAccountStatus } from "@prisma/client"
 
 // GET /api/portals/[id] - Get a specific portal
 export async function GET(
@@ -96,6 +97,32 @@ export async function PATCH(
     for (const field of allowedFields) {
       if (field in updates) {
         safeUpdates[field] = updates[field]
+      }
+    }
+
+    // STORAGE VALIDATION: Check if trying to activate portal with disconnected storage
+    if (safeUpdates.isActive === true && existingPortal.storageAccountId) {
+      const storageAccount = await prisma.storageAccount.findUnique({
+        where: { id: existingPortal.storageAccountId },
+        select: { status: true, provider: true, email: true }
+      })
+
+      if (storageAccount) {
+        if (storageAccount.status === StorageAccountStatus.DISCONNECTED) {
+          return NextResponse.json({
+            error: `Cannot activate portal. Your ${storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage account is disconnected. Please reconnect your storage account first.`,
+            code: "STORAGE_DISCONNECTED",
+            storageProvider: storageAccount.provider,
+            storageEmail: storageAccount.email
+          }, { status: 400 })
+        } else if (storageAccount.status === StorageAccountStatus.ERROR) {
+          return NextResponse.json({
+            error: `Cannot activate portal. There are connection issues with your ${storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage account. Please check your storage connection.`,
+            code: "STORAGE_ERROR",
+            storageProvider: storageAccount.provider,
+            storageEmail: storageAccount.email
+          }, { status: 400 })
+        }
       }
     }
 

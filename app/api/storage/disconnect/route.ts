@@ -105,15 +105,37 @@ export async function POST(request: Request) {
         select: {
           id: true,
           name: true,
-          storageProvider: true
+          storageProvider: true,
+          isActive: true
         }
       })
       
       console.log('🔍 STORAGE_DISCONNECT: Affected portals:', affectedPortals.length)
 
+      // AUTOMATIC PORTAL DEACTIVATION: Deactivate portals that use the disconnected storage
+      let deactivatedPortals = 0
+      if (affectedPortals.length > 0) {
+        const activePortalIds = affectedPortals.filter(p => p.isActive).map(p => p.id)
+        
+        if (activePortalIds.length > 0) {
+          const portalUpdateResult = await tx.uploadPortal.updateMany({
+            where: {
+              id: { in: activePortalIds }
+            },
+            data: {
+              isActive: false
+            }
+          })
+          
+          deactivatedPortals = portalUpdateResult.count
+          console.log('🔍 STORAGE_DISCONNECT: Deactivated portals:', deactivatedPortals)
+        }
+      }
+
       return {
         updatedStorageAccounts: storageUpdateResult.count,
         affectedPortals,
+        deactivatedPortals,
         updatedAccounts
       }
     })
@@ -123,6 +145,10 @@ export async function POST(request: Request) {
     if (result.affectedPortals.length > 0) {
       const portalNames = result.affectedPortals.map(p => p.name).join(", ")
       message += ` Note: ${result.affectedPortals.length} portal(s) (${portalNames}) may be affected and might need reconfiguration.`
+      
+      if (result.deactivatedPortals > 0) {
+        message += ` ${result.deactivatedPortals} active portal(s) have been automatically deactivated.`
+      }
     }
 
     console.log('✅ STORAGE_DISCONNECT: Success:', {
@@ -152,6 +178,7 @@ export async function POST(request: Request) {
       success: true, 
       message,
       affectedPortals: result.affectedPortals.length,
+      deactivatedPortals: result.deactivatedPortals,
       storageDisconnected: true,
       authPreserved: true
     })

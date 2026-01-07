@@ -28,6 +28,8 @@ import {
     RefreshCw,
     Lock
 } from "lucide-react"
+import { FileList } from "@/components/assets"
+import { ToastComponent } from "@/components/ui/Toast"
 
 interface Portal {
     id: string
@@ -80,10 +82,69 @@ export default function PortalList({
     const [portalToDelete, setPortalToDelete] = useState<Portal | null>(null)
     const [togglingId, setTogglingId] = useState<string | null>(null)
 
-    // Modal State
     const [selectedPortal, setSelectedPortal] = useState<Portal | null>(null)
     const [portalFiles, setPortalFiles] = useState<any[]>([])
     const [isLoadingFiles, setIsLoadingFiles] = useState(false)
+
+    // Toast notification state
+    const [toast, setToast] = useState<{
+        isOpen: boolean;
+        type: 'error' | 'success' | 'warning' | 'info';
+        title: string;
+        message: string;
+    }>({
+        isOpen: false,
+        type: 'error',
+        title: '',
+        message: ''
+    })
+
+    const showToast = (type: 'error' | 'success' | 'warning' | 'info', title: string, message: string) => {
+        setToast({
+            isOpen: true,
+            type,
+            title,
+            message
+        })
+    }
+
+    const handleFilesUpdate = (updatedFiles: any[]) => {
+        setPortalFiles(updatedFiles)
+    }
+
+    const handleDeleteRequest = (file: any) => {
+        // Check storage account status before showing delete modal
+        if (file.storageAccount) {
+            const status = file.storageAccount.status
+            if (status === 'DISCONNECTED') {
+                showToast('error', 'File Unavailable', `Cannot delete file. Your ${file.storageAccount.provider} storage account is disconnected.`)
+                return
+            } else if (status === 'ERROR') {
+                showToast('error', 'File Unavailable', `Cannot delete file. There are connection issues with your ${file.storageAccount.provider} storage account.`)
+                return
+            }
+        }
+        
+        // Proceed with deletion
+        deleteFile(file)
+    }
+
+    const deleteFile = async (file: any) => {
+        try {
+            const res = await fetch(`/api/uploads/${file.id}`, {
+                method: 'DELETE',
+            })
+            if (res.ok) {
+                setPortalFiles(prev => prev.filter(f => f.id !== file.id))
+                showToast('success', 'File Deleted', 'File has been successfully deleted.')
+            } else {
+                const errorData = await res.json()
+                showToast('error', 'Delete Error', errorData.error || 'Failed to delete file')
+            }
+        } catch (error) {
+            showToast('error', 'Delete Error', 'Error deleting file')
+        }
+    }
 
     useEffect(() => {
         if (disablePolling) return;
@@ -127,9 +188,30 @@ export default function PortalList({
     async function togglePortalStatus(id: string, isActive: boolean) {
         setTogglingId(id)
 
-        // Optimistic Update
+        // Find the portal to check its storage account status
+        const portal = portals.find(p => p.id === id)
+        if (!portal) {
+            setTogglingId(null)
+            return
+        }
+
         const newStatus = !isActive
 
+        // STORAGE VALIDATION: Check if trying to activate portal with disconnected storage
+        if (newStatus && portal.storageAccount) {
+            if (portal.storageAccount.status === 'DISCONNECTED') {
+                setTogglingId(null)
+                // Show error message - portal cannot be activated with disconnected storage
+                alert(`Cannot activate portal "${portal.name}". Your ${portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage account is disconnected. Please reconnect your storage account first in the Integrations page.`)
+                return
+            } else if (portal.storageAccount.status === 'ERROR') {
+                setTogglingId(null)
+                alert(`Cannot activate portal "${portal.name}". There are connection issues with your ${portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage account. Please check your storage connection in the Integrations page.`)
+                return
+            }
+        }
+
+        // Optimistic Update
         // Update parent state if available for categorization consistency
         if (allPortals && onPortalsUpdate) {
             const updatedAll = allPortals.map(p => p.id === id ? { ...p, isActive: newStatus } : p)
@@ -145,16 +227,23 @@ export default function PortalList({
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ isActive: newStatus })
             })
-            if (res.ok) {
-                posthog.capture('portal_status_toggled', {
-                    portal_id: id,
-                    new_status: newStatus ? 'live' : 'hidden',
-                });
-            } else {
-                throw new Error("Failed to toggle")
+            
+            if (!res.ok) {
+                const errorData = await res.json()
+                throw new Error(errorData.error || "Failed to toggle portal status")
             }
+            
+            posthog.capture('portal_status_toggled', {
+                portal_id: id,
+                new_status: newStatus ? 'live' : 'hidden',
+            });
         } catch (error) {
             console.error("Error toggling portal:", error)
+            
+            // Show user-friendly error message
+            const errorMessage = error instanceof Error ? error.message : "Failed to toggle portal status"
+            alert(`Error: ${errorMessage}`)
+            
             // Revert on error
             if (allPortals && onPortalsUpdate) {
                 const revertedAll = allPortals.map(p => p.id === id ? { ...p, isActive: isActive } : p)
@@ -378,13 +467,25 @@ Status: ${portal.isActive ? 'Active ✅' : 'Inactive ⏸️'}`
                             {/* Portal Status Toggle */}
                             <button
                                 onClick={() => togglePortalStatus(portal.id, portal.isActive)}
-                                disabled={togglingId === portal.id}
-                                className={`absolute top-6 right-6 z-20 p-2 rounded-xl transition-all duration-200 flex-shrink-0 ${togglingId === portal.id ? 'opacity-60 cursor-not-allowed animate-pulse' : ''
-                                    } ${portal.isActive
-                                        ? 'bg-success/10 dark:bg-success/20 text-success hover:bg-success/20 dark:hover:bg-success/30 shadow-sm hover:shadow-md'
-                                        : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
-                                    }`}
-                                title={portal.isActive ? "Portal is live (Click to pause)" : "Portal is paused (Click to activate)"}
+                                disabled={togglingId === portal.id || (portal.storageAccount?.status === 'DISCONNECTED' || portal.storageAccount?.status === 'ERROR')}
+                                className={`absolute top-6 right-6 z-20 p-2 rounded-xl transition-all duration-200 flex-shrink-0 ${
+                                    togglingId === portal.id ? 'opacity-60 cursor-not-allowed animate-pulse' : ''
+                                } ${
+                                    portal.storageAccount?.status === 'DISCONNECTED' || portal.storageAccount?.status === 'ERROR'
+                                        ? 'opacity-50 cursor-not-allowed bg-muted text-muted-foreground'
+                                        : portal.isActive
+                                            ? 'bg-success/10 dark:bg-success/20 text-success hover:bg-success/20 dark:hover:bg-success/30 shadow-sm hover:shadow-md'
+                                            : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+                                }`}
+                                title={
+                                    portal.storageAccount?.status === 'DISCONNECTED'
+                                        ? `Cannot activate - ${portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage is disconnected`
+                                        : portal.storageAccount?.status === 'ERROR'
+                                            ? `Cannot activate - ${portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage has connection issues`
+                                            : portal.isActive 
+                                                ? "Portal is live (Click to pause)" 
+                                                : "Portal is paused (Click to activate)"
+                                }
                             >
                                 {togglingId === portal.id ? (
                                     <RefreshCw className="w-6 h-6 animate-spin" />
@@ -451,6 +552,35 @@ Status: ${portal.isActive ? 'Active ✅' : 'Inactive ⏸️'}`
                                     </dd>
                                 </div>
                             </dl>
+
+                            {/* Storage Disconnected Warning */}
+                            {portal.storageAccount?.status === 'DISCONNECTED' && (
+                                <div className="mt-4 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl">
+                                    <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
+                                        <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                                            <div className="w-2 h-2 bg-white rounded-full" />
+                                        </div>
+                                        <span className="text-xs font-medium">Storage Disconnected</span>
+                                    </div>
+                                    <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                                        Reconnect {portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} to activate this portal
+                                    </p>
+                                </div>
+                            )}
+
+                            {portal.storageAccount?.status === 'ERROR' && (
+                                <div className="mt-4 p-3 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-xl">
+                                    <div className="flex items-center gap-2 text-orange-700 dark:text-orange-400">
+                                        <div className="w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
+                                            <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                                        </div>
+                                        <span className="text-xs font-medium">Storage Error</span>
+                                    </div>
+                                    <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                                        Check {portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} connection in settings
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
                         {/* Card Actions */}
@@ -603,26 +733,22 @@ Status: ${portal.isActive ? 'Active ✅' : 'Inactive ⏸️'}`
                                             <RefreshCw className="w-8 h-8 text-muted-foreground animate-spin mx-auto mb-2" />
                                             <p className="text-muted-foreground text-sm italic">Retrieving file history...</p>
                                         </div>
-                                    ) : portalFiles.length > 0 ? (
-                                        portalFiles.map((file) => (
-                                            <div key={file.id} className="p-4 rounded-2xl border border-border hover:border-muted-foreground hover:bg-muted/50 transition-all flex items-center justify-between group">
-                                                <div className="min-w-0 pr-4">
-                                                    <p className="text-sm font-bold text-foreground truncate">{file.fileName}</p>
-                                                    <p className="text-xs text-muted-foreground mt-0.5">
-                                                        {formatFileSize(file.fileSize)} · {new Date(file.createdAt).toLocaleDateString()}
-                                                    </p>
-                                                </div>
-                                                <a
-                                                    href={`/api/uploads/${file.id}/download`}
-                                                    download={file.fileName}
-                                                    className="w-10 h-10 bg-card shadow-sm border border-border rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-muted-foreground transition-all group-hover:scale-105"
-                                                >
-                                                    <Download className="w-4 h-4" />
-                                                </a>
-                                            </div>
-                                        ))
                                     ) : (
-                                        <p className="text-center py-8 text-muted-foreground italic text-sm">No documents found.</p>
+                                        <FileList
+                                            files={portalFiles}
+                                            onDelete={handleDeleteRequest}
+                                            onFilesUpdate={handleFilesUpdate}
+                                            showToast={showToast}
+                                            showActions={true}
+                                            showPortal={false}
+                                            showSearch={true}
+                                            showViewToggle={true}
+                                            showAutoSync={true}
+                                            compact={true}
+                                            emptyMessage="No documents found"
+                                            emptyDescription="No files have been uploaded to this portal yet."
+                                            viewMode="list"
+                                        />
                                     )}
                                 </div>
                             </div>
@@ -645,6 +771,15 @@ Status: ${portal.isActive ? 'Active ✅' : 'Inactive ⏸️'}`
                     </div>
                 )}
             </AnimatePresence>
+
+            {/* Toast Notification */}
+            <ToastComponent
+                isOpen={toast.isOpen}
+                onClose={() => setToast({ ...toast, isOpen: false })}
+                type={toast.type}
+                title={toast.title}
+                message={toast.message}
+            />
         </>
     )
 }

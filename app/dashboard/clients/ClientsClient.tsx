@@ -24,6 +24,7 @@ import {
 } from "lucide-react"
 import { FileList } from "@/components/assets"
 import { formatFileSize, getFileIcon } from "@/lib/file-utils"
+import { ToastComponent } from "@/components/ui/Toast"
 
 interface Client {
     key: string
@@ -51,6 +52,66 @@ export default function ClientsClient({ clients: initialClients }: ClientsClient
     const [files, setFiles] = useState<any[]>([])
     const [isLoadingFiles, setIsLoadingFiles] = useState(false)
     const [copiedEmail, setCopiedEmail] = useState(false)
+
+    // Toast notification state
+    const [toast, setToast] = useState<{
+        isOpen: boolean;
+        type: 'error' | 'success' | 'warning' | 'info';
+        title: string;
+        message: string;
+    }>({
+        isOpen: false,
+        type: 'error',
+        title: '',
+        message: ''
+    })
+
+    const showToast = (type: 'error' | 'success' | 'warning' | 'info', title: string, message: string) => {
+        setToast({
+            isOpen: true,
+            type,
+            title,
+            message
+        })
+    }
+
+    const handleFilesUpdate = (updatedFiles: any[]) => {
+        setFiles(updatedFiles)
+    }
+
+    const handleDeleteRequest = (file: any) => {
+        // Check storage account status before showing delete modal
+        if (file.storageAccount) {
+            const status = file.storageAccount.status
+            if (status === 'DISCONNECTED') {
+                showToast('error', 'File Unavailable', `Cannot delete file. Your ${file.storageAccount.provider} storage account is disconnected.`)
+                return
+            } else if (status === 'ERROR') {
+                showToast('error', 'File Unavailable', `Cannot delete file. There are connection issues with your ${file.storageAccount.provider} storage account.`)
+                return
+            }
+        }
+        
+        // Proceed with deletion
+        deleteFile(file)
+    }
+
+    const deleteFile = async (file: any) => {
+        try {
+            const res = await fetch(`/api/uploads/${file.id}`, {
+                method: 'DELETE',
+            })
+            if (res.ok) {
+                setFiles(prev => prev.filter(f => f.id !== file.id))
+                showToast('success', 'File Deleted', 'File has been successfully deleted.')
+            } else {
+                const errorData = await res.json()
+                showToast('error', 'Delete Error', errorData.error || 'Failed to delete file')
+            }
+        } catch (error) {
+            showToast('error', 'Delete Error', 'Error deleting file')
+        }
+    }
 
     const tabs = [
         { id: "directory", name: "Directory", icon: Users, description: "All clients and their history" },
@@ -383,9 +444,14 @@ export default function ClientsClient({ clients: initialClients }: ClientsClient
                                     ) : (
                                         <FileList
                                             files={files}
-                                            showActions={false}
-                                            showDownloadOnly={true}
-                                            showPortal={false}
+                                            onDelete={handleDeleteRequest}
+                                            onFilesUpdate={handleFilesUpdate}
+                                            showToast={showToast}
+                                            showActions={true}
+                                            showPortal={true}
+                                            showSearch={true}
+                                            showViewToggle={true}
+                                            showAutoSync={true}
                                             compact={true}
                                             emptyMessage="No documents found"
                                             emptyDescription="This client hasn't uploaded any files yet."
@@ -416,6 +482,15 @@ export default function ClientsClient({ clients: initialClients }: ClientsClient
                 )
                 }
             </AnimatePresence >
+
+            {/* Toast Notification */}
+            <ToastComponent
+                isOpen={toast.isOpen}
+                onClose={() => setToast({ ...toast, isOpen: false })}
+                type={toast.type}
+                title={toast.title}
+                message={toast.message}
+            />
         </div >
     )
 }
