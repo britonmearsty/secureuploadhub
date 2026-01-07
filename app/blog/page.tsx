@@ -39,20 +39,9 @@ interface Article {
 }
 
 async function getArticles(): Promise<{ articles: Article[]; total: number }> {
-  try {
-    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/articles?limit=20`, {
-      next: { revalidate: 300 } // Revalidate every 5 minutes
-    })
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch articles')
-    }
-    
-    return await response.json()
-  } catch (error) {
-    console.error('Error fetching articles:', error)
-    return { articles: [], total: 0 }
-  }
+  // TODO: Implement actual articles API or database query
+  // For now, return empty array to prevent server component errors
+  return { articles: [], total: 0 }
 }
 
 export default async function BlogPage() {

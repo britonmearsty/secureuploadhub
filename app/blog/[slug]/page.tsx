@@ -41,23 +41,9 @@ interface BlogPostPageProps {
 }
 
 async function getArticle(slug: string): Promise<Article | null> {
-  try {
-    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/articles/${slug}`, {
-      next: { revalidate: 300 } // Revalidate every 5 minutes
-    })
-    
-    if (!response.ok) {
-      if (response.status === 404) {
-        return null
-      }
-      throw new Error('Failed to fetch article')
-    }
-    
-    return await response.json()
-  } catch (error) {
-    console.error('Error fetching article:', error)
-    return null
-  }
+  // TODO: Implement actual articles API or database query
+  // For now, return null to prevent server component errors
+  return null
 }
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
