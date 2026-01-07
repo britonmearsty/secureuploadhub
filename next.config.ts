@@ -30,11 +30,6 @@ const nextConfig: NextConfig = {
             key: 'X-XSS-Protection',
             value: '1; mode=block',
           },
-          // Enable HTTP/2 Server Push hints
-          {
-            key: 'Link',
-            value: '</static/css/app.css>; rel=preload; as=style, </static/js/app.js>; rel=preload; as=script',
-          },
         ],
       },
     ];

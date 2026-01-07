@@ -31,13 +31,13 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://secureuploadhub.com",
+    canonical: process.env.NEXT_PUBLIC_APP_URL || "https://secureuploadhub.com",
   },
   openGraph: {
     title: "SecureUploadHub | Professional Client File Collection",
     description: "Secure file collection platform for accountants, lawyers & consultants. Stop chasing email attachments - create branded upload portals in seconds.",
     type: "website",
-    url: "https://secureuploadhub.com",
+    url: process.env.NEXT_PUBLIC_APP_URL || "https://secureuploadhub.com",
     siteName: "SecureUploadHub",
     locale: "en_US",
     images: [
@@ -71,10 +71,10 @@ export default function RootLayout({
     "@graph": [
       {
         "@type": "Organization",
-        "@id": "https://secureuploadhub.com/#organization",
+        "@id": `${process.env.NEXT_PUBLIC_APP_URL || "https://secureuploadhub.com"}/#organization`,
         "name": "SecureUploadHub",
-        "url": "https://secureuploadhub.com",
-        "logo": "https://secureuploadhub.com/logo.png",
+        "url": process.env.NEXT_PUBLIC_APP_URL || "https://secureuploadhub.com",
+        "logo": `${process.env.NEXT_PUBLIC_APP_URL || "https://secureuploadhub.com"}/logo.png`,
         "description": "Professional secure file collection platform for businesses",
         "address": {
           "@type": "PostalAddress",
@@ -94,7 +94,7 @@ export default function RootLayout({
       },
       {
         "@type": "SoftwareApplication",
-        "@id": "https://secureuploadhub.com/#software",
+        "@id": `${process.env.NEXT_PUBLIC_APP_URL || "https://secureuploadhub.com"}/#software`,
         "name": "SecureUploadHub",
         "applicationCategory": "BusinessApplication",
         "operatingSystem": "Web Browser",
@@ -114,7 +114,7 @@ export default function RootLayout({
       },
       {
         "@type": "LocalBusiness",
-        "@id": "https://secureuploadhub.com/#business",
+        "@id": `${process.env.NEXT_PUBLIC_APP_URL || "https://secureuploadhub.com"}/#business`,
         "name": "SecureUploadHub",
         "address": {
           "@type": "PostalAddress",
