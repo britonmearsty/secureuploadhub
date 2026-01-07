@@ -45,6 +45,12 @@ const navItems = [
         icon: Users,
     },
     {
+        name: "Blog",
+        href: "/admin/blog",
+        icon: FileText,
+        description: "Manage articles and blog content"
+    },
+    {
         name: "Communication",
         href: "/admin/communication",
         icon: MessageSquare,

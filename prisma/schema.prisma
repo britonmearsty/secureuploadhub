@@ -69,6 +69,8 @@ model User {
   messages          Message[]
   feedback          Feedback[]
   notifications     Notification[]
+  // Blog System Relations
+  articles          Article[]
 }
 
 model SyncSettings {
@@ -548,4 +550,86 @@ enum NotificationType {
   MESSAGE_RECEIVED
   FEEDBACK_RESPONSE
   SYSTEM_ANNOUNCEMENT
+}
+
+// Blog System Models
+
+model Article {
+  id          String        @id @default(cuid())
+  title       String
+  slug        String        @unique
+  excerpt     String?
+  content     Json          // Tiptap JSON content
+  authorId    String
+  status      ArticleStatus @default(DRAFT)
+  isFeatured  Boolean       @default(false)
+  featuredAt  DateTime?     // When it was marked as featured
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  author      User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  categories  ArticleCategory[]
+  tags        ArticleTag[]
+  
+  @@index([authorId])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([isFeatured])
+  @@index([slug])
+  @@index([createdAt])
+}
+
+model Category {
+  id          String            @id @default(cuid())
+  name        String            @unique
+  slug        String            @unique
+  description String?
+  color       String?           @default("#6366f1")
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  
+  articles    ArticleCategory[]
+  
+  @@index([slug])
+}
+
+model Tag {
+  id        String       @id @default(cuid())
+  name      String       @unique
+  slug      String       @unique
+  color     String?      @default("#64748b")
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  
+  articles  ArticleTag[]
+  
+  @@index([slug])
+}
+
+// Junction tables for many-to-many relationships
+model ArticleCategory {
+  articleId  String
+  categoryId String
+  
+  article    Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  
+  @@id([articleId, categoryId])
+}
+
+model ArticleTag {
+  articleId String
+  tagId     String
+  
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@id([articleId, tagId])
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
 }
