@@ -57,6 +57,7 @@ interface PortalListProps {
     initialPortals?: Portal[]
     allPortals?: Portal[]
     onPortalsUpdate?: (portals: Portal[]) => void
+    showToast?: (type: 'error' | 'success' | 'warning' | 'info', title: string, message: string) => void
     className?: string
     emptyStateTab?: string
     activePortalsCount?: number
@@ -68,6 +69,7 @@ export default function PortalList({
     initialPortals,
     allPortals,
     onPortalsUpdate,
+    showToast,
     className,
     emptyStateTab = "all",
     activePortalsCount = 0,
@@ -99,13 +101,17 @@ export default function PortalList({
         message: ''
     })
 
-    const showToast = (type: 'error' | 'success' | 'warning' | 'info', title: string, message: string) => {
-        setToast({
-            isOpen: true,
-            type,
-            title,
-            message
-        })
+    const showToastInternal = (type: 'error' | 'success' | 'warning' | 'info', title: string, message: string) => {
+        if (showToast) {
+            showToast(type, title, message)
+        } else {
+            setToast({
+                isOpen: true,
+                type,
+                title,
+                message
+            })
+        }
     }
 
     const handleFilesUpdate = (updatedFiles: any[]) => {
@@ -117,10 +123,10 @@ export default function PortalList({
         if (file.storageAccount) {
             const status = file.storageAccount.status
             if (status === 'DISCONNECTED') {
-                showToast('error', 'File Unavailable', `Cannot delete file. Your ${file.storageAccount.provider} storage account is disconnected.`)
+                showToastInternal('error', 'File Unavailable', `Cannot delete file. Your ${file.storageAccount.provider} storage account is disconnected.`)
                 return
             } else if (status === 'ERROR') {
-                showToast('error', 'File Unavailable', `Cannot delete file. There are connection issues with your ${file.storageAccount.provider} storage account.`)
+                showToastInternal('error', 'File Unavailable', `Cannot delete file. There are connection issues with your ${file.storageAccount.provider} storage account.`)
                 return
             }
         }
@@ -136,13 +142,13 @@ export default function PortalList({
             })
             if (res.ok) {
                 setPortalFiles(prev => prev.filter(f => f.id !== file.id))
-                showToast('success', 'File Deleted', 'File has been successfully deleted.')
+                showToastInternal('success', 'File Deleted', 'File has been successfully deleted.')
             } else {
                 const errorData = await res.json()
-                showToast('error', 'Delete Error', errorData.error || 'Failed to delete file')
+                showToastInternal('error', 'Delete Error', errorData.error || 'Failed to delete file')
             }
         } catch (error) {
-            showToast('error', 'Delete Error', 'Error deleting file')
+            showToastInternal('error', 'Delete Error', 'Error deleting file')
         }
     }
 
@@ -201,12 +207,14 @@ export default function PortalList({
         if (newStatus && portal.storageAccount) {
             if (portal.storageAccount.status === 'DISCONNECTED') {
                 setTogglingId(null)
-                // Show error message - portal cannot be activated with disconnected storage
-                alert(`Cannot activate portal "${portal.name}". Your ${portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage account is disconnected. Please reconnect your storage account first in the Integrations page.`)
+                // Show toast notification instead of alert
+                showToastInternal('error', 'Cannot Activate Portal', 
+                    `Your ${portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage account is disconnected. Please reconnect your storage account first in the Integrations page.`)
                 return
             } else if (portal.storageAccount.status === 'ERROR') {
                 setTogglingId(null)
-                alert(`Cannot activate portal "${portal.name}". There are connection issues with your ${portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage account. Please check your storage connection in the Integrations page.`)
+                showToastInternal('error', 'Cannot Activate Portal', 
+                    `There are connection issues with your ${portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage account. Please check your storage connection in the Integrations page.`)
                 return
             }
         }
@@ -242,7 +250,7 @@ export default function PortalList({
             
             // Show user-friendly error message
             const errorMessage = error instanceof Error ? error.message : "Failed to toggle portal status"
-            alert(`Error: ${errorMessage}`)
+            showToastInternal('error', 'Portal Toggle Failed', errorMessage)
             
             // Revert on error
             if (allPortals && onPortalsUpdate) {
@@ -738,7 +746,7 @@ Status: ${portal.isActive ? 'Active ✅' : 'Inactive ⏸️'}`
                                             files={portalFiles}
                                             onDelete={handleDeleteRequest}
                                             onFilesUpdate={handleFilesUpdate}
-                                            showToast={showToast}
+                                            showToast={showToastInternal}
                                             showActions={true}
                                             showPortal={false}
                                             showSearch={true}
@@ -772,14 +780,16 @@ Status: ${portal.isActive ? 'Active ✅' : 'Inactive ⏸️'}`
                 )}
             </AnimatePresence>
 
-            {/* Toast Notification */}
-            <ToastComponent
-                isOpen={toast.isOpen}
-                onClose={() => setToast({ ...toast, isOpen: false })}
-                type={toast.type}
-                title={toast.title}
-                message={toast.message}
-            />
+            {/* Toast Notification - Only show if no external showToast handler */}
+            {!showToast && (
+                <ToastComponent
+                    isOpen={toast.isOpen}
+                    onClose={() => setToast({ ...toast, isOpen: false })}
+                    type={toast.type}
+                    title={toast.title}
+                    message={toast.message}
+                />
+            )}
         </>
     )
 }

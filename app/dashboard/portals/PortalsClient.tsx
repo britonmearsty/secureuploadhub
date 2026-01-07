@@ -21,6 +21,7 @@ import {
     ArrowRight
 } from "lucide-react"
 import PortalList from "../components/PortalList"
+import { ToastComponent } from "@/components/ui/Toast"
 
 interface PortalsClientProps {
     initialPortals: any[]
@@ -32,6 +33,28 @@ export default function PortalsClient({ initialPortals }: PortalsClientProps) {
     const [searchQuery, setSearchQuery] = useState("")
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
     const [activeTipIndex, setActiveTipIndex] = useState(0)
+
+    // Toast notification state
+    const [toast, setToast] = useState<{
+        isOpen: boolean;
+        type: 'error' | 'success' | 'warning' | 'info';
+        title: string;
+        message: string;
+    }>({
+        isOpen: false,
+        type: 'error',
+        title: '',
+        message: ''
+    })
+
+    const showToast = (type: 'error' | 'success' | 'warning' | 'info', title: string, message: string) => {
+        setToast({
+            isOpen: true,
+            type,
+            title,
+            message
+        })
+    }
 
     // Handle portals updates from children
     const handlePortalsUpdate = (updatedPortals: any[]) => {
@@ -222,6 +245,7 @@ export default function PortalsClient({ initialPortals }: PortalsClientProps) {
                                 initialPortals={filteredPortals}
                                 allPortals={portals}
                                 onPortalsUpdate={handlePortalsUpdate}
+                                showToast={showToast}
                                 className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 gap-6" : "space-y-4"}
                                 emptyStateTab={activeTab}
                                 activePortalsCount={activePortals.length}
@@ -231,6 +255,15 @@ export default function PortalsClient({ initialPortals }: PortalsClientProps) {
                     </AnimatePresence>
                 </main>
             </div>
+
+            {/* Toast Notification */}
+            <ToastComponent
+                isOpen={toast.isOpen}
+                onClose={() => setToast({ ...toast, isOpen: false })}
+                type={toast.type}
+                title={toast.title}
+                message={toast.message}
+            />
         </div>
     )
 }

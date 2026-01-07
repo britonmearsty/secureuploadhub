@@ -7,6 +7,7 @@ import QuickActions from "./components/QuickActions"
 import PortalList from "./components/PortalList"
 import RecentUploads from "./components/RecentUploads"
 import PostHogIdentify from "./components/PostHogIdentify"
+import { ToastComponent } from "@/components/ui/Toast"
 import {
     ArrowUpRight,
     Plus,
@@ -26,6 +27,28 @@ export default function DashboardClient({ user, stats: initialStats, portals: in
     const [stats, setStats] = useState(initialStats);
     const [portals, setPortals] = useState(initialPortals);
     const [uploads, setUploads] = useState(initialUploads);
+
+    // Toast notification state
+    const [toast, setToast] = useState<{
+        isOpen: boolean;
+        type: 'error' | 'success' | 'warning' | 'info';
+        title: string;
+        message: string;
+    }>({
+        isOpen: false,
+        type: 'error',
+        title: '',
+        message: ''
+    })
+
+    const showToast = (type: 'error' | 'success' | 'warning' | 'info', title: string, message: string) => {
+        setToast({
+            isOpen: true,
+            type,
+            title,
+            message
+        })
+    }
 
     useEffect(() => {
         const hour = new Date().getHours();
@@ -109,6 +132,7 @@ export default function DashboardClient({ user, stats: initialStats, portals: in
 
                     <PortalList
                         initialPortals={portals.slice(0, 4)}
+                        showToast={showToast}
                         className="grid grid-cols-1 md:grid-cols-2 gap-4"
                         disablePolling={true}
                     />
@@ -146,6 +170,15 @@ export default function DashboardClient({ user, stats: initialStats, portals: in
                     </section>
                 </aside>
             </div>
+
+            {/* Toast Notification */}
+            <ToastComponent
+                isOpen={toast.isOpen}
+                onClose={() => setToast({ ...toast, isOpen: false })}
+                type={toast.type}
+                title={toast.title}
+                message={toast.message}
+            />
         </main>
     )
 }
