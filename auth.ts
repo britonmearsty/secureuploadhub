@@ -6,7 +6,7 @@ import prisma from "@/lib/prisma"
 import { getPostHogClient } from "@/lib/posthog-server"
 import { sendSignInNotification, sendWelcomeEmail } from "@/lib/email-templates"
 import { headers } from "next/headers"
-import { createStorageAccountForOAuth, ensureStorageAccountsForUser } from "@/lib/storage/auto-create"
+import { StorageAccountManager } from "@/lib/storage/storage-account-manager"
 
 // Consolidated auth configuration with database sessions
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -118,23 +118,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 },
               })
               
-              // IMMEDIATE StorageAccount creation for account linking
-              // This ensures StorageAccount is created even if linkAccount event fails
+              // ENHANCED: Use centralized StorageAccount manager to prevent race conditions
               if (["google", "dropbox"].includes(account.provider)) {
                 try {
-                  await createStorageAccountForOAuth(
+                  const result = await StorageAccountManager.createOrGetStorageAccount(
                     existingUser.id,
                     {
                       provider: account.provider,
                       providerAccountId: account.providerAccountId
                     },
                     existingUser.email,
-                    existingUser.name
+                    existingUser.name,
+                    { forceCreate: false, respectDisconnected: true }
                   )
-                  console.log(`✅ IMMEDIATE: Created StorageAccount during account linking for ${account.provider}`)
+
+                  if (result.success) {
+                    console.log(`✅ SIGNIN: StorageAccount ${result.created ? 'created' : 'validated'} for ${account.provider} (${result.storageAccountId})`)
+                  } else {
+                    console.error(`❌ SIGNIN: Failed to create StorageAccount for ${account.provider}:`, result.error)
+                  }
                 } catch (error) {
-                  console.error(`❌ IMMEDIATE: Failed to create StorageAccount during account linking:`, error)
-                  // Don't block signin - linkAccount event will retry
+                  console.error(`❌ SIGNIN: Exception creating StorageAccount for ${account.provider}:`, error)
+                  // Don't block sign-in for StorageAccount creation failures
                 }
               }
             } catch (error) {
@@ -223,23 +228,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       
       if (user.id && account && ["google", "dropbox"].includes(account.provider)) {
         try {
-          const success = await createStorageAccountForOAuth(
+          const result = await StorageAccountManager.createOrGetStorageAccount(
             user.id,
             {
               provider: account.provider,
               providerAccountId: account.providerAccountId
             },
             user.email ?? null,
-            user.name ?? null
+            user.name ?? null,
+            { forceCreate: false, respectDisconnected: true }
           )
           
-          if (success) {
-            console.log(`✅ LINK_ACCOUNT: Successfully created StorageAccount for ${account.provider}`)
+          if (result.success) {
+            console.log(`✅ LINK_ACCOUNT: StorageAccount ${result.created ? 'created' : 'validated'} for ${account.provider} (${result.storageAccountId})`)
           } else {
-            console.log(`ℹ️ LINK_ACCOUNT: StorageAccount already exists or creation skipped for ${account.provider}`)
+            console.error(`❌ LINK_ACCOUNT: Failed to create StorageAccount for ${account.provider}:`, result.error)
           }
         } catch (error) {
-          console.error(`❌ LINK_ACCOUNT: Failed to create StorageAccount for ${account.provider}:`, error)
+          console.error(`❌ LINK_ACCOUNT: Exception creating StorageAccount for ${account.provider}:`, error)
           // Don't throw error - we don't want to break OAuth flow
           // The fallback mechanisms in API endpoints will catch this
         }
@@ -264,7 +270,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       
       // Perform a quick consistency check (non-blocking)
       if (user.id) {
-        ensureStorageAccountsForUser(user.id).catch(error => {
+        StorageAccountManager.ensureStorageAccountsForUser(user.id, {
+          forceCreate: false,
+          respectDisconnected: true
+        }).catch(error => {
           console.error(`❌ UPDATE_USER: Failed to ensure StorageAccounts for user ${user.id}:`, error)
         })
       }

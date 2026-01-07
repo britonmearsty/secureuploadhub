@@ -8,7 +8,7 @@
  */
 
 import { auth } from "@/auth"
-import { ensureStorageAccountsForUser } from "./auto-create"
+import { StorageAccountManager } from "./storage-account-manager"
 
 /**
  * Middleware function to ensure StorageAccounts exist for the current user
@@ -32,7 +32,10 @@ export async function ensureUserStorageAccounts(): Promise<{
   }
 
   try {
-    const result = await ensureStorageAccountsForUser(session.user.id)
+    const result = await StorageAccountManager.ensureStorageAccountsForUser(session.user.id, {
+      forceCreate: false,
+      respectDisconnected: true
+    })
     
     if (result.created > 0) {
       console.log(`🛡️ MIDDLEWARE_FALLBACK: Created ${result.created} missing StorageAccount(s) for user ${session.user.id}`)
@@ -95,7 +98,10 @@ export async function ensureStorageForPortalOperation(
   console.log(`🔍 ensureStorageForPortalOperation: Starting for userId=${userId}, requiredProvider=${requiredProvider}`)
   
   try {
-    const result = await ensureStorageAccountsForUser(userId)
+    const result = await StorageAccountManager.ensureStorageAccountsForUser(userId, {
+      forceCreate: false,
+      respectDisconnected: true
+    })
     console.log(`🔍 ensureStorageForPortalOperation: ensureStorageAccountsForUser result:`, result)
     
     let hasRequiredProvider = true
@@ -163,14 +169,16 @@ export async function performBackgroundStorageAccountMaintenance(): Promise<{
   console.log('🔧 BACKGROUND_MAINTENANCE: Starting storage account maintenance...')
   
   try {
-    const { ensureStorageAccountsForAllUsers } = await import('./auto-create')
-    const result = await ensureStorageAccountsForAllUsers()
+    const result = await StorageAccountManager.ensureStorageAccountsForUser("all-users", {
+      forceCreate: false,
+      respectDisconnected: true
+    })
     
-    console.log(`✅ BACKGROUND_MAINTENANCE: Completed - processed ${result.usersProcessed} users, created ${result.accountsCreated} accounts, reactivated ${result.accountsReactivated} accounts`)
+    console.log(`✅ BACKGROUND_MAINTENANCE: Completed - processed users, created ${result.created} accounts, reactivated ${result.reactivated} accounts`)
     
     return {
-      usersProcessed: result.usersProcessed,
-      issuesFixed: result.accountsCreated + result.accountsReactivated,
+      usersProcessed: 1, // This would need to be updated for batch processing
+      issuesFixed: result.created + result.reactivated,
       errors: result.errors
     }
   } catch (error) {

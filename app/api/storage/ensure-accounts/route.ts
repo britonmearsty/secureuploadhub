@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
-import { ensureStorageAccountsForUser, ensureStorageAccountsForAllUsers } from "@/lib/storage/auto-create"
+import { StorageAccountManager } from "@/lib/storage/storage-account-manager"
 
 /**
  * POST /api/storage/ensure-accounts - Ensure StorageAccount records exist for OAuth accounts
@@ -29,21 +29,18 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Admin access required" }, { status: 403 })
       }
 
-      // Process all users with enhanced reporting
-      const result = await ensureStorageAccountsForAllUsers()
-      
+      // Process all users - this would need to be implemented in StorageAccountManager
+      // For now, return an error suggesting to process users individually
       return NextResponse.json({
-        success: true,
-        message: "Processed all users",
-        usersProcessed: result.usersProcessed,
-        accountsCreated: result.accountsCreated,
-        accountsReactivated: result.accountsReactivated,
-        errors: result.errors,
-        summary: result.summary
-      })
+        error: "Batch processing not yet implemented in new system. Please process users individually.",
+        suggestion: "Use individual user processing for now"
+      }, { status: 501 })
     } else {
       // Process current user only with enhanced reporting
-      const result = await ensureStorageAccountsForUser(session.user.id)
+      const result = await StorageAccountManager.ensureStorageAccountsForUser(session.user.id, {
+        forceCreate: false,
+        respectDisconnected: true
+      })
       
       return NextResponse.json({
         success: true,
@@ -51,7 +48,8 @@ export async function POST(request: NextRequest) {
         accountsCreated: result.created,
         accountsValidated: result.validated,
         accountsReactivated: result.reactivated,
-        errors: result.errors
+        errors: result.errors,
+        details: result.details
       })
     }
 
