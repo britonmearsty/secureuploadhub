@@ -38,6 +38,7 @@ export class SingleEmailStorageManager {
       })
 
       if (!user) {
+        console.error(`❌ AUTO_DETECT: User ${userId} not found`)
         return {
           success: false,
           created: false,
@@ -48,6 +49,31 @@ export class SingleEmailStorageManager {
 
       const userEmail = user.email
       console.log(`🔍 AUTO_DETECT: User login email: ${userEmail}`)
+
+      // Enhanced validation for Google Drive
+      if (provider === "google") {
+        if (!userEmail) {
+          console.error(`❌ GOOGLE_AUTO_DETECT: User ${userId} has no email address`)
+          return {
+            success: false,
+            created: false,
+            updated: false,
+            error: "User has no email address - required for Google Drive integration"
+          }
+        }
+        
+        if (!providerAccountId) {
+          console.error(`❌ GOOGLE_AUTO_DETECT: No provider account ID for user ${userId}`)
+          return {
+            success: false,
+            created: false,
+            updated: false,
+            error: "No Google provider account ID provided"
+          }
+        }
+        
+        console.log(`🔍 GOOGLE_AUTO_DETECT: Validated - User: ${userEmail}, Provider ID: ${providerAccountId}`)
+      }
 
       return await prisma.$transaction(async (tx) => {
         // Check if storage account already exists for this user/provider
@@ -75,6 +101,12 @@ export class SingleEmailStorageManager {
           })
 
           console.log(`✅ AUTO_DETECT: Updated existing storage account for ${provider}`)
+          
+          // Enhanced logging for Google Drive
+          if (provider === "google") {
+            console.log(`🎉 GOOGLE_AUTO_DETECT: Successfully updated Google Drive StorageAccount ${updatedAccount.id} for ${userEmail}`)
+          }
+          
           return {
             success: true,
             storageAccountId: updatedAccount.id,
@@ -84,31 +116,106 @@ export class SingleEmailStorageManager {
         }
 
         // Create new storage account - always with user's login email
-        const newStorageAccount = await tx.storageAccount.create({
-          data: {
-            userId,
-            provider: storageProvider,
-            providerAccountId,
-            displayName: user.name || `${provider} Account`,
-            email: userEmail, // ALWAYS user's login email
-            status: StorageAccountStatus.ACTIVE,
-            isActive: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            lastAccessedAt: new Date()
-          }
-        })
+        try {
+          const newStorageAccount = await tx.storageAccount.create({
+            data: {
+              userId,
+              provider: storageProvider,
+              providerAccountId,
+              displayName: user.name || `${provider} Account`,
+              email: userEmail, // ALWAYS user's login email
+              status: StorageAccountStatus.ACTIVE,
+              isActive: true,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              lastAccessedAt: new Date()
+            }
+          })
 
-        console.log(`✅ AUTO_DETECT: Created new storage account for ${provider} with email ${userEmail}`)
-        return {
-          success: true,
-          storageAccountId: newStorageAccount.id,
-          created: true,
-          updated: false
+          console.log(`✅ AUTO_DETECT: Created new storage account for ${provider} with email ${userEmail}`)
+          
+          // Enhanced logging for Google Drive
+          if (provider === "google") {
+            console.log(`🎉 GOOGLE_AUTO_DETECT: Successfully created Google Drive StorageAccount ${newStorageAccount.id} for ${userEmail}`)
+          }
+          
+          return {
+            success: true,
+            storageAccountId: newStorageAccount.id,
+            created: true,
+            updated: false
+          }
+        } catch (createError) {
+          // Enhanced error handling for potential constraint violations
+          console.error(`❌ AUTO_DETECT: Failed to create StorageAccount for ${provider}:`, createError)
+          
+          if (provider === "google") {
+            console.error(`🚨 GOOGLE_AUTO_DETECT: StorageAccount creation failed for ${userEmail}`)
+            console.error(`🚨 GOOGLE_AUTO_DETECT: Create error details:`, {
+              userId,
+              provider: storageProvider,
+              providerAccountId,
+              userEmail,
+              error: createError instanceof Error ? createError.message : 'Unknown error'
+            })
+          }
+          
+          // Check if this is a unique constraint violation (account already exists)
+          if (createError instanceof Error && createError.message.includes('unique constraint')) {
+            console.log(`🔄 AUTO_DETECT: Unique constraint violation, attempting to find existing account`)
+            
+            // Try to find the existing account again (might have been created by another process)
+            const existingAccount = await tx.storageAccount.findFirst({
+              where: {
+                userId,
+                provider: storageProvider
+              }
+            })
+            
+            if (existingAccount) {
+              console.log(`✅ AUTO_DETECT: Found existing account after constraint violation, updating it`)
+              
+              const updatedAccount = await tx.storageAccount.update({
+                where: { id: existingAccount.id },
+                data: {
+                  providerAccountId,
+                  email: userEmail,
+                  displayName: user.name || `${provider} Account`,
+                  status: StorageAccountStatus.ACTIVE,
+                  isActive: true,
+                  lastError: null,
+                  lastAccessedAt: new Date(),
+                  updatedAt: new Date()
+                }
+              })
+              
+              return {
+                success: true,
+                storageAccountId: updatedAccount.id,
+                created: false,
+                updated: true
+              }
+            }
+          }
+          
+          throw createError // Re-throw if we can't handle it
         }
       })
     } catch (error) {
       console.error(`❌ AUTO_DETECT: Error managing storage account for ${provider}:`, error)
+      
+      // Enhanced error logging for Google Drive
+      if (provider === "google") {
+        console.error(`🚨 GOOGLE_AUTO_DETECT: Critical error for user ${userId}`)
+        console.error(`🚨 GOOGLE_AUTO_DETECT: Error details:`, {
+          userId,
+          provider,
+          providerAccountId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined
+        })
+      }
+      
       return {
         success: false,
         created: false,

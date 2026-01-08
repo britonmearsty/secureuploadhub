@@ -223,6 +223,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       
       if (user.id && account && ["google", "dropbox"].includes(account.provider)) {
         try {
+          // Enhanced logging for Google Drive specifically
+          if (account.provider === "google") {
+            console.log(`🔍 GOOGLE_LINK: Starting Google Drive StorageAccount creation for user ${user.id}`)
+            console.log(`🔍 GOOGLE_LINK: User email: ${user.email}`)
+            console.log(`🔍 GOOGLE_LINK: Provider account ID: ${account.providerAccountId}`)
+            console.log(`🔍 GOOGLE_LINK: Has access token: ${!!account.access_token}`)
+            console.log(`🔍 GOOGLE_LINK: Has refresh token: ${!!account.refresh_token}`)
+          }
+          
           const result = await SingleEmailStorageManager.autoDetectStorageAccount(
             user.id,
             account.provider as "google" | "dropbox",
@@ -231,15 +240,74 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           
           if (result.success) {
             console.log(`✅ LINK_ACCOUNT: StorageAccount ${result.created ? 'created' : 'updated'} for ${account.provider} (${result.storageAccountId})`)
+            
+            // Additional success logging for Google Drive
+            if (account.provider === "google") {
+              console.log(`🎉 GOOGLE_LINK: SUCCESS - Google Drive StorageAccount ${result.storageAccountId} ${result.created ? 'created' : 'updated'} for user ${user.email}`)
+            }
           } else {
             console.error(`❌ LINK_ACCOUNT: Failed to auto-detect StorageAccount for ${account.provider}:`, result.error)
+            
+            // Enhanced error logging for Google Drive
+            if (account.provider === "google") {
+              console.error(`🚨 GOOGLE_LINK: CRITICAL FAILURE - Google Drive StorageAccount creation failed for user ${user.email}`)
+              console.error(`🚨 GOOGLE_LINK: Error details:`, {
+                userId: user.id,
+                userEmail: user.email,
+                providerAccountId: account.providerAccountId,
+                error: result.error,
+                emailMismatch: result.emailMismatch
+              })
+              
+              // Try to create audit log for tracking
+              try {
+                await prisma.auditLog.create({
+                  data: {
+                    userId: user.id,
+                    action: 'GOOGLE_STORAGE_CREATION_FAILED',
+                    resource: 'StorageAccount',
+                    resourceId: account.providerAccountId,
+                    details: {
+                      provider: 'google',
+                      providerAccountId: account.providerAccountId,
+                      error: result.error,
+                      userEmail: user.email,
+                      timestamp: new Date().toISOString(),
+                      context: 'linkAccount_event',
+                      severity: 'ERROR'
+                    }
+                  }
+                })
+                console.log(`📝 GOOGLE_LINK: Created audit log for failed StorageAccount creation`)
+              } catch (auditError) {
+                console.error(`❌ GOOGLE_LINK: Failed to create audit log:`, auditError)
+              }
+            }
           }
         } catch (error) {
           console.error(`❌ LINK_ACCOUNT: Exception auto-detecting StorageAccount for ${account.provider}:`, error)
+          
+          // Enhanced exception logging for Google Drive
+          if (account.provider === "google") {
+            console.error(`🚨 GOOGLE_LINK: EXCEPTION - Unexpected error during Google Drive StorageAccount creation`)
+            console.error(`🚨 GOOGLE_LINK: Exception details:`, {
+              userId: user.id,
+              userEmail: user.email,
+              providerAccountId: account.providerAccountId,
+              error: error instanceof Error ? error.message : 'Unknown error',
+              stack: error instanceof Error ? error.stack : undefined
+            })
+          }
+          
           // Don't throw error - we don't want to break OAuth flow
         }
       } else {
         console.log(`ℹ️ LINK_ACCOUNT: Skipped - not a storage provider or missing data`)
+        
+        // Log what we received for debugging
+        if (account) {
+          console.log(`ℹ️ LINK_ACCOUNT: Account details - provider: ${account.provider}, userId: ${user.id}`)
+        }
       }
     },
     
