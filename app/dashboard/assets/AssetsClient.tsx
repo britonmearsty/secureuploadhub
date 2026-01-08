@@ -76,13 +76,13 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
     
     const [storageWarningModal, setStorageWarningModal] = useState<{
         isOpen: boolean;
-        type: 'disconnected' | 'inactive' | 'error' | 'not_configured';
+        type: 'deactivated' | 'inactive' | 'error' | 'not_configured';
         storageProvider?: string;
         storageEmail?: string;
         fileId?: string;
     }>({
         isOpen: false,
-        type: 'disconnected'
+        type: 'deactivated'
     })
 
     // Toast notification state
@@ -186,8 +186,8 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
         // Check storage account status before showing delete modal
         if (file.storageAccount) {
             const status = file.storageAccount.status
-            if (status === 'DISCONNECTED') {
-                showToast('error', 'File Unavailable', `Cannot delete file. Your ${file.storageAccount.provider} storage account is disconnected.`)
+            if (status === 'INACTIVE') {
+                showToast('error', 'File Unavailable', `Cannot delete file. Your ${file.storageAccount.provider} storage account is deactivated.`)
                 return
             } else if (status === 'ERROR') {
                 showToast('error', 'File Unavailable', `Cannot delete file. There are connection issues with your ${file.storageAccount.provider} storage account.`)
@@ -601,7 +601,7 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                     // Navigate to settings - you can implement this
                     window.location.href = '/dashboard/settings'
                 }}
-                onReconnect={() => {
+                onReactivate={() => {
                     setStorageWarningModal({ ...storageWarningModal, isOpen: false })
                     // Navigate to integrations - you can implement this
                     window.location.href = '/dashboard/integrations'

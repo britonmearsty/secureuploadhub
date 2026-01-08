@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { getConnectedAccounts } from "@/lib/storage"
-import { StorageAccountManager } from "@/lib/storage/storage-account-manager"
+import { SingleEmailStorageManager } from "@/lib/storage/single-email-manager"
 import { getActiveStorageAccountsForUser } from "@/lib/storage/data-integrity-helpers"
 
 // GET /api/storage/accounts - Get connected storage accounts
@@ -21,45 +21,31 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Enhanced fallback mechanism using the new StorageAccountManager
-    const fallbackResult = await StorageAccountManager.ensureStorageAccountsForUser(
-      session.user.id,
-      { forceCreate: false, respectDisconnected: true }
-    )
-    
-    if (fallbackResult.created > 0) {
-      console.log(`✅ STORAGE_ACCOUNTS_API: Created ${fallbackResult.created} missing StorageAccount(s) for user ${session.user.id}`)
-    }
-    
-    if (fallbackResult.errors.length > 0) {
-      console.warn(`⚠️ STORAGE_ACCOUNTS_API: Fallback had errors:`, fallbackResult.errors)
-    }
-
-    console.log('🔍 STORAGE_ACCOUNTS_API: Calling getConnectedAccounts...')
-    const accounts = await getConnectedAccounts(session.user.id)
-    console.log('🔍 STORAGE_ACCOUNTS_API: getConnectedAccounts result:', {
+    // Use simplified connected accounts from single email manager
+    console.log('🔍 STORAGE_ACCOUNTS_API: Getting simplified connected accounts...')
+    const accounts = await SingleEmailStorageManager.getSimplifiedConnectedAccounts(session.user.id)
+    console.log('🔍 STORAGE_ACCOUNTS_API: Simplified accounts result:', {
       accountCount: accounts.length,
       accounts: accounts.map(a => ({
         provider: a.provider,
-        isConnected: a.isConnected,
-        hasValidOAuth: a.hasValidOAuth,
-        storageStatus: a.storageStatus,
-        email: a.email
+        email: a.email,
+        status: a.status,
+        isActive: a.isActive
       }))
     })
 
-    // Also get the clean storage accounts using new helper
-    const activeStorageAccounts = await getActiveStorageAccountsForUser(session.user.id)
-
     const response = {
-      accounts,
-      activeStorageAccounts,
-      fallbackInfo: {
-        accountsCreated: fallbackResult.created,
-        accountsReactivated: fallbackResult.reactivated,
-        accountsValidated: fallbackResult.validated,
-        errors: fallbackResult.errors
-      }
+      accounts: accounts.map(account => ({
+        provider: account.provider,
+        providerAccountId: account.id, // Use storage account ID
+        email: account.email,
+        name: account.displayName,
+        isConnected: account.isActive,
+        storageAccountId: account.id,
+        storageStatus: account.status,
+        isAuthAccount: true, // Since we enforce same email, this is always true
+        hasValidOAuth: account.isActive // Simplified: if storage is active, OAuth should be valid
+      }))
     }
     
     console.log('✅ STORAGE_ACCOUNTS_API: Returning response')

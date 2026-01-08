@@ -20,7 +20,7 @@ interface ConnectedAccount {
 export default function ConnectedAccounts() {
     const [accounts, setAccounts] = useState<ConnectedAccount[]>([])
     const [loading, setLoading] = useState(true)
-    const [disconnecting, setDisconnecting] = useState<string | null>(null)
+    const [deactivating, setDeactivating] = useState<string | null>(null)
     const [toast, setToast] = useState<{
         isOpen: boolean;
         type: 'error' | 'success' | 'warning' | 'info';
@@ -62,9 +62,9 @@ export default function ConnectedAccounts() {
         }
     }
 
-    async function handleReconnect(provider: string) {
+    async function handleReactivate(provider: string) {
         try {
-            const res = await fetch('/api/storage/reconnect', {
+            const res = await fetch('/api/storage/reactivate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ provider })
@@ -72,7 +72,7 @@ export default function ConnectedAccounts() {
 
             if (res.ok) {
                 const data = await res.json()
-                showToast('success', 'Storage Reconnected', data.message)
+                showToast('success', 'Storage Reactivated', data.message)
                 
                 // Refresh accounts
                 fetchAccounts()
@@ -81,19 +81,19 @@ export default function ConnectedAccounts() {
                 if (errorData.needsOAuth) {
                     showToast('info', 'OAuth Required', errorData.error)
                 } else {
-                    showToast('error', 'Reconnection Failed', errorData.error)
+                    showToast('error', 'Reactivation Failed', errorData.error)
                 }
             }
         } catch (error) {
             showToast('error', 'Connection Error', 'An unexpected error occurred')
         }
     }
-    async function handleDisconnect(provider: string) {
-        console.log('🔍 FRONTEND: Starting disconnect for provider:', provider)
-        setDisconnecting(provider)
+    async function handleDeactivate(provider: string) {
+        console.log('🔍 FRONTEND: Starting deactivate for provider:', provider)
+        setDeactivating(provider)
         try {
-            console.log('🔍 FRONTEND: Calling disconnect API...')
-            const res = await fetch(`/api/storage/disconnect`, {
+            console.log('🔍 FRONTEND: Calling deactivate API...')
+            const res = await fetch(`/api/storage/deactivate`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ provider })
@@ -107,7 +107,7 @@ export default function ConnectedAccounts() {
                 console.log('🔍 FRONTEND: Success response data:', data)
                 
                 // Show success message
-                showToast('success', 'Storage Disconnected', data.message)
+                showToast('success', 'Storage Deactivated', data.message)
                 
                 // Refresh accounts to show updated status
                 console.log('🔍 FRONTEND: Refreshing accounts...')
@@ -115,22 +115,26 @@ export default function ConnectedAccounts() {
             } else {
                 const errorData = await res.json()
                 console.log('🔍 FRONTEND: Error response data:', errorData)
-                if (errorData.cannotDisconnect) {
-                    showToast('warning', 'Cannot Disconnect', errorData.error)
+                if (errorData.cannotDeactivate) {
+                    showToast('warning', 'Cannot Deactivate', errorData.error)
                 } else {
-                    showToast('error', 'Disconnection Failed', errorData.error || 'Failed to disconnect storage account')
+                    showToast('error', 'Deactivation Failed', errorData.error || 'Failed to deactivate storage account')
                 }
             }
         } catch (error) {
-            console.error("🔍 FRONTEND: Error disconnecting account:", error)
-            showToast('error', 'Connection Error', 'An unexpected error occurred while disconnecting')
+            console.error("🔍 FRONTEND: Error deactivating account:", error)
+            showToast('error', 'Connection Error', 'An unexpected error occurred while deactivating')
         } finally {
-            setDisconnecting(null)
+            setDeactivating(null)
         }
     }
 
-    // Only show connected accounts in the connected tab
-    const connectedAccounts = accounts.filter(a => a.isConnected)
+    // Only show accounts that have storage accounts (no duplicates)
+    const connectedAccounts = accounts.filter((a, index, arr) => 
+        a.isConnected && 
+        // Remove duplicates by provider
+        arr.findIndex(acc => acc.provider === a.provider) === index
+    )
     
     console.log("🔍 DEBUG: All accounts:", accounts)
     console.log("🔍 DEBUG: Connected accounts:", connectedAccounts)
@@ -157,17 +161,20 @@ export default function ConnectedAccounts() {
             id: "google",
             name: "Google Drive",
             icon: <GoogleDriveIcon />,
-            account: accounts.find((a) => a.provider === "google"),
+            account: connectedAccounts.find((a) => a.provider === "google"),
             color: "blue"
         },
         {
             id: "dropbox",
             name: "Dropbox",
             icon: <DropboxIcon />,
-            account: accounts.find((a) => a.provider === "dropbox"),
+            account: connectedAccounts.find((a) => a.provider === "dropbox"),
             color: "blue"
         }
     ]
+
+    // Filter providers to only show those with connected accounts
+    const activeProviders = providers.filter(p => p.account)
 
     return (
         <div className="space-y-4">
@@ -183,13 +190,12 @@ export default function ConnectedAccounts() {
                 </div>
             )}
 
-            {connectedAccounts.map((account) => {
-                const provider = providers.find(p => p.id === account.provider)
-                if (!provider) return null
+            {activeProviders.map((provider) => {
 
+                const account = provider.account!
                 return (
                     <motion.div
-                        key={account.provider}
+                        key={provider.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="flex items-center justify-between p-5 rounded-2xl bg-primary/5 border border-primary/20 transition-all hover:bg-primary/10"
@@ -222,11 +228,11 @@ export default function ConnectedAccounts() {
                                         <div className="flex items-center gap-2">
                                             <div className={`w-2 h-2 rounded-full ${
                                                 account.storageStatus === 'ACTIVE' ? 'bg-green-500' : 
-                                                account.storageStatus === 'DISCONNECTED' ? 'bg-red-500' : 'bg-yellow-500'
+                                                account.storageStatus === 'INACTIVE' ? 'bg-red-500' : 'bg-yellow-500'
                                             }`} />
                                             <span className="text-xs text-muted-foreground">
                                                 Storage: {account.storageStatus === 'ACTIVE' ? 'Connected' : 
-                                                         account.storageStatus === 'DISCONNECTED' ? 'Disconnected' : 'Inactive'}
+                                                         account.storageStatus === 'INACTIVE' ? 'Deactivated' : 'Inactive'}
                                             </span>
                                         </div>
                                     )}
@@ -235,31 +241,31 @@ export default function ConnectedAccounts() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                            {account.storageStatus === 'DISCONNECTED' ? (
+                            {account.storageStatus === 'INACTIVE' ? (
                                 <button
-                                    onClick={() => handleReconnect(account.provider)}
+                                    onClick={() => handleReactivate(account.provider)}
                                     className="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all active:scale-95 bg-green-500 hover:bg-green-600 text-white"
                                     title="Reactivate storage access for this account"
                                 >
                                     <CheckCircle2 className="w-4 h-4" />
-                                    Reconnect Storage
+                                    Reactivate Storage
                                 </button>
                             ) : account.storageStatus === 'ACTIVE' ? (
                                 <button
-                                    onClick={() => handleDisconnect(account.provider)}
-                                    disabled={disconnecting === account.provider}
+                                    onClick={() => handleDeactivate(account.provider)}
+                                    disabled={deactivating === account.provider}
                                     className="px-5 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all active:scale-95 bg-card border border-destructive/30 text-destructive hover:bg-destructive/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    title="Disable storage access (login method will be preserved)"
+                                    title="Deactivate storage access (login method will be preserved)"
                                 >
-                                    {disconnecting === account.provider ? (
+                                    {deactivating === account.provider ? (
                                         <>
                                             <Loader2 className="w-4 h-4 animate-spin" />
-                                            Disconnecting...
+                                            Deactivating...
                                         </>
                                     ) : (
                                         <>
                                             <LogOut className="w-4 h-4" />
-                                            Disable Storage
+                                            Deactivate Storage
                                         </>
                                     )}
                                 </button>

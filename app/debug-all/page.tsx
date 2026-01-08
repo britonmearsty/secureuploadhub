@@ -31,7 +31,7 @@ export default function DebugAllPage() {
     setDisconnectResult(null)
     
     try {
-      const response = await fetch('/api/storage/disconnect', {
+      const response = await fetch('/api/storage/deactivate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

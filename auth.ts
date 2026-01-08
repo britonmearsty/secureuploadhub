@@ -6,7 +6,7 @@ import prisma from "@/lib/prisma"
 import { getPostHogClient } from "@/lib/posthog-server"
 import { sendSignInNotification, sendWelcomeEmail } from "@/lib/email-templates"
 import { headers } from "next/headers"
-import { StorageAccountManager } from "@/lib/storage/storage-account-manager"
+import { SingleEmailStorageManager } from "@/lib/storage/single-email-manager"
 
 // Consolidated auth configuration with database sessions
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -118,27 +118,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 },
               })
               
-              // ENHANCED: Use centralized StorageAccount manager to prevent race conditions
+              // ENHANCED: Auto-detect storage accounts based on user's login email
               if (["google", "dropbox"].includes(account.provider)) {
                 try {
-                  const result = await StorageAccountManager.createOrGetStorageAccount(
+                  const result = await SingleEmailStorageManager.autoDetectStorageAccount(
                     existingUser.id,
-                    {
-                      provider: account.provider,
-                      providerAccountId: account.providerAccountId
-                    },
-                    existingUser.email,
-                    existingUser.name,
-                    { forceCreate: false, respectDisconnected: true }
+                    account.provider as "google" | "dropbox",
+                    account.providerAccountId
                   )
 
                   if (result.success) {
-                    console.log(`✅ SIGNIN: StorageAccount ${result.created ? 'created' : 'validated'} for ${account.provider} (${result.storageAccountId})`)
+                    console.log(`✅ SIGNIN: StorageAccount ${result.created ? 'created' : 'updated'} for ${account.provider} (${result.storageAccountId})`)
                   } else {
-                    console.error(`❌ SIGNIN: Failed to create StorageAccount for ${account.provider}:`, result.error)
+                    console.error(`❌ SIGNIN: Failed to auto-detect StorageAccount for ${account.provider}:`, result.error)
                   }
                 } catch (error) {
-                  console.error(`❌ SIGNIN: Exception creating StorageAccount for ${account.provider}:`, error)
+                  console.error(`❌ SIGNIN: Exception auto-detecting StorageAccount for ${account.provider}:`, error)
                   // Don't block sign-in for StorageAccount creation failures
                 }
               }
@@ -228,26 +223,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       
       if (user.id && account && ["google", "dropbox"].includes(account.provider)) {
         try {
-          const result = await StorageAccountManager.createOrGetStorageAccount(
+          const result = await SingleEmailStorageManager.autoDetectStorageAccount(
             user.id,
-            {
-              provider: account.provider,
-              providerAccountId: account.providerAccountId
-            },
-            user.email ?? null,
-            user.name ?? null,
-            { forceCreate: false, respectDisconnected: true }
+            account.provider as "google" | "dropbox",
+            account.providerAccountId
           )
           
           if (result.success) {
-            console.log(`✅ LINK_ACCOUNT: StorageAccount ${result.created ? 'created' : 'validated'} for ${account.provider} (${result.storageAccountId})`)
+            console.log(`✅ LINK_ACCOUNT: StorageAccount ${result.created ? 'created' : 'updated'} for ${account.provider} (${result.storageAccountId})`)
           } else {
-            console.error(`❌ LINK_ACCOUNT: Failed to create StorageAccount for ${account.provider}:`, result.error)
+            console.error(`❌ LINK_ACCOUNT: Failed to auto-detect StorageAccount for ${account.provider}:`, result.error)
           }
         } catch (error) {
-          console.error(`❌ LINK_ACCOUNT: Exception creating StorageAccount for ${account.provider}:`, error)
+          console.error(`❌ LINK_ACCOUNT: Exception auto-detecting StorageAccount for ${account.provider}:`, error)
           // Don't throw error - we don't want to break OAuth flow
-          // The fallback mechanisms in API endpoints will catch this
         }
       } else {
         console.log(`ℹ️ LINK_ACCOUNT: Skipped - not a storage provider or missing data`)
@@ -265,18 +254,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     
     async updateUser({ user }) {
       // This event fires when user data is updated
-      // We can use this to ensure StorageAccounts are still consistent
       console.log(`🔄 UPDATE_USER EVENT: userId=${user.id}, email=${user.email}`)
       
-      // Perform a quick consistency check (non-blocking)
-      if (user.id) {
-        StorageAccountManager.ensureStorageAccountsForUser(user.id, {
-          forceCreate: false,
-          respectDisconnected: true
-        }).catch(error => {
-          console.error(`❌ UPDATE_USER: Failed to ensure StorageAccounts for user ${user.id}:`, error)
-        })
-      }
+      // Note: With single email enforcement, we don't need complex consistency checks
+      // The single email manager handles this automatically
     },
   },
 })

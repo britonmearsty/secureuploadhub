@@ -62,8 +62,8 @@ export function FileItem({
     // Check storage account status before download
     if (file.storageAccount) {
       const status = file.storageAccount.status
-      if (status === 'DISCONNECTED') {
-        showToast?.('error', 'File Unavailable', `Cannot download file. Your ${file.storageAccount.provider} storage account is disconnected.`)
+      if (status === 'INACTIVE') {
+        showToast?.('error', 'File Unavailable', `Cannot download file. Your ${file.storageAccount.provider} storage account is deactivated.`)
         return
       } else if (status === 'ERROR') {
         showToast?.('error', 'File Unavailable', `Cannot download file. There are connection issues with your ${file.storageAccount.provider} storage account.`)
@@ -89,8 +89,8 @@ export function FileItem({
     // Check storage account status before delete
     if (file.storageAccount) {
       const status = file.storageAccount.status
-      if (status === 'DISCONNECTED') {
-        showToast?.('error', 'File Unavailable', `Cannot delete file. Your ${file.storageAccount.provider} storage account is disconnected.`)
+      if (status === 'INACTIVE') {
+        showToast?.('error', 'File Unavailable', `Cannot delete file. Your ${file.storageAccount.provider} storage account is deactivated.`)
         return
       } else if (status === 'ERROR') {
         showToast?.('error', 'File Unavailable', `Cannot delete file. There are connection issues with your ${file.storageAccount.provider} storage account.`)

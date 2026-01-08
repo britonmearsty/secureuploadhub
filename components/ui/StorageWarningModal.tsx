@@ -6,10 +6,10 @@ import { AlertTriangle, X, Cloud, RefreshCw, Settings } from 'lucide-react';
 interface StorageWarningModalProps {
   isOpen: boolean;
   onClose: () => void;
-  type: 'disconnected' | 'inactive' | 'error' | 'not_configured';
+  type: 'deactivated' | 'inactive' | 'error' | 'not_configured';
   storageProvider?: string;
   storageEmail?: string;
-  onReconnect?: () => void;
+  onReactivate?: () => void;
   onSettings?: () => void;
   loading?: boolean;
 }
@@ -20,7 +20,7 @@ export function StorageWarningModal({
   type,
   storageProvider,
   storageEmail,
-  onReconnect,
+  onReactivate,
   onSettings,
   loading = false
 }: StorageWarningModalProps) {
@@ -28,14 +28,14 @@ export function StorageWarningModal({
 
   const getContent = () => {
     switch (type) {
-      case 'disconnected':
+      case 'deactivated':
         return {
-          title: 'Storage Account Disconnected',
-          message: `Your ${storageProvider} account needs to be reconnected to access this file.`,
+          title: 'Storage Account Deactivated',
+          message: `Your ${storageProvider} account needs to be reactivated to access this file.`,
           details: storageEmail ? `Account: ${storageEmail}` : undefined,
           icon: 'text-red-600',
           backdrop: 'bg-red-50',
-          primaryAction: 'Reconnect Storage',
+          primaryAction: 'Reactivate Storage',
           primaryVariant: 'bg-red-600 hover:bg-red-700 text-white' as const
         };
       
@@ -134,9 +134,9 @@ export function StorageWarningModal({
               Cancel
             </button>
             
-            {onReconnect && (type === 'disconnected' || type === 'error') && (
+            {onReactivate && (type === 'deactivated' || type === 'error') && (
               <button
-                onClick={onReconnect}
+                onClick={onReactivate}
                 disabled={loading}
                 className={`flex-1 px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${content.primaryVariant}`}
               >
