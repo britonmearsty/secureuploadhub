@@ -13,7 +13,7 @@ import { withIdempotency } from "@/lib/idempotency"
 export interface ActivateSubscriptionParams {
   subscriptionId: string
   paymentData: {
-    reference: string
+    reference: string | null
     paymentId: string
     amount: number
     currency: string
@@ -21,7 +21,7 @@ export interface ActivateSubscriptionParams {
       authorization_code: string
     }
   }
-  source: 'webhook' | 'verification' | 'manual'
+  source: 'webhook' | 'verification' | 'manual' | 'manual_check' | 'manual_verification' | 'manual_recovery'
 }
 
 /**
@@ -106,7 +106,7 @@ async function _activateSubscriptionInternal(params: ActivateSubscriptionParams)
 
       // Check if payment already exists
       let payment = await tx.payment.findFirst({
-        where: { providerPaymentRef: reference }
+        where: { providerPaymentRef: reference || undefined }
       })
 
       if (!payment) {
@@ -119,7 +119,7 @@ async function _activateSubscriptionInternal(params: ActivateSubscriptionParams)
             currency: currency || subscription.plan.currency,
             status: PAYMENT_STATUS.SUCCEEDED,
             providerPaymentId: paymentId,
-            providerPaymentRef: reference,
+            providerPaymentRef: reference || `manual_${subscription.id}_${Date.now()}`,
             description: `Initial payment for ${subscription.plan.name}`,
             ...(authorization?.authorization_code && { 
               authorizationCode: authorization.authorization_code 
@@ -248,11 +248,11 @@ export async function cancelSubscription(userId: string) {
       throw new Error('Failed to acquire lock for subscription cancellation')
     }
 
-    // Find active subscription
+    // Find subscription (allow cancelling incomplete, active, or past_due subscriptions)
     const subscription = await prisma.subscription.findFirst({
       where: {
         userId,
-        status: { in: [SUBSCRIPTION_STATUS.ACTIVE, SUBSCRIPTION_STATUS.PAST_DUE] }
+        status: { in: [SUBSCRIPTION_STATUS.INCOMPLETE, SUBSCRIPTION_STATUS.ACTIVE, SUBSCRIPTION_STATUS.PAST_DUE] }
       },
       include: { plan: true }
     })
@@ -261,7 +261,44 @@ export async function cancelSubscription(userId: string) {
       throw new Error('No active subscription found')
     }
 
-    // Cancel Paystack subscription if exists
+    // Handle incomplete subscriptions differently
+    if (subscription.status === SUBSCRIPTION_STATUS.INCOMPLETE) {
+      // For incomplete subscriptions, cancel immediately
+      const result = await prisma.$transaction(async (tx) => {
+        const updatedSubscription = await tx.subscription.update({
+          where: { id: subscription.id },
+          data: {
+            status: SUBSCRIPTION_STATUS.CANCELED,
+            cancelAtPeriodEnd: false, // Cancel immediately for incomplete subscriptions
+          }
+        })
+
+        await tx.subscriptionHistory.create({
+          data: {
+            subscriptionId: subscription.id,
+            action: "cancelled",
+            oldValue: JSON.stringify({ status: subscription.status }),
+            newValue: JSON.stringify({ status: SUBSCRIPTION_STATUS.CANCELED }),
+            reason: "User cancelled incomplete subscription",
+          }
+        })
+
+        return updatedSubscription
+      })
+
+      // Create audit log
+      await createAuditLog({
+        userId,
+        action: AUDIT_ACTIONS.SUBSCRIPTION_CANCELLED,
+        resource: "subscription",
+        resourceId: subscription.id,
+        details: { action: "cancelled_incomplete", immediateCancel: true }
+      })
+
+      return result
+    }
+
+    // For active/past_due subscriptions, cancel Paystack subscription if exists
     if (subscription.providerSubscriptionId) {
       try {
         const { cancelPaystackSubscription } = await import("@/lib/paystack-subscription")
@@ -272,7 +309,7 @@ export async function cancelSubscription(userId: string) {
       }
     }
 
-    // Update subscription
+    // Update subscription to cancel at period end
     const result = await prisma.$transaction(async (tx) => {
       const updatedSubscription = await tx.subscription.update({
         where: { id: subscription.id },

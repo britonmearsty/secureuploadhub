@@ -191,6 +191,17 @@ export async function POST(request: NextRequest) {
           callback_url: `${PAYSTACK_CONFIG.baseUrl}/dashboard/billing?status=success&subscription_id=${subscription.id}`,
           // Customize available payment channels
           channels: ['card', 'bank', 'ussd', 'bank_transfer'], // Remove unwanted options
+          // Add metadata to link payment to subscription
+          metadata: {
+            type: 'subscription_setup',
+            subscription_id: subscription.id,
+            user_id: session.user.id,
+            plan_id: plan.id,
+            user_email: user.email,
+            source: 'web_app',
+            plan_name: plan.name,
+            customer_name: user.name || user.email.split('@')[0]
+          },
           // Add custom fields that appear on checkout
           custom_fields: [
             {
@@ -203,18 +214,7 @@ export async function POST(request: NextRequest) {
               variable_name: "billing_period",
               value: "Monthly"
             }
-          ],
-          metadata: {
-            subscription_id: subscription.id,
-            plan_id: plan.id,
-            user_id: session.user.id,
-            type: 'subscription_setup',
-            user_email: user.email,
-            // Add more metadata for tracking
-            source: 'web_app',
-            plan_name: plan.name,
-            customer_name: user.name || user.email.split('@')[0]
-          }
+          ]
         });
 
         if (!initializeResponse.status) {
@@ -233,6 +233,19 @@ export async function POST(request: NextRequest) {
             description: `Initial payment for ${plan.name}`,
           }
         });
+
+        // Create payment record to link with webhook
+        await prisma.payment.create({
+          data: {
+            subscriptionId: subscription.id,
+            userId: session.user.id,
+            amount: plan.price,
+            currency: plan.currency,
+            status: PAYMENT_STATUS.PENDING,
+            description: `Initial payment for ${plan.name}`,
+            providerPaymentRef: reference,
+          }
+        })
 
         return NextResponse.json({
           subscription: subscription,
@@ -314,19 +327,26 @@ export async function DELETE() {
 
     const updatedSubscription = await cancelSubscription(session.user.id)
 
+    // Provide different messages based on subscription status
+    const message = updatedSubscription.status === 'canceled' 
+      ? "Subscription cancelled successfully"
+      : "Subscription will be canceled at the end of the billing period"
+
     return NextResponse.json({ 
-      message: "Subscription will be canceled at the end of the billing period",
+      message,
       subscription: updatedSubscription
     })
   } catch (error: any) {
     console.error("Error canceling subscription:", error)
     
     if (error.message === 'No active subscription found') {
-      return NextResponse.json({ error: "No active subscription found" }, { status: 404 })
+      return NextResponse.json({ 
+        error: "No active subscription found. You may not have a subscription or it may already be cancelled." 
+      }, { status: 404 })
     }
     
     return NextResponse.json(
-      { error: "Failed to cancel subscription" },
+      { error: "Failed to cancel subscription. Please try again or contact support." },
       { status: 500 }
     )
   }

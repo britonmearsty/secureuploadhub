@@ -94,10 +94,44 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                     setBanner({ type: "success", message: data.message })
                     // Refresh the page to show updated subscription
                     setTimeout(() => window.location.reload(), 1000)
+                } else {
+                    setBanner({ type: "info", message: data.message })
                 }
             }
         } catch (error) {
             console.error('Error checking subscription status:', error)
+        } finally {
+            setCheckingStatus(false)
+        }
+    }
+
+    // Function to recover subscription
+    const handleRecoverSubscription = async (paymentReference?: string) => {
+        if (!subscription) return
+        
+        setCheckingStatus(true)
+        try {
+            const response = await fetch('/api/billing/subscription/recover', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    subscriptionId: subscription.id,
+                    paymentReference
+                })
+            })
+            
+            const data = await response.json()
+            
+            if (response.ok && data.recovery.success) {
+                setBanner({ type: "success", message: data.recovery.message })
+                // Refresh the page to show updated subscription
+                setTimeout(() => window.location.reload(), 1000)
+            } else {
+                setBanner({ type: "error", message: data.recovery?.message || data.error || "Recovery failed" })
+            }
+        } catch (error) {
+            console.error('Error recovering subscription:', error)
+            setBanner({ type: "error", message: "Failed to recover subscription" })
         } finally {
             setCheckingStatus(false)
         }
@@ -384,13 +418,29 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                                 <p className="text-sm text-foreground mb-2">
                                                                     Your subscription is being processed. If you've completed payment, it should activate shortly.
                                                                 </p>
-                                                                <button
-                                                                    onClick={checkSubscriptionStatus}
-                                                                    disabled={checkingStatus}
-                                                                    className="text-xs px-3 py-1 bg-primary hover:bg-primary/80 text-primary-foreground rounded transition-colors disabled:opacity-50"
-                                                                >
-                                                                    {checkingStatus ? "Checking..." : "Check Status Now"}
-                                                                </button>
+                                                                <div className="flex gap-2">
+                                                                    <button
+                                                                        onClick={checkSubscriptionStatus}
+                                                                        disabled={checkingStatus}
+                                                                        className="text-xs px-3 py-1 bg-primary hover:bg-primary/80 text-primary-foreground rounded transition-colors disabled:opacity-50"
+                                                                    >
+                                                                        {checkingStatus ? "Checking..." : "Check Status Now"}
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            const paymentRef = prompt("If you have a payment reference from Paystack, enter it here to help recover your subscription:")
+                                                                            if (paymentRef) {
+                                                                                handleRecoverSubscription(paymentRef)
+                                                                            } else {
+                                                                                handleRecoverSubscription()
+                                                                            }
+                                                                        }}
+                                                                        disabled={checkingStatus}
+                                                                        className="text-xs px-3 py-1 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded transition-colors disabled:opacity-50"
+                                                                    >
+                                                                        Recover Subscription
+                                                                    </button>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     )}

@@ -39,62 +39,101 @@ export async function POST(request: NextRequest) {
 
     // If subscription is incomplete, check for recent successful payments
     if (subscription.status === 'incomplete') {
+      // Check for recent successful payments (last 7 days instead of 24 hours)
       const recentPayment = await prisma.payment.findFirst({
         where: {
           subscriptionId: subscription.id,
           status: 'succeeded',
           createdAt: {
-            gte: new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
+            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Last 7 days
           }
         },
         orderBy: { createdAt: 'desc' }
       })
 
       if (recentPayment) {
-        // Activate subscription based on successful payment
-        const now = new Date()
-        const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000) // 30 days
-
-        await prisma.$transaction(async (tx) => {
-          await tx.subscription.update({
-            where: { id: subscription.id },
-            data: {
-              status: SUBSCRIPTION_STATUS.ACTIVE,
-              currentPeriodStart: now,
-              currentPeriodEnd: periodEnd,
-              nextBillingDate: periodEnd,
-              cancelAtPeriodEnd: false,
-              retryCount: 0,
-              gracePeriodEnd: null,
-              lastPaymentAttempt: now,
-            }
-          })
-
-          await tx.subscriptionHistory.create({
-            data: {
-              subscriptionId: subscription.id,
-              action: "activated",
-              oldValue: JSON.stringify({ status: subscription.status }),
-              newValue: JSON.stringify({ status: SUBSCRIPTION_STATUS.ACTIVE }),
-              reason: "Activated based on successful payment found",
-            }
-          })
+        // Use the centralized activation function
+        const { activateSubscription } = await import('@/lib/subscription-manager')
+        
+        const result = await activateSubscription({
+          subscriptionId: subscription.id,
+          paymentData: {
+            reference: recentPayment.providerPaymentRef,
+            paymentId: recentPayment.providerPaymentId || '',
+            amount: recentPayment.amount * 100, // Convert to kobo
+            currency: recentPayment.currency,
+          },
+          source: 'manual_check'
         })
 
-        await createAuditLog({
-          userId: session.user.id,
-          action: AUDIT_ACTIONS.SUBSCRIPTION_UPDATED,
-          resource: "subscription",
-          resourceId: subscription.id,
-          details: { 
-            action: "manual_activation", 
-            paymentId: recentPayment.id,
-            previousStatus: subscription.status 
+        if (result.result.success) {
+          updated = true
+          message = "Subscription activated successfully based on successful payment"
+        } else {
+          console.error('Failed to activate subscription during manual check:', result.result.reason)
+          message = `Failed to activate subscription: ${result.result.reason}`
+        }
+      } else {
+        // Check for any pending payments that might have succeeded
+        const pendingPayments = await prisma.payment.findMany({
+          where: {
+            subscriptionId: subscription.id,
+            status: { in: ['pending', 'processing'] },
+            createdAt: {
+              gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Last 7 days
+            }
+          },
+          orderBy: { createdAt: 'desc' }
+        })
+
+        // Try to verify each pending payment with Paystack
+        for (const payment of pendingPayments) {
+          try {
+            const { getPaystack } = await import('@/lib/billing')
+            const paystack = await getPaystack()
+            const verification = await (paystack as any).transaction.verify(payment.providerPaymentRef)
+            
+            if (verification.status && verification.data.status === 'success') {
+              // Update payment status
+              await prisma.payment.update({
+                where: { id: payment.id },
+                data: {
+                  status: 'succeeded',
+                  providerPaymentId: verification.data.id?.toString(),
+                  providerResponse: JSON.stringify(verification.data)
+                }
+              })
+
+              // Activate subscription
+              const { activateSubscription } = await import('@/lib/subscription-manager')
+              
+              const result = await activateSubscription({
+                subscriptionId: subscription.id,
+                paymentData: {
+                  reference: payment.providerPaymentRef,
+                  paymentId: verification.data.id?.toString() || '',
+                  amount: verification.data.amount || payment.amount * 100,
+                  currency: verification.data.currency || payment.currency,
+                  authorization: verification.data.authorization
+                },
+                source: 'manual_verification'
+              })
+
+              if (result.result.success) {
+                updated = true
+                message = "Payment verified and subscription activated successfully"
+                break // Exit loop on first successful activation
+              }
+            }
+          } catch (error) {
+            console.error('Error verifying payment:', payment.providerPaymentRef, error)
+            // Continue to next payment
           }
-        })
+        }
 
-        updated = true
-        message = "Subscription activated based on successful payment"
+        if (!updated) {
+          message = "No successful payments found. Please ensure your payment was completed successfully."
+        }
       }
     }
 
