@@ -70,7 +70,7 @@ export async function uploadFileInChunks(
 
   // For small files, use standard upload (no chunking needed)
   if (totalChunks === 1) {
-    return uploadSingleChunk(portalId, uploadFile, clientInfo, accessToken)
+    return uploadSingleChunk(portalId, uploadFile, clientInfo, accessToken, onProgress)
   }
 
   try {
@@ -236,30 +236,73 @@ async function uploadSingleChunk(
   portalId: string,
   file: File,
   clientInfo: any,
-  accessToken?: string
+  accessToken?: string,
+  onProgress?: (progress: ChunkUploadProgress) => void
 ): Promise<ChunkUploadResult> {
-  const formData = new FormData()
-  formData.append("file", file)
-  formData.append("portalId", portalId)
-  formData.append("clientName", clientInfo.clientName || "")
-  formData.append("clientEmail", clientInfo.clientEmail || "")
-  formData.append("clientMessage", clientInfo.clientMessage || "")
-  if (accessToken) formData.append("token", accessToken)
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    const formData = new FormData()
+    
+    formData.append("file", file)
+    formData.append("portalId", portalId)
+    formData.append("clientName", clientInfo.clientName || "")
+    formData.append("clientEmail", clientInfo.clientEmail || "")
+    formData.append("clientMessage", clientInfo.clientMessage || "")
+    if (accessToken) formData.append("token", accessToken)
 
-  const res = await fetch("/api/upload", {
-    method: "POST",
-    headers: accessToken ? { "Authorization": `Bearer ${accessToken}` } : {},
-    body: formData,
+    // Track upload progress
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && onProgress) {
+        const percentComplete = Math.round((event.loaded / event.total) * 100)
+        onProgress({
+          chunkIndex: 0,
+          totalChunks: 1,
+          uploadedBytes: event.loaded,
+          totalBytes: event.total,
+          percentComplete,
+        })
+      }
+    }
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const result = JSON.parse(xhr.responseText)
+          resolve({
+            success: true,
+            fileId: result.uploadId,
+          })
+        } catch (error) {
+          reject(new Error("Invalid response from server"))
+        }
+      } else {
+        try {
+          const error = JSON.parse(xhr.responseText)
+          resolve({ success: false, error: error.error || `Upload failed (${xhr.status})` })
+        } catch {
+          resolve({ success: false, error: `HTTP ${xhr.status}: ${xhr.statusText}` })
+        }
+      }
+    }
+
+    xhr.onerror = () => {
+      reject(new Error("Network error during upload. Please check your internet connection and try again."))
+    }
+
+    xhr.ontimeout = () => {
+      reject(new Error("Upload timeout. The file may be too large or your connection is slow."))
+    }
+
+    // Set timeout (30 seconds)
+    xhr.timeout = 30000
+
+    // Set headers
+    if (accessToken) {
+      xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`)
+    }
+
+    // Start upload
+    xhr.open("POST", "/api/upload")
+    xhr.send(formData)
   })
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ error: `HTTP ${res.status}: ${res.statusText}` }))
-    return { success: false, error: error.error || `Upload failed (${res.status})` }
-  }
-
-  const result = await res.json()
-  return {
-    success: true,
-    fileId: result.uploadId,
-  }
 }

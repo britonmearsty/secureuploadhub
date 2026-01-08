@@ -50,6 +50,12 @@ export function validateFileType(options: FileValidationOptions): boolean {
       "image/svg+xml": ["svg"],
       "application/pdf": ["pdf"],
       "text/plain": ["txt"],
+      "text/markdown": ["md"],
+      "text/javascript": ["js"],
+      "text/typescript": ["ts"],
+      "application/json": ["json"],
+      "text/html": ["html"],
+      "text/css": ["css"],
       "application/msword": ["doc"],
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ["docx"],
       "application/vnd.ms-excel": ["xls"],
@@ -80,7 +86,7 @@ export function validateFileType(options: FileValidationOptions): boolean {
         "image": ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "tiff", "ico"],
         "video": ["mp4", "avi", "mov", "wmv", "flv", "webm", "mkv", "m4v"],
         "audio": ["mp3", "wav", "ogg", "m4a", "aac", "flac", "wma"],
-        "text": ["txt", "csv", "log", "md", "rtf"],
+        "text": ["txt", "csv", "log", "md", "rtf", "js", "ts", "jsx", "tsx", "json", "xml", "html", "css"],
         "application": ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "zip", "rar", "7z"]
       }
       

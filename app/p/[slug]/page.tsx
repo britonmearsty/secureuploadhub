@@ -754,7 +754,7 @@ export default function PublicUploadPage() {
                         {/* Simplified Contact Info */}
                         {(portal.requireClientName || portal.requireClientEmail) && (
                             <section className="space-y-4">
-                                <div className="grid sm:grid-cols-2 gap-4">
+                                <div className={`grid gap-4 ${portal.requireClientName && portal.requireClientEmail ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
                                     {portal.requireClientName && (
                                         <div className="relative">
                                             <input
@@ -938,6 +938,10 @@ export default function PublicUploadPage() {
                                                                 animate={{ opacity: 1, height: "auto" }}
                                                                 transition={{ duration: 0.3 }}
                                                             >
+                                                                <div className="flex items-center justify-between text-xs text-slate-600 mb-1">
+                                                                    <span>Uploading...</span>
+                                                                    <span>{Math.max(0, Math.min(100, uploadFile.progress))}%</span>
+                                                                </div>
                                                                 <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
                                                                     <motion.div
                                                                         className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full relative"
@@ -1040,14 +1044,8 @@ export default function PublicUploadPage() {
                                                             </div>
                                                         )}
                                                         {uploadFile.status === "uploading" && (
-                                                            <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-lg">
-                                                                <motion.div
-                                                                    animate={{ rotate: 360 }}
-                                                                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                                                    className="w-3 h-3"
-                                                                >
-                                                                    <Loader2 className="w-3 h-3" />
-                                                                </motion.div>
+                                                            <div className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-lg">
+                                                                Uploading
                                                             </div>
                                                         )}
                                                         {uploadFile.status === "complete" && (

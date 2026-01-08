@@ -187,6 +187,7 @@ export default function EditPortalPage() {
     { label: "Archives (ZIP, RAR)", value: "application/zip,application/x-rar-compressed,application/x-7z-compressed" },
     { label: "Videos (MP4, MOV)", value: "video/*" },
     { label: "Audio (MP3, WAV)", value: "audio/*" },
+    { label: "Text/Code Files (TXT, MD, JS)", value: "text/*" },
   ]
 
   const toggleFolder = (id: string) => {
