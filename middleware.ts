@@ -20,8 +20,12 @@ export function middleware(request: NextRequest) {
   const isOnDashboard = pathname.startsWith("/dashboard")
   const isOnAuthPage = pathname.startsWith("/auth")
 
-  // Log every middleware execution
-  console.log(`🔄 MIDDLEWARE: ${pathname} | Auth: ${isAuth} | Admin: ${isOnAdmin} | Dashboard: ${isOnDashboard} | AuthPage: ${isOnAuthPage}`)
+  // Only log blocked or redirected requests to reduce noise
+  const shouldLog = !isAuth && (isOnAdmin || isOnDashboard) || (isAuth && isOnAuthPage)
+
+  if (shouldLog) {
+    console.log(`🔄 MIDDLEWARE: ${pathname} | Auth: ${isAuth} | Admin: ${isOnAdmin} | Dashboard: ${isOnDashboard} | AuthPage: ${isOnAuthPage}`)
+  }
 
   // Protect admin routes - require authentication (role check happens server-side in layout)
   if (isOnAdmin && !isAuth) {
@@ -54,7 +58,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 
-  console.log(`✅ MIDDLEWARE: Allowing request to ${pathname}`)
+  // Only log successful requests for important routes
+  if (shouldLog) {
+    console.log(`✅ MIDDLEWARE: Allowing request to ${pathname}`)
+  }
+  
   return NextResponse.next()
 }
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getPaystack } from '@/lib/billing'
 import prisma from '@/lib/prisma'
 import { PAYMENT_STATUS, SUBSCRIPTION_STATUS } from '@/lib/billing-constants'
-import { addMonths } from 'date-fns'
+import { activateSubscription } from '@/lib/subscription-manager'
 
 export async function GET(request: NextRequest) {
   try {
@@ -62,37 +62,44 @@ export async function GET(request: NextRequest) {
         })
       }
 
-      // Update subscription status if not already active
-      if (payment.subscription && payment.subscription.status !== SUBSCRIPTION_STATUS.ACTIVE) {
-        const now = new Date()
-        const periodEnd = addMonths(now, 1) // Use proper date calculation
-
-        await prisma.subscription.update({
-          where: { id: payment.subscription.id },
-          data: {
-            status: SUBSCRIPTION_STATUS.ACTIVE,
-            currentPeriodStart: now,
-            currentPeriodEnd: periodEnd,
-            nextBillingDate: periodEnd,
-            cancelAtPeriodEnd: false,
-            retryCount: 0,
-            gracePeriodEnd: null,
-            lastPaymentAttempt: now,
-          }
+      // Update subscription status if not already active and subscription exists
+      if (payment.subscription && payment.subscription.status === SUBSCRIPTION_STATUS.INCOMPLETE) {
+        const result = await activateSubscription({
+          subscriptionId: payment.subscription.id,
+          paymentData: {
+            reference,
+            paymentId: paystackData.id?.toString() || '',
+            amount: paystackData.amount || 0,
+            currency: paystackData.currency || payment.subscription.plan.currency,
+            authorization: paystackData.authorization
+          },
+          source: 'verification'
         })
 
-        // Create subscription history entry
-        await prisma.subscriptionHistory.create({
-          data: {
-            subscriptionId: payment.subscription.id,
-            action: "activated",
-            oldValue: JSON.stringify({ status: payment.subscription.status }),
-            newValue: JSON.stringify({ status: SUBSCRIPTION_STATUS.ACTIVE }),
-            reason: "Payment verified and subscription activated",
-          }
-        })
-
-        console.log(`Subscription ${payment.subscription.id} activated via payment verification`)
+        if (result.result.success && result.result.subscription) {
+          return NextResponse.json({
+            success: true,
+            message: 'Payment verified and subscription activated successfully',
+            payment: {
+              id: payment.id,
+              amount: payment.amount,
+              currency: payment.currency,
+              status: PAYMENT_STATUS.SUCCEEDED
+            },
+            subscription: {
+              id: result.result.subscription.id,
+              status: SUBSCRIPTION_STATUS.ACTIVE,
+              plan: payment.subscription.plan
+            }
+          })
+        } else {
+          console.error('Failed to activate subscription during verification:', result.result.reason)
+          return NextResponse.json({
+            success: false,
+            message: 'Payment verified but subscription activation failed',
+            error: result.result.reason
+          }, { status: 500 })
+        }
       }
 
       return NextResponse.json({
@@ -106,7 +113,7 @@ export async function GET(request: NextRequest) {
         },
         subscription: payment.subscription ? {
           id: payment.subscription.id,
-          status: SUBSCRIPTION_STATUS.ACTIVE,
+          status: payment.subscription.status,
           plan: payment.subscription.plan
         } : null
       })

@@ -67,6 +67,13 @@ export interface IdempotencyResult<T> {
 }
 
 /**
+ * Check if operation has been executed (without executing it)
+ */
+export function hasBeenExecuted(key: string): boolean {
+  return InMemoryIdempotency.get(key) !== null
+}
+
+/**
  * Execute operation with idempotency protection using in-memory cache
  */
 export async function withIdempotency<T>(

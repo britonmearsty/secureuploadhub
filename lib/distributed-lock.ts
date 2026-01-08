@@ -58,80 +58,42 @@ class InMemoryLock {
 export class DistributedLock {
   private lockKey: string
   private lockValue: string
-  private ttlMs: number
-  private acquired: boolean = false
 
-  constructor(lockKey: string, ttlMs: number = 30000) {
-    this.lockKey = `lock:${lockKey}`
-    this.lockValue = `${Date.now()}-${Math.random().toString(36).substring(2)}`
-    this.ttlMs = ttlMs
+  constructor(key: string) {
+    this.lockKey = key
+    this.lockValue = `${Date.now()}-${Math.random()}`
   }
 
   /**
-   * Acquire the distributed lock
+   * Acquire the lock with timeout
    */
-  async acquire(): Promise<boolean> {
-    try {
-      this.acquired = InMemoryLock.acquire(this.lockKey, this.lockValue, this.ttlMs)
-      
-      if (this.acquired) {
-        console.log(`🔒 DISTRIBUTED_LOCK: Acquired lock ${this.lockKey}`)
-      } else {
-        console.log(`⏳ DISTRIBUTED_LOCK: Failed to acquire lock ${this.lockKey} (already held)`)
+  async acquire(timeoutMs: number = 30000): Promise<boolean> {
+    const startTime = Date.now()
+    
+    while (Date.now() - startTime < timeoutMs) {
+      if (InMemoryLock.acquire(this.lockKey, this.lockValue, timeoutMs)) {
+        return true
       }
-
-      return this.acquired
-    } catch (error) {
-      console.error(`❌ DISTRIBUTED_LOCK: Error acquiring lock ${this.lockKey}:`, error)
-      return false
+      
+      // Wait a bit before retrying
+      await new Promise(resolve => setTimeout(resolve, 100))
     }
+    
+    return false
   }
 
   /**
-   * Release the distributed lock
+   * Release the lock
    */
   async release(): Promise<boolean> {
-    if (!this.acquired) {
-      return true
-    }
-
-    try {
-      const released = InMemoryLock.release(this.lockKey, this.lockValue)
-      
-      if (released) {
-        console.log(`🔓 DISTRIBUTED_LOCK: Released lock ${this.lockKey}`)
-        this.acquired = false
-      } else {
-        console.warn(`⚠️ DISTRIBUTED_LOCK: Failed to release lock ${this.lockKey} (not our lock or expired)`)
-      }
-
-      return released
-    } catch (error) {
-      console.error(`❌ DISTRIBUTED_LOCK: Error releasing lock ${this.lockKey}:`, error)
-      return false
-    }
+    return InMemoryLock.release(this.lockKey, this.lockValue)
   }
 
   /**
-   * Extend the lock TTL
+   * Extend the lock duration
    */
-  async extend(additionalMs: number = 30000): Promise<boolean> {
-    if (!this.acquired) {
-      return false
-    }
-
-    try {
-      const extended = InMemoryLock.extend(this.lockKey, this.lockValue, additionalMs)
-      
-      if (extended) {
-        console.log(`⏰ DISTRIBUTED_LOCK: Extended lock ${this.lockKey} by ${additionalMs}ms`)
-      }
-
-      return extended
-    } catch (error) {
-      console.error(`❌ DISTRIBUTED_LOCK: Error extending lock ${this.lockKey}:`, error)
-      return false
-    }
+  async extend(additionalMs: number): Promise<boolean> {
+    return InMemoryLock.extend(this.lockKey, this.lockValue, additionalMs)
   }
 }
 
@@ -153,7 +115,7 @@ export async function withDistributedLock<T>(
     retryDelayMs = 1000
   } = options
 
-  const lock = new DistributedLock(lockKey, ttlMs)
+  const lock = new DistributedLock(lockKey)
   let attempt = 0
 
   while (attempt < retryAttempts) {

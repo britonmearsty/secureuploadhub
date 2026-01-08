@@ -74,24 +74,43 @@ export function getUploadRules(
     status: StorageAccountStatus
   }>
 ): UploadFlowRules {
+  console.log(`🔍 UPLOAD_RULES_START:`, {
+    portalStorageAccountId,
+    portalStorageProvider,
+    userStorageAccountsCount: userStorageAccounts.length,
+    userAccounts: userStorageAccounts.map(acc => ({
+      id: acc.id,
+      provider: acc.provider,
+      status: acc.status,
+      canCreateUploads: canCreateUploads(acc.status)
+    }))
+  })
+
   // Rule 1: If portal has a storage account, use it (if ACTIVE)
   if (portalStorageAccountId) {
+    console.log(`📋 UPLOAD_RULES: Portal has storage account ${portalStorageAccountId}`)
+    
     const portalAccount = userStorageAccounts.find(acc => acc.id === portalStorageAccountId)
     
     if (!portalAccount) {
+      console.log(`❌ UPLOAD_RULES: Portal storage account not found in user accounts`)
       return {
         canUpload: false,
         reason: "Portal's storage account not found"
       }
     }
 
+    console.log(`📊 UPLOAD_RULES: Portal account status: ${portalAccount.status}, canCreateUploads: ${canCreateUploads(portalAccount.status)}`)
+
     if (!canCreateUploads(portalAccount.status)) {
+      console.log(`❌ UPLOAD_RULES: Portal storage account cannot create uploads`)
       return {
         canUpload: false,
         reason: `Portal's storage account is ${portalAccount.status.toLowerCase()}`
       }
     }
 
+    console.log(`✅ UPLOAD_RULES: Using portal storage account`)
     return {
       canUpload: true,
       storageAccountId: portalStorageAccountId
@@ -99,17 +118,22 @@ export function getUploadRules(
   }
 
   // Rule 2: Portal has no storage account, find active account for provider
+  console.log(`📋 UPLOAD_RULES: Portal has no storage account, looking for ${portalStorageProvider} account`)
+  
   const preferredAccount = userStorageAccounts.find(acc => 
     acc.provider === portalStorageProvider && 
     canCreateUploads(acc.status)
   )
 
   if (preferredAccount) {
+    console.log(`✅ UPLOAD_RULES: Found preferred account for ${portalStorageProvider}: ${preferredAccount.id}`)
     return {
       canUpload: true,
       storageAccountId: preferredAccount.id
     }
   }
+
+  console.log(`⚠️ UPLOAD_RULES: No preferred account found, looking for any active account`)
 
   // Rule 3: Fallback - if preferred provider not available, use any active account
   const anyActiveAccount = userStorageAccounts.find(acc => 
@@ -117,6 +141,7 @@ export function getUploadRules(
   )
 
   if (anyActiveAccount) {
+    console.log(`✅ UPLOAD_RULES: Found fallback active account: ${anyActiveAccount.id} (${anyActiveAccount.provider})`)
     return {
       canUpload: true,
       storageAccountId: anyActiveAccount.id
@@ -124,6 +149,7 @@ export function getUploadRules(
   }
 
   // Rule 4: No active accounts available
+  console.log(`❌ UPLOAD_RULES: No active accounts available`)
   return {
     canUpload: false,
     reason: `No active storage accounts available. Please connect a cloud storage provider.`

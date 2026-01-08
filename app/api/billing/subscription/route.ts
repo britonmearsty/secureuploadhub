@@ -10,6 +10,7 @@ import {
 import { createAuditLog, AUDIT_ACTIONS } from "@/lib/audit-log"
 import { BILLING_INTERVAL, PAYMENT_STATUS } from "@/lib/billing-constants"
 import { getPaystackCurrency, convertToPaystackSubunit } from "@/lib/paystack-currency"
+import { cancelSubscription } from "@/lib/subscription-manager"
 
 export const dynamic = 'force-dynamic'
 
@@ -311,74 +312,19 @@ export async function DELETE() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const subscription = await prisma.subscription.findFirst({
-      where: {
-        userId: session.user.id,
-        status: { in: ["active", "past_due"] }
-      },
-      include: { plan: true }
-    })
-
-    if (!subscription) {
-      return NextResponse.json({ error: "No active subscription found" }, { status: 404 })
-    }
-
-    // Cancel Paystack subscription if providerSubscriptionId exists
-    if (subscription.providerSubscriptionId) {
-      try {
-        const { cancelPaystackSubscription } = await import("@/lib/paystack-subscription")
-        await cancelPaystackSubscription(subscription.providerSubscriptionId)
-      } catch (error) {
-        console.error("Error canceling Paystack subscription:", error)
-        // Continue with local cancellation even if Paystack fails
-      }
-    }
-
-    // Update subscription
-    const updatedSubscription = await prisma.$transaction(async (tx) => {
-      // Cancel at period end
-      const updated = await tx.subscription.update({
-        where: { id: subscription.id },
-        data: {
-          cancelAtPeriodEnd: true,
-          status: "active" // Keep active until period ends
-        }
-      })
-
-      // Create subscription history entry
-      await tx.subscriptionHistory.create({
-        data: {
-          subscriptionId: subscription.id,
-          action: "cancelled",
-          oldValue: JSON.stringify({ status: subscription.status }),
-          newValue: JSON.stringify({ status: "active", cancelAtPeriodEnd: true }),
-          reason: "User requested cancellation",
-        }
-      })
-
-      return updated
-    })
-
-    // Create audit log
-    if (session.user.id) {
-      await createAuditLog({
-        userId: session.user.id,
-        action: AUDIT_ACTIONS.SUBSCRIPTION_UPDATED,
-        resource: "subscription",
-        resourceId: subscription.id,
-        details: {
-          action: "cancelled",
-          cancelAtPeriodEnd: true,
-        }
-      });
-    }
+    const updatedSubscription = await cancelSubscription(session.user.id)
 
     return NextResponse.json({ 
       message: "Subscription will be canceled at the end of the billing period",
       subscription: updatedSubscription
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error canceling subscription:", error)
+    
+    if (error.message === 'No active subscription found') {
+      return NextResponse.json({ error: "No active subscription found" }, { status: 404 })
+    }
+    
     return NextResponse.json(
       { error: "Failed to cancel subscription" },
       { status: 500 }

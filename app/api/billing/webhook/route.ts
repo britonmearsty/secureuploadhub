@@ -5,6 +5,7 @@ import crypto from "crypto"
 import { PAYMENT_STATUS, SUBSCRIPTION_STATUS, mapPaystackPaymentStatus, mapPaystackSubscriptionStatus } from "@/lib/billing-constants"
 import { createAuditLog, AUDIT_ACTIONS } from "@/lib/audit-log"
 import { addMonths } from "date-fns"
+import { activateSubscription } from "@/lib/subscription-manager"
 
 export const dynamic = 'force-dynamic'
 
@@ -388,8 +389,26 @@ async function handleChargeSuccess(data: any) {
   })
 
   // Check if this is a subscription setup payment
-  if (metadata?.type === 'subscription_setup') {
-    await handleSubscriptionSetupPayment(data)
+  if (metadata?.type === 'subscription_setup' && metadata?.subscription_id) {
+    console.log("Processing subscription setup payment:", metadata.subscription_id)
+    
+    const result = await activateSubscription({
+      subscriptionId: metadata.subscription_id,
+      paymentData: {
+        reference,
+        paymentId: paymentId?.toString(),
+        amount: amount || 0,
+        currency: currency || 'NGN',
+        authorization
+      },
+      source: 'webhook'
+    })
+
+    if (result.result.success) {
+      console.log("Subscription activated successfully:", metadata.subscription_id)
+    } else {
+      console.error("Failed to activate subscription:", result.result.reason)
+    }
     return
   }
 
@@ -414,7 +433,24 @@ async function handleChargeSuccess(data: any) {
       
       if (subscription && subscription.status === SUBSCRIPTION_STATUS.INCOMPLETE) {
         console.log("Found incomplete subscription, activating:", subscription.id)
-        await activateSubscriptionFromPayment(subscription, data)
+        
+        const result = await activateSubscription({
+          subscriptionId: subscription.id,
+          paymentData: {
+            reference,
+            paymentId: paymentId?.toString(),
+            amount: amount || 0,
+            currency: currency || subscription.plan.currency,
+            authorization
+          },
+          source: 'webhook'
+        })
+
+        if (result.result.success) {
+          console.log("Subscription activated successfully:", subscription.id)
+        } else {
+          console.error("Failed to activate subscription:", result.result.reason)
+        }
         return
       }
     }
@@ -439,7 +475,24 @@ async function handleChargeSuccess(data: any) {
         
         if (incompleteSubscription) {
           console.log("Found incomplete subscription by email, activating:", incompleteSubscription.id)
-          await activateSubscriptionFromPayment(incompleteSubscription, data)
+          
+          const result = await activateSubscription({
+            subscriptionId: incompleteSubscription.id,
+            paymentData: {
+              reference,
+              paymentId: paymentId?.toString(),
+              amount: amount || 0,
+              currency: currency || incompleteSubscription.plan.currency,
+              authorization
+            },
+            source: 'webhook'
+          })
+
+          if (result.result.success) {
+            console.log("Subscription activated successfully:", incompleteSubscription.id)
+          } else {
+            console.error("Failed to activate subscription:", result.result.reason)
+          }
           return
         }
       }
@@ -467,7 +520,24 @@ async function handleChargeSuccess(data: any) {
         
         if (matchingSubscription) {
           console.log("Found incomplete subscription by amount match, activating:", matchingSubscription.id)
-          await activateSubscriptionFromPayment(matchingSubscription, data)
+          
+          const result = await activateSubscription({
+            subscriptionId: matchingSubscription.id,
+            paymentData: {
+              reference,
+              paymentId: paymentId?.toString(),
+              amount: amount || 0,
+              currency: currency || matchingSubscription.plan.currency,
+              authorization
+            },
+            source: 'webhook'
+          })
+
+          if (result.result.success) {
+            console.log("Subscription activated successfully:", matchingSubscription.id)
+          } else {
+            console.error("Failed to activate subscription:", result.result.reason)
+          }
           return
         }
       }
@@ -482,12 +552,35 @@ async function handleChargeSuccess(data: any) {
     return
   }
 
-  // Handle existing payment
-  if (existingPayment.status === PAYMENT_STATUS.SUCCEEDED) {
-    console.log("Duplicate webhook for payment:", reference)
-    return // Duplicate webhook
+  // Handle existing payment - use centralized activation for incomplete subscriptions
+  if (existingPayment.subscription && existingPayment.subscription.status === SUBSCRIPTION_STATUS.INCOMPLETE) {
+    const result = await activateSubscription({
+      subscriptionId: existingPayment.subscription.id,
+      paymentData: {
+        reference,
+        paymentId: paymentId?.toString(),
+        amount: amount || 0,
+        currency: currency || existingPayment.currency,
+        authorization
+      },
+      source: 'webhook'
+    })
+
+    if (result.result.success) {
+      console.log("Subscription activated successfully:", existingPayment.subscription.id)
+    } else {
+      console.error("Failed to activate subscription:", result.result.reason)
+    }
+    return
   }
 
+  // Handle duplicate webhook
+  if (existingPayment.status === PAYMENT_STATUS.SUCCEEDED) {
+    console.log("Duplicate webhook for payment:", reference)
+    return
+  }
+
+  // Handle regular payment update for active subscriptions
   const subscription = existingPayment.subscription
   const now = new Date()
   const periodEnd = subscription ? addMonths(now, 1) : null
@@ -506,38 +599,32 @@ async function handleChargeSuccess(data: any) {
       }
     })
 
-    // Update subscription if exists and ensure it's activated
-    if (subscription && periodEnd) {
-      const updateData: any = {
-        status: SUBSCRIPTION_STATUS.ACTIVE,
-        providerSubscriptionId: data.subscription?.subscription_code ?? subscription.providerSubscriptionId,
-        providerCustomerId: data.customer?.id?.toString() || subscription.providerCustomerId,
-        currentPeriodStart: now,
-        currentPeriodEnd: periodEnd,
-        nextBillingDate: periodEnd,
-        cancelAtPeriodEnd: false,
-        retryCount: 0, // Reset retry count on successful payment
-        gracePeriodEnd: null, // Clear grace period
-        lastPaymentAttempt: now,
-      }
-
+    // Update subscription if exists and it's a renewal
+    if (subscription && periodEnd && subscription.status === SUBSCRIPTION_STATUS.ACTIVE) {
       await tx.subscription.update({
         where: { id: subscription.id },
-        data: updateData
+        data: {
+          currentPeriodStart: now,
+          currentPeriodEnd: periodEnd,
+          nextBillingDate: periodEnd,
+          retryCount: 0,
+          gracePeriodEnd: null,
+          lastPaymentAttempt: now,
+        }
       })
 
       // Create subscription history entry
       await tx.subscriptionHistory.create({
         data: {
           subscriptionId: subscription.id,
-          action: subscription.status === SUBSCRIPTION_STATUS.INCOMPLETE ? 'activated' : 'renewed',
+          action: 'renewed',
           oldValue: JSON.stringify({ status: subscription.status }),
           newValue: JSON.stringify({ status: SUBSCRIPTION_STATUS.ACTIVE }),
-          reason: subscription.status === SUBSCRIPTION_STATUS.INCOMPLETE ? 'Initial payment succeeded' : 'Payment succeeded',
+          reason: 'Payment succeeded - subscription renewed',
         }
       })
 
-      console.log(`Subscription ${subscription.id} activated/renewed via webhook`)
+      console.log(`Subscription ${subscription.id} renewed via webhook`)
     }
   })
 
@@ -550,202 +637,6 @@ async function handleChargeSuccess(data: any) {
       details: { action: "payment_succeeded", reference, previousStatus: subscription.status }
     })
   }
-}
-
-async function handleSubscriptionSetupPayment(data: any) {
-  const { reference, id: paymentId, amount, currency, status, metadata, authorization } = data
-
-  if (status !== "success") {
-    console.log("Subscription setup payment not successful:", status)
-    return
-  }
-
-  const subscriptionId = metadata?.subscription_id
-  const userId = metadata?.user_id
-  const planId = metadata?.plan_id
-
-  if (!subscriptionId || !userId || !planId) {
-    console.error("Missing metadata for subscription setup payment:", metadata)
-    return
-  }
-
-  const subscription = await prisma.subscription.findUnique({
-    where: { id: subscriptionId },
-    include: { plan: true, user: true }
-  })
-
-  if (!subscription) {
-    console.error("Subscription not found for setup payment:", subscriptionId)
-    return
-  }
-
-  if (subscription.status === SUBSCRIPTION_STATUS.ACTIVE) {
-    console.log("Subscription already active, skipping setup:", subscriptionId)
-    return
-  }
-
-  const now = new Date()
-  const periodEnd = addMonths(now, 1)
-
-  await prisma.$transaction(async (tx) => {
-    // Check if payment record already exists
-    const existingPayment = await tx.payment.findFirst({
-      where: { providerPaymentRef: reference }
-    })
-
-    if (!existingPayment) {
-      // Create payment record
-      await tx.payment.create({
-        data: {
-          subscriptionId: subscription.id,
-          userId: subscription.userId,
-          amount: (amount || 0) / 100,
-          currency: currency || subscription.plan.currency,
-          status: PAYMENT_STATUS.SUCCEEDED,
-          providerPaymentId: paymentId.toString(),
-          providerPaymentRef: reference,
-          description: `Initial payment for ${subscription.plan.name}`,
-          ...(authorization?.authorization_code && { authorizationCode: authorization.authorization_code }),
-        }
-      })
-    } else {
-      // Update existing payment
-      await tx.payment.update({
-        where: { id: existingPayment.id },
-        data: {
-          status: PAYMENT_STATUS.SUCCEEDED,
-          providerPaymentId: paymentId.toString(),
-          ...(authorization?.authorization_code && { authorizationCode: authorization.authorization_code }),
-        }
-      })
-    }
-
-    // Now create the Paystack subscription with the authorization
-    if (authorization?.authorization_code) {
-      try {
-        const { createPaystackSubscription, getOrCreatePaystackPlan } = await import('@/lib/paystack-subscription')
-        const { getPaystackCurrency, convertToPaystackSubunit } = await import('@/lib/paystack-currency')
-        
-        const paystackCurrency = getPaystackCurrency(subscription.plan.currency)
-        const paystackPlan = await getOrCreatePaystackPlan({
-          name: subscription.plan.name,
-          amount: convertToPaystackSubunit(subscription.plan.price, paystackCurrency),
-          interval: "monthly",
-          currency: paystackCurrency,
-          description: subscription.plan.description || undefined,
-        })
-
-        const paystackSubscription = await createPaystackSubscription({
-          customer: subscription.providerCustomerId!,
-          plan: paystackPlan.plan_code,
-          authorization: authorization.authorization_code,
-        })
-
-        // Update subscription with Paystack subscription ID and activate it
-        await tx.subscription.update({
-          where: { id: subscription.id },
-          data: {
-            status: SUBSCRIPTION_STATUS.ACTIVE,
-            providerSubscriptionId: paystackSubscription.subscription_code,
-            currentPeriodStart: now,
-            currentPeriodEnd: periodEnd,
-            nextBillingDate: periodEnd,
-            cancelAtPeriodEnd: false,
-            retryCount: 0,
-            gracePeriodEnd: null,
-            lastPaymentAttempt: now,
-          }
-        })
-
-        // Create subscription history entry
-        await tx.subscriptionHistory.create({
-          data: {
-            subscriptionId: subscription.id,
-            action: "activated",
-            oldValue: JSON.stringify({ status: subscription.status }),
-            newValue: JSON.stringify({
-              status: SUBSCRIPTION_STATUS.ACTIVE,
-              providerSubscriptionId: paystackSubscription.subscription_code,
-            }),
-            reason: "Subscription activated after initial payment",
-          }
-        })
-
-        console.log("Subscription successfully activated:", subscriptionId)
-
-      } catch (error) {
-        console.error("Error creating Paystack subscription after payment:", error)
-        // Still update subscription to active since payment succeeded
-        await tx.subscription.update({
-          where: { id: subscription.id },
-          data: {
-            status: SUBSCRIPTION_STATUS.ACTIVE,
-            currentPeriodStart: now,
-            currentPeriodEnd: periodEnd,
-            nextBillingDate: periodEnd,
-            cancelAtPeriodEnd: false,
-            retryCount: 0,
-            gracePeriodEnd: null,
-            lastPaymentAttempt: now,
-          }
-        })
-
-        // Create subscription history entry
-        await tx.subscriptionHistory.create({
-          data: {
-            subscriptionId: subscription.id,
-            action: "activated",
-            oldValue: JSON.stringify({ status: subscription.status }),
-            newValue: JSON.stringify({ status: SUBSCRIPTION_STATUS.ACTIVE }),
-            reason: "Subscription activated after initial payment (Paystack subscription creation failed)",
-          }
-        })
-
-        console.log("Subscription activated without Paystack subscription:", subscriptionId)
-      }
-    } else {
-      // No authorization code, but payment succeeded - still activate subscription
-      await tx.subscription.update({
-        where: { id: subscription.id },
-        data: {
-          status: SUBSCRIPTION_STATUS.ACTIVE,
-          currentPeriodStart: now,
-          currentPeriodEnd: periodEnd,
-          nextBillingDate: periodEnd,
-          cancelAtPeriodEnd: false,
-          retryCount: 0,
-          gracePeriodEnd: null,
-          lastPaymentAttempt: now,
-        }
-      })
-
-      // Create subscription history entry
-      await tx.subscriptionHistory.create({
-        data: {
-          subscriptionId: subscription.id,
-          action: "activated",
-          oldValue: JSON.stringify({ status: subscription.status }),
-          newValue: JSON.stringify({ status: SUBSCRIPTION_STATUS.ACTIVE }),
-          reason: "Subscription activated after initial payment (no authorization code)",
-        }
-      })
-
-      console.log("Subscription activated without authorization code:", subscriptionId)
-    }
-  })
-
-  await createAuditLog({
-    userId: subscription.userId,
-    action: AUDIT_ACTIONS.SUBSCRIPTION_CREATED,
-    resource: "subscription",
-    resourceId: subscription.id,
-    details: { 
-      action: "subscription_setup_completed", 
-      reference,
-      authorizationCode: authorization?.authorization_code,
-      previousStatus: subscription.status
-    }
-  })
 }
 
 async function handleChargeFailed(data: any) {
@@ -773,103 +664,4 @@ async function handleChargeFailed(data: any) {
       })
     }
   }
-}
-// Helper function to activate subscription from payment data
-async function activateSubscriptionFromPayment(subscription: any, paymentData: any) {
-  const { reference, id: paymentId, amount, currency, authorization } = paymentData
-  const now = new Date()
-  const periodEnd = addMonths(now, 1)
-
-  await prisma.$transaction(async (tx) => {
-    // Create payment record
-    await tx.payment.create({
-      data: {
-        subscriptionId: subscription.id,
-        userId: subscription.userId,
-        amount: (amount || 0) / 100,
-        currency: currency || subscription.plan.currency,
-        status: PAYMENT_STATUS.SUCCEEDED,
-        providerPaymentId: paymentId.toString(),
-        providerPaymentRef: reference,
-        description: `Initial payment for ${subscription.plan.name}`,
-        ...(authorization?.authorization_code && { authorizationCode: authorization.authorization_code }),
-      }
-    })
-
-    // Try to create Paystack subscription with authorization if available
-    let providerSubscriptionId = subscription.providerSubscriptionId
-    
-    if (authorization?.authorization_code && !providerSubscriptionId) {
-      try {
-        const { createPaystackSubscription, getOrCreatePaystackPlan } = await import('@/lib/paystack-subscription')
-        const { getPaystackCurrency, convertToPaystackSubunit } = await import('@/lib/paystack-currency')
-        
-        const paystackCurrency = getPaystackCurrency(subscription.plan.currency)
-        const paystackPlan = await getOrCreatePaystackPlan({
-          name: subscription.plan.name,
-          amount: convertToPaystackSubunit(subscription.plan.price, paystackCurrency),
-          interval: "monthly",
-          currency: paystackCurrency,
-          description: subscription.plan.description || undefined,
-        })
-
-        const paystackSubscription = await createPaystackSubscription({
-          customer: subscription.providerCustomerId!,
-          plan: paystackPlan.plan_code,
-          authorization: authorization.authorization_code,
-        })
-
-        providerSubscriptionId = paystackSubscription.subscription_code
-        console.log("Created Paystack subscription:", providerSubscriptionId)
-      } catch (error) {
-        console.error("Failed to create Paystack subscription:", error)
-        // Continue with activation even if Paystack subscription creation fails
-      }
-    }
-
-    // Update subscription to active
-    await tx.subscription.update({
-      where: { id: subscription.id },
-      data: {
-        status: SUBSCRIPTION_STATUS.ACTIVE,
-        ...(providerSubscriptionId && { providerSubscriptionId }),
-        currentPeriodStart: now,
-        currentPeriodEnd: periodEnd,
-        nextBillingDate: periodEnd,
-        cancelAtPeriodEnd: false,
-        retryCount: 0,
-        gracePeriodEnd: null,
-        lastPaymentAttempt: now,
-      }
-    })
-
-    // Create subscription history entry
-    await tx.subscriptionHistory.create({
-      data: {
-        subscriptionId: subscription.id,
-        action: "activated",
-        oldValue: JSON.stringify({ status: subscription.status }),
-        newValue: JSON.stringify({
-          status: SUBSCRIPTION_STATUS.ACTIVE,
-          ...(providerSubscriptionId && { providerSubscriptionId }),
-        }),
-        reason: "Subscription activated from successful payment",
-      }
-    })
-  })
-
-  // Create audit log
-  await createAuditLog({
-    userId: subscription.userId,
-    action: AUDIT_ACTIONS.SUBSCRIPTION_UPDATED,
-    resource: "subscription",
-    resourceId: subscription.id,
-    details: { 
-      action: "activated_from_payment", 
-      reference,
-      previousStatus: subscription.status 
-    }
-  })
-
-  console.log("Successfully activated subscription:", subscription.id)
 }

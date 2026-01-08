@@ -16,8 +16,13 @@ import {
  * Enhanced logging for storage account operations
  */
 function logStorageOperation(operation: string, details: any) {
-  const timestamp = new Date().toISOString()
-  console.log(`[${timestamp}] STORAGE_MANAGER: ${operation}`, details)
+  // Only log important operations to reduce noise
+  const importantOps = ['ENSURE_USER_COMPLETE', 'CREATE_OR_GET_COMPLETE', 'CREATED_NEW_ACCOUNT', 'REACTIVATED_ACCOUNT', 'CREATION_FAILED', 'ENSURE_USER_FAILED']
+  
+  if (importantOps.includes(operation)) {
+    const timestamp = new Date().toISOString()
+    console.log(`[${timestamp}] STORAGE_MANAGER: ${operation}`, details)
+  }
 }
 
 /**
