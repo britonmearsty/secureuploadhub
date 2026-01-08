@@ -122,8 +122,8 @@ export default function PortalList({
         // Check storage account status before showing delete modal
         if (file.storageAccount) {
             const status = file.storageAccount.status
-            if (status === 'DISCONNECTED') {
-                showToastInternal('error', 'File Unavailable', `Cannot delete file. Your ${file.storageAccount.provider} storage account is disconnected.`)
+            if (status === 'INACTIVE') {
+                showToastInternal('error', 'File Unavailable', `Cannot delete file. Your ${file.storageAccount.provider} storage account is deactivated.`)
                 return
             } else if (status === 'ERROR') {
                 showToastInternal('error', 'File Unavailable', `Cannot delete file. There are connection issues with your ${file.storageAccount.provider} storage account.`)
@@ -205,11 +205,11 @@ export default function PortalList({
 
         // STORAGE VALIDATION: Check if trying to activate portal with disconnected storage
         if (newStatus && portal.storageAccount) {
-            if (portal.storageAccount.status === 'DISCONNECTED') {
+            if (portal.storageAccount.status === 'INACTIVE') {
                 setTogglingId(null)
                 // Show toast notification instead of alert
                 showToastInternal('error', 'Cannot Activate Portal', 
-                    `Your ${portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage account is disconnected. Please reconnect your storage account first in the Integrations page.`)
+                    `Your ${portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage account is deactivated. Please reactivate your storage account first in the Integrations page.`)
                 return
             } else if (portal.storageAccount.status === 'ERROR') {
                 setTogglingId(null)
@@ -475,19 +475,19 @@ Status: ${portal.isActive ? 'Active ✅' : 'Inactive ⏸️'}`
                             {/* Portal Status Toggle */}
                             <button
                                 onClick={() => togglePortalStatus(portal.id, portal.isActive)}
-                                disabled={togglingId === portal.id || (portal.storageAccount?.status === 'DISCONNECTED' || portal.storageAccount?.status === 'ERROR')}
+                                disabled={togglingId === portal.id || (portal.storageAccount?.status === 'INACTIVE' || portal.storageAccount?.status === 'ERROR')}
                                 className={`absolute top-6 right-6 z-20 p-2 rounded-xl transition-all duration-200 flex-shrink-0 ${
                                     togglingId === portal.id ? 'opacity-60 cursor-not-allowed animate-pulse' : ''
                                 } ${
-                                    portal.storageAccount?.status === 'DISCONNECTED' || portal.storageAccount?.status === 'ERROR'
+                                    portal.storageAccount?.status === 'INACTIVE' || portal.storageAccount?.status === 'ERROR'
                                         ? 'opacity-50 cursor-not-allowed bg-muted text-muted-foreground'
                                         : portal.isActive
                                             ? 'bg-success/10 dark:bg-success/20 text-success hover:bg-success/20 dark:hover:bg-success/30 shadow-sm hover:shadow-md'
                                             : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
                                 }`}
                                 title={
-                                    portal.storageAccount?.status === 'DISCONNECTED'
-                                        ? `Cannot activate - ${portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage is disconnected`
+                                    portal.storageAccount?.status === 'INACTIVE'
+                                        ? `Cannot activate - ${portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage is deactivated`
                                         : portal.storageAccount?.status === 'ERROR'
                                             ? `Cannot activate - ${portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage has connection issues`
                                             : portal.isActive 

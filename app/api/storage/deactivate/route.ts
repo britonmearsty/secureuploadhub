@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { SingleEmailStorageManager } from "@/lib/storage/single-email-manager"
 
-// POST /api/storage/disconnect - Deactivate storage account (preserve for reactivation)
+// POST /api/storage/deactivate - Deactivate storage account (preserve for reactivation)
 export async function POST(request: Request) {
   console.log('🔍 STORAGE_DEACTIVATE: Request received')
   

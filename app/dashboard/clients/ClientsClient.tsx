@@ -83,8 +83,8 @@ export default function ClientsClient({ clients: initialClients }: ClientsClient
         // Check storage account status before showing delete modal
         if (file.storageAccount) {
             const status = file.storageAccount.status
-            if (status === 'DISCONNECTED') {
-                showToast('error', 'File Unavailable', `Cannot delete file. Your ${file.storageAccount.provider} storage account is disconnected.`)
+            if (status === 'INACTIVE') {
+                showToast('error', 'File Unavailable', `Cannot delete file. Your ${file.storageAccount.provider} storage account is deactivated.`)
                 return
             } else if (status === 'ERROR') {
                 showToast('error', 'File Unavailable', `Cannot delete file. There are connection issues with your ${file.storageAccount.provider} storage account.`)

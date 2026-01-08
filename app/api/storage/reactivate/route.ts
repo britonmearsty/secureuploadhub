@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { SingleEmailStorageManager } from "@/lib/storage/single-email-manager"
 
-// POST /api/storage/reconnect - Reactivate storage access (same email account)
+// POST /api/storage/reactivate - Reactivate storage access (same email account)
 export async function POST(request: Request) {
   try {
     const session = await auth()
