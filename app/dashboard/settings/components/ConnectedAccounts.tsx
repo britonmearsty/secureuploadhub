@@ -129,8 +129,12 @@ export default function ConnectedAccounts() {
         }
     }
 
-    // Only show connected accounts in the connected tab
-    const connectedAccounts = accounts.filter(a => a.isConnected)
+    // Only show accounts that have storage accounts (no duplicates)
+    const connectedAccounts = accounts.filter((a, index, arr) => 
+        a.isConnected && 
+        // Remove duplicates by provider
+        arr.findIndex(acc => acc.provider === a.provider) === index
+    )
     
     console.log("🔍 DEBUG: All accounts:", accounts)
     console.log("🔍 DEBUG: Connected accounts:", connectedAccounts)
@@ -157,17 +161,20 @@ export default function ConnectedAccounts() {
             id: "google",
             name: "Google Drive",
             icon: <GoogleDriveIcon />,
-            account: accounts.find((a) => a.provider === "google"),
+            account: connectedAccounts.find((a) => a.provider === "google"),
             color: "blue"
         },
         {
             id: "dropbox",
             name: "Dropbox",
             icon: <DropboxIcon />,
-            account: accounts.find((a) => a.provider === "dropbox"),
+            account: connectedAccounts.find((a) => a.provider === "dropbox"),
             color: "blue"
         }
     ]
+
+    // Filter providers to only show those with connected accounts
+    const activeProviders = providers.filter(p => p.account)
 
     return (
         <div className="space-y-4">
@@ -183,13 +190,12 @@ export default function ConnectedAccounts() {
                 </div>
             )}
 
-            {connectedAccounts.map((account) => {
-                const provider = providers.find(p => p.id === account.provider)
-                if (!provider) return null
+            {activeProviders.map((provider) => {
 
+                const account = provider.account!
                 return (
                     <motion.div
-                        key={account.provider}
+                        key={provider.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="flex items-center justify-between p-5 rounded-2xl bg-primary/5 border border-primary/20 transition-all hover:bg-primary/10"

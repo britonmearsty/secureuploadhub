@@ -532,12 +532,7 @@ Status: ${portal.isActive ? 'Active ✅' : 'Inactive ⏸️'}`
                                                 ) : portal.storageAccount.status === 'INACTIVE' ? (
                                                     <>
                                                         <div className="w-2 h-2 bg-yellow-500 rounded-full" />
-                                                        <span className="text-xs font-medium text-yellow-600">Inactive</span>
-                                                    </>
-                                                ) : portal.storageAccount.status === 'DISCONNECTED' ? (
-                                                    <>
-                                                        <div className="w-2 h-2 bg-red-500 rounded-full" />
-                                                        <span className="text-xs font-medium text-red-600">Disconnected</span>
+                                                        <span className="text-xs font-medium text-yellow-600">Deactivated</span>
                                                     </>
                                                 ) : portal.storageAccount.status === 'ERROR' ? (
                                                     <>
@@ -562,16 +557,16 @@ Status: ${portal.isActive ? 'Active ✅' : 'Inactive ⏸️'}`
                             </dl>
 
                             {/* Storage Disconnected Warning */}
-                            {portal.storageAccount?.status === 'DISCONNECTED' && (
-                                <div className="mt-4 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl">
-                                    <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
-                                        <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                            {portal.storageAccount?.status === 'INACTIVE' && (
+                                <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-xl">
+                                    <div className="flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
+                                        <div className="w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center">
                                             <div className="w-2 h-2 bg-white rounded-full" />
                                         </div>
-                                        <span className="text-xs font-medium">Storage Disconnected</span>
+                                        <span className="text-xs font-medium">Storage Deactivated</span>
                                     </div>
-                                    <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                                        Reconnect {portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} to activate this portal
+                                    <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                                        Reactivate {portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} to enable uploads
                                     </p>
                                 </div>
                             )}
