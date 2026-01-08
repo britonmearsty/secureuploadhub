@@ -309,7 +309,6 @@ describe('API Route: /api/billing/plans', () => {
       expect(data.error).toBe('Failed to fetch billing plans')
     })
   })
-})
 
 describe('API Route: /api/billing/subscription', () => {
   beforeEach(() => {
