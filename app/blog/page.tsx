@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { Calendar, User, Star, ArrowRight } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import prisma from '@/lib/prisma'
 
 export const metadata: Metadata = {
   title: 'Blog - SecureUploadHub',
@@ -12,12 +13,12 @@ interface Article {
   id: string
   title: string
   slug: string
-  excerpt: string
-  publishedAt: string
-  createdAt: string
+  excerpt: string | null
+  publishedAt: Date | null
+  createdAt: Date
   isFeatured: boolean
   author: {
-    name: string
+    name: string | null
     email: string
   }
   categories: Array<{
@@ -25,7 +26,7 @@ interface Article {
       id: string
       name: string
       slug: string
-      color: string
+      color: string | null
     }
   }>
   tags: Array<{
@@ -33,15 +34,76 @@ interface Article {
       id: string
       name: string
       slug: string
-      color: string
+      color: string | null
     }
   }>
 }
 
 async function getArticles(): Promise<{ articles: Article[]; total: number }> {
-  // TODO: Implement actual articles API or database query
-  // For now, return empty array to prevent server component errors
-  return { articles: [], total: 0 }
+  try {
+    const articles = await prisma.article.findMany({
+      where: {
+        status: 'PUBLISHED'
+      },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        excerpt: true,
+        publishedAt: true,
+        createdAt: true,
+        isFeatured: true,
+        author: {
+          select: {
+            name: true,
+            email: true
+          }
+        },
+        categories: {
+          select: {
+            category: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                color: true
+              }
+            }
+          }
+        },
+        tags: {
+          select: {
+            tag: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                color: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: [
+        { isFeatured: 'desc' },
+        { publishedAt: 'desc' }
+      ]
+    })
+
+    const total = await prisma.article.count({
+      where: {
+        status: 'PUBLISHED'
+      }
+    })
+
+    return {
+      articles,
+      total
+    }
+  } catch (error) {
+    console.error('Error fetching articles:', error)
+    return { articles: [], total: 0 }
+  }
 }
 
 export default async function BlogPage() {
@@ -144,8 +206,8 @@ function FeaturedArticleCard({ article }: { article: Article }) {
               key={category.id}
               className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
               style={{ 
-                backgroundColor: `${category.color}20`,
-                color: category.color 
+                backgroundColor: `${category.color || '#6B7280'}20`,
+                color: category.color || '#6B7280'
               }}
             >
               {category.name}
@@ -207,8 +269,8 @@ function ArticleCard({ article }: { article: Article }) {
               key={category.id}
               className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
               style={{ 
-                backgroundColor: `${category.color}20`,
-                color: category.color 
+                backgroundColor: `${category.color || '#6B7280'}20`,
+                color: category.color || '#6B7280'
               }}
             >
               {category.name}

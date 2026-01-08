@@ -3,19 +3,20 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Calendar, User, ArrowLeft, Star } from 'lucide-react'
 import { formatDistanceToNow, format } from 'date-fns'
+import prisma from '@/lib/prisma'
 
 interface Article {
   id: string
   title: string
   slug: string
-  excerpt: string
+  excerpt: string | null
   content: any
-  publishedAt: string
-  createdAt: string
-  updatedAt: string
+  publishedAt: Date | null
+  createdAt: Date
+  updatedAt: Date
   isFeatured: boolean
   author: {
-    name: string
+    name: string | null
     email: string
   }
   categories: Array<{
@@ -23,7 +24,7 @@ interface Article {
       id: string
       name: string
       slug: string
-      color: string
+      color: string | null
     }
   }>
   tags: Array<{
@@ -31,7 +32,7 @@ interface Article {
       id: string
       name: string
       slug: string
-      color: string
+      color: string | null
     }
   }>
 }
@@ -41,9 +42,80 @@ interface BlogPostPageProps {
 }
 
 async function getArticle(slug: string): Promise<Article | null> {
-  // TODO: Implement actual articles API or database query
-  // For now, return null to prevent server component errors
-  return null
+  try {
+    const article = await prisma.article.findUnique({
+      where: { 
+        slug,
+        status: 'PUBLISHED'
+      },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        excerpt: true,
+        content: true,
+        publishedAt: true,
+        createdAt: true,
+        updatedAt: true,
+        isFeatured: true,
+        author: {
+          select: {
+            name: true,
+            email: true
+          }
+        },
+        categories: {
+          select: {
+            category: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                color: true
+              }
+            }
+          }
+        },
+        tags: {
+          select: {
+            tag: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                color: true
+              }
+            }
+          }
+        }
+      }
+    })
+
+    return article
+  } catch (error) {
+    console.error('Error fetching article:', error)
+    return null
+  }
+}
+
+export async function generateStaticParams() {
+  try {
+    const articles = await prisma.article.findMany({
+      where: {
+        status: 'PUBLISHED'
+      },
+      select: {
+        slug: true
+      }
+    })
+
+    return articles.map((article) => ({
+      slug: article.slug
+    }))
+  } catch (error) {
+    console.error('Error generating static params:', error)
+    return []
+  }
 }
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
@@ -63,8 +135,8 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       title: article.title,
       description: article.excerpt || '',
       type: 'article',
-      publishedTime: article.publishedAt,
-      modifiedTime: article.updatedAt,
+      publishedTime: article.publishedAt?.toISOString(),
+      modifiedTime: article.updatedAt.toISOString(),
       authors: [article.author.name || 'SecureUploadHub'],
     },
   }
@@ -141,8 +213,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                     key={category.id}
                     className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
                     style={{ 
-                      backgroundColor: `${category.color}20`,
-                      color: category.color 
+                      backgroundColor: `${category.color || '#6B7280'}20`,
+                      color: category.color || '#6B7280'
                     }}
                   >
                     {category.name}
@@ -158,8 +230,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                     key={tag.id}
                     className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
                     style={{ 
-                      borderColor: tag.color,
-                      color: tag.color 
+                      borderColor: tag.color || '#6B7280',
+                      color: tag.color || '#6B7280'
                     }}
                   >
                     #{tag.name}

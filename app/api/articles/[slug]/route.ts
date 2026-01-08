@@ -64,7 +64,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       )
     }
 
-    return NextResponse.json(article)
+    return NextResponse.json({ article })
   } catch (error) {
     console.error('Error fetching article:', error)
     return NextResponse.json(
