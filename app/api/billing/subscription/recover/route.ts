@@ -115,12 +115,17 @@ export async function POST(request: NextRequest) {
         }
       }
     } else {
-      // Try to recover by finding any successful payments for this user
-      const recentSuccessfulPayments = await prisma.payment.findMany({
+      // Try to recover by:
+      // 1. Finding unlinked successful payments
+      // 2. Finding pending payments that might have succeeded in Paystack
+      const recentPayments = await prisma.payment.findMany({
         where: {
           userId: session.user.id,
-          status: PAYMENT_STATUS.SUCCEEDED,
-          subscriptionId: null, // Unlinked payments
+          OR: [
+            { status: PAYMENT_STATUS.SUCCEEDED, subscriptionId: null },
+            { status: PAYMENT_STATUS.PENDING },
+            { status: PAYMENT_STATUS.PROCESSING }
+          ],
           createdAt: {
             gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Last 30 days
           }
@@ -128,47 +133,69 @@ export async function POST(request: NextRequest) {
         orderBy: { createdAt: 'desc' }
       })
 
-      if (recentSuccessfulPayments.length > 0) {
-        // Try to link the most recent payment
-        const payment = recentSuccessfulPayments[0]
+      if (recentPayments.length > 0) {
+        const { getPaystack } = await import('@/lib/billing')
+        const paystack = await getPaystack()
+        let recoveredCount = 0
 
-        // Update payment to link with subscription
-        await prisma.payment.update({
-          where: { id: payment.id },
-          data: { subscriptionId: subscription.id }
-        })
+        for (const payment of recentPayments) {
+          try {
+            // Verify payment with Paystack
+            const verification = await (paystack as any).transaction.verify(payment.providerPaymentRef)
 
-        // Activate subscription
-        const result = await activateSubscription({
-          subscriptionId: subscription.id,
-          paymentData: {
-            reference: payment.providerPaymentRef,
-            paymentId: payment.providerPaymentId || '',
-            amount: payment.amount * 100, // Convert to kobo
-            currency: payment.currency,
-          },
-          source: 'manual_recovery'
-        })
+            if (verification.status && verification.data.status === 'success') {
+              // Update payment to link with subscription if unlinked, and mark as succeeded
+              await prisma.payment.update({
+                where: { id: payment.id },
+                data: {
+                  subscriptionId: subscription.id,
+                  status: PAYMENT_STATUS.SUCCEEDED,
+                  providerPaymentId: verification.data.id?.toString(),
+                  providerResponse: JSON.stringify(verification.data)
+                }
+              })
 
-        if (result.result.success) {
-          recoveryResult = {
-            success: true,
-            method: 'unlinked_payment',
-            message: 'Subscription recovered by linking unlinked successful payment',
-            paymentId: payment.id
+              // Activate subscription
+              const result = await activateSubscription({
+                subscriptionId: subscription.id,
+                paymentData: {
+                  reference: payment.providerPaymentRef,
+                  paymentId: verification.data.id?.toString() || '',
+                  amount: verification.data.amount || payment.amount * 100,
+                  currency: verification.data.currency || payment.currency,
+                  authorization: verification.data.authorization
+                },
+                source: 'manual_recovery'
+              })
+
+              if (result.result.success) {
+                recoveredCount++
+                recoveryResult = {
+                  success: true,
+                  method: 'stuck_payment_recovery',
+                  message: `Subscription recovered by verifying previously ${payment.status} payment`,
+                  paymentId: payment.id
+                }
+                break // Success!
+              }
+            }
+          } catch (error) {
+            console.error(`Error verifying payment ${payment.providerPaymentRef}:`, error)
           }
-        } else {
+        }
+
+        if (!recoveryResult) {
           recoveryResult = {
             success: false,
-            method: 'unlinked_payment',
-            message: `Found payment but failed to activate subscription: ${result.result.reason}`
+            method: 'search',
+            message: `Found ${recentPayments.length} candidate payments, but none were confirmed as successful by Paystack.`
           }
         }
       } else {
         recoveryResult = {
           success: false,
           method: 'search',
-          message: 'No unlinked successful payments found for this user in the last 30 days'
+          message: 'No unlinked successful or pending payments found for this user in the last 30 days'
         }
       }
     }
