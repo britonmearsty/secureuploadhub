@@ -75,14 +75,15 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
     const currentPlan = subscription?.plan || fallbackPlan
     const isFreePlan = !subscription
 
-    const checkSubscriptionStatus = async () => {
-        if (!subscription || subscription.status === 'active') return
+    const checkSubscriptionStatus = async (reference?: string) => {
+        if (!subscription || (subscription.status === 'active' && !reference)) return
 
         setCheckingStatus(true)
         try {
             const response = await fetch('/api/billing/subscription/status', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reference })
             })
 
             if (response.ok) {
@@ -90,7 +91,7 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                 if (data.updated) {
                     setMessage({ type: "success", text: "Subscription updated! Refreshing..." })
                     window.location.reload()
-                } else {
+                } else if (!reference) {
                     setMessage({ type: "info", text: "Status checked. No changes found yet." })
                 }
             }
@@ -104,10 +105,11 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
     useEffect(() => {
         const params = new URLSearchParams(window.location.search)
         const status = params.get("status")
+        const reference = params.get("reference") || params.get("trxref")
 
         if (status === "success") {
             setMessage({ type: "success", text: "Payment successful. Verifying subscription..." })
-            checkSubscriptionStatus()
+            checkSubscriptionStatus(reference || undefined)
         } else if (status === "failed") {
             setMessage({ type: "error", text: "Payment failed. Please try again." })
         }
@@ -316,8 +318,8 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                         onClick={() => handleSubscribe(plan.id)}
                                         disabled={isCurrent || !!subscribing}
                                         className={`w-full py-2 px-4 rounded-lg font-bold text-sm transition-colors ${isCurrent
-                                                ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                                                : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                                            ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                                            : 'bg-primary text-primary-foreground hover:bg-primary/90'
                                             }`}
                                     >
                                         {subscribing === plan.id ? 'Processing...' : isCurrent ? 'Current Plan' : 'Upgrade'}

@@ -93,16 +93,37 @@ export class DropboxService implements CloudStorageService {
             body: JSON.stringify({
               path: data.path_display,
               settings: {
-                requested_visibility: "team_only",
+                requested_visibility: "public",
               },
             }),
           }
         )
-        if (linkResponse.ok) {
+
+        // If public fails, try with default settings (no settings object)
+        if (!linkResponse.ok) {
+          const retryResponse = await fetch(
+            `${DROPBOX_API}/sharing/create_shared_link_with_settings`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                path: data.path_display,
+              }),
+            }
+          )
+          if (retryResponse.ok) {
+            const linkData = await retryResponse.json()
+            webViewLink = linkData.url
+          }
+        } else {
           const linkData = await linkResponse.json()
           webViewLink = linkData.url
         }
-      } catch {
+      } catch (e) {
+        console.warn("Failed to create shared link:", e)
         // Shared link creation is optional
       }
 
@@ -110,6 +131,7 @@ export class DropboxService implements CloudStorageService {
         success: true,
         fileId: data.id,
         fileName: data.name,
+        filePath: data.path_display,
         webViewLink,
       }
     } catch (error) {
@@ -326,9 +348,9 @@ export class DropboxService implements CloudStorageService {
 
         // Handle file not found as a special case
         if (errorData.error?.[".tag"] === "path_not_found" || response.status === 409) {
-          return { 
+          return {
             success: true, // Consider it successful since the file is already gone
-            error: "File not found in Dropbox (already deleted)" 
+            error: "File not found in Dropbox (already deleted)"
           }
         }
 

@@ -28,7 +28,7 @@ export class SingleEmailStorageManager {
     providerAccountId: string
   ): Promise<SingleEmailStorageResult> {
     const storageProvider = provider === "google" ? "google_drive" : "dropbox"
-    
+
     console.log(`🔍 AUTO_DETECT: Auto-detecting storage account for ${provider}`)
 
     try {
@@ -62,7 +62,7 @@ export class SingleEmailStorageManager {
             error: "User has no email address - required for Google Drive integration"
           }
         }
-        
+
         if (!providerAccountId) {
           console.error(`❌ GOOGLE_AUTO_DETECT: No provider account ID for user ${userId}`)
           return {
@@ -72,7 +72,7 @@ export class SingleEmailStorageManager {
             error: "No Google provider account ID provided"
           }
         }
-        
+
         console.log(`🔍 GOOGLE_AUTO_DETECT: Validated - User: ${userEmail}, Provider ID: ${providerAccountId}`)
       }
 
@@ -103,13 +103,13 @@ export class SingleEmailStorageManager {
           })
 
           console.log(`✅ AUTO_DETECT: Updated existing storage account for ${provider} (status: ${existingStorageAccount.status} → ACTIVE)`)
-          
+
           // Enhanced logging for Google Drive
           if (provider === "google") {
             console.log(`🎉 GOOGLE_AUTO_DETECT: Successfully updated Google Drive StorageAccount ${updatedAccount.id} for ${userEmail}`)
             console.log(`🔄 GOOGLE_AUTO_DETECT: Status changed from ${existingStorageAccount.status} to ACTIVE`)
           }
-          
+
           return {
             success: true,
             storageAccountId: updatedAccount.id,
@@ -136,12 +136,12 @@ export class SingleEmailStorageManager {
           })
 
           console.log(`✅ AUTO_DETECT: Created new storage account for ${provider} with email ${userEmail}`)
-          
+
           // Enhanced logging for Google Drive
           if (provider === "google") {
             console.log(`🎉 GOOGLE_AUTO_DETECT: Successfully created Google Drive StorageAccount ${newStorageAccount.id} for ${userEmail}`)
           }
-          
+
           return {
             success: true,
             storageAccountId: newStorageAccount.id,
@@ -151,7 +151,7 @@ export class SingleEmailStorageManager {
         } catch (createError) {
           // Enhanced error handling for potential constraint violations
           console.error(`❌ AUTO_DETECT: Failed to create StorageAccount for ${provider}:`, createError)
-          
+
           if (provider === "google") {
             console.error(`🚨 GOOGLE_AUTO_DETECT: StorageAccount creation failed for ${userEmail}`)
             console.error(`🚨 GOOGLE_AUTO_DETECT: Create error details:`, {
@@ -162,11 +162,11 @@ export class SingleEmailStorageManager {
               error: createError instanceof Error ? createError.message : 'Unknown error'
             })
           }
-          
+
           // Check if this is a unique constraint violation (account already exists)
           if (createError instanceof Error && createError.message.includes('unique constraint')) {
             console.log(`🔄 AUTO_DETECT: Unique constraint violation, attempting to find existing account`)
-            
+
             // Try to find the existing account again (might have been created by another process)
             const existingAccount = await tx.storageAccount.findFirst({
               where: {
@@ -174,10 +174,10 @@ export class SingleEmailStorageManager {
                 provider: storageProvider
               }
             })
-            
+
             if (existingAccount) {
               console.log(`✅ AUTO_DETECT: Found existing account after constraint violation, updating it`)
-              
+
               const updatedAccount = await tx.storageAccount.update({
                 where: { id: existingAccount.id },
                 data: {
@@ -191,7 +191,7 @@ export class SingleEmailStorageManager {
                   updatedAt: new Date()
                 }
               })
-              
+
               return {
                 success: true,
                 storageAccountId: updatedAccount.id,
@@ -200,13 +200,13 @@ export class SingleEmailStorageManager {
               }
             }
           }
-          
+
           throw createError // Re-throw if we can't handle it
         }
       })
     } catch (error) {
       console.error(`❌ AUTO_DETECT: Error managing storage account for ${provider}:`, error)
-      
+
       // Enhanced error logging for Google Drive
       if (provider === "google") {
         console.error(`🚨 GOOGLE_AUTO_DETECT: Critical error for user ${userId}`)
@@ -218,7 +218,7 @@ export class SingleEmailStorageManager {
           stack: error instanceof Error ? error.stack : undefined
         })
       }
-      
+
       return {
         success: false,
         created: false,
@@ -233,7 +233,7 @@ export class SingleEmailStorageManager {
    */
   static async getStorageAccount(userId: string, provider: "google" | "dropbox") {
     const storageProvider = provider === "google" ? "google_drive" : "dropbox"
-    
+
     return await prisma.storageAccount.findFirst({
       where: {
         userId,
@@ -248,7 +248,7 @@ export class SingleEmailStorageManager {
    */
   static async deactivateStorageAccount(userId: string, provider: "google" | "dropbox") {
     const storageProvider = provider === "google" ? "google_drive" : "dropbox"
-    
+
     try {
       // Get current storage accounts to track status changes
       const currentAccounts = await prisma.storageAccount.findMany({
@@ -309,7 +309,7 @@ export class SingleEmailStorageManager {
    */
   static async reactivateStorageAccount(userId: string, provider: "google" | "dropbox") {
     const storageProvider = provider === "google" ? "google_drive" : "dropbox"
-    
+
     try {
       // Get current storage accounts to track status changes
       const currentAccounts = await prisma.storageAccount.findMany({
@@ -402,9 +402,9 @@ export class SingleEmailStorageManager {
     return storageAccounts.map((account: any) => {
       const provider = account.provider === "google_drive" ? "google" : "dropbox"
       const isActive = account.status === StorageAccountStatus.ACTIVE
-      
+
       console.log(`🔍 SIMPLIFIED_ACCOUNTS: ${provider} - Status: ${account.status}, IsActive: ${isActive}`)
-      
+
       return {
         id: account.id,
         provider,
@@ -422,17 +422,66 @@ export class SingleEmailStorageManager {
    * Check if user has OAuth access for a provider
    * This determines if storage integration is available
    */
+  /**
+   * Check if user has OAuth access for a provider
+   * This determines if storage integration is available
+   * FIX: Determines the *correct* OAuth account to check, ignoring zombies
+   */
   static async hasOAuthAccess(userId: string, provider: "google" | "dropbox") {
-    const oauthAccount = await prisma.account.findFirst({
+    const storageProvider = provider === "google" ? "google_drive" : "dropbox"
+
+    // 1. First, check if we have a linked StorageAccount
+    // This tells us WHICH providerAccountId is the "active" one
+    const storageAccount = await prisma.storageAccount.findFirst({
       where: {
         userId,
-        provider
+        provider: storageProvider
       },
       select: {
-        access_token: true,
-        expires_at: true
+        providerAccountId: true
       }
     })
+
+    let oauthAccount = null;
+
+    if (storageAccount?.providerAccountId) {
+      // Precise Check: distinct lookup for the EXACT account linked to storage
+      oauthAccount = await prisma.account.findUnique({
+        where: {
+          provider_providerAccountId: {
+            provider: provider,
+            providerAccountId: storageAccount.providerAccountId
+          }
+        },
+        select: {
+          access_token: true,
+          expires_at: true,
+          refresh_token: true // Check if we have refresh token too
+        }
+      })
+    }
+
+    // Fallback: If no storage account or specific OAuth account not found
+    // (e.g. storage exists but oauth row was deleted, or new user)
+    if (!oauthAccount) {
+      // Find the MOST RECENT account (fix for multiple account rows)
+      const accounts = await prisma.account.findMany({
+        where: {
+          userId,
+          provider
+        },
+        orderBy: {
+          createdAt: 'desc' // vital: check the newest one only
+        },
+        take: 1,
+        select: {
+          access_token: true,
+          expires_at: true,
+          refresh_token: true
+        }
+      })
+      oauthAccount = accounts[0]
+    }
 
     if (!oauthAccount || !oauthAccount.access_token) {
       return false
@@ -440,8 +489,21 @@ export class SingleEmailStorageManager {
 
     // Check if token is expired (with 1 minute buffer)
     const now = Math.floor(Date.now() / 1000)
-    const isExpired = oauthAccount.expires_at && oauthAccount.expires_at < now - 60
+    // If we have a refresh token, we consider it "active" because we can refresh it
+    // But for this check, we mainly care if we HAVE the tokens
+    // Ideally we should check validity, but existence is the first step
 
-    return !isExpired
+    // Strict expiry check only if we don't have a refresh token?
+    // Actually, usually existence of record implies we 'have access' unless revoked
+    // But let's stick to the expiry check if it's there
+    if (oauthAccount.expires_at && oauthAccount.expires_at < now - 60) {
+      // It's expired.
+      // If we have a refresh_token, it's technically still "connectable" but might need refresh
+      // For the UI "Is Connected" state, we usually return true if we have the refresh token
+      // because the app handles refresh automatically.
+      return !!oauthAccount.refresh_token;
+    }
+
+    return true
   }
 }

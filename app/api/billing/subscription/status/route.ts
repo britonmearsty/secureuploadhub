@@ -18,6 +18,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    // Try to parse body for specific reference
+    let referenceFromClient: string | undefined
+    try {
+      const body = await request.json()
+      referenceFromClient = body.reference
+    } catch (e) {
+      // Body might be empty or not JSON, that's fine
+    }
+
     // Find user's subscription
     const subscription = await prisma.subscription.findFirst({
       where: {
@@ -37,10 +46,40 @@ export async function POST(request: NextRequest) {
     let updated = false
     let message = "Subscription status is up to date"
 
-    // Check for recent successful payments or pending ones that might have succeeded
-    if (subscription.status === 'incomplete' || subscription.status === 'active') {
-      // 1. Check if there's any payment for this subscription that is already marked as succeeded
-      // but the subscription hasn't been synced yet
+    // 1. If specific reference provided by client, prioritize verifying it
+    if (referenceFromClient) {
+      console.log(`Verifying client-provided reference: ${referenceFromClient}`)
+      try {
+        const { getPaystack } = await import('@/lib/billing')
+        const paystack = await getPaystack()
+        const verification = await (paystack as any).transaction.verify(referenceFromClient)
+
+        if (verification.status && verification.data.status === 'success') {
+          const { activateSubscription } = await import('@/lib/subscription-manager')
+          const result = await activateSubscription({
+            subscriptionId: subscription.id,
+            paymentData: {
+              reference: referenceFromClient,
+              paymentId: verification.data.id?.toString() || '',
+              amount: verification.data.amount, // subunits
+              currency: verification.data.currency,
+              authorization: verification.data.authorization
+            },
+            source: 'manual_verification_ref'
+          })
+
+          if (result.result.success) {
+            updated = true
+            message = "Payment verified and subscription activated"
+          }
+        }
+      } catch (error) {
+        console.error('Error verifying provided reference:', error)
+      }
+    }
+
+    // 2. Fallback: Check for recent successful payments that aren't synced yet
+    if (!updated && (subscription.status === 'incomplete' || subscription.status === 'active')) {
       const recentSucceededPayment = await prisma.payment.findFirst({
         where: {
           subscriptionId: subscription.id,
@@ -70,63 +109,53 @@ export async function POST(request: NextRequest) {
           message = "Subscription activated successfully"
         }
       }
+    }
 
-      // 2. Check for any pending/processing payments and verify them with Paystack
-      if (!updated) {
-        const stuckPayments = await prisma.payment.findMany({
-          where: {
-            subscriptionId: subscription.id,
-            status: { in: [PAYMENT_STATUS.PENDING, PAYMENT_STATUS.PROCESSING] },
-            createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
-          }
-        })
+    // 3. Fallback: Check for any pending/processing payments and verify them with Paystack
+    if (!updated && (subscription.status === 'incomplete' || subscription.status === 'active')) {
+      const stuckPayments = await prisma.payment.findMany({
+        where: {
+          subscriptionId: subscription.id,
+          status: { in: [PAYMENT_STATUS.PENDING, PAYMENT_STATUS.PROCESSING] },
+          createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
+        }
+      })
 
-        for (const payment of stuckPayments) {
-          try {
-            const { getPaystack } = await import('@/lib/billing')
-            const paystack = await getPaystack()
-            const verification = await (paystack as any).transaction.verify(payment.providerPaymentRef)
+      for (const payment of stuckPayments) {
+        if (referenceFromClient && payment.providerPaymentRef === referenceFromClient) continue
 
-            if (verification.status && verification.data.status === 'success') {
-              // Update payment status
-              await prisma.payment.update({
-                where: { id: payment.id },
-                data: {
-                  status: PAYMENT_STATUS.SUCCEEDED,
-                  providerPaymentId: verification.data.id?.toString(),
-                  providerResponse: JSON.stringify(verification.data)
-                }
-              })
+        try {
+          const { getPaystack } = await import('@/lib/billing')
+          const paystack = await getPaystack()
+          const verification = await (paystack as any).transaction.verify(payment.providerPaymentRef)
 
+          if (verification.status && verification.data.status === 'success') {
+            const { activateSubscription } = await import('@/lib/subscription-manager')
+            const result = await activateSubscription({
+              subscriptionId: subscription.id,
+              paymentData: {
+                reference: payment.providerPaymentRef,
+                paymentId: verification.data.id?.toString() || '',
+                amount: verification.data.amount || payment.amount * 100,
+                currency: verification.data.currency || payment.currency,
+                authorization: verification.data.authorization
+              },
+              source: 'manual_verification'
+            })
+
+            if (result.result.success) {
               updated = true
-              message = "Payment verified successfully"
-
-              // If it was a new subscription, activate it
-              if (subscription.status === 'incomplete') {
-                const { activateSubscription } = await import('@/lib/subscription-manager')
-                await activateSubscription({
-                  subscriptionId: subscription.id,
-                  paymentData: {
-                    reference: payment.providerPaymentRef,
-                    paymentId: verification.data.id?.toString() || '',
-                    amount: verification.data.amount || payment.amount * 100,
-                    currency: verification.data.currency || payment.currency,
-                    authorization: verification.data.authorization
-                  },
-                  source: 'manual_verification'
-                })
-                message = "Payment verified and subscription activated successfully"
-              }
+              message = "Payment verified and subscription activated successfully"
               break
             }
-          } catch (error) {
-            console.error('Error verifying stuck payment:', error)
           }
+        } catch (error) {
+          console.error('Error verifying stuck payment:', error)
         }
       }
     }
 
-    // If subscription has Paystack subscription ID, check Paystack status
+    // 4. Final Fallback: If subscription has Paystack ID, sync status directly
     if (subscription.providerSubscriptionId && !updated) {
       try {
         const paystackSub = await getPaystackSubscription(subscription.providerSubscriptionId)
@@ -178,7 +207,6 @@ export async function POST(request: NextRequest) {
         }
       } catch (error) {
         console.error("Error checking Paystack subscription:", error)
-        // Don't fail the request if Paystack check fails
       }
     }
 
@@ -187,7 +215,7 @@ export async function POST(request: NextRequest) {
       message,
       subscription: {
         id: subscription.id,
-        status: updated ? (subscription.status === 'incomplete' ? SUBSCRIPTION_STATUS.ACTIVE : subscription.status) : subscription.status,
+        status: updated ? SUBSCRIPTION_STATUS.ACTIVE : subscription.status,
         plan: subscription.plan
       }
     })

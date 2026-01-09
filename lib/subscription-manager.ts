@@ -21,7 +21,7 @@ export interface ActivateSubscriptionParams {
       authorization_code: string
     }
   }
-  source: 'webhook' | 'verification' | 'manual' | 'manual_check' | 'manual_verification' | 'manual_recovery' | 'deep_recovery_sync' | 'deep_search_recovery'
+  source: 'webhook' | 'verification' | 'manual' | 'manual_check' | 'manual_verification' | 'manual_verification_ref' | 'manual_recovery' | 'deep_recovery_sync' | 'deep_search_recovery'
 }
 
 /**

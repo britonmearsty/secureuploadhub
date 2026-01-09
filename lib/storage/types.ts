@@ -22,6 +22,7 @@ export interface UploadResult {
   fileId?: string
   fileName?: string
   webViewLink?: string
+  filePath?: string
   error?: string
 }
 

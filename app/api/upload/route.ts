@@ -17,10 +17,10 @@ const JWT_SECRET = new TextEncoder().encode(
 // POST /api/upload - Handle file upload
 export async function POST(request: NextRequest) {
   const uploadId = `upload_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-  
+
   try {
     console.log(`🔄 UPLOAD_START: ${uploadId} - Processing upload request`)
-    
+
     const formData = await request.formData()
 
     const file = formData.get("file") as File | null
@@ -55,10 +55,10 @@ export async function POST(request: NextRequest) {
 
     // Get portal and validate (include user and storage account for storage access)
     console.log(`🔍 UPLOAD_PORTAL_LOOKUP: ${uploadId} - Looking up portal ${portalId}`)
-    
+
     const portal = await prisma.uploadPortal.findUnique({
       where: { id: portalId },
-      include: { 
+      include: {
         user: true,
         storageAccount: true
       }
@@ -91,9 +91,9 @@ export async function POST(request: NextRequest) {
 
     // STORAGE ACCOUNT VALIDATION - Check if portal can accept uploads
     console.log(`🔍 UPLOAD_STORAGE_VALIDATION: ${uploadId} - Validating storage accounts`)
-    
+
     let resolvedStorageAccountId: string | null = null
-    
+
     // Get user's storage accounts for validation
     const userStorageAccounts = await prisma.storageAccount.findMany({
       where: { userId: portal.userId },
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
         portalStorageProvider: portal.storageProvider,
         userStorageAccounts: userStorageAccounts.length
       })
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: uploadRules.reason || "Portal cannot accept uploads at this time"
       }, { status: 400 })
     }
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
     // Verify password protection
     if (portal.passwordHash) {
       console.log(`🔐 UPLOAD_PASSWORD_CHECK: ${uploadId} - Portal requires password`)
-      
+
       if (!token) {
         console.log(`❌ UPLOAD_ERROR: ${uploadId} - Password required but no token provided`)
         return NextResponse.json({ error: "Password verification required" }, { status: 401 })
@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
 
     // Enforce billing upload limits
     console.log(`💳 UPLOAD_BILLING_CHECK: ${uploadId} - Checking billing limits`)
-    
+
     try {
       await assertUploadAllowed(portal.userId, file.size)
       console.log(`✅ UPLOAD_BILLING_OK: ${uploadId}`)
@@ -212,7 +212,7 @@ export async function POST(request: NextRequest) {
       allowedTypes: portal.allowedFileTypes,
       hasRestrictions: !!(portal.allowedFileTypes && portal.allowedFileTypes.length > 0)
     })
-    
+
     if (portal.allowedFileTypes && portal.allowedFileTypes.length > 0) {
       const isAllowed = validateFileType({
         allowedTypes: portal.allowedFileTypes,
@@ -230,7 +230,7 @@ export async function POST(request: NextRequest) {
           error: "This file type is not allowed for this portal"
         }, { status: 400 })
       }
-      
+
       console.log(`✅ UPLOAD_FILE_TYPE_OK: ${uploadId}`)
     }
 
@@ -246,7 +246,7 @@ export async function POST(request: NextRequest) {
 
     // Security Scan - Skip for safe file types, async scan for others
     console.log(`🛡️ UPLOAD_SECURITY_SCAN: ${uploadId} - Starting security scan`)
-    
+
     const { scanFile } = await import("@/lib/scanner")
 
     // Safe file types that don't need scanning (reduces latency by ~200-500ms)
@@ -264,10 +264,10 @@ export async function POST(request: NextRequest) {
     if (!isSafeType) {
       // Scan potentially dangerous files before returning
       console.log(`🔍 UPLOAD_SCANNING: ${uploadId} - Scanning potentially dangerous file`)
-      
+
       try {
         scanResult = await scanFile(buffer, file.name, mimeType)
-        
+
         console.log(`📊 UPLOAD_SCAN_RESULT: ${uploadId}`, {
           status: scanResult.status,
           ...(scanResult.status === "infected" && { threat: (scanResult as any).threat }),
@@ -293,7 +293,7 @@ export async function POST(request: NextRequest) {
             error: "Security Check Failed: Unable to scan file. Please try again."
           }, { status: 500 })
         }
-        
+
         console.log(`✅ UPLOAD_SCAN_CLEAN: ${uploadId}`)
       } catch (scanError) {
         console.log(`❌ UPLOAD_ERROR: ${uploadId} - Scan exception`, {
@@ -328,7 +328,7 @@ export async function POST(request: NextRequest) {
       const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '') // YYYYMMDD
       const timeStr = now.toTimeString().slice(0, 8).replace(/:/g, '') // HHMMSS
       const sanitizedClientName = clientName.replace(/[^a-zA-Z0-9\s-]/g, "_").trim()
-      
+
       // Format: "ClientName_YYYYMMDD_HHMMSS" for uniqueness
       targetFolderPath = `${sanitizedClientName}_${dateStr}_${timeStr}`
     }
@@ -341,7 +341,7 @@ export async function POST(request: NextRequest) {
       targetFolderPath,
       storageFolderId: portal.storageFolderId
     })
-    
+
     const result = await uploadToCloudStorage(
       portal.userId,
       storageProvider,
@@ -362,7 +362,7 @@ export async function POST(request: NextRequest) {
     if (result.success) {
       uploadSuccess = true
       storageFileId = result.fileId
-      storagePath = result.webViewLink || targetFolderPath
+      storagePath = result.webViewLink || result.filePath || targetFolderPath
     }
 
     if (!uploadSuccess) {
@@ -380,7 +380,7 @@ export async function POST(request: NextRequest) {
 
     // Create file upload record with storage account binding
     console.log(`💾 UPLOAD_DB_SAVE: ${uploadId} - Saving upload record to database`)
-    
+
     const uploadedAt = new Date()
     const fileUpload = await prisma.fileUpload.create({
       data: {
@@ -409,7 +409,7 @@ export async function POST(request: NextRequest) {
 
     // Invalidate all relevant caches since new upload was created
     console.log(`🗑️ UPLOAD_CACHE_INVALIDATE: ${uploadId} - Invalidating caches`)
-    
+
     await Promise.all([
       invalidateCache(getUserDashboardKey(portal.userId)),
       invalidateCache(getUserUploadsKey(portal.userId)),
@@ -420,7 +420,7 @@ export async function POST(request: NextRequest) {
     // Send email notification to portal owner (async, don't block response)
     if (portal.user.email) {
       console.log(`📧 UPLOAD_EMAIL_NOTIFICATION: ${uploadId} - Sending notification to ${portal.user.email}`)
-      
+
       const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
       sendUploadNotification({
         to: portal.user.email,
@@ -458,10 +458,10 @@ export async function POST(request: NextRequest) {
       stack: error instanceof Error ? error.stack : undefined,
       errorType: error?.constructor?.name
     })
-    
+
     const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
-    return NextResponse.json({ 
-      error: `Upload failed: ${errorMessage}` 
+    return NextResponse.json({
+      error: `Upload failed: ${errorMessage}`
     }, { status: 500 })
   }
 }

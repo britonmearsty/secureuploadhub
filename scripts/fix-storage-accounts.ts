@@ -12,7 +12,6 @@
 import { config } from "dotenv"
 config() // Load environment variables
 
-import prisma from "../lib/prisma"
 import { StorageAccountStatus } from "@prisma/client"
 import { validateStorageConnection } from "../lib/storage"
 
@@ -25,6 +24,8 @@ interface FixResult {
 }
 
 async function fixUserStorageAccounts(userEmail: string, dryRun: boolean = false): Promise<FixResult> {
+  const { default: prisma } = await import("../lib/prisma")
+
   const result: FixResult = {
     usersProcessed: 0,
     storageAccountsCreated: 0,
@@ -53,17 +54,30 @@ async function fixUserStorageAccounts(userEmail: string, dryRun: boolean = false
     result.usersProcessed = 1
 
     // Fix 1: Create missing StorageAccount records
-    for (const oauthAccount of user.accounts) {
+    // Sort accounts by newer first to ensure we use the latest OAuth credential
+    const sortedAccounts = [...user.accounts].sort((a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+
+    const processedProviders = new Set<string>()
+
+    for (const oauthAccount of sortedAccounts) {
+      if (!["google", "dropbox"].includes(oauthAccount.provider)) continue
+
       const storageProvider = oauthAccount.provider === "google" ? "google_drive" : "dropbox"
-      
-      // Check if StorageAccount exists
+
+      // Skip if we've already processed this provider for this user
+      if (processedProviders.has(storageProvider)) continue
+
+      // Check if StorageAccount exists (any storage account for this provider)
+      // We check generally for the provider, not just specific ID, to avoid duplicates
       const existingStorageAccount = user.storageAccounts.find(
-        sa => sa.provider === storageProvider && sa.providerAccountId === oauthAccount.providerAccountId
+        sa => sa.provider === storageProvider
       )
 
       if (!existingStorageAccount) {
-        console.log(`   📝 Creating missing StorageAccount for ${storageProvider}`)
-        
+        console.log(`   📝 Creating missing StorageAccount for ${storageProvider} using newest credential`)
+
         if (!dryRun) {
           try {
             await prisma.storageAccount.create({
@@ -90,25 +104,32 @@ async function fixUserStorageAccounts(userEmail: string, dryRun: boolean = false
           console.log(`   🔍 [DRY RUN] Would create StorageAccount for ${storageProvider}`)
           result.storageAccountsCreated++
         }
+      } else {
+        // Storage account exists, check if it points to this latest credential
+        if (existingStorageAccount.providerAccountId !== oauthAccount.providerAccountId) {
+          console.log(`   ⚠️ Mismatch: Storage linked to ${existingStorageAccount.providerAccountId}, but newest OAuth is ${oauthAccount.providerAccountId}`)
+        }
       }
+
+      processedProviders.add(storageProvider)
     }
 
     // Fix 2: Validate and update existing StorageAccount statuses
-    const storageAccountsToCheck = dryRun 
-      ? user.storageAccounts 
+    const storageAccountsToCheck = dryRun
+      ? user.storageAccounts
       : await prisma.storageAccount.findMany({ where: { userId: user.id } })
 
     for (const storageAccount of storageAccountsToCheck) {
       const provider = storageAccount.provider === "google_drive" ? "google_drive" : "dropbox"
-      
+
       console.log(`   🧪 Testing connection for ${storageAccount.provider}`)
-      
+
       try {
         const validation = await validateStorageConnection(user.id, provider)
-        
+
         if (validation.isValid && storageAccount.status !== StorageAccountStatus.ACTIVE) {
           console.log(`   🔄 Reactivating ${storageAccount.provider} account`)
-          
+
           if (!dryRun) {
             await prisma.storageAccount.update({
               where: { id: storageAccount.id },
@@ -127,7 +148,7 @@ async function fixUserStorageAccounts(userEmail: string, dryRun: boolean = false
           }
         } else if (!validation.isValid && storageAccount.status === StorageAccountStatus.ACTIVE) {
           console.log(`   ⚠️  Disconnecting invalid ${storageAccount.provider} account`)
-          
+
           if (!dryRun) {
             await prisma.storageAccount.update({
               where: { id: storageAccount.id },
@@ -163,8 +184,9 @@ async function fixUserStorageAccounts(userEmail: string, dryRun: boolean = false
 }
 
 async function fixAllUsers(dryRun: boolean = false): Promise<FixResult> {
+  const { default: prisma } = await import("../lib/prisma")
   console.log("🔧 Fixing storage accounts for all affected users...")
-  
+
   const result: FixResult = {
     usersProcessed: 0,
     storageAccountsCreated: 0,
@@ -194,9 +216,9 @@ async function fixAllUsers(dryRun: boolean = false): Promise<FixResult> {
 
   for (const user of problematicUsers) {
     console.log(`\n👤 Processing: ${user.email}`)
-    
+
     const userResult = await fixUserStorageAccounts(user.email, dryRun)
-    
+
     // Aggregate results
     result.usersProcessed += userResult.usersProcessed
     result.storageAccountsCreated += userResult.storageAccountsCreated
@@ -209,6 +231,7 @@ async function fixAllUsers(dryRun: boolean = false): Promise<FixResult> {
 }
 
 async function main() {
+  const { default: prisma } = await import("../lib/prisma")
   const args = process.argv.slice(2)
   const dryRun = args.includes("--dry-run")
   const userEmail = args.find(arg => !arg.startsWith("--"))
@@ -231,7 +254,7 @@ async function main() {
   console.log(`   Storage accounts created: ${result.storageAccountsCreated}`)
   console.log(`   Storage accounts reactivated: ${result.storageAccountsReactivated}`)
   console.log(`   Storage accounts disconnected: ${result.storageAccountsDisconnected}`)
-  
+
   if (result.errors.length > 0) {
     console.log(`\n❌ Errors (${result.errors.length}):`)
     result.errors.forEach(error => console.log(`   • ${error}`))
@@ -245,9 +268,10 @@ async function main() {
 }
 
 if (require.main === module) {
+  // We can't use prisma.$disconnect in finally because prisma is not available in this scope
+  // But process exit handles it.
   main()
     .catch(console.error)
-    .finally(() => prisma.$disconnect())
 }
 
 export { fixUserStorageAccounts, fixAllUsers }

@@ -17,7 +17,7 @@ const JWT_SECRET = new TextEncoder().encode(
 // POST /api/upload/chunked/complete - Finalize a chunked upload
 export async function POST(request: NextRequest) {
   const uploadStartTime = Date.now()
-  
+
   try {
     const body = await request.json()
     const { uploadId, portalId, fileName, fileSize, mimeType, token } = body
@@ -73,13 +73,13 @@ export async function POST(request: NextRequest) {
 
     // Security Scan - Skip for safe file types, async scan for others
     const { scanFile } = await import("@/lib/scanner")
-    
+
     // Safe file types that don't need scanning (reduces latency)
     const SAFE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'text/plain', 'application/pdf']
     const isSafeType = SAFE_TYPES.includes(mimeType)
-    
+
     let scanResult: ScanResult = { status: "clean" }
-    
+
     if (!isSafeType) {
       // Scan potentially dangerous files before returning
       scanResult = await scanFile(fileBuffer, fileName, mimeType)
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
       const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '') // YYYYMMDD
       const timeStr = now.toTimeString().slice(0, 8).replace(/:/g, '') // HHMMSS
       const sanitizedClientName = chunkedUpload.clientName.replace(/[^a-zA-Z0-9\s-]/g, "_").trim()
-      
+
       // Format: "ClientName_YYYYMMDD_HHMMSS" for uniqueness
       targetFolderPath = `${sanitizedClientName}_${dateStr}_${timeStr}`
     }
@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
         clientMessage: chunkedUpload.clientMessage || null,
         storageProvider,
         storageFileId: result.fileId || null,
-        storagePath: result.webViewLink || null,
+        storagePath: result.webViewLink || result.filePath || null,
         status: "uploaded",
         ipAddress: ipAddress.split(",")[0].trim(),
         userAgent: userAgent.substring(0, 500),
@@ -242,8 +242,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error completing chunked upload:", error)
     const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
-    return NextResponse.json({ 
-      error: `Upload completion failed: ${errorMessage}` 
+    return NextResponse.json({
+      error: `Upload completion failed: ${errorMessage}`
     }, { status: 500 })
   }
 }
