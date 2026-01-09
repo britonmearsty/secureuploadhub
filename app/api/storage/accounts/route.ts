@@ -21,9 +21,11 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const userId = session.user.id // Extract to a variable for TypeScript
+
     // Use simplified connected accounts from single email manager
     console.log('🔍 STORAGE_ACCOUNTS_API: Getting simplified connected accounts...')
-    const accounts = await SingleEmailStorageManager.getSimplifiedConnectedAccounts(session.user.id)
+    const accounts = await SingleEmailStorageManager.getSimplifiedConnectedAccounts(userId)
     console.log('🔍 STORAGE_ACCOUNTS_API: Simplified accounts result:', {
       accountCount: accounts.length,
       accounts: accounts.map(a => ({
@@ -34,21 +36,38 @@ export async function GET() {
       }))
     })
 
+    // ENHANCED: Also check OAuth status for each account
+    const enhancedAccounts = await Promise.all(
+      accounts.map(async (account) => {
+        const hasValidOAuth = await SingleEmailStorageManager.hasOAuthAccess(
+          userId,
+          account.provider as "google" | "dropbox"
+        )
+        console.log(`🔍 STORAGE_ACCOUNTS_API: ${account.provider} OAuth status: ${hasValidOAuth}`)
+        
+        return {
+          provider: account.provider,
+          providerAccountId: account.id, // Use storage account ID
+          email: account.email,
+          name: account.displayName,
+          isConnected: account.isActive && hasValidOAuth, // Both must be true
+          storageAccountId: account.id,
+          storageStatus: account.status,
+          isAuthAccount: true, // Since we enforce same email, this is always true
+          hasValidOAuth // Show OAuth status separately
+        }
+      })
+    )
+
     const response = {
-      accounts: accounts.map(account => ({
-        provider: account.provider,
-        providerAccountId: account.id, // Use storage account ID
-        email: account.email,
-        name: account.displayName,
-        isConnected: account.isActive,
-        storageAccountId: account.id,
-        storageStatus: account.status,
-        isAuthAccount: true, // Since we enforce same email, this is always true
-        hasValidOAuth: account.isActive // Simplified: if storage is active, OAuth should be valid
-      }))
+      accounts: enhancedAccounts
     }
     
-    console.log('✅ STORAGE_ACCOUNTS_API: Returning response')
+    console.log('✅ STORAGE_ACCOUNTS_API: Returning enhanced response:', {
+      totalAccounts: enhancedAccounts.length,
+      connectedAccounts: enhancedAccounts.filter(a => a.isConnected).length
+    })
+    
     return NextResponse.json(response)
   } catch (error) {
     console.error("❌ STORAGE_ACCOUNTS_API: Error fetching storage accounts:", error)

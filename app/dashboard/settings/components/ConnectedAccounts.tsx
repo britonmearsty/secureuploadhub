@@ -48,15 +48,30 @@ export default function ConnectedAccounts() {
 
     async function fetchAccounts() {
         try {
+            console.log('🔍 FRONTEND: Fetching storage accounts...')
             const res = await fetch("/api/storage/accounts")
+            console.log('🔍 FRONTEND: API response status:', res.status, res.ok)
+            
             if (res.ok) {
                 const data = await res.json()
-                console.log("🔍 DEBUG: Storage accounts API response:", data)
-                console.log("🔍 DEBUG: Accounts array:", data.accounts)
+                console.log("🔍 FRONTEND: Storage accounts API response:", data)
+                console.log("🔍 FRONTEND: Accounts array:", data.accounts)
+                console.log("🔍 FRONTEND: Account details:", data.accounts?.map((a: any) => ({
+                    provider: a.provider,
+                    isConnected: a.isConnected,
+                    hasValidOAuth: a.hasValidOAuth,
+                    storageStatus: a.storageStatus,
+                    email: a.email
+                })))
+                
                 setAccounts(data.accounts || [])
+            } else {
+                console.error('🔍 FRONTEND: API error:', res.status, res.statusText)
+                const errorData = await res.json().catch(() => ({}))
+                console.error('🔍 FRONTEND: Error data:', errorData)
             }
         } catch (error) {
-            console.error("Error fetching accounts:", error)
+            console.error("🔍 FRONTEND: Error fetching accounts:", error)
         } finally {
             setLoading(false)
         }
@@ -178,6 +193,24 @@ export default function ConnectedAccounts() {
 
     return (
         <div className="space-y-4">
+            {/* Debug/Refresh Section */}
+            <div className="flex justify-between items-center">
+                <div className="text-sm text-muted-foreground">
+                    {accounts.length > 0 && (
+                        <span>Found {accounts.length} storage account{accounts.length !== 1 ? 's' : ''}</span>
+                    )}
+                </div>
+                <button
+                    onClick={() => {
+                        setLoading(true)
+                        fetchAccounts()
+                    }}
+                    className="px-3 py-1.5 text-xs bg-muted hover:bg-muted/80 rounded-lg transition-colors"
+                >
+                    Refresh
+                </button>
+            </div>
+
             {connectedAccounts.length === 0 && !loading && (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="p-4 bg-muted rounded-full mb-4">

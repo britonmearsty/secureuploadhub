@@ -86,25 +86,27 @@ export class SingleEmailStorageManager {
 
         if (existingStorageAccount) {
           // Update existing account - always use user's login email
+          // IMPORTANT: Always reactivate the account regardless of current status
           const updatedAccount = await tx.storageAccount.update({
             where: { id: existingStorageAccount.id },
             data: {
               providerAccountId, // Update OAuth account ID
               email: userEmail, // Always use login email
               displayName: user.name || `${provider} Account`,
-              status: StorageAccountStatus.ACTIVE,
-              isActive: true,
-              lastError: null,
+              status: StorageAccountStatus.ACTIVE, // Always set to ACTIVE
+              isActive: true, // Always set to true
+              lastError: null, // Clear any previous errors
               lastAccessedAt: new Date(),
               updatedAt: new Date()
             }
           })
 
-          console.log(`✅ AUTO_DETECT: Updated existing storage account for ${provider}`)
+          console.log(`✅ AUTO_DETECT: Updated existing storage account for ${provider} (status: ${existingStorageAccount.status} → ACTIVE)`)
           
           // Enhanced logging for Google Drive
           if (provider === "google") {
             console.log(`🎉 GOOGLE_AUTO_DETECT: Successfully updated Google Drive StorageAccount ${updatedAccount.id} for ${userEmail}`)
+            console.log(`🔄 GOOGLE_AUTO_DETECT: Status changed from ${existingStorageAccount.status} to ACTIVE`)
           }
           
           return {
@@ -311,6 +313,7 @@ export class SingleEmailStorageManager {
   /**
    * Get simplified connected accounts for user
    * Shows only accounts that match user's login email
+   * ENHANCED: More robust filtering and status reporting
    */
   static async getSimplifiedConnectedAccounts(userId: string) {
     const user = await prisma.user.findUnique({
@@ -333,19 +336,31 @@ export class SingleEmailStorageManager {
         email: true,
         displayName: true,
         status: true,
-        lastAccessedAt: true
+        isActive: true, // Keep for backward compatibility
+        lastAccessedAt: true,
+        createdAt: true
       }
     })
 
-    return storageAccounts.map(account => ({
-      id: account.id,
-      provider: account.provider === "google_drive" ? "google" : "dropbox",
-      email: user.email, // Always show user's login email
-      displayName: account.displayName,
-      status: account.status,
-      isActive: account.status === StorageAccountStatus.ACTIVE,
-      lastAccessedAt: account.lastAccessedAt
-    }))
+    console.log(`🔍 SIMPLIFIED_ACCOUNTS: Found ${storageAccounts.length} storage accounts for user ${userId}`)
+
+    return storageAccounts.map(account => {
+      const provider = account.provider === "google_drive" ? "google" : "dropbox"
+      const isActive = account.status === StorageAccountStatus.ACTIVE
+      
+      console.log(`🔍 SIMPLIFIED_ACCOUNTS: ${provider} - Status: ${account.status}, IsActive: ${isActive}`)
+      
+      return {
+        id: account.id,
+        provider,
+        email: user.email, // Always show user's login email
+        displayName: account.displayName,
+        status: account.status,
+        isActive, // Use status-based logic instead of deprecated field
+        lastAccessedAt: account.lastAccessedAt,
+        createdAt: account.createdAt
+      }
+    })
   }
 
   /**
