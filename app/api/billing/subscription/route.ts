@@ -141,10 +141,10 @@ export async function POST(request: NextRequest) {
 
       // For initial subscription, we need to get authorization from user first
       // Instead of creating subscription immediately, return checkout URL
-      
+
       // Check if user has existing authorization (saved card)
       let authorizationCode = null;
-      
+
       // Try to get existing authorization from previous payments
       const existingPayment = await prisma.payment.findFirst({
         where: {
@@ -160,7 +160,7 @@ export async function POST(request: NextRequest) {
       }
 
       let paystackSubscription;
-      
+
       if (authorizationCode) {
         // Create subscription with existing authorization
         paystackSubscription = await createPaystackSubscription({
@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
         // Create a payment initialization for the first payment
         const paystack = await import('@/lib/billing').then(m => m.getPaystack());
         const reference = `sub_${subscription.id}_${Date.now()}`; // Unique reference
-        
+
         const initializeResponse = await (paystack as any).transaction.initialize({
           email: user.email,
           amount: convertToPaystackSubunit(plan.price, paystackCurrency),
@@ -210,7 +210,7 @@ export async function POST(request: NextRequest) {
               value: plan.name
             },
             {
-              display_name: "Billing Period", 
+              display_name: "Billing Period",
               variable_name: "billing_period",
               value: "Monthly"
             }
@@ -220,19 +220,6 @@ export async function POST(request: NextRequest) {
         if (!initializeResponse.status) {
           throw new Error(`Failed to initialize payment: ${initializeResponse.message}`);
         }
-
-        // Create a pending payment record so webhook can find it
-        await prisma.payment.create({
-          data: {
-            subscriptionId: subscription.id,
-            userId: session.user.id,
-            amount: plan.price,
-            currency: plan.currency,
-            status: "pending",
-            providerPaymentRef: reference,
-            description: `Initial payment for ${plan.name}`,
-          }
-        });
 
         // Create payment record to link with webhook
         await prisma.payment.create({
@@ -328,23 +315,23 @@ export async function DELETE() {
     const updatedSubscription = await cancelSubscription(session.user.id)
 
     // Provide different messages based on subscription status
-    const message = updatedSubscription.status === 'canceled' 
+    const message = updatedSubscription.status === 'canceled'
       ? "Subscription cancelled successfully"
       : "Subscription will be canceled at the end of the billing period"
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message,
       subscription: updatedSubscription
     })
   } catch (error: any) {
     console.error("Error canceling subscription:", error)
-    
+
     if (error.message === 'No active subscription found') {
-      return NextResponse.json({ 
-        error: "No active subscription found. You may not have a subscription or it may already be cancelled." 
+      return NextResponse.json({
+        error: "No active subscription found. You may not have a subscription or it may already be cancelled."
       }, { status: 404 })
     }
-    
+
     return NextResponse.json(
       { error: "Failed to cancel subscription. Please try again or contact support." },
       { status: 500 }

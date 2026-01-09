@@ -136,7 +136,6 @@ export async function POST(request: NextRequest) {
       if (recentPayments.length > 0) {
         const { getPaystack } = await import('@/lib/billing')
         const paystack = await getPaystack()
-        let recoveredCount = 0
 
         for (const payment of recentPayments) {
           try {
@@ -144,7 +143,7 @@ export async function POST(request: NextRequest) {
             const verification = await (paystack as any).transaction.verify(payment.providerPaymentRef)
 
             if (verification.status && verification.data.status === 'success') {
-              // Update payment to link with subscription if unlinked, and mark as succeeded
+              // Update payment and activate (existing logic)
               await prisma.payment.update({
                 where: { id: payment.id },
                 data: {
@@ -155,7 +154,6 @@ export async function POST(request: NextRequest) {
                 }
               })
 
-              // Activate subscription
               const result = await activateSubscription({
                 subscriptionId: subscription.id,
                 paymentData: {
@@ -169,33 +167,146 @@ export async function POST(request: NextRequest) {
               })
 
               if (result.result.success) {
-                recoveredCount++
                 recoveryResult = {
                   success: true,
                   method: 'stuck_payment_recovery',
                   message: `Subscription recovered by verifying previously ${payment.status} payment`,
                   paymentId: payment.id
                 }
-                break // Success!
+                break
               }
             }
           } catch (error) {
             console.error(`Error verifying payment ${payment.providerPaymentRef}:`, error)
           }
         }
+      }
 
-        if (!recoveryResult) {
-          recoveryResult = {
-            success: false,
-            method: 'search',
-            message: `Found ${recentPayments.length} candidate payments, but none were confirmed as successful by Paystack.`
+      // DEEP SEARCH: If still not recovered, search Paystack directly for ANY successful transactions for this user
+      if (!recoveryResult) {
+        console.log("Starting Paystack Deep Search for user email:", session.user.email)
+        try {
+          const { getPaystack } = await import('@/lib/billing')
+          const paystack = await getPaystack()
+
+          // 1. Get transactions for this customer email
+          const paystackTx = await (paystack as any).transaction.list({
+            customer: session.user.email,
+            status: 'success'
+          })
+
+          if (paystackTx.status && paystackTx.data && paystackTx.data.length > 0) {
+            console.log(`Found ${paystackTx.data.length} successful transactions on Paystack for email ${session.user.email}`)
+
+            for (const tx of paystackTx.data) {
+              // Check if we already have this payment in our DB
+              const txId = tx.id.toString()
+              const existingPayment = await prisma.payment.findFirst({
+                where: { providerPaymentId: txId }
+              })
+
+              if (existingPayment) {
+                // If it's already in our DB and linked to this subscription, we might just need to sync status
+                if (existingPayment.subscriptionId === subscription.id && subscription.status === SUBSCRIPTION_STATUS.INCOMPLETE) {
+                  const result = await activateSubscription({
+                    subscriptionId: subscription.id,
+                    paymentData: {
+                      reference: tx.reference,
+                      paymentId: txId,
+                      amount: tx.amount,
+                      currency: tx.currency,
+                      authorization: tx.authorization
+                    },
+                    source: 'deep_recovery_sync'
+                  })
+
+                  if (result.result.success) {
+                    recoveryResult = {
+                      success: true,
+                      method: 'deep_search_sync',
+                      message: 'Subscription successfully synced from existing Paystack transaction'
+                    }
+                    break
+                  }
+                }
+                continue // Already processed
+              }
+
+              // This is a "new" successful payment we don't have linked yet
+              // Try to find if it matches any of our PENDING payments by amount
+              const matchingPending = await prisma.payment.findFirst({
+                where: {
+                  userId: session.user.id,
+                  status: PAYMENT_STATUS.PENDING,
+                  amount: (tx.amount || 0) / 100
+                }
+              })
+
+              if (matchingPending) {
+                console.log("Matched Paystack transaction with local pending payment:", matchingPending.id)
+                await prisma.payment.update({
+                  where: { id: matchingPending.id },
+                  data: {
+                    status: PAYMENT_STATUS.SUCCEEDED,
+                    subscriptionId: subscription.id,
+                    providerPaymentId: txId,
+                    providerPaymentRef: tx.reference,
+                    providerResponse: JSON.stringify(tx)
+                  }
+                })
+              } else {
+                // Create a new payment record for this untracked successful payment
+                console.log("Creating new payment record for untracked Paystack transaction:", tx.reference)
+                await prisma.payment.create({
+                  data: {
+                    userId: session.user.id,
+                    subscriptionId: subscription.id,
+                    amount: (tx.amount || 0) / 100,
+                    currency: tx.currency,
+                    status: PAYMENT_STATUS.SUCCEEDED,
+                    providerPaymentId: txId,
+                    providerPaymentRef: tx.reference,
+                    providerResponse: JSON.stringify(tx),
+                    description: `Deep recovery: ${tx.reference}`
+                  }
+                })
+              }
+
+              // Activate/Sync the subscription
+              const result = await activateSubscription({
+                subscriptionId: subscription.id,
+                paymentData: {
+                  reference: tx.reference,
+                  paymentId: txId,
+                  amount: tx.amount,
+                  currency: tx.currency,
+                  authorization: tx.authorization
+                },
+                source: 'deep_search_recovery'
+              })
+
+              if (result.result.success) {
+                recoveryResult = {
+                  success: true,
+                  method: 'deep_search_recovery',
+                  message: 'Subscription recovered via Paystack transaction history search'
+                }
+                break
+              }
+            }
           }
+        } catch (error) {
+          console.error("Deep search failed:", error)
         }
-      } else {
+      }
+
+      if (!recoveryResult) {
         recoveryResult = {
           success: false,
           method: 'search',
-          message: 'No unlinked successful or pending payments found for this user in the last 30 days'
+          message: recentPayments.length > 0
+            ? `Found ${recentPayments.length} candidate payments locally, but none matched successful Paystack transactions.`
+            : 'No successful transactions found for your account on Paystack in the last 30 days.'
         }
       }
     }
