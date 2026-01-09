@@ -222,6 +222,35 @@ export default function ConnectedAccounts() {
         }
     }
 
+    async function handleRefreshToken(provider: string) {
+        console.log('🔄 FRONTEND: Starting token refresh for provider:', provider)
+        try {
+            const res = await fetch(`/api/storage/refresh-token`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ provider })
+            })
+
+            if (res.ok) {
+                const data = await res.json()
+                showToast('success', 'Token Refreshed', data.message)
+                
+                // Refresh accounts to show updated status
+                fetchAccounts()
+            } else {
+                const errorData = await res.json()
+                if (errorData.error.includes('reconnect')) {
+                    showToast('warning', 'Reconnection Required', errorData.error)
+                } else {
+                    showToast('error', 'Refresh Failed', errorData.error || 'Failed to refresh token')
+                }
+            }
+        } catch (error) {
+            console.error("🔄 FRONTEND: Error refreshing token:", error)
+            showToast('error', 'Connection Error', 'An unexpected error occurred while refreshing token')
+        }
+    }
+
     // Show ALL accounts, not just connected ones - users need to see disconnected/inactive accounts too
     // FIXED: Prioritize ACTIVE accounts over ERROR/INACTIVE when there are duplicates
     const allAccounts = accounts.reduce((acc: ConnectedAccount[], current) => {
@@ -434,7 +463,7 @@ export default function ConnectedAccounts() {
                                     <div className="flex items-center gap-2">
                                         <div className={`w-2 h-2 rounded-full ${account.hasValidOAuth ? 'bg-green-500' : 'bg-red-500'}`} />
                                         <span className="text-xs text-muted-foreground">
-                                            OAuth: {account.hasValidOAuth ? 'Active' : 'Disconnected'}
+                                            Drive Access: {account.hasValidOAuth ? 'Active' : 'Expired'}
                                         </span>
                                     </div>
                                     {account.storageStatus && (
@@ -461,26 +490,36 @@ export default function ConnectedAccounts() {
                                     <CheckCircle2 className="w-4 h-4" />
                                     Reactivate Storage
                                 </button>
-                            ) : account.storageStatus === 'DISCONNECTED' || !account.hasValidOAuth ? (
-                                <button
-                                    onClick={async () => {
-                                        try {
-                                            // Use NextAuth signIn function for reconnection
-                                            await signIn(account.provider, { 
-                                                callbackUrl: window.location.href,
-                                                redirect: true 
-                                            })
-                                        } catch (error) {
-                                            console.error('OAuth reconnection failed:', error)
-                                            showToast('error', 'Connection Failed', 'Failed to reconnect OAuth account')
-                                        }
-                                    }}
-                                    className="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all active:scale-95 bg-blue-500 hover:bg-blue-600 text-white"
-                                    title="Reconnect your OAuth account to restore access"
-                                >
-                                    <CheckCircle2 className="w-4 h-4" />
-                                    Reconnect OAuth
-                                </button>
+                            ) : !account.hasValidOAuth ? (
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => handleRefreshToken(account.provider)}
+                                        className="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all active:scale-95 bg-blue-500 hover:bg-blue-600 text-white"
+                                        title="Refresh expired access token"
+                                    >
+                                        <CheckCircle2 className="w-4 h-4" />
+                                        Refresh Token
+                                    </button>
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                // Use NextAuth signIn function for reconnection
+                                                await signIn(account.provider, { 
+                                                    callbackUrl: window.location.href,
+                                                    redirect: true 
+                                                })
+                                            } catch (error) {
+                                                console.error('OAuth reconnection failed:', error)
+                                                showToast('error', 'Connection Failed', 'Failed to reconnect OAuth account')
+                                            }
+                                        }}
+                                        className="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all active:scale-95 bg-purple-500 hover:bg-purple-600 text-white"
+                                        title="Reconnect your OAuth account completely"
+                                    >
+                                        <CheckCircle2 className="w-4 h-4" />
+                                        Reconnect OAuth
+                                    </button>
+                                </div>
                             ) : account.storageStatus === 'ACTIVE' ? (
                                 <button
                                     onClick={() => handleDeactivate(account.provider)}

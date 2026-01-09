@@ -74,9 +74,35 @@ export async function POST() {
         if (isExpired && !oauthAccount.refresh_token) {
           shouldBeStatus = StorageAccountStatus.DISCONNECTED
           reason = "Token expired, no refresh token"
-        } else if (isExpired) {
-          shouldBeStatus = StorageAccountStatus.ERROR
-          reason = "Token expired, needs refresh"
+        } else if (isExpired && oauthAccount.refresh_token) {
+          // Attempt to refresh the token automatically
+          console.log(`🔄 SYNC_OAUTH: Attempting to refresh expired ${oauthProvider} token`)
+          const refreshResult = await attemptTokenRefresh(oauthProvider, oauthAccount.refresh_token)
+          
+          if (refreshResult.success) {
+            // Update the OAuth account with new token
+            await prisma.account.update({
+              where: {
+                provider_providerAccountId: {
+                  provider: oauthAccount.provider,
+                  providerAccountId: oauthAccount.providerAccountId
+                }
+              },
+              data: {
+                access_token: refreshResult.access_token,
+                expires_at: refreshResult.expires_at,
+                refresh_token: refreshResult.refresh_token || oauthAccount.refresh_token,
+                updatedAt: new Date()
+              }
+            })
+            
+            shouldBeStatus = StorageAccountStatus.ACTIVE
+            reason = "Token refreshed automatically"
+            actions.push(`✅ Auto-refreshed ${oauthProvider} token`)
+          } else {
+            shouldBeStatus = StorageAccountStatus.ERROR
+            reason = `Token refresh failed: ${refreshResult.error}`
+          }
         } else {
           shouldBeStatus = StorageAccountStatus.ACTIVE
           reason = "OAuth is valid"
@@ -155,5 +181,98 @@ export async function POST() {
       { error: "Internal server error" },
       { status: 500 }
     )
+  }
+}
+
+async function attemptTokenRefresh(provider: string, refreshToken: string) {
+  try {
+    if (provider === 'google') {
+      return await refreshGoogleToken(refreshToken)
+    } else if (provider === 'dropbox') {
+      return await refreshDropboxToken(refreshToken)
+    } else {
+      return { success: false, error: 'Unsupported provider' }
+    }
+  } catch (error) {
+    console.error(`Error refreshing ${provider} token:`, error)
+    return { success: false, error: 'Token refresh failed' }
+  }
+}
+
+async function refreshGoogleToken(refreshToken: string) {
+  try {
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        client_id: process.env.GOOGLE_CLIENT_ID!,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+        refresh_token: refreshToken,
+        grant_type: 'refresh_token',
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      return {
+        success: false,
+        error: errorData.error_description || 'Failed to refresh Google token'
+      }
+    }
+
+    const data = await response.json()
+    
+    return {
+      success: true,
+      access_token: data.access_token,
+      expires_at: Math.floor(Date.now() / 1000) + data.expires_in,
+      refresh_token: data.refresh_token
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Network error while refreshing token'
+    }
+  }
+}
+
+async function refreshDropboxToken(refreshToken: string) {
+  try {
+    const response = await fetch('https://api.dropboxapi.com/oauth2/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        client_id: process.env.DROPBOX_CLIENT_ID!,
+        client_secret: process.env.DROPBOX_CLIENT_SECRET!,
+        refresh_token: refreshToken,
+        grant_type: 'refresh_token',
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      return {
+        success: false,
+        error: errorData.error_description || 'Failed to refresh Dropbox token'
+      }
+    }
+
+    const data = await response.json()
+    
+    return {
+      success: true,
+      access_token: data.access_token,
+      expires_at: Math.floor(Date.now() / 1000) + data.expires_in,
+      refresh_token: data.refresh_token || refreshToken
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Network error while refreshing token'
+    }
   }
 }
