@@ -32,13 +32,20 @@ export async function POST(request: Request) {
 
     if (result.success) {
       console.log('✅ STORAGE_DEACTIVATE: Success:', {
-        deactivatedCount: result.deactivatedCount
+        deactivatedCount: result.deactivatedCount,
+        deactivatedPortals: result.deactivatedPortals
       })
+
+      let message = `${provider} storage deactivated. Your files are preserved and you can reactivate anytime.`
+      if (result.deactivatedPortals && result.deactivatedPortals > 0) {
+        message += ` ${result.deactivatedPortals} portal(s) have been automatically deactivated.`
+      }
 
       return NextResponse.json({ 
         success: true, 
-        message: `${provider} storage deactivated. Your files are preserved and you can reactivate anytime.`,
-        deactivatedCount: result.deactivatedCount
+        message,
+        deactivatedCount: result.deactivatedCount,
+        deactivatedPortals: result.deactivatedPortals || 0
       })
     } else {
       console.log('❌ STORAGE_DEACTIVATE: Failed:', result.error)

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Cloud, CheckCircle2, Loader2, LogOut } from "lucide-react"
 import { motion } from "framer-motion"
 import { ToastComponent } from "@/components/ui/Toast"
+import { signIn } from "next-auth/react"
 
 interface ConnectedAccount {
     provider: "google" | "dropbox"
@@ -22,6 +23,7 @@ export default function ConnectedAccounts() {
     const [loading, setLoading] = useState(true)
     const [deactivating, setDeactivating] = useState<string | null>(null)
     const [fixing, setFixing] = useState(false)
+    const [syncing, setSyncing] = useState(false)
     const [toast, setToast] = useState<{
         isOpen: boolean;
         type: 'error' | 'success' | 'warning' | 'info';
@@ -50,6 +52,15 @@ export default function ConnectedAccounts() {
     async function fetchAccounts() {
         try {
             console.log('🔍 FRONTEND: Fetching storage accounts...')
+            
+            // First, sync OAuth status with storage account status
+            try {
+                await fetch('/api/storage/sync-oauth-status', { method: 'POST' })
+                console.log('🔄 FRONTEND: OAuth status synced')
+            } catch (syncError) {
+                console.warn('⚠️ FRONTEND: OAuth sync failed, continuing with fetch:', syncError)
+            }
+            
             const res = await fetch("/api/storage/accounts")
             console.log('🔍 FRONTEND: API response status:', res.status, res.ok)
             
@@ -78,6 +89,38 @@ export default function ConnectedAccounts() {
         }
     }
 
+    async function handleSyncStatus() {
+        setSyncing(true)
+        try {
+            const res = await fetch('/api/storage/sync-oauth-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+
+            if (res.ok) {
+                const data = await res.json()
+                let message = data.message
+                if (data.summary?.deactivatedPortals > 0) {
+                    message += ` ${data.summary.deactivatedPortals} portal(s) were automatically deactivated.`
+                }
+                if (data.summary?.reactivatedPortals > 0) {
+                    message += ` ${data.summary.reactivatedPortals} portal(s) were automatically reactivated.`
+                }
+                showToast('success', 'Status Synced', message)
+                
+                // Refresh accounts
+                fetchAccounts()
+            } else {
+                const errorData = await res.json()
+                showToast('error', 'Sync Failed', errorData.error || 'Failed to sync OAuth status')
+            }
+        } catch (error) {
+            showToast('error', 'Connection Error', 'An unexpected error occurred')
+        } finally {
+            setSyncing(false)
+        }
+    }
+    
     async function handleFixStorage() {
         setFixing(true)
         try {
@@ -88,7 +131,11 @@ export default function ConnectedAccounts() {
 
             if (res.ok) {
                 const data = await res.json()
-                showToast('success', 'Storage Fixed', `${data.message}. ${data.summary.created} created, ${data.summary.reactivated} reactivated.`)
+                let message = `${data.message}. ${data.summary.created} created, ${data.summary.reactivated} reactivated.`
+                if (data.summary?.reactivatedPortals > 0) {
+                    message += ` ${data.summary.reactivatedPortals} portal(s) were automatically reactivated.`
+                }
+                showToast('success', 'Storage Fixed', message)
                 
                 // Refresh accounts
                 fetchAccounts()
@@ -113,7 +160,11 @@ export default function ConnectedAccounts() {
 
             if (res.ok) {
                 const data = await res.json()
-                showToast('success', 'Storage Reactivated', data.message)
+                let message = data.message
+                if (data.reactivatedPortals > 0) {
+                    message += ` ${data.reactivatedPortals} portal(s) were automatically reactivated.`
+                }
+                showToast('success', 'Storage Reactivated', message)
                 
                 // Refresh accounts
                 fetchAccounts()
@@ -145,10 +196,11 @@ export default function ConnectedAccounts() {
 
             if (res.ok) {
                 const data = await res.json()
-                console.log('🔍 FRONTEND: Success response data:', data)
-                
-                // Show success message
-                showToast('success', 'Storage Deactivated', data.message)
+                let message = data.message
+                if (data.deactivatedPortals > 0) {
+                    message += ` ${data.deactivatedPortals} portal(s) were automatically deactivated.`
+                }
+                showToast('success', 'Storage Deactivated', message)
                 
                 // Refresh accounts to show updated status
                 console.log('🔍 FRONTEND: Refreshing accounts...')
@@ -227,6 +279,24 @@ export default function ConnectedAccounts() {
                 </div>
                 <div className="flex gap-2">
                     <button
+                        onClick={handleSyncStatus}
+                        disabled={syncing}
+                        className="px-3 py-1.5 text-xs bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        title="Sync storage account status with OAuth status"
+                    >
+                        {syncing ? (
+                            <>
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                                Syncing...
+                            </>
+                        ) : (
+                            <>
+                                <CheckCircle2 className="w-3 h-3" />
+                                Sync Status
+                            </>
+                        )}
+                    </button>
+                    <button
                         onClick={handleFixStorage}
                         disabled={fixing}
                         className="px-3 py-1.5 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
@@ -290,13 +360,24 @@ export default function ConnectedAccounts() {
                                     <p className="text-xs text-muted-foreground mt-1">Connect to enable file storage and sync</p>
                                 </div>
                             </div>
-                            <a
-                                href={`/api/auth/signin/${provider.id}?callbackUrl=${encodeURIComponent(window.location.href)}`}
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        // Use NextAuth signIn function for new connections
+                                        await signIn(provider.id, { 
+                                            callbackUrl: window.location.href,
+                                            redirect: true 
+                                        })
+                                    } catch (error) {
+                                        console.error('OAuth connection failed:', error)
+                                        showToast('error', 'Connection Failed', 'Failed to connect OAuth account')
+                                    }
+                                }}
                                 className="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all active:scale-95 bg-primary hover:bg-primary/90 text-primary-foreground"
                             >
                                 <CheckCircle2 className="w-4 h-4" />
                                 Connect {provider.name}
-                            </a>
+                            </button>
                         </motion.div>
                     )
                 }
@@ -361,14 +442,25 @@ export default function ConnectedAccounts() {
                                     Reactivate Storage
                                 </button>
                             ) : account.storageStatus === 'DISCONNECTED' || !account.hasValidOAuth ? (
-                                <a
-                                    href={`/api/auth/signin/${account.provider}?callbackUrl=${encodeURIComponent(window.location.href)}`}
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            // Use NextAuth signIn function for reconnection
+                                            await signIn(account.provider, { 
+                                                callbackUrl: window.location.href,
+                                                redirect: true 
+                                            })
+                                        } catch (error) {
+                                            console.error('OAuth reconnection failed:', error)
+                                            showToast('error', 'Connection Failed', 'Failed to reconnect OAuth account')
+                                        }
+                                    }}
                                     className="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all active:scale-95 bg-blue-500 hover:bg-blue-600 text-white"
                                     title="Reconnect your OAuth account to restore access"
                                 >
                                     <CheckCircle2 className="w-4 h-4" />
                                     Reconnect OAuth
-                                </a>
+                                </button>
                             ) : account.storageStatus === 'ACTIVE' ? (
                                 <button
                                     onClick={() => handleDeactivate(account.provider)}

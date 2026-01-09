@@ -5,7 +5,8 @@
  */
 
 import prisma from "@/lib/prisma"
-import { StorageAccountStatus } from "@prisma/client"
+import { StorageAccountStatus } from "./account-states"
+import { handleStorageAccountStatusChange } from "./portal-management"
 
 export interface SingleEmailStorageResult {
   success: boolean
@@ -75,7 +76,7 @@ export class SingleEmailStorageManager {
         console.log(`🔍 GOOGLE_AUTO_DETECT: Validated - User: ${userEmail}, Provider ID: ${providerAccountId}`)
       }
 
-      return await prisma.$transaction(async (tx) => {
+      return await prisma.$transaction(async (tx: any) => {
         // Check if storage account already exists for this user/provider
         const existingStorageAccount = await tx.storageAccount.findFirst({
           where: {
@@ -249,6 +250,18 @@ export class SingleEmailStorageManager {
     const storageProvider = provider === "google" ? "google_drive" : "dropbox"
     
     try {
+      // Get current storage accounts to track status changes
+      const currentAccounts = await prisma.storageAccount.findMany({
+        where: {
+          userId,
+          provider: storageProvider
+        },
+        select: {
+          id: true,
+          status: true
+        }
+      })
+
       const result = await prisma.storageAccount.updateMany({
         where: {
           userId,
@@ -262,9 +275,24 @@ export class SingleEmailStorageManager {
         }
       })
 
+      // Handle portal deactivation for each affected storage account
+      let totalDeactivatedPortals = 0
+      for (const account of currentAccounts) {
+        if (account.status === StorageAccountStatus.ACTIVE) {
+          const portalResult = await handleStorageAccountStatusChange(
+            account.id,
+            account.status,
+            StorageAccountStatus.INACTIVE,
+            "Storage account deactivated by user"
+          )
+          totalDeactivatedPortals += portalResult.deactivatedPortals
+        }
+      }
+
       return {
         success: true,
-        deactivatedCount: result.count
+        deactivatedCount: result.count,
+        deactivatedPortals: totalDeactivatedPortals
       }
     } catch (error) {
       console.error(`❌ DEACTIVATE: Error deactivating ${provider}:`, error)
@@ -283,6 +311,18 @@ export class SingleEmailStorageManager {
     const storageProvider = provider === "google" ? "google_drive" : "dropbox"
     
     try {
+      // Get current storage accounts to track status changes
+      const currentAccounts = await prisma.storageAccount.findMany({
+        where: {
+          userId,
+          provider: storageProvider
+        },
+        select: {
+          id: true,
+          status: true
+        }
+      })
+
       const result = await prisma.storageAccount.updateMany({
         where: {
           userId,
@@ -297,9 +337,24 @@ export class SingleEmailStorageManager {
         }
       })
 
+      // Handle portal reactivation for each affected storage account
+      let totalReactivatedPortals = 0
+      for (const account of currentAccounts) {
+        if (account.status !== StorageAccountStatus.ACTIVE) {
+          const portalResult = await handleStorageAccountStatusChange(
+            account.id,
+            account.status,
+            StorageAccountStatus.ACTIVE,
+            "Storage account reactivated by user"
+          )
+          totalReactivatedPortals += portalResult.reactivatedPortals
+        }
+      }
+
       return {
         success: true,
-        reactivatedCount: result.count
+        reactivatedCount: result.count,
+        reactivatedPortals: totalReactivatedPortals
       }
     } catch (error) {
       console.error(`❌ REACTIVATE: Error reactivating ${provider}:`, error)
@@ -344,7 +399,7 @@ export class SingleEmailStorageManager {
 
     console.log(`🔍 SIMPLIFIED_ACCOUNTS: Found ${storageAccounts.length} storage accounts for user ${userId}`)
 
-    return storageAccounts.map(account => {
+    return storageAccounts.map((account: any) => {
       const provider = account.provider === "google_drive" ? "google" : "dropbox"
       const isActive = account.status === StorageAccountStatus.ACTIVE
       

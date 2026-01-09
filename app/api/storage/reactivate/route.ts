@@ -93,11 +93,21 @@ export async function POST(request: Request) {
     })
 
     if (result.success) {
-      console.log('✅ STORAGE_REACTIVATE: Success')
+      console.log('✅ STORAGE_REACTIVATE: Success:', {
+        reactivatedCount: result.reactivatedCount,
+        reactivatedPortals: result.reactivatedPortals
+      })
+
+      let message = `${provider} storage reactivated for your account (${session.user.email}).`
+      if (result.reactivatedPortals && result.reactivatedPortals > 0) {
+        message += ` ${result.reactivatedPortals} portal(s) have been automatically reactivated.`
+      }
+
       return NextResponse.json({ 
         success: true, 
-        message: `${provider} storage reactivated for your account (${session.user.email}).`,
-        reactivatedCount: result.reactivatedCount
+        message,
+        reactivatedCount: result.reactivatedCount,
+        reactivatedPortals: result.reactivatedPortals || 0
       })
     } else {
       console.log('❌ STORAGE_REACTIVATE: Failed:', result.error)

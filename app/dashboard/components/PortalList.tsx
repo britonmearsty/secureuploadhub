@@ -30,6 +30,7 @@ import {
 } from "lucide-react"
 import { FileList } from "@/components/assets"
 import { ToastComponent } from "@/components/ui/Toast"
+import { getStorageErrorMessage } from "@/lib/storage/error-messages"
 
 interface Portal {
     id: string
@@ -122,11 +123,13 @@ export default function PortalList({
         // Check storage account status before showing delete modal
         if (file.storageAccount) {
             const status = file.storageAccount.status
-            if (status === 'INACTIVE') {
-                showToastInternal('error', 'File Unavailable', `Cannot delete file. Your ${file.storageAccount.provider} storage account is deactivated.`)
-                return
-            } else if (status === 'ERROR') {
-                showToastInternal('error', 'File Unavailable', `Cannot delete file. There are connection issues with your ${file.storageAccount.provider} storage account.`)
+            if (status !== 'ACTIVE') {
+                const errorInfo = getStorageErrorMessage(
+                    status,
+                    file.storageAccount.provider,
+                    'file_access'
+                )
+                showToastInternal('error', errorInfo.title, errorInfo.message)
                 return
             }
         }
@@ -203,18 +206,16 @@ export default function PortalList({
 
         const newStatus = !isActive
 
-        // STORAGE VALIDATION: Check if trying to activate portal with disconnected storage
+        // STORAGE VALIDATION: Check if trying to activate portal with inactive/disconnected storage
         if (newStatus && portal.storageAccount) {
-            if (portal.storageAccount.status === 'INACTIVE') {
+            if (portal.storageAccount.status !== 'ACTIVE') {
                 setTogglingId(null)
-                // Show toast notification instead of alert
-                showToastInternal('error', 'Cannot Activate Portal', 
-                    `Your ${portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage account is deactivated. Please reactivate your storage account first in the Integrations page.`)
-                return
-            } else if (portal.storageAccount.status === 'ERROR') {
-                setTogglingId(null)
-                showToastInternal('error', 'Cannot Activate Portal', 
-                    `There are connection issues with your ${portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage account. Please check your storage connection in the Integrations page.`)
+                const errorInfo = getStorageErrorMessage(
+                    portal.storageAccount.status,
+                    portal.storageAccount.provider,
+                    'portal_activation'
+                )
+                showToastInternal('error', errorInfo.title, errorInfo.message)
                 return
             }
         }
@@ -248,9 +249,26 @@ export default function PortalList({
         } catch (error) {
             console.error("Error toggling portal:", error)
             
-            // Show user-friendly error message
-            const errorMessage = error instanceof Error ? error.message : "Failed to toggle portal status"
-            showToastInternal('error', 'Portal Toggle Failed', errorMessage)
+            // Handle specific storage-related errors from the API
+            if (error instanceof Error) {
+                const errorMessage = error.message
+                
+                // Try to extract storage status from error message and provide appropriate feedback
+                if (errorMessage.includes('storage account is disconnected')) {
+                    const errorInfo = getStorageErrorMessage('DISCONNECTED', 'google_drive', 'portal_activation')
+                    showToastInternal('error', errorInfo.title, errorInfo.message)
+                } else if (errorMessage.includes('storage account is deactivated')) {
+                    const errorInfo = getStorageErrorMessage('INACTIVE', 'google_drive', 'portal_activation')
+                    showToastInternal('error', errorInfo.title, errorInfo.message)
+                } else if (errorMessage.includes('connection issues')) {
+                    const errorInfo = getStorageErrorMessage('ERROR', 'google_drive', 'portal_activation')
+                    showToastInternal('error', errorInfo.title, errorInfo.message)
+                } else {
+                    showToastInternal('error', 'Portal Toggle Failed', errorMessage)
+                }
+            } else {
+                showToastInternal('error', 'Portal Toggle Failed', 'Failed to toggle portal status')
+            }
             
             // Revert on error
             if (allPortals && onPortalsUpdate) {
@@ -475,7 +493,7 @@ Status: ${portal.isActive ? 'Active ✅' : 'Inactive ⏸️'}`
                             {/* Portal Status Toggle */}
                             <button
                                 onClick={() => togglePortalStatus(portal.id, portal.isActive)}
-                                disabled={togglingId === portal.id || (portal.storageAccount?.status === 'INACTIVE' || portal.storageAccount?.status === 'ERROR')}
+                                disabled={togglingId === portal.id || (portal.storageAccount?.status === 'INACTIVE' || portal.storageAccount?.status === 'DISCONNECTED' || portal.storageAccount?.status === 'ERROR')}
                                 className={`absolute top-6 right-6 z-20 p-2 rounded-xl transition-all duration-200 flex-shrink-0 ${
                                     togglingId === portal.id ? 'opacity-60 cursor-not-allowed animate-pulse' : ''
                                 } ${

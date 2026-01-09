@@ -100,7 +100,7 @@ export async function PATCH(
       }
     }
 
-    // STORAGE VALIDATION: Check if trying to activate portal with disconnected storage
+    // STORAGE VALIDATION: Check if trying to activate portal with inactive/disconnected storage
     if (safeUpdates.isActive === true && existingPortal.storageAccountId) {
       const storageAccount = await prisma.storageAccount.findUnique({
         where: { id: existingPortal.storageAccountId },
@@ -108,19 +108,31 @@ export async function PATCH(
       })
 
       if (storageAccount) {
+        const providerName = storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'
+        
         if (storageAccount.status === StorageAccountStatus.DISCONNECTED) {
           return NextResponse.json({
-            error: `Cannot activate portal. Your ${storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage account is disconnected. Please reconnect your storage account first.`,
+            error: `Cannot activate portal. Your ${providerName} storage account is disconnected. Please reconnect your storage account first.`,
             code: "STORAGE_DISCONNECTED",
             storageProvider: storageAccount.provider,
-            storageEmail: storageAccount.email
+            storageEmail: storageAccount.email,
+            actionRequired: "reconnect"
+          }, { status: 400 })
+        } else if (storageAccount.status === StorageAccountStatus.INACTIVE) {
+          return NextResponse.json({
+            error: `Cannot activate portal. Your ${providerName} storage account is deactivated. Please reactivate your storage account first.`,
+            code: "STORAGE_INACTIVE",
+            storageProvider: storageAccount.provider,
+            storageEmail: storageAccount.email,
+            actionRequired: "reactivate"
           }, { status: 400 })
         } else if (storageAccount.status === StorageAccountStatus.ERROR) {
           return NextResponse.json({
-            error: `Cannot activate portal. There are connection issues with your ${storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage account. Please check your storage connection.`,
+            error: `Cannot activate portal. There are connection issues with your ${providerName} storage account. Please check your storage connection.`,
             code: "STORAGE_ERROR",
             storageProvider: storageAccount.provider,
-            storageEmail: storageAccount.email
+            storageEmail: storageAccount.email,
+            actionRequired: "fix"
           }, { status: 400 })
         }
       }

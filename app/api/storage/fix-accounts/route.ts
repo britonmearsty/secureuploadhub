@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
 import { StorageAccountStatus } from "@/lib/storage/account-states"
+import { handleMultipleStorageAccountChanges } from "@/lib/storage/portal-management"
 
 // POST /api/storage/fix-accounts - Fix storage accounts for current user
 export async function POST() {
@@ -39,6 +40,12 @@ export async function POST() {
     let createdCount = 0
     let reactivatedCount = 0
     const actions: string[] = []
+    const statusChanges: Array<{
+      storageAccountId: string
+      oldStatus: StorageAccountStatus
+      newStatus: StorageAccountStatus
+      reason: string
+    }> = []
 
     for (const oauthAccount of user.accounts) {
       const storageProvider = oauthAccount.provider === 'google' ? 'google_drive' : 'dropbox'
@@ -89,6 +96,15 @@ export async function POST() {
           })
           
           actions.push(`🔄 Reactivated ${oauthAccount.provider} storage (was ${existingStorage.status}): ${existingStorage.id}`)
+          
+          // Track status change for portal management
+          statusChanges.push({
+            storageAccountId: existingStorage.id,
+            oldStatus: existingStorage.status,
+            newStatus: StorageAccountStatus.ACTIVE,
+            reason: `Reactivated via fix-accounts API`
+          })
+          
           reactivatedCount++
           fixedCount++
         } catch (error) {
@@ -117,6 +133,22 @@ export async function POST() {
       }
     }
 
+    // Handle portal reactivation based on storage account changes
+    let portalManagementResult = {
+      deactivatedPortals: 0,
+      reactivatedPortals: 0,
+      affectedPortals: [] as any[]
+    }
+
+    if (statusChanges.length > 0) {
+      console.log(`🔄 FIX_ACCOUNTS: Handling portal management for ${statusChanges.length} storage account changes`)
+      portalManagementResult = await handleMultipleStorageAccountChanges(statusChanges)
+      
+      if (portalManagementResult.reactivatedPortals > 0) {
+        actions.push(`🔓 Auto-reactivated ${portalManagementResult.reactivatedPortals} portal(s) due to storage account reactivation`)
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: `Fixed ${fixedCount} storage account(s)`,
@@ -125,9 +157,12 @@ export async function POST() {
         created: createdCount,
         reactivated: reactivatedCount,
         oauthAccounts: user.accounts.length,
-        storageAccounts: user.storageAccounts.length
+        storageAccounts: user.storageAccounts.length,
+        reactivatedPortals: portalManagementResult.reactivatedPortals,
+        affectedPortals: portalManagementResult.affectedPortals.length
       },
-      actions
+      actions,
+      portalChanges: portalManagementResult.affectedPortals
     })
 
   } catch (error) {
