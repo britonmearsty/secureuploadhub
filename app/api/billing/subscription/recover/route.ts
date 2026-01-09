@@ -19,19 +19,18 @@ export async function POST(request: NextRequest) {
 
     const { subscriptionId, paymentReference } = await request.json()
 
-    // Find the subscription
     const subscription = await prisma.subscription.findFirst({
       where: {
         id: subscriptionId || undefined,
         userId: session.user.id,
-        status: SUBSCRIPTION_STATUS.INCOMPLETE
+        status: { in: [SUBSCRIPTION_STATUS.INCOMPLETE, SUBSCRIPTION_STATUS.ACTIVE] }
       },
       include: { plan: true }
     })
 
     if (!subscription) {
-      return NextResponse.json({ 
-        error: "No incomplete subscription found for this user" 
+      return NextResponse.json({
+        error: "No incomplete subscription found for this user"
       }, { status: 404 })
     }
 
@@ -43,7 +42,7 @@ export async function POST(request: NextRequest) {
         const { getPaystack } = await import('@/lib/billing')
         const paystack = await getPaystack()
         const verification = await (paystack as any).transaction.verify(paymentReference)
-        
+
         if (verification.status && verification.data.status === 'success') {
           // Create or update payment record
           const existingPayment = await prisma.payment.findFirst({
@@ -132,7 +131,7 @@ export async function POST(request: NextRequest) {
       if (recentSuccessfulPayments.length > 0) {
         // Try to link the most recent payment
         const payment = recentSuccessfulPayments[0]
-        
+
         // Update payment to link with subscription
         await prisma.payment.update({
           where: { id: payment.id },

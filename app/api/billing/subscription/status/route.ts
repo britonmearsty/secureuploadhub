@@ -29,17 +29,17 @@ export async function POST(request: NextRequest) {
     })
 
     if (!subscription) {
-      return NextResponse.json({ 
-        error: "No subscription found" 
+      return NextResponse.json({
+        error: "No subscription found"
       }, { status: 404 })
     }
 
     let updated = false
     let message = "Subscription status is up to date"
 
-    // If subscription is incomplete, check for recent successful payments
-    if (subscription.status === 'incomplete') {
-      // Check for recent successful payments (last 7 days instead of 24 hours)
+    // Check for recent successful payments or pending ones that might have succeeded
+    if (subscription.status === 'incomplete' || subscription.status === 'active') {
+      // Check for recent successful payments (last 7 days)
       const recentPayment = await prisma.payment.findFirst({
         where: {
           subscriptionId: subscription.id,
@@ -51,10 +51,10 @@ export async function POST(request: NextRequest) {
         orderBy: { createdAt: 'desc' }
       })
 
-      if (recentPayment) {
-        // Use the centralized activation function
+      if (recentPayment && subscription.status === 'incomplete') {
+        // Use the centralized activation function for incomplete subscriptions
         const { activateSubscription } = await import('@/lib/subscription-manager')
-        
+
         const result = await activateSubscription({
           subscriptionId: subscription.id,
           paymentData: {
@@ -69,12 +69,12 @@ export async function POST(request: NextRequest) {
         if (result.result.success) {
           updated = true
           message = "Subscription activated successfully based on successful payment"
-        } else {
-          console.error('Failed to activate subscription during manual check:', result.result.reason)
-          message = `Failed to activate subscription: ${result.result.reason}`
         }
-      } else {
+      }
+
+      if (!updated) {
         // Check for any pending payments that might have succeeded
+        // This is important for both new subscriptions AND upgrades
         const pendingPayments = await prisma.payment.findMany({
           where: {
             subscriptionId: subscription.id,
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
             const { getPaystack } = await import('@/lib/billing')
             const paystack = await getPaystack()
             const verification = await (paystack as any).transaction.verify(payment.providerPaymentRef)
-            
+
             if (verification.status && verification.data.status === 'success') {
               // Update payment status
               await prisma.payment.update({
@@ -104,35 +104,35 @@ export async function POST(request: NextRequest) {
                 }
               })
 
-              // Activate subscription
-              const { activateSubscription } = await import('@/lib/subscription-manager')
-              
-              const result = await activateSubscription({
-                subscriptionId: subscription.id,
-                paymentData: {
-                  reference: payment.providerPaymentRef,
-                  paymentId: verification.data.id?.toString() || '',
-                  amount: verification.data.amount || payment.amount * 100,
-                  currency: verification.data.currency || payment.currency,
-                  authorization: verification.data.authorization
-                },
-                source: 'manual_verification'
-              })
+              updated = true
+              message = "Payment verified successfully"
 
-              if (result.result.success) {
-                updated = true
-                message = "Payment verified and subscription activated successfully"
-                break // Exit loop on first successful activation
+              // If it was incomplete, activate it
+              if (subscription.status === 'incomplete') {
+                const { activateSubscription } = await import('@/lib/subscription-manager')
+
+                const result = await activateSubscription({
+                  subscriptionId: subscription.id,
+                  paymentData: {
+                    reference: payment.providerPaymentRef,
+                    paymentId: verification.data.id?.toString() || '',
+                    amount: verification.data.amount || payment.amount * 100,
+                    currency: verification.data.currency || payment.currency,
+                    authorization: verification.data.authorization
+                  },
+                  source: 'manual_verification'
+                })
+
+                if (result.result.success) {
+                  message = "Payment verified and subscription activated successfully"
+                }
               }
+
+              break // Exit loop on first successful verification
             }
           } catch (error) {
             console.error('Error verifying payment:', payment.providerPaymentRef, error)
-            // Continue to next payment
           }
-        }
-
-        if (!updated) {
-          message = "No successful payments found. Please ensure your payment was completed successfully."
         }
       }
     }
@@ -141,10 +141,10 @@ export async function POST(request: NextRequest) {
     if (subscription.providerSubscriptionId && !updated) {
       try {
         const paystackSub = await getPaystackSubscription(subscription.providerSubscriptionId)
-        
+
         if (paystackSub) {
           const paystackStatus = mapPaystackSubscriptionStatus(paystackSub.status)
-          
+
           if (paystackStatus !== subscription.status) {
             await prisma.$transaction(async (tx) => {
               await tx.subscription.update({
@@ -175,8 +175,8 @@ export async function POST(request: NextRequest) {
               action: AUDIT_ACTIONS.SUBSCRIPTION_UPDATED,
               resource: "subscription",
               resourceId: subscription.id,
-              details: { 
-                action: "status_sync", 
+              details: {
+                action: "status_sync",
                 oldStatus: subscription.status,
                 newStatus: paystackStatus,
                 paystackSubscriptionId: subscription.providerSubscriptionId
@@ -227,7 +227,7 @@ export async function GET(request: NextRequest) {
         userId: session.user.id,
         status: { in: ["incomplete", "active", "past_due", "canceled"] }
       },
-      include: { 
+      include: {
         plan: true,
         payments: {
           orderBy: { createdAt: 'desc' },
@@ -238,7 +238,7 @@ export async function GET(request: NextRequest) {
     })
 
     if (!subscription) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         subscription: null,
         message: "No subscription found"
       })

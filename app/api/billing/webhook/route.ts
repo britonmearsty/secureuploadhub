@@ -289,16 +289,59 @@ async function handleInvoicePaymentSucceeded(data: any) {
   const paymentId = data.id
   const amount = data.amount
   const currency = data.currency
-  const paidAt = data.paid_at
+  const customerEmail = data.customer?.email
 
   if (!subscriptionCode) return
 
-  const subscription = await prisma.subscription.findFirst({
+  let subscription = await prisma.subscription.findFirst({
     where: { providerSubscriptionId: subscriptionCode },
     include: { plan: true, user: true }
   })
 
+  // FALLBACK: If subscription not found by code, try to find by customer email
+  if (!subscription && customerEmail) {
+    console.log(`Subscription not found by code ${subscriptionCode}, searching by email: ${customerEmail}`)
+    const user = await prisma.user.findUnique({
+      where: { email: customerEmail }
+    })
+
+    if (user) {
+      subscription = await prisma.subscription.findFirst({
+        where: {
+          userId: user.id,
+          status: { in: [SUBSCRIPTION_STATUS.INCOMPLETE, SUBSCRIPTION_STATUS.ACTIVE, SUBSCRIPTION_STATUS.PAST_DUE] }
+        },
+        include: { plan: true, user: true },
+        orderBy: { createdAt: 'desc' }
+      })
+
+      if (subscription && !subscription.providerSubscriptionId) {
+        console.log(`Found subscription ${subscription.id} for user, linking Paystack code: ${subscriptionCode}`)
+        await prisma.subscription.update({
+          where: { id: subscription.id },
+          data: { providerSubscriptionId: subscriptionCode }
+        })
+      }
+    }
+  }
+
   if (subscription) {
+    // If the subscription is incomplete, use the centralized activation logic
+    if (subscription.status === SUBSCRIPTION_STATUS.INCOMPLETE) {
+      console.log(`Activating incomplete subscription ${subscription.id} via invoice webhook`)
+      await activateSubscription({
+        subscriptionId: subscription.id,
+        paymentData: {
+          reference,
+          paymentId: paymentId?.toString(),
+          amount: amount || 0,
+          currency: currency || subscription.plan.currency,
+        },
+        source: 'webhook'
+      })
+      return
+    }
+
     const now = new Date()
     const periodEnd = addMonths(now, 1)
     const nextBilling = addMonths(now, 1)
@@ -543,13 +586,39 @@ async function handleChargeSuccess(data: any) {
       }
     }
     
-    console.error("Could not handle charge success - no matching payment or subscription found", {
-      reference,
-      customerEmail: data.customer?.email,
-      metadata,
-      amount
-    })
-    return
+    // Approach 4: Try to find any PENDING payment matching this user and amount
+    // This handles upgrade proration payments where the reference might not match
+    if (data.customer?.email && amount) {
+      const user = await prisma.user.findUnique({
+        where: { email: data.customer.email }
+      })
+      
+      if (user) {
+        const pendingPayment = await prisma.payment.findFirst({
+          where: {
+            userId: user.id,
+            status: PAYMENT_STATUS.PENDING,
+            amount: (amount || 0) / 100,
+          },
+          include: { subscription: { include: { plan: true, user: true } } }
+        })
+        
+        if (pendingPayment) {
+          console.log("Found pending payment by amount match from customer email, updating:", pendingPayment.id)
+          existingPayment = pendingPayment as any
+        }
+      }
+    }
+    
+    if (!existingPayment) {
+      console.error("Could not handle charge success - no matching payment or subscription found", {
+        reference,
+        customerEmail: data.customer?.email,
+        metadata,
+        amount
+      })
+      return
+    }
   }
 
   // Handle existing payment - use centralized activation for incomplete subscriptions
