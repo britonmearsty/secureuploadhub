@@ -29,7 +29,7 @@ export default function AdminNotFound() {
               Admin Page Not Found
             </h1>
             <p className="text-lg text-muted-foreground max-w-md mx-auto leading-relaxed">
-              The admin page you're looking for doesn't exist or you may not have permission to access it.
+              The admin page you&apos;re looking for doesn&apos;t exist or you may not have permission to access it.
             </p>
           </div>
 
@@ -42,7 +42,7 @@ export default function AdminNotFound() {
               <Settings className="w-4 h-4" />
               Admin Dashboard
             </Link>
-            
+
             <Link
               href="/"
               className="inline-flex items-center gap-2 bg-secondary text-secondary-foreground px-6 py-3 rounded-xl font-semibold hover:bg-secondary/80 transition-all border border-border hover:shadow-md hover:scale-105 transform"
@@ -88,15 +88,12 @@ export default function AdminNotFound() {
 
         {/* Decorative Elements - Admin themed */}
         <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-          <div className={`absolute top-1/4 left-1/4 w-32 h-32 rounded-full blur-3xl animate-pulse ${
-            resolvedTheme === 'dark' ? 'bg-destructive/10' : 'bg-destructive/5'
-          }`}></div>
-          <div className={`absolute bottom-1/4 right-1/4 w-48 h-48 rounded-full blur-3xl animate-pulse delay-1000 ${
-            resolvedTheme === 'dark' ? 'bg-warning/20' : 'bg-warning/10'
-          }`}></div>
-          <div className={`absolute top-1/2 right-1/3 w-24 h-24 rounded-full blur-2xl animate-pulse delay-500 ${
-            resolvedTheme === 'dark' ? 'bg-info/30' : 'bg-info/20'
-          }`}></div>
+          <div className={`absolute top-1/4 left-1/4 w-32 h-32 rounded-full blur-3xl animate-pulse ${resolvedTheme === 'dark' ? 'bg-destructive/10' : 'bg-destructive/5'
+            }`}></div>
+          <div className={`absolute bottom-1/4 right-1/4 w-48 h-48 rounded-full blur-3xl animate-pulse delay-1000 ${resolvedTheme === 'dark' ? 'bg-warning/20' : 'bg-warning/10'
+            }`}></div>
+          <div className={`absolute top-1/2 right-1/3 w-24 h-24 rounded-full blur-2xl animate-pulse delay-500 ${resolvedTheme === 'dark' ? 'bg-info/30' : 'bg-info/20'
+            }`}></div>
         </div>
       </div>
     </div>

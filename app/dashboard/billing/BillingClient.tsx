@@ -75,7 +75,7 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
     const currentPlan = subscription?.plan || fallbackPlan
     const isFreePlan = !subscription
 
-    const checkSubscriptionStatus = async (reference?: string) => {
+    const checkSubscriptionStatus = async (reference?: string, retryCount = 0) => {
         if (!subscription || (subscription.status === 'active' && !reference)) return
 
         setCheckingStatus(true)
@@ -89,16 +89,35 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
             if (response.ok) {
                 const data = await response.json()
                 if (data.updated) {
-                    setMessage({ type: "success", text: "Subscription updated! Refreshing..." })
-                    window.location.reload()
+                    setMessage({ type: "success", text: "Subscription activated! Refreshing..." })
+                    setTimeout(() => window.location.reload(), 1500)
+                } else if (reference && retryCount < 5) {
+                    // If we have a reference but it's not updated yet, poll again
+                    setMessage({
+                        type: "info",
+                        text: `Payment verified. Still waiting for subscription activation (attempt ${retryCount + 1}/5)...`
+                    })
+                    setTimeout(() => checkSubscriptionStatus(reference, retryCount + 1), 3000)
                 } else if (!reference) {
                     setMessage({ type: "info", text: "Status checked. No changes found yet." })
+                } else {
+                    setMessage({
+                        type: "error",
+                        text: "Verification is taking longer than usual. Please refresh the page in a moment."
+                    })
                 }
+            } else {
+                throw new Error('Failed to check status')
             }
         } catch (error) {
             console.error('Error checking status:', error)
+            if (reference && retryCount < 3) {
+                setTimeout(() => checkSubscriptionStatus(reference, retryCount + 1), 5000)
+            }
         } finally {
-            setCheckingStatus(false)
+            if (retryCount >= 5 || !reference) {
+                setCheckingStatus(false)
+            }
         }
     }
 

@@ -30,7 +30,7 @@ function ApiNotFoundContent() {
               API Endpoint Not Found
             </h1>
             <p className="text-lg text-muted-foreground max-w-md mx-auto leading-relaxed">
-              The API endpoint you're trying to access doesn't exist or has been moved.
+              The API endpoint you&apos;re trying to access doesn&apos;t exist or has been moved.
             </p>
           </div>
 
@@ -41,8 +41,8 @@ function ApiNotFoundContent() {
               <span className="font-semibold text-destructive">HTTP 404 - Not Found</span>
             </div>
             <p className="text-sm text-muted-foreground text-left">
-              If you're a developer, check your API endpoint URL and ensure it matches the documented routes. 
-              If you're a user, this page shouldn't be accessible through normal navigation.
+              If you&apos;re a developer, check your API endpoint URL and ensure it matches the documented routes.
+              If you&apos;re a user, this page shouldn&apos;t be accessible through normal navigation.
             </p>
           </div>
 
@@ -55,7 +55,7 @@ function ApiNotFoundContent() {
               <Home className="w-4 h-4" />
               Go Home
             </Link>
-            
+
             <Link
               href="/dashboard"
               className="inline-flex items-center gap-2 bg-secondary text-secondary-foreground px-6 py-3 rounded-xl font-semibold hover:bg-secondary/80 transition-all border border-border hover:shadow-md hover:scale-105 transform"
@@ -95,15 +95,12 @@ function ApiNotFoundContent() {
 
         {/* Decorative Elements - API/Tech themed */}
         <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-          <div className={`absolute top-1/4 left-1/4 w-32 h-32 rounded-full blur-3xl animate-pulse ${
-            resolvedTheme === 'dark' ? 'bg-destructive/10' : 'bg-destructive/5'
-          }`}></div>
-          <div className={`absolute bottom-1/4 right-1/4 w-48 h-48 rounded-full blur-3xl animate-pulse delay-1000 ${
-            resolvedTheme === 'dark' ? 'bg-muted/20' : 'bg-muted/10'
-          }`}></div>
-          <div className={`absolute top-1/2 right-1/3 w-24 h-24 rounded-full blur-2xl animate-pulse delay-500 ${
-            resolvedTheme === 'dark' ? 'bg-accent/30' : 'bg-accent/20'
-          }`}></div>
+          <div className={`absolute top-1/4 left-1/4 w-32 h-32 rounded-full blur-3xl animate-pulse ${resolvedTheme === 'dark' ? 'bg-destructive/10' : 'bg-destructive/5'
+            }`}></div>
+          <div className={`absolute bottom-1/4 right-1/4 w-48 h-48 rounded-full blur-3xl animate-pulse delay-1000 ${resolvedTheme === 'dark' ? 'bg-muted/20' : 'bg-muted/10'
+            }`}></div>
+          <div className={`absolute top-1/2 right-1/3 w-24 h-24 rounded-full blur-2xl animate-pulse delay-500 ${resolvedTheme === 'dark' ? 'bg-accent/30' : 'bg-accent/20'
+            }`}></div>
         </div>
       </div>
     </div>

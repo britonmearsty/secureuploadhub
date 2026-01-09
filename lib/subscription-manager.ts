@@ -93,8 +93,9 @@ async function _activateSubscriptionInternal(params: ActivateSubscriptionParams)
   const periodEnd = addMonths(now, 1)
 
   try {
+    // 1. Database operations - separate from external API calls
     const result = await prisma.$transaction(async (tx) => {
-      // Double-check status within transaction to prevent race conditions
+      // Double-check status within transaction
       const currentSub = await tx.subscription.findUnique({
         where: { id: subscriptionId },
         select: { status: true }
@@ -105,9 +106,12 @@ async function _activateSubscriptionInternal(params: ActivateSubscriptionParams)
       }
 
       // Check if payment already exists
-      let payment = await tx.payment.findFirst({
-        where: { providerPaymentRef: reference || undefined }
-      })
+      let payment = null
+      if (reference) {
+        payment = await tx.payment.findFirst({
+          where: { providerPaymentRef: reference }
+        })
+      }
 
       if (!payment) {
         // Create payment record
@@ -115,7 +119,7 @@ async function _activateSubscriptionInternal(params: ActivateSubscriptionParams)
           data: {
             subscriptionId: subscription.id,
             userId: subscription.userId,
-            amount: amount / 100, // Convert from kobo to naira
+            amount: amount / 100, // Convert from subunits to standard
             currency: currency || subscription.plan.currency,
             status: PAYMENT_STATUS.SUCCEEDED,
             providerPaymentId: paymentId,
@@ -140,24 +144,11 @@ async function _activateSubscriptionInternal(params: ActivateSubscriptionParams)
         })
       }
 
-      // Create Paystack subscription if we have authorization
-      let providerSubscriptionId = subscription.providerSubscriptionId
-
-      if (authorization?.authorization_code && !providerSubscriptionId) {
-        try {
-          providerSubscriptionId = await createPaystackSubscription(subscription, authorization.authorization_code)
-        } catch (error) {
-          console.error("Failed to create Paystack subscription:", error)
-          // Continue with activation even if Paystack subscription creation fails
-        }
-      }
-
-      // Activate subscription
+      // Activate subscription status locally
       const activatedSubscription = await tx.subscription.update({
         where: { id: subscription.id },
         data: {
           status: SUBSCRIPTION_STATUS.ACTIVE,
-          ...(providerSubscriptionId && { providerSubscriptionId }),
           currentPeriodStart: now,
           currentPeriodEnd: periodEnd,
           nextBillingDate: periodEnd,
@@ -174,10 +165,7 @@ async function _activateSubscriptionInternal(params: ActivateSubscriptionParams)
           subscriptionId: subscription.id,
           action: "activated",
           oldValue: JSON.stringify({ status: subscription.status }),
-          newValue: JSON.stringify({
-            status: SUBSCRIPTION_STATUS.ACTIVE,
-            ...(providerSubscriptionId && { providerSubscriptionId }),
-          }),
+          newValue: JSON.stringify({ status: SUBSCRIPTION_STATUS.ACTIVE }),
           reason: `Subscription activated from ${source}`,
         }
       })
@@ -185,7 +173,34 @@ async function _activateSubscriptionInternal(params: ActivateSubscriptionParams)
       return { subscription: activatedSubscription, payment }
     })
 
-    // Create audit log outside transaction
+    // 2. Post-activation external API calls (OUTSIDE transaction)
+    let providerSubscriptionId = subscription.providerSubscriptionId
+    if (authorization?.authorization_code && !providerSubscriptionId) {
+      console.log(`Creating Paystack subscription for ${subscription.id} outside transaction`)
+      try {
+        const paystackSubCode = await createPaystackSubscription(subscription, authorization.authorization_code)
+        if (paystackSubCode) {
+          // Update DB with the paystack code (separate transaction/update)
+          await prisma.subscription.update({
+            where: { id: subscription.id },
+            data: { providerSubscriptionId: paystackSubCode }
+          })
+
+          await prisma.subscriptionHistory.create({
+            data: {
+              subscriptionId: subscription.id,
+              action: "status_changed",
+              newValue: JSON.stringify({ providerSubscriptionId: paystackSubCode }),
+              reason: "Paystack subscription code linked",
+            }
+          })
+        }
+      } catch (error) {
+        console.error("Failed to create Paystack subscription (non-critical):", error)
+      }
+    }
+
+    // 3. Audit log
     await createAuditLog({
       userId: subscription.userId,
       action: AUDIT_ACTIONS.SUBSCRIPTION_UPDATED,
@@ -204,7 +219,11 @@ async function _activateSubscriptionInternal(params: ActivateSubscriptionParams)
 
   } catch (error) {
     console.error(`Failed to activate subscription ${subscriptionId}:`, error)
-    return { success: false, reason: 'activation_failed', error: error instanceof Error ? error.message : String(error) }
+    return {
+      success: false,
+      reason: 'activation_failed',
+      error: error instanceof Error ? error.message : String(error)
+    }
   }
 }
 

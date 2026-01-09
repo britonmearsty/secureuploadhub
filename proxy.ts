@@ -8,11 +8,11 @@ function isAuthenticated(request: NextRequest): boolean {
   // Database sessions use different cookie names than JWT sessions
   const sessionToken = request.cookies.get("authjs.session-token")?.value
     || request.cookies.get("__Secure-authjs.session-token")?.value
-  
+
   return !!sessionToken
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   const isAuth = isAuthenticated(request)
@@ -62,7 +62,7 @@ export function middleware(request: NextRequest) {
   if (shouldLog) {
     console.log(`✅ MIDDLEWARE: Allowing request to ${pathname}`)
   }
-  
+
   return NextResponse.next()
 }
 

@@ -1,0 +1,1744 @@
+
+> secureuploadhub@0.1.0 lint C:\Users\mears\Desktop\workspace\secureuploadhub
+> eslint
+
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\admin\admin-audit-logs.test.ts
+  583:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\admin\admin-billing-api.test.ts
+  472:4  error  Parsing error: Declaration or statement expected
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\admin\admin-components.test.ts
+    4:10  warning  'render' is defined but never used              @typescript-eslint/no-unused-vars
+    4:18  warning  'screen' is defined but never used              @typescript-eslint/no-unused-vars
+    4:26  warning  'fireEvent' is defined but never used           @typescript-eslint/no-unused-vars
+    4:37  warning  'waitFor' is defined but never used             @typescript-eslint/no-unused-vars
+   17:43  error    Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+   25:35  error    Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+   26:35  error    Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+   27:38  error    Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+   29:35  error    Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+   56:11  warning  'mockProps' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  327:13  warning  'portal' is assigned a value but never used     @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\admin\admin-portals-api.test.ts
+  170:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  484:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\admin\admin-users-api.test.ts
+  2:10  warning  'NextRequest' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\admin\run-admin-tests.ts
+  11:10  warning  'readFileSync' is defined but never used     @typescript-eslint/no-unused-vars
+  86:13  warning  'output' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\api\admin.test.ts
+  101:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  132:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  133:70  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  153:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  180:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  222:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  223:71  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  238:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  256:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  277:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  278:71  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  304:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  328:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  355:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  356:71  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  357:74  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  384:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  409:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  436:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  437:71  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  438:74  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  462:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  487:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  504:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  525:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  560:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  586:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\api\billing.test.ts
+  311:2  error  Parsing error: Declaration or statement expected
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\api\dashboard.test.ts
+   53:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   88:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  127:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  135:80  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  136:78  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  169:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  173:80  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  174:78  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  191:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  222:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  240:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\api\newsletter.test.ts
+  246:101  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  279:105  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  280:96   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  317:92   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  352:92   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  395:92   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  502:93   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  503:96   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  535:105  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  536:101  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  561:93   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  565:12   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\api\portals.test.ts
+   71:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   93:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   94:80  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  114:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  155:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  171:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  188:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  206:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  227:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  231:84  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  251:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  256:84  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  278:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\api\public.test.ts
+  346:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  394:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  450:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  473:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  496:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  519:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  544:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  577:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  601:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  610:62  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  633:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\api\storage.test.ts
+  385:0  error  Parsing error: Declaration or statement expected
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\api\test-runner.ts
+   14:11  warning  'TestResult' is defined but never used  @typescript-eslint/no-unused-vars
+   92:14  warning  'error' is defined but never used       @typescript-eslint/no-unused-vars
+  121:14  warning  'error' is defined but never used       @typescript-eslint/no-unused-vars
+  145:14  warning  'error' is defined but never used       @typescript-eslint/no-unused-vars
+  168:14  warning  'error' is defined but never used       @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\api\upload.test.ts
+   69:59  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  153:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  172:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  191:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  208:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  224:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  240:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  257:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  274:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  291:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  326:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  333:77  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  334:82  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  355:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  395:94  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  397:77  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  398:82  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\api\uploads.test.ts
+   38:60  warning  'recoverGoogleDriveFileId' is defined but never used  @typescript-eslint/no-unused-vars
+   65:56  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  108:56  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  109:80  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  110:78  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  157:56  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  158:80  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  159:78  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  189:56  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  190:80  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  210:56  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  211:80  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  212:78  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  231:56  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  268:56  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  293:56  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  294:79  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  321:56  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  322:79  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  324:75  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  363:56  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  364:79  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  366:75  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  398:56  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  399:79  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  438:56  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  461:56  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  462:79  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  494:56  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  495:79  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  496:79  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  528:56  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  529:79  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  534:12  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  566:56  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  567:79  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  603:56  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  631:56  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  632:80  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  633:78  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  676:56  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  677:80  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  678:78  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  717:56  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  718:80  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  757:56  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\billing\comprehensive-billing.test.ts
+   129:77  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   207:56  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   209:78  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   210:71  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   211:90  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   212:80  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   219:64  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   257:56  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   258:90  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   274:56  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   292:56  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   294:78  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   295:71  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   302:64  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   357:87  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   358:81  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   413:87  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   414:64  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   465:86  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   467:41  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   469:69  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   471:64  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   516:56  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   517:86  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   518:82  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   519:81  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   576:56  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   577:86  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   579:84  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   586:64  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   587:81  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   595:13  warning  'data' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   603:56  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   647:56  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   648:86  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   656:64  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   657:64  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   658:81  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   703:56  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   704:86  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   705:85  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   706:64  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   707:81  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   738:56  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   739:86  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   771:56  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   772:86  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   779:64  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   816:56  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   817:81  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   846:56  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   847:81  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   868:56  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   869:81  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   927:56  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   951:56  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   953:78  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   954:81  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   961:64  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   977:56  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   998:56  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   999:78  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  1000:81  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  1006:71  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  1055:80  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\billing\run-billing-tests.ts
+   12:8   warning  'path' is defined but never used          @typescript-eslint/no-unused-vars
+  111:55  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\integration\billing-flow.test.ts
+   91:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   92:69  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   93:76  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  131:90  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  132:80  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  139:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  189:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  190:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  225:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  268:96  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  269:86  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  270:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  321:96  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  329:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  330:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  331:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  376:96  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  377:85  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  378:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  379:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  428:92  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  430:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  436:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  438:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  487:92  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  489:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  491:69  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  492:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  493:76  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  537:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  563:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  590:90  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  597:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  672:87  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  674:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  675:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  740:86  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  752:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  791:96  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  792:84  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  793:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  794:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\integration\upload-flow.test.ts
+  116:13  warning  'finalChunk' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  191:13  warning  'verifyRequest' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  221:13  warning  'portal' is assigned a value but never used         @typescript-eslint/no-unused-vars
+  264:13  warning  'file' is assigned a value but never used           @typescript-eslint/no-unused-vars
+  285:13  warning  'totalChunks' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  380:13  warning  'uploadResult' is assigned a value but never used   @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\lib\chunked-upload.test.ts
+  95:13  warning  'result' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\lib\compression.test.ts
+  1:32  warning  'vi' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\lib\portal-cache.test.ts
+   39:34  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   49:34  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   50:36  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   66:34  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   67:36  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   83:34  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   84:36  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   95:34  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   96:36  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  109:34  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  110:36  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  125:34  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  126:36  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  144:34  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  153:34  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  161:34  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  175:34  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  176:36  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  198:34  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  199:36  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  208:14  warning  'key' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\lib\slug-validation.test.ts
+  127:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  128:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  129:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\lib\storage-services.test.ts
+    9:29  error    Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  184:15  warning  'expiresAt' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  258:25  error    Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  312:15  warning  'endpoint' is assigned a value but never used   @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\lib\subscription-manager.test.ts
+   24:48  warning  'lockKey' is defined but never used                        @typescript-eslint/no-unused-vars
+  113:71  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  115:13  warning  'mockActivationResult' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  125:87  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  140:14  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  162:71  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  179:71  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  187:89  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  202:71  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  222:71  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  230:92  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  245:71  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  251:87  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  271:56  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  298:71  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  304:87  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  326:56  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  348:71  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  357:12  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  377:56  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  402:71  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  411:12  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  427:56  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  449:71  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  455:87  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  466:58  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  491:92  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  495:12  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  515:92  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  519:12  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  549:91  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  559:92  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\__tests__\upload-optimizations.test.ts
+   12:32  warning  'beforeEach' is defined but never used         @typescript-eslint/no-unused-vars
+   12:44  warning  'afterEach' is defined but never used          @typescript-eslint/no-unused-vars
+  237:11  warning  'attempts' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  307:16  warning  'e' is defined but never used                  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\admin\AdminDashboardClient.tsx
+  74:33  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\admin\AdminDashboardEnhanced.tsx
+    8:3   warning  'FolderOpen' is defined but never used                                                                             @typescript-eslint/no-unused-vars
+   19:3   warning  'Eye' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+   84:14  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+   96:6   warning  React Hook useEffect has a missing dependency: 'fetchAnalytics'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  244:11  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\admin\analytics\debug\page.tsx
+  10:9  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+  82:6  warning  React Hook useEffect has a missing dependency: 'runAllTests'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\admin\analytics\page.tsx
+    5:10  warning  'Card' is defined but never used                                                                                   @typescript-eslint/no-unused-vars
+    5:16  warning  'CardContent' is defined but never used                                                                            @typescript-eslint/no-unused-vars
+    5:29  warning  'CardDescription' is defined but never used                                                                        @typescript-eslint/no-unused-vars
+    5:46  warning  'CardHeader' is defined but never used                                                                             @typescript-eslint/no-unused-vars
+    5:58  warning  'CardTitle' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+   20:3   warning  'Sparkles' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+   21:3   warning  'Zap' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+   27:10  warning  'MetricCard' is defined but never used                                                                             @typescript-eslint/no-unused-vars
+  145:68  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  349:6   warning  React Hook useEffect has a missing dependency: 'fetchAnalytics'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  905:79  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  945:77  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  945:82  warning  'index' is defined but never used                                                                                  @typescript-eslint/no-unused-vars
+  985:70  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\admin\audit\AuditLogClient.tsx
+    7:3   warning  'Filter' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+    8:3   warning  'Calendar' is defined but never used                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+   11:3   warning  'Shield' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   25:12  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   44:22  warning  'setUserFilter' is assigned a value but never used                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   65:6   warning  React Hook useEffect has a missing dependency: 'fetchLogs'. Either include it or remove the dependency array                                                                                                                                                                             react-hooks/exhaustive-deps
+  326:29  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\admin\billing\BillingManagementClient.tsx
+     7:3   warning  'Filter' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+     8:3   warning  'MoreHorizontal' is defined but never used                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+    11:3   warning  'TrendingUp' is defined but never used                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+   123:56  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   172:6   warning  React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array                                                                                                                                                                             react-hooks/exhaustive-deps
+   243:9   warning  'fetchPaymentHistory' is assigned a value but never used                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+   257:14  warning  'error' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+   296:14  warning  'error' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+   307:9   warning  'handleCancelSubscription' is assigned a value but never used                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+   361:14  warning  'error' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+   470:53  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   535:29  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+   902:14  warning  'error' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+   916:62  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   921:14  warning  'error' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+   945:15  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  1235:13  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\admin\blog\components\ArticleForm.tsx
+  26:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\admin\communication\components\AdminFeedbackList.tsx
+    4:29  warning  'CardHeader' is defined but never used                                                                            @typescript-eslint/no-unused-vars
+    4:41  warning  'CardTitle' is defined but never used                                                                             @typescript-eslint/no-unused-vars
+   15:3   warning  'MessageSquare' is defined but never used                                                                         @typescript-eslint/no-unused-vars
+   16:3   warning  'Calendar' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+   17:3   warning  'User' is defined but never used                                                                                  @typescript-eslint/no-unused-vars
+   20:3   warning  'X' is defined but never used                                                                                     @typescript-eslint/no-unused-vars
+   23:31  warning  'format' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+  104:6   warning  React Hook useEffect has a missing dependency: 'fetchFeedback'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  117:6   warning  React Hook useEffect has a missing dependency: 'fetchFeedback'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\admin\communication\components\AdminTicketDetails.tsx
+   14:3   warning  'Clock' is defined but never used                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+   99:10  warning  'loading' is assigned a value but never used                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+  135:6   warning  React Hook useEffect has a missing dependency: 'ticket'. Either include it or remove the dependency array. If 'setFullTicket' needs the current value of 'ticket', you can also switch to useReducer instead of useState and read 'ticket' in the reducer  react-hooks/exhaustive-deps
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\admin\communication\components\AdminTicketList.tsx
+    4:29  warning  'CardHeader' is defined but never used                                                                           @typescript-eslint/no-unused-vars
+    4:41  warning  'CardTitle' is defined but never used                                                                            @typescript-eslint/no-unused-vars
+   13:3   warning  'User' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+   15:3   warning  'Filter' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+   23:31  warning  'format' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+   88:70  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  147:6   warning  React Hook useEffect has a missing dependency: 'fetchTickets'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  160:6   warning  React Hook useEffect has a missing dependency: 'fetchTickets'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\admin\communication\components\CommunicationAnalytics.tsx
+  19:3  warning  'LineChart' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+  20:3  warning  'Line' is defined but never used                                                                                   @typescript-eslint/no-unused-vars
+  24:3  warning  'TrendingDown' is defined but never used                                                                           @typescript-eslint/no-unused-vars
+  28:3  warning  'Users' is defined but never used                                                                                  @typescript-eslint/no-unused-vars
+  87:6  warning  React Hook useEffect has a missing dependency: 'fetchAnalytics'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\admin\communication\components\CommunicationOverview.tsx
+  11:3  warning  'Users' is defined but never used        @typescript-eslint/no-unused-vars
+  12:3  warning  'TrendingUp' is defined but never used   @typescript-eslint/no-unused-vars
+  14:3  warning  'CheckCircle' is defined but never used  @typescript-eslint/no-unused-vars
+  17:3  warning  'Shield' is defined but never used       @typescript-eslint/no-unused-vars
+  18:3  warning  'Settings' is defined but never used     @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\admin\components\AdminSidebar.tsx
+   16:5   warning  'FolderOpen' is defined but never used                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+  235:29  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\admin\email-templates\EmailTemplatesClient.tsx
+   14:29  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+   29:29  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  172:6   warning  React Hook useEffect has a missing dependency: 'fetchTemplates'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  393:14  warning  'error' is defined but never used                                                                                  @typescript-eslint/no-unused-vars
+  922:72  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\admin\layout.tsx
+  55:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\admin\not-found.tsx
+   4:10  warning  'ArrowLeft' is defined but never used                            @typescript-eslint/no-unused-vars
+  32:33  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  32:54  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\admin\portals\page.tsx
+  82:6  warning  React Hook useEffect has a missing dependency: 'fetchPortals'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\admin\settings\SystemSettingsClient.tsx
+   96:18  warning  'e' is defined but never used                                                                                     @typescript-eslint/no-unused-vars
+  128:6   warning  React Hook useEffect has a missing dependency: 'fetchSettings'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  537:91  error    Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\admin\users\EnhancedUsersManagementClient.tsx
+    3:20  warning  'useEffect' is defined but never used                                                                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+    7:3   warning  'Filter' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+    8:3   warning  'MoreHorizontal' is defined but never used                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+   14:3   warning  'Eye' is defined but never used                                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+   21:3   warning  'AlertTriangle' is defined but never used                                                                                                                                                                                                                                                @typescript-eslint/no-unused-vars
+   22:3   warning  'ChevronUp' is defined but never used                                                                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+   23:3   warning  'ChevronDown' is defined but never used                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+   62:17  warning  'setUsers' is assigned a value but never used                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+   72:52  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  105:9   warning  'retryOperation' is assigned a value but never used                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+  176:59  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  219:18  warning  'error' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+  408:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  557:14  warning  'error' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+  579:14  warning  'error' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+  601:14  warning  'error' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+  624:14  warning  'error' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+  641:14  warning  'error' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+  665:15  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  860:17  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  914:54  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  931:54  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\admin\users\UsersManagementClient.tsx
+  84:49  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\analytics\dashboard-simple\route.ts
+  39:9   error  'dashboardData' is never reassigned. Use 'const' instead  prefer-const
+  69:27  error  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  70:29  error  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\analytics\dashboard\route.ts
+  20:21  warning  'timezone' is assigned a value but never used             @typescript-eslint/no-unused-vars
+  45:9   error    'dashboardData' is never reassigned. Use 'const' instead  prefer-const
+  75:27  error    Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  76:29  error    Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\analytics\export\route.ts
+   46:9   error  'exportData' is never reassigned. Use 'const' instead  prefer-const
+   46:21  error  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  174:29  error  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  195:33  error  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  206:37  error  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\analytics\performance-test\route.ts
+  5:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\analytics\performance\route.ts
+  163:15  warning  'data' is defined but never used          @typescript-eslint/no-unused-vars
+  223:52  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  223:70  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  251:37  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  251:56  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\analytics\route.ts
+   19:9   error    'analytics' is never reassigned. Use 'const' instead           prefer-const
+   54:27  error    Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+   55:24  error    Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+   56:24  error    Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+   78:18  error    Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+  146:13  error    'billingTablesExist' is never reassigned. Use 'const' instead  prefer-const
+  151:18  warning  'e' is defined but never used                                  @typescript-eslint/no-unused-vars
+  158:18  warning  'e' is defined but never used                                  @typescript-eslint/no-unused-vars
+  309:18  warning  'e' is defined but never used                                  @typescript-eslint/no-unused-vars
+  408:18  warning  'e' is defined but never used                                  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\analytics\uploads\route.ts
+  45:9  error  'uploadAnalytics' is never reassigned. Use 'const' instead  prefer-const
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\analytics\users\route.ts
+  45:9  error  'userAnalytics' is never reassigned. Use 'const' instead  prefer-const
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\articles\route.ts
+  22:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\audit\route.ts
+   80:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  146:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\billing\analytics\route.ts
+  156:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  169:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  169:67  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  172:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  219:60  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  219:72  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  225:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  228:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\billing\migrate\route.ts
+  172:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\billing\plans\route.ts
+  19:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\billing\refunds\route.ts
+  107:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\billing\subscriptions\route.ts
+   21:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  114:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\blog\scheduler\route.ts
+   5:28  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+  27:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\categories\route.ts
+  5:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\communication\analytics\route.ts
+  110:78  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  114:82  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  118:82  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  125:79  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  129:83  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\communication\feedback\[id]\route.ts
+   4:10  warning  'FeedbackStatus' is defined but never used  @typescript-eslint/no-unused-vars
+  45:23  error    Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\communication\feedback\route.ts
+  27:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\communication\tickets\[id]\route.ts
+    4:10  warning  'TicketStatus' is defined but never used  @typescript-eslint/no-unused-vars
+    4:24  warning  'Priority' is defined but never used      @typescript-eslint/no-unused-vars
+  128:23  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\communication\tickets\route.ts
+  28:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\email-templates\route.ts
+  28:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\fix-subscriptions\route.ts
+  11:28  warning  'request' is defined but never used       @typescript-eslint/no-unused-vars
+  49:19  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  61:27  warning  'request' is defined but never used       @typescript-eslint/no-unused-vars
+  97:19  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\portals\route.ts
+  32:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\settings\route.ts
+  15:7   warning  'updateSettingSchema' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  33:18  error    Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\subscription-health\route.ts
+   57:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  109:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\tags\route.ts
+  5:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\test-db\route.ts
+  5:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\users\[id]\password-reset\route.ts
+  43:11  warning  'resetTokenExpiry' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\users\bulk-actions\route.ts
+  34:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\admin\users\route.ts
+   8:11  warning  'user' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  19:18  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\articles\route.ts
+  13:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\billing\plans\route.ts
+  1:10  warning  'NextRequest' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\billing\renewal\route.ts
+  157:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  229:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  238:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  247:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\billing\subscription\change-plan\route.ts
+    5:30  warning  'isUpgrade' is defined but never used     @typescript-eslint/no-unused-vars
+    5:41  warning  'isDowngrade' is defined but never used   @typescript-eslint/no-unused-vars
+    8:10  warning  'addMonths' is defined but never used     @typescript-eslint/no-unused-vars
+   97:23  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  108:25  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  199:19  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\billing\subscription\recover\route.ts
+   44:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  143:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  193:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\billing\subscription\route.ts
+  159:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  186:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  286:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  296:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  326:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\billing\subscription\status\route.ts
+   26:14  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+   55:49  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  130:51  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  235:27  warning  'request' is defined but never used       @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\billing\verify-payment\route.ts
+  21:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\billing\webhook\route.ts
+    5:47  warning  'mapPaystackPaymentStatus' is defined but never used       @typescript-eslint/no-unused-vars
+    5:73  warning  'mapPaystackSubscriptionStatus' is defined but never used  @typescript-eslint/no-unused-vars
+   73:47  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+   76:9   warning  'planCode' is assigned a value but never used              @typescript-eslint/no-unused-vars
+  113:47  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  162:48  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  203:49  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  222:49  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  286:52  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  419:42  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  608:47  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+  711:41  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\communication\feedback\route.ts
+  24:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\communication\notifications\read-all\route.ts
+  6:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\communication\notifications\route.ts
+  25:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\communication\tickets\[id]\messages\route.ts
+  185:9   error  'ticketUpdate' is never reassigned. Use 'const' instead  prefer-const
+  185:23  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\communication\tickets\[id]\route.ts
+    4:10  warning  'TicketStatus' is defined but never used  @typescript-eslint/no-unused-vars
+    4:24  warning  'Priority' is defined but never used      @typescript-eslint/no-unused-vars
+  136:23  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\communication\tickets\route.ts
+  27:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\dashboard\route.ts
+   7:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+  89:28  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\not-found.tsx
+  33:35  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  33:61  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  44:21  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  45:21  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  45:50  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\portals\route.ts
+   10:10  warning  'StorageAccountStatus' is defined but never used  @typescript-eslint/no-unused-vars
+  179:19  error    Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\storage\accounts\route.ts
+  3:10  warning  'getConnectedAccounts' is defined but never used             @typescript-eslint/no-unused-vars
+  5:10  warning  'getActiveStorageAccountsForUser' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\storage\auto-sync\route.ts
+  168:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\storage\cleanup\route.ts
+  5:10  warning  'StorageAccountStatus' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\storage\fix-accounts\route.ts
+   54:61  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  140:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\storage\folders\[id]\route.ts
+  73:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\storage\health-check\route.ts
+  5:28  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\storage\sync-oauth-status\route.ts
+   53:53  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  148:30  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  233:12  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+  272:12  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\upload\chunked\init\route.ts
+  89:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\upload\image\route.ts
+  62:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\upload\route.ts
+    9:10  warning  'StorageAccountStatus' is defined but never used            @typescript-eslint/no-unused-vars
+  198:19  error    Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+  273:76  error    Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+  280:36  error    Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+  290:39  error    Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+  317:9   error    'storageProvider' is never reassigned. Use 'const' instead  prefer-const
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\upload\session\route.ts
+  80:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\uploads\[id]\download\route.ts
+   88:9   warning  'providerForToken' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  118:27  error    Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  150:31  error    Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  194:48  error    Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  203:19  error    Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\uploads\[id]\route.ts
+  4:10  warning  'deleteFromCloudStorage' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\v1\portals\route.ts
+   22:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   22:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   26:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   80:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   80:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  182:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\v1\storage\disconnect\route.ts
+  16:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  16:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\v1\storage\health-check\route.ts
+  15:41  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  15:46  warning  'data' is defined but never used          @typescript-eslint/no-unused-vars
+  15:52  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\v1\storage\route.ts
+  22:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\v1\uploads\[id]\route.ts
+  18:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  59:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\api\v1\uploads\route.ts
+  21:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  45:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\auth\not-found.tsx
+   4:10  warning  'ArrowLeft' is defined but never used                            @typescript-eslint/no-unused-vars
+   4:34  warning  'UserPlus' is defined but never used                             @typescript-eslint/no-unused-vars
+  33:42  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  33:63  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  33:76  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\blog\[slug]\page.tsx
+  13:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\cookie-policy\page.tsx
+   33:204  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+   33:215  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+   33:264  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+   33:278  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+   99:117  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  133:39   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  133:52   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  196:212  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  196:225  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\DashboardClient.tsx
+   3:10  warning  'motion' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+  12:5   warning  'ArrowUpRight' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+  19:11  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  20:12  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  21:14  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  22:14  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+  55:24  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\DashboardClient.tsx:55:24
+  53 |     useEffect(() => {
+  54 |         const hour = new Date().getHours();
+> 55 |         if (hour < 12) setGreeting("Good morning");
+     |                        ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  56 |         else if (hour < 18) setGreeting("Good afternoon");
+  57 |         else setGreeting("Good evening");
+  58 |     }, []);  react-hooks/set-state-in-effect
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\assets\AssetsClient.tsx
+    3:29   warning  'useEffect' is defined but never used                            @typescript-eslint/no-unused-vars
+    9:5    warning  'Download' is defined but never used                             @typescript-eslint/no-unused-vars
+   10:5    warning  'File' is defined but never used                                 @typescript-eslint/no-unused-vars
+   11:5    warning  'Folder' is defined but never used                               @typescript-eslint/no-unused-vars
+   12:5    warning  'Cloud' is defined but never used                                @typescript-eslint/no-unused-vars
+   13:5    warning  'HardDrive' is defined but never used                            @typescript-eslint/no-unused-vars
+   15:5    warning  'Filter' is defined but never used                               @typescript-eslint/no-unused-vars
+   17:5    warning  'Layout' is defined but never used                               @typescript-eslint/no-unused-vars
+   21:5    warning  'Calendar' is defined but never used                             @typescript-eslint/no-unused-vars
+   22:5    warning  'ExternalLink' is defined but never used                         @typescript-eslint/no-unused-vars
+   23:5    warning  'ChevronDown' is defined but never used                          @typescript-eslint/no-unused-vars
+   24:5    warning  'Inbox' is defined but never used                                @typescript-eslint/no-unused-vars
+   33:10   warning  'formatFileSize' is defined but never used                       @typescript-eslint/no-unused-vars
+   33:26   warning  'getFileIcon' is defined but never used                          @typescript-eslint/no-unused-vars
+   68:12   warning  'expandedFolders' is assigned a value but never used             @typescript-eslint/no-unused-vars
+  101:11   warning  'handleStorageWarning' is assigned a value but never used        @typescript-eslint/no-unused-vars
+  101:48   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  130:11   warning  'toggleFolder' is assigned a value but never used                @typescript-eslint/no-unused-vars
+  178:18   warning  'error' is defined but never used                                @typescript-eslint/no-unused-vars
+  221:18   warning  'error' is defined but never used                                @typescript-eslint/no-unused-vars
+  550:121  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  550:145  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\assets\page.tsx
+  30:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  86:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\billing\BillingClient.tsx
+    9:5   warning  'AlertCircle' is defined but never used                                                                                     @typescript-eslint/no-unused-vars
+   10:5   warning  'ShieldCheck' is defined but never used                                                                                     @typescript-eslint/no-unused-vars
+   11:5   warning  'TrendingUp' is defined but never used                                                                                      @typescript-eslint/no-unused-vars
+   12:5   warning  'Clock' is defined but never used                                                                                           @typescript-eslint/no-unused-vars
+   13:5   warning  'ArrowUpRight' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+   59:12  warning  'checkingStatus' is assigned a value but never used                                                                         @typescript-eslint/no-unused-vars
+   76:11  warning  'isFreePlan' is assigned a value but never used                                                                             @typescript-eslint/no-unused-vars
+  120:8   warning  React Hook useEffect has a missing dependency: 'checkSubscriptionStatus'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  146:18  warning  'error' is defined but never used                                                                                           @typescript-eslint/no-unused-vars
+  172:26  warning  'error' is defined but never used                                                                                           @typescript-eslint/no-unused-vars
+  200:18  warning  'error' is defined but never used                                                                                           @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\billing\page.tsx
+  48:17  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\billing\page.tsx:48:17
+  46 |         storageBytes: usage.storageBytes
+  47 |       },
+> 48 |       timestamp:Date.now()
+     |                 ^^^^^^^^^^ Cannot call impure function
+  49 |     })
+  50 |   }).catch(()=>{})
+  51 |   // #endregion  react-hooks/purity
+  57:43  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  57:67  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  69:47  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  70:38  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\clients\ClientsClient.tsx
+   12:5    warning  'Download' is defined but never used                             @typescript-eslint/no-unused-vars
+   14:13   warning  'UserIcon' is defined but never used                             @typescript-eslint/no-unused-vars
+   15:5    warning  'Calendar' is defined but never used                             @typescript-eslint/no-unused-vars
+   18:5    warning  'MoreVertical' is defined but never used                         @typescript-eslint/no-unused-vars
+   20:5    warning  'Filter' is defined but never used                               @typescript-eslint/no-unused-vars
+   26:10   warning  'formatFileSize' is defined but never used                       @typescript-eslint/no-unused-vars
+   52:40   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   78:46   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   82:40   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   99:37   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  111:18   warning  'error' is defined but never used                                @typescript-eslint/no-unused-vars
+  302:66   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  320:169  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  320:198  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\clients\page.tsx
+  54:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\communication\CommunicationDashboard.tsx
+  7:10  warning  'Button' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\communication\tickets\TicketsPage.tsx
+  4:10  warning  'motion' is defined but never used          @typescript-eslint/no-unused-vars
+  6:25  warning  'HeadphonesIcon' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\components\PortalList.tsx
+    8:5    warning  'Plus' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+   10:5    warning  'Settings' is defined but never used                                                                             @typescript-eslint/no-unused-vars
+   18:5    warning  'Clock' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+   19:5    warning  'Layout' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+   21:5    warning  'MoreVertical' is defined but never used                                                                         @typescript-eslint/no-unused-vars
+   27:5    warning  'Download' is defined but never used                                                                             @typescript-eslint/no-unused-vars
+   89:52   error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  118:46   error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  122:40   error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  141:37   error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  153:18   warning  'error' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+  169:8    warning  React Hook useEffect has a missing dependency: 'fetchPortals'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  339:11   warning  'formatFileSize' is assigned a value but never used                                                              @typescript-eslint/no-unused-vars
+  667:105  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                  react/no-unescaped-entities
+  667:127  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\components\RecentUploads.tsx
+   9:3  warning  'Mail' is defined but never used          @typescript-eslint/no-unused-vars
+  10:3  warning  'History' is defined but never used       @typescript-eslint/no-unused-vars
+  11:3  warning  'ExternalLink' is defined but never used  @typescript-eslint/no-unused-vars
+  12:3  warning  'ChevronRight' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\components\Sidebar.tsx
+   23:3   warning  'Star' is defined but never used                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+   24:3   warning  'Bell' is defined but never used                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+   25:3   warning  'HelpCircle' is defined but never used                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+   38:9   error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   43:11  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  365:15  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\components\StatsOverview.tsx
+   5:22  warning  'Upload' is defined but never used                                                                             @typescript-eslint/no-unused-vars
+   5:30  warning  'Users' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+   5:47  warning  'BarChart3' is defined but never used                                                                          @typescript-eslint/no-unused-vars
+   5:77  warning  'Target' is defined but never used                                                                             @typescript-eslint/no-unused-vars
+  40:6   warning  React Hook useEffect has a missing dependency: 'fetchStats'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\integrations\IntegrationsClient.tsx
+    8:5    warning  'History' is defined but never used                              @typescript-eslint/no-unused-vars
+   10:5    warning  'CheckCircle2' is defined but never used                         @typescript-eslint/no-unused-vars
+   30:12   warning  'loadingSettings' is assigned a value but never used             @typescript-eslint/no-unused-vars
+   65:64   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   65:95   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  242:150  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  342:53   warning  'category' is defined but never used                             @typescript-eslint/no-unused-vars
+  342:96   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\not-found.tsx
+   4:10  warning  'ArrowLeft' is defined but never used                            @typescript-eslint/no-unused-vars
+   4:21  warning  'Home' is defined but never used                                 @typescript-eslint/no-unused-vars
+  32:37  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  32:58  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  32:71  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\page.tsx
+  54:38  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\page.tsx:54:38
+  52 |         where: {
+  53 |           portal: { userId },
+> 54 |           createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
+     |                                      ^^^^^^^^^^ Cannot call impure function
+  55 |         }
+  56 |       })
+  57 |     ])  react-hooks/purity
+  72:27  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\portals\PortalsClient.tsx
+   20:5   warning  'Mail' is defined but never used                                                                                   @typescript-eslint/no-unused-vars
+   21:5   warning  'ArrowRight' is defined but never used                                                                             @typescript-eslint/no-unused-vars
+   27:21  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+   60:50  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+   70:48  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  110:8   warning  React Hook useEffect has a missing dependency: 'proTips.length'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\portals\[id]\page.tsx
+    16:3    warning  'Upload' is defined but never used                                                                                                               @typescript-eslint/no-unused-vars
+    18:3    warning  'Layout' is defined but never used                                                                                                               @typescript-eslint/no-unused-vars
+    23:3    warning  'ChevronDown' is defined but never used                                                                                                          @typescript-eslint/no-unused-vars
+    24:3    warning  'Eye' is defined but never used                                                                                                                  @typescript-eslint/no-unused-vars
+    27:3    warning  'Copy' is defined but never used                                                                                                                 @typescript-eslint/no-unused-vars
+    33:8    warning  'StorageSelector' is defined but never used                                                                                                      @typescript-eslint/no-unused-vars
+    34:8    warning  'FolderTree' is defined but never used                                                                                                           @typescript-eslint/no-unused-vars
+    35:8    warning  'Breadcrumb' is defined but never used                                                                                                           @typescript-eslint/no-unused-vars
+    36:8    warning  'FileConstraints' is defined but never used                                                                                                      @typescript-eslint/no-unused-vars
+   128:10   warning  'dropdownOpen' is assigned a value but never used                                                                                                @typescript-eslint/no-unused-vars
+   132:10   warning  'folderSectionOpen' is assigned a value but never used                                                                                           @typescript-eslint/no-unused-vars
+   132:29   warning  'setFolderSectionOpen' is assigned a value but never used                                                                                        @typescript-eslint/no-unused-vars
+   133:10   warning  'colorSectionOpen' is assigned a value but never used                                                                                            @typescript-eslint/no-unused-vars
+   133:28   warning  'setColorSectionOpen' is assigned a value but never used                                                                                         @typescript-eslint/no-unused-vars
+   145:64   error    Unexpected any. Specify a different type                                                                                                         @typescript-eslint/no-explicit-any
+   234:6    warning  React Hook useEffect has a missing dependency: 'fetchPortal'. Either include it or remove the dependency array                                   react-hooks/exhaustive-deps
+   251:6    warning  React Hook useEffect has missing dependencies: 'loadingFolders' and 'selectStorageProvider'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+   541:65   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                  react/no-unescaped-entities
+   541:86   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                  react/no-unescaped-entities
+   541:105  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                  react/no-unescaped-entities
+   863:85   error    Unexpected any. Specify a different type                                                                                                         @typescript-eslint/no-explicit-any
+  1392:100  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                  react/no-unescaped-entities
+  1392:114  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\portals\new\page.tsx
+   14:3   warning  'Upload' is defined but never used                                                                                                               @typescript-eslint/no-unused-vars
+   17:3   warning  'Layout' is defined but never used                                                                                                               @typescript-eslint/no-unused-vars
+   22:3   warning  'Eye' is defined but never used                                                                                                                  @typescript-eslint/no-unused-vars
+   24:3   warning  'ChevronDown' is defined but never used                                                                                                          @typescript-eslint/no-unused-vars
+   48:11  error    Unexpected any. Specify a different type                                                                                                         @typescript-eslint/no-explicit-any
+   49:30  error    Unexpected any. Specify a different type                                                                                                         @typescript-eslint/no-explicit-any
+   83:33  error    Unexpected any. Specify a different type                                                                                                         @typescript-eslint/no-explicit-any
+  104:10  warning  'dropdownOpen' is assigned a value but never used                                                                                                @typescript-eslint/no-unused-vars
+  160:64  error    Unexpected any. Specify a different type                                                                                                         @typescript-eslint/no-explicit-any
+  219:6   warning  React Hook useEffect has missing dependencies: 'loadingFolders' and 'selectStorageProvider'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  762:35  warning  'isAccountActive' is assigned a value but never used                                                                                             @typescript-eslint/no-unused-vars
+  769:85  error    Unexpected any. Specify a different type                                                                                                         @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\settings\components\ConnectedAccounts.tsx
+   71:85  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  117:18  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+  146:18  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+  179:18  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\settings\components\FileSettings.tsx
+  116:105  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  116:117  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  161:20   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  161:46   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\settings\components\NotificationSettings.tsx
+   5:25  warning  'Mail' is defined but never used  @typescript-eslint/no-unused-vars
+  46:14  warning  '_' is defined but never used     @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\settings\components\ProfileSettings.tsx
+  31:14  warning  '_' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\settings\components\ThemeSettings.tsx
+  33:14  warning  '_' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\dashboard\support\SupportDashboard.tsx
+  11:10  warning  'Card' is defined but never used         @typescript-eslint/no-unused-vars
+  11:16  warning  'CardContent' is defined but never used  @typescript-eslint/no-unused-vars
+  11:29  warning  'CardHeader' is defined but never used   @typescript-eslint/no-unused-vars
+  11:41  warning  'CardTitle' is defined but never used    @typescript-eslint/no-unused-vars
+  12:10  warning  'Badge' is defined but never used        @typescript-eslint/no-unused-vars
+  13:10  warning  'Button' is defined but never used       @typescript-eslint/no-unused-vars
+  62:44  warning  'user' is defined but never used         @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\debug-all\page.tsx
+    6:50   error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+    7:60   error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   88:49   error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  180:85   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  180:101  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  190:55   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  190:71   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  192:54   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  192:69   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  200:51   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  200:58   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  200:63   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  200:76   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\debug-cleanup\page.tsx
+  215:60  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\debug-portal\page.tsx
+   6:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   7:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  83:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\debug-storage\page.tsx
+   6:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  63:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\for-agencies\page.tsx
+   11:3    warning  'Lock' is defined but never used                                 @typescript-eslint/no-unused-vars
+   98:120  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  231:62   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\for-consultants\page.tsx
+   6:3  warning  'Clock' is defined but never used  @typescript-eslint/no-unused-vars
+  11:3  warning  'Lock' is defined but never used   @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\for-lawyers\page.tsx
+   12:3    warning  'FolderSync' is defined but never used                           @typescript-eslint/no-unused-vars
+  225:171  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  285:33   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\gdpr\page.tsx
+   92:93   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+   92:115  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  140:66   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  140:79   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\not-found.tsx
+  33:27  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  33:48  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\p\[slug]\layout.tsx
+  82:40  warning  'params' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\p\[slug]\page.tsx
+   14:5    warning  'FileIcon' is defined but never used                                                                            @typescript-eslint/no-unused-vars
+   19:5    warning  'Mail' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+   20:5    warning  'User' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+   21:5    warning  'MessageSquare' is defined but never used                                                                       @typescript-eslint/no-unused-vars
+   25:5    warning  'FileImage' is defined but never used                                                                           @typescript-eslint/no-unused-vars
+   26:5    warning  'FileVideo' is defined but never used                                                                           @typescript-eslint/no-unused-vars
+   27:5    warning  'FileAudio' is defined but never used                                                                           @typescript-eslint/no-unused-vars
+   28:5    warning  'FileArchive' is defined but never used                                                                         @typescript-eslint/no-unused-vars
+   29:5    warning  'FileCode' is defined but never used                                                                            @typescript-eslint/no-unused-vars
+   30:5    warning  'FileSpreadsheet' is defined but never used                                                                     @typescript-eslint/no-unused-vars
+   32:5    warning  'FileType' is defined but never used                                                                            @typescript-eslint/no-unused-vars
+   36:8    warning  'Head' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+  105:8    warning  React Hook useEffect has a missing dependency: 'fetchPortal'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  245:20   warning  'retryWithBackoff' is defined but never used                                                                    @typescript-eslint/no-unused-vars
+  519:15   warning  'uploadDuration' is assigned a value but never used                                                             @typescript-eslint/no-unused-vars
+  569:105  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                 react/no-unescaped-entities
+  569:119  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                 react/no-unescaped-entities
+  637:39   warning  'iconColor' is assigned a value but never used                                                                  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\p\not-found.tsx
+   4:10  warning  'ArrowLeft' is defined but never used                            @typescript-eslint/no-unused-vars
+  33:36  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  33:57  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\page.tsx
+   6:8   warning  'Lottie' is defined but never used            @typescript-eslint/no-unused-vars
+   7:8   warning  'featureAnimation' is defined but never used  @typescript-eslint/no-unused-vars
+  13:3   warning  'MailWarning' is defined but never used       @typescript-eslint/no-unused-vars
+  16:11  warning  'LinkIcon' is defined but never used          @typescript-eslint/no-unused-vars
+  17:3   warning  'Send' is defined but never used              @typescript-eslint/no-unused-vars
+  19:3   warning  'Sparkles' is defined but never used          @typescript-eslint/no-unused-vars
+  20:3   warning  'FileText' is defined but never used          @typescript-eslint/no-unused-vars
+  21:3   warning  'Users' is defined but never used             @typescript-eslint/no-unused-vars
+  23:8   warning  'Image' is defined but never used             @typescript-eslint/no-unused-vars
+  28:3   warning  'ScaleIn' is defined but never used           @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\payment\callback\PaymentCallbackClient.tsx
+  15:66  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              @typescript-eslint/no-explicit-any
+  29:5   error    Error: Cannot access variable before it is declared
+
+`verifyPayment` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\payment\callback\PaymentCallbackClient.tsx:29:5
+  27 |
+  28 |     // Verify payment with your backend
+> 29 |     verifyPayment(paymentRef)
+     |     ^^^^^^^^^^^^^ `verifyPayment` accessed before it is declared
+  30 |   }, [searchParams])
+  31 |
+  32 |   const verifyPayment = async (reference: string) => {
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\payment\callback\PaymentCallbackClient.tsx:32:3
+  30 |   }, [searchParams])
+  31 |
+> 32 |   const verifyPayment = async (reference: string) => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 33 |     try {
+     | ^^^^^^^^^
+> 34 |       const response = await fetch(`/api/billing/verify-payment?reference=${reference}`)
+     …
+     | ^^^^^^^^^
+> 48 |     }
+     | ^^^^^^^^^
+> 49 |   }
+     | ^^^^ `verifyPayment` is declared here
+  50 |
+  51 |   const getStatusIcon = () => {
+  52 |     switch (status) {  react-hooks/immutability
+  45:14  warning  'error' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\privacy\page.tsx
+  33:32  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  33:36  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  33:38  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  33:42  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  33:44  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  33:49  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  33:54  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  33:62  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\security\page.tsx
+  248:100  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\terms\page.tsx
+   47:67   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+   47:77   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+   56:67   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+   56:73   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+   77:282  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  106:37   error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\app\test-disconnect\page.tsx
+  6:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\auth.ts
+  100:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\admin\CreatePlanModal.tsx
+  10:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\admin\SubscriptionHealthDashboard.tsx
+   55:19  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  236:23  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  236:36  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\admin\analytics\AnalyticsChart.tsx
+   21:9   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   27:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   28:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   29:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   66:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   89:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  101:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\admin\analytics\MetricCard.tsx
+  56:12  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\admin\analytics\MetricCard.tsx:56:12
+  54 |         </div>
+  55 |         {TrendIcon && (
+> 56 |           <TrendIcon className={cn('h-4 w-4', getTrendColor())} />
+     |            ^^^^^^^^^ This component is created during render
+  57 |         )}
+  58 |       </div>
+  59 |       <div className="space-y-1">
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\admin\analytics\MetricCard.tsx:47:21
+  45 |   };
+  46 |
+> 47 |   const TrendIcon = getTrendIcon();
+     |                     ^^^^^^^^^^^^^^ The component is created during render here
+  48 |
+  49 |   return (
+  50 |     <div className={cn('bg-white rounded-xl p-6 border border-slate-200 hover:shadow-md transition-shadow', className)}>  react-hooks/static-components
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\admin\subscription-fix-panel.tsx
+  56:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  82:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\assets\FileItem.tsx
+    4:36   warning  'X' is defined but never used                                    @typescript-eslint/no-unused-vars
+  171:93   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  171:109  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  261:91   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  261:107  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\assets\FileList.tsx
+  128:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\billing\subscription-status-checker.tsx
+   66:19  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   86:19  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  157:54  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  158:21  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  158:34  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\checkout\CheckoutPage.tsx
+  3:20  warning  'useEffect' is defined but never used    @typescript-eslint/no-unused-vars
+  5:77  warning  'AlertCircle' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\checkout\PaymentForm.tsx
+   5:30  warning  'Clock' is defined but never used                                @typescript-eslint/no-unused-vars
+  27:10  warning  'paymentStep' is assigned a value but never used                 @typescript-eslint/no-unused-vars
+  88:64  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\checkout\PaystackPopup.tsx
+  11:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  13:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  25:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  66:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\communication\notifications\NotificationList.tsx
+   15:10  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  161:51  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\communication\tickets\TicketDetails.tsx
+    9:37  warning  'Clock' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+  146:6   warning  React Hook useEffect has a missing dependency: 'fetchTicket'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\communication\tickets\TicketList.tsx
+   4:29  warning  'CardHeader' is defined but never used                                                                           @typescript-eslint/no-unused-vars
+   4:41  warning  'CardTitle' is defined but never used                                                                            @typescript-eslint/no-unused-vars
+   9:46  warning  'Filter' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+  99:6   warning  React Hook useEffect has a missing dependency: 'fetchTickets'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\debug\ClientLogger.tsx
+  11:9  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\landingpage\testimonials-section.tsx
+  42:17  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  42:37  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\storage-health-check.tsx
+   96:80   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+   96:116  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  162:27   error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\ui\ColorPicker.tsx
+  23:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\ui\ColorPicker.tsx:23:5
+  21 |   useEffect(() => {
+  22 |     const hexRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/
+> 23 |     setIsValidColor(hexRegex.test(value))
+     |     ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  24 |   }, [value])
+  25 |
+  26 |   const handleTextChange = (newValue: string) => {  react-hooks/set-state-in-effect
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\ui\FolderTree.tsx
+  13:3   warning  'Check' is defined but never used                @typescript-eslint/no-unused-vars
+  14:3   warning  'X' is defined but never used                    @typescript-eslint/no-unused-vars
+  63:10  warning  'isCreating' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\ui\FormNavigation.tsx
+  3:10  warning  'useState' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\ui\ImageUpload.tsx
+  136:15  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\ui\StorageSelector.tsx
+   5:10  warning  'Cloud' is defined but never used                                                                                              @typescript-eslint/no-unused-vars
+  59:6   warning  React Hook useEffect has missing dependencies: 'handleSync' and 'syncing'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\ui\input.tsx
+  4:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\components\ui\textarea.tsx
+  4:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\debug-billing-issue.js
+  6:26  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\debug-storage-accounts.js
+  6:26  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\emails\FeedbackResponseEmail.tsx
+  136:17  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\emails\SignInEmail.tsx
+   8:5   warning  'Img' is defined but never used                                  @typescript-eslint/no-unused-vars
+  53:82  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\emails\TicketCreatedEmail.tsx
+  94:58  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\emails\TicketStatusEmail.tsx
+  121:54  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\emails\UploadNotificationEmail.tsx
+  123:62  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  123:75  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\emails\VerificationEmail.tsx
+  62:22  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\emails\WelcomeEmail.tsx
+  37:52  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  41:42  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\emails\email.tsx
+  4:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\fix-storage-connections.js
+  6:26  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\api\middleware.ts
+   55:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   55:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   61:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   92:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   92:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   94:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  114:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  114:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  116:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  136:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  138:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  172:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  174:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  239:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  242:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  242:60  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  244:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  244:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  260:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  260:65  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  261:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  270:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  270:59  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  274:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  274:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\audit-log.ts
+   8:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  53:16  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\billing.ts
+  61:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  65:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  86:75  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\cache.ts
+    3:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+    6:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   39:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  141:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\chunked-upload.ts
+  137:13  warning  'results' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  238:15  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  275:18  warning  'error' is defined but never used             @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\communication-notifications.ts
+    9:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   39:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  136:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\communication-types.ts
+  50:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\distributed-lock.ts
+  113:5  warning  'ttlMs' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\email-templates.tsx
+    6:21  warning  'SendEmailOptions' is defined but never used                     @typescript-eslint/no-unused-vars
+  341:26  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  341:64  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  342:46  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  342:84  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\idempotency.ts
+  15:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  31:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  44:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  52:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\paystack-currency.ts
+  68:58  warning  'currency' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\paystack-subscription.ts
+    2:10  warning  'PAYSTACK_CONFIG' is defined but never used  @typescript-eslint/no-unused-vars
+   86:42  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+   91:12  warning  'error' is defined but never used            @typescript-eslint/no-unused-vars
+   96:39  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  121:39  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  140:38  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  144:13  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  151:12  warning  'error' is defined but never used            @typescript-eslint/no-unused-vars
+  167:27  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  180:39  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  198:41  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  205:12  warning  'error' is defined but never used            @typescript-eslint/no-unused-vars
+  219:21  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  229:39  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  247:21  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  252:39  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  289:21  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  309:39  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\redis.ts
+   1:13  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   6:30  error  A `require()` style import is forbidden   @typescript-eslint/no-require-imports
+  10:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\storage\auto-create.ts
+  19:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\storage\download-enforcement.ts
+    8:28  warning  'DownloadFlowRules' is defined but never used  @typescript-eslint/no-unused-vars
+   19:10  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+   20:20  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  105:9   error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  106:19  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  201:10  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  218:30  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\storage\dropbox.ts
+  15:5  warning  'mimeType' is defined but never used    @typescript-eslint/no-unused-vars
+  16:5  warning  'folderId' is defined but never used    @typescript-eslint/no-unused-vars
+  17:5  warning  'folderPath' is defined but never used  @typescript-eslint/no-unused-vars
+  18:5  warning  'origin' is defined but never used      @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\storage\error-messages.ts
+  98:34  warning  'actionRequired' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\storage\google-drive.ts
+  307:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  328:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\storage\index.ts
+  410:29  error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+  514:7   error  'effectiveFileId' is never reassigned. Use 'const' instead  prefer-const
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\storage\middleware-fallback.ts
+  66:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\storage\portal-creation.ts
+    8:34  warning  'PortalCreationRules' is defined but never used     @typescript-eslint/no-unused-vars
+  189:9   warning  'updatedPortal' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  285:14  error    Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\storage\single-email-manager.ts
+   79:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  402:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\storage\storage-account-manager.ts
+   8:10  warning  'withDistributedLock' is defined but never used  @typescript-eslint/no-unused-vars
+  10:3   warning  'withIdempotency' is defined but never used      @typescript-eslint/no-unused-vars
+  18:58  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\storage\upload-acceptance.ts
+   96:11  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   98:23  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  161:3   warning  'file' is defined but never used          @typescript-eslint/no-unused-vars
+  351:33  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\storage\upload-enforcement.ts
+  7:10  warning  'StorageAccountStatus' is defined but never used  @typescript-eslint/no-unused-vars
+  8:26  warning  'UploadFlowRules' is defined but never used       @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\subscription-manager.ts
+   31:40  warning  'source' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  211:57  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\theme-provider.tsx
+  29:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\theme-provider.tsx:29:7
+  27 |     const storedTheme = localStorage.getItem("theme") as Theme
+  28 |     if (storedTheme) {
+> 29 |       setTheme(storedTheme)
+     |       ^^^^^^^^ Avoid calling setState() directly within an effect
+  30 |     }
+  31 |   }, [])
+  32 |                                     react-hooks/set-state-in-effect
+  45:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\lib\theme-provider.tsx:45:7
+  43 |       
+  44 |       root.classList.add(systemTheme)
+> 45 |       setResolvedTheme(systemTheme)
+     |       ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  46 |     } else {
+  47 |       root.classList.add(theme)
+  48 |       setResolvedTheme(theme)  react-hooks/set-state-in-effect
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\run-working-tests.js
+  10:22  error    A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  54:16  warning  'e' is defined but never used            @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\scripts\analytics-health-check.ts
+  21:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\scripts\check-http2.js
+  1:15  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\scripts\cleanup-zombie-accounts.ts
+  12:8  warning  'path' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\scripts\diagnose-subscriptions.ts
+  12:16  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  13:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\scripts\fix-data-integrity.ts
+  14:1   error    A `require()` style import is forbidden                     @typescript-eslint/no-require-imports
+  21:3   warning  'syncStorageAccountActiveStatus' is defined but never used  @typescript-eslint/no-unused-vars
+  27:12  error    Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+  34:56  error    Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\scripts\fix-incomplete-subscriptions.ts
+  150:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\scripts\fix-storage-accounts.ts
+  234:20  warning  'prisma' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\scripts\monitor-subscription-health.ts
+  178:67  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  178:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\scripts\seed-audit-logs.ts
+  5:10  warning  'createAuditLog' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\scripts\storage-maintenance.ts
+  40:32  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\scripts\subscription-renewal.ts
+  44:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\scripts\test-race-condition-fix.ts
+   14:1   error  A `require()` style import is forbidden   @typescript-eslint/no-require-imports
+   31:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   38:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  221:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\scripts\test-storage-fixes.ts
+  24:10  warning  'ensureUserStorageAccounts' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\server-http2.js
+  1:32  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  2:19  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  3:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  4:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\test-billing.js
+  15:22  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  16:24  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\test-subscription-fix.js
+  6:34  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\mears\Desktop\workspace\secureuploadhub\types\paystack.d.ts
+   2:13  warning  'PaystackConfig' is defined but never used  @typescript-eslint/no-unused-vars
+  11:31  error    Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+
+✖ 1118 problems (752 errors, 366 warnings)
+  10 errors and 0 warnings potentially fixable with the `--fix` option.
+
+ ELIFECYCLE  Command failed with exit code 1.

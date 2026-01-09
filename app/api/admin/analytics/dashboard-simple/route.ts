@@ -5,7 +5,7 @@ import prisma from '@/lib/prisma';
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session?.user || session.user.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     // Calculate date range based on period
     const now = new Date();
     const startDate = new Date();
-    
+
     switch (period) {
       case '7d':
         startDate.setDate(now.getDate() - 7);
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     console.log('Date range:', startDate.toISOString(), 'to', now.toISOString());
 
     // Initialize response with default values
-    let dashboardData = {
+    const dashboardData = {
       overview: {
         totalUsers: 0,
         totalPortals: 0,
@@ -76,35 +76,35 @@ export async function GET(request: NextRequest) {
     try {
       // Get basic metrics using simple Prisma queries (no raw SQL)
       console.log('Fetching basic metrics...');
-      
+
       const totalUsers = await prisma.user.count();
       console.log('Total users:', totalUsers);
-      
+
       const totalPortals = await prisma.uploadPortal.count();
       console.log('Total portals:', totalPortals);
-      
+
       const totalUploads = await prisma.fileUpload.count();
       console.log('Total uploads:', totalUploads);
-      
+
       const totalStorage = await prisma.fileUpload.aggregate({
         _sum: { fileSize: true },
       });
       console.log('Total storage:', totalStorage._sum.fileSize);
-      
+
       const newUsers = await prisma.user.count({
         where: {
           createdAt: { gte: startDate },
         },
       });
       console.log('New users:', newUsers);
-      
+
       const newPortals = await prisma.uploadPortal.count({
         where: {
           createdAt: { gte: startDate },
         },
       });
       console.log('New portals:', newPortals);
-      
+
       const newUploads = await prisma.fileUpload.count({
         where: {
           createdAt: { gte: startDate },
@@ -176,15 +176,15 @@ export async function GET(request: NextRequest) {
       // Generate simple trend data (without raw SQL)
       console.log('Generating trend data...');
       const days = Math.min(parseInt(period.replace('d', '')), 30); // Limit to 30 days for simplicity
-      
+
       for (let i = days - 1; i >= 0; i--) {
         const date = new Date();
         date.setDate(date.getDate() - i);
         date.setHours(0, 0, 0, 0);
-        
+
         const nextDate = new Date(date);
         nextDate.setDate(nextDate.getDate() + 1);
-        
+
         const dayUsers = await prisma.user.count({
           where: {
             createdAt: {
@@ -193,7 +193,7 @@ export async function GET(request: NextRequest) {
             },
           },
         });
-        
+
         const dayUploads = await prisma.fileUpload.count({
           where: {
             createdAt: {
@@ -202,12 +202,12 @@ export async function GET(request: NextRequest) {
             },
           },
         });
-        
+
         dashboardData.trends.userGrowth.push({
           date: date.toISOString().split('T')[0],
           count: dayUsers,
         });
-        
+
         dashboardData.trends.uploadTrends.push({
           date: date.toISOString().split('T')[0],
           count: dayUploads,

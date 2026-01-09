@@ -11,7 +11,7 @@ const querySchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session?.user || session.user.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     // Calculate date range based on period
     const now = new Date();
     const startDate = new Date();
-    
+
     switch (period) {
       case '7d':
         startDate.setDate(now.getDate() - 7);
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Initialize default response
-    let dashboardData = {
+    const dashboardData = {
       overview: {
         totalUsers: 0,
         totalPortals: 0,
@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
         prisma.fileUpload.aggregate({
           _sum: { fileSize: true },
         }),
-        
+
         // Active users (users with recent activity)
         prisma.user.count({
           where: {
@@ -119,21 +119,21 @@ export async function GET(request: NextRequest) {
             ]
           }
         }),
-        
+
         // New users in period
         prisma.user.count({
           where: {
             createdAt: { gte: startDate },
           },
         }),
-        
+
         // New portals in period
         prisma.uploadPortal.count({
           where: {
             createdAt: { gte: startDate },
           },
         }),
-        
+
         // New uploads in period
         prisma.fileUpload.count({
           where: {
@@ -146,7 +146,7 @@ export async function GET(request: NextRequest) {
       dashboardData.overview.totalUsers = totalUsers.status === 'fulfilled' ? totalUsers.value : 0;
       dashboardData.overview.totalPortals = totalPortals.status === 'fulfilled' ? totalPortals.value : 0;
       dashboardData.overview.totalUploads = totalUploads.status === 'fulfilled' ? totalUploads.value : 0;
-      dashboardData.overview.totalStorageGB = totalStorage.status === 'fulfilled' ? 
+      dashboardData.overview.totalStorageGB = totalStorage.status === 'fulfilled' ?
         Math.round((totalStorage.value._sum.fileSize || 0) / (1024 * 1024 * 1024) * 100) / 100 : 0;
       dashboardData.overview.activeUsers = activeUsers.status === 'fulfilled' ? activeUsers.value : 0;
       dashboardData.overview.newUsers = newUsers.status === 'fulfilled' ? newUsers.value : 0;
@@ -215,7 +215,7 @@ export async function GET(request: NextRequest) {
         current.setHours(0, 0, 0, 0);
         const endDate = new Date(end);
         endDate.setHours(23, 59, 59, 999);
-        
+
         while (current <= endDate) {
           dates.push(new Date(current));
           current.setDate(current.getDate() + 1);
@@ -261,7 +261,7 @@ export async function GET(request: NextRequest) {
 
         // Process the data to group by day
         const userGrowthMap = new Map<string, number>();
-        
+
         userData.forEach(item => {
           const dateKey = formatDate(item.createdAt);
           const currentCount = userGrowthMap.get(dateKey) || 0;
@@ -298,7 +298,7 @@ export async function GET(request: NextRequest) {
 
         // Process the data to group by day
         const uploadTrendsMap = new Map<string, { count: number; total_size: number }>();
-        
+
         uploadData.forEach(item => {
           const dateKey = formatDate(item.createdAt);
           const existing = uploadTrendsMap.get(dateKey) || { count: 0, total_size: 0 };

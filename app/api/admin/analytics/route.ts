@@ -5,7 +5,7 @@ import prisma from '@/lib/prisma';
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session?.user || session.user.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     startDate.setDate(startDate.getDate() - days);
 
     // Initialize default values
-    let analytics = {
+    const analytics = {
       overview: {
         users: {
           total: 0,
@@ -127,11 +127,11 @@ export async function GET(request: NextRequest) {
       analytics.overview.users.new = newUsers.status === 'fulfilled' ? newUsers.value : 0;
       analytics.overview.users.admins = adminUsers.status === 'fulfilled' ? adminUsers.value : 0;
       analytics.overview.users.disabled = disabledUsers.status === 'fulfilled' ? disabledUsers.value : 0;
-      
+
       analytics.overview.portals.total = totalPortals.status === 'fulfilled' ? totalPortals.value : 0;
       analytics.overview.portals.active = activePortals.status === 'fulfilled' ? activePortals.value : 0;
       analytics.overview.portals.new = newPortals.status === 'fulfilled' ? newPortals.value : 0;
-      
+
       analytics.overview.uploads.total = totalUploads.status === 'fulfilled' ? totalUploads.value : 0;
       analytics.overview.uploads.completed = completedUploads.status === 'fulfilled' ? completedUploads.value : 0;
       analytics.overview.uploads.failed = failedUploads.status === 'fulfilled' ? failedUploads.value : 0;
@@ -143,15 +143,15 @@ export async function GET(request: NextRequest) {
       // Try to get billing metrics (might not exist)
       try {
         // Check if billing tables exist by attempting queries with error handling
-        let billingTablesExist = { subscription_exists: false, payment_exists: false };
-        
+        const billingTablesExist = { subscription_exists: false, payment_exists: false };
+
         try {
           await prisma.subscription.findFirst();
           billingTablesExist.subscription_exists = true;
         } catch (e) {
           // Subscription table doesn't exist
         }
-        
+
         try {
           await prisma.payment.findFirst();
           billingTablesExist.payment_exists = true;
@@ -168,7 +168,7 @@ export async function GET(request: NextRequest) {
               _sum: { amount: true }
             }),
             prisma.payment.aggregate({
-              where: { 
+              where: {
                 status: 'completed',
                 createdAt: { gte: startDate }
               },
@@ -193,7 +193,7 @@ export async function GET(request: NextRequest) {
         current.setHours(0, 0, 0, 0);
         const endDate = new Date(end);
         endDate.setHours(23, 59, 59, 999);
-        
+
         while (current <= endDate) {
           dates.push(new Date(current));
           current.setDate(current.getDate() + 1);
@@ -227,7 +227,7 @@ export async function GET(request: NextRequest) {
 
         // Process the data to group by day
         const userGrowthMap = new Map<string, number>();
-        
+
         userGrowthData.forEach(item => {
           const dateKey = formatDate(item.createdAt);
           const currentCount = userGrowthMap.get(dateKey) || 0;
@@ -270,7 +270,7 @@ export async function GET(request: NextRequest) {
 
         // Process the data to group by day
         const uploadTrendMap = new Map<string, { uploads: number; storage: number }>();
-        
+
         uploadData.forEach(item => {
           const dateKey = formatDate(item.createdAt);
           const existing = uploadTrendMap.get(dateKey) || { uploads: 0, storage: 0 };
@@ -331,7 +331,7 @@ export async function GET(request: NextRequest) {
 
           // Process the data to group by day
           const revenueTrendMap = new Map<string, { payments: number; revenue: number }>();
-          
+
           paymentData.forEach(item => {
             const dateKey = formatDate(item.createdAt);
             const existing = revenueTrendMap.get(dateKey) || { payments: 0, revenue: 0 };
@@ -460,17 +460,17 @@ export async function GET(request: NextRequest) {
       }
 
       // Calculate derived metrics
-      const conversionRate = analytics.overview.users.total > 0 ? 
+      const conversionRate = analytics.overview.users.total > 0 ?
         (analytics.overview.billing.activeSubscriptions / analytics.overview.users.total) * 100 : 0;
-      const averageStoragePerUser = analytics.overview.users.total > 0 ? 
+      const averageStoragePerUser = analytics.overview.users.total > 0 ?
         analytics.overview.uploads.totalStorage / analytics.overview.users.total : 0;
-      const averageUploadsPerPortal = analytics.overview.portals.total > 0 ? 
+      const averageUploadsPerPortal = analytics.overview.portals.total > 0 ?
         analytics.overview.uploads.total / analytics.overview.portals.total : 0;
 
       analytics.overview.users.conversionRate = Math.round(conversionRate * 100) / 100;
       analytics.overview.uploads.averagePerUser = Math.round(averageStoragePerUser);
       analytics.overview.portals.averageUploads = Math.round(averageUploadsPerPortal * 100) / 100;
-      analytics.overview.billing.averageRevenuePerUser = analytics.overview.billing.activeSubscriptions > 0 ? 
+      analytics.overview.billing.averageRevenuePerUser = analytics.overview.billing.activeSubscriptions > 0 ?
         Math.round((analytics.overview.billing.totalRevenue / analytics.overview.billing.activeSubscriptions) * 100) / 100 : 0;
 
     } catch (error) {
