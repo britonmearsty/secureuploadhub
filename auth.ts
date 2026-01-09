@@ -43,7 +43,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       authorization: {
         params: {
           token_access_type: "offline",
-          scope: "files.metadata.read files.content.write files.content.read",
+          scope: "openid email profile files.metadata.read files.content.write files.content.read",
         },
       },
       profile: async (profile) => {
@@ -72,7 +72,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (!url.includes('/dashboard')) {
         console.log(`🔄 AUTH REDIRECT: url=${url}, baseUrl=${baseUrl}`)
       }
-      
+
       // Handle explicit URLs first
       if (url.startsWith("/")) {
         return `${baseUrl}${url}`
@@ -80,7 +80,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (url.startsWith(baseUrl)) {
         return url
       }
-      
+
       // Default redirect after sign-in
       return `${baseUrl}/dashboard`
     },
@@ -117,7 +117,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                   id_token: account.id_token,
                 },
               })
-              
+
               // ENHANCED: Auto-detect storage accounts based on user's login email
               if (["google", "dropbox"].includes(account.provider)) {
                 try {
@@ -220,7 +220,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // This event fires when an OAuth account is linked to a user
       // This handles both new user creation and linking additional accounts
       console.log(`🔗 LINK_ACCOUNT EVENT: userId=${user.id}, provider=${account?.provider}, providerAccountId=${account?.providerAccountId}`)
-      
+
       if (user.id && account && ["google", "dropbox"].includes(account.provider)) {
         try {
           // Enhanced logging for Google Drive specifically
@@ -231,23 +231,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             console.log(`🔍 GOOGLE_LINK: Has access token: ${!!account.access_token}`)
             console.log(`🔍 GOOGLE_LINK: Has refresh token: ${!!account.refresh_token}`)
           }
-          
+
           const result = await SingleEmailStorageManager.autoDetectStorageAccount(
             user.id,
             account.provider as "google" | "dropbox",
             account.providerAccountId
           )
-          
+
           if (result.success) {
             console.log(`✅ LINK_ACCOUNT: StorageAccount ${result.created ? 'created' : 'updated'} for ${account.provider} (${result.storageAccountId})`)
-            
+
             // Additional success logging for Google Drive
             if (account.provider === "google") {
               console.log(`🎉 GOOGLE_LINK: SUCCESS - Google Drive StorageAccount ${result.storageAccountId} ${result.created ? 'created' : 'updated'} for user ${user.email}`)
             }
           } else {
             console.error(`❌ LINK_ACCOUNT: Failed to auto-detect StorageAccount for ${account.provider}:`, result.error)
-            
+
             // Enhanced error logging for Google Drive
             if (account.provider === "google") {
               console.error(`🚨 GOOGLE_LINK: CRITICAL FAILURE - Google Drive StorageAccount creation failed for user ${user.email}`)
@@ -258,7 +258,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 error: result.error,
                 emailMismatch: result.emailMismatch
               })
-              
+
               // Try to create audit log for tracking
               try {
                 await prisma.auditLog.create({
@@ -286,7 +286,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           }
         } catch (error) {
           console.error(`❌ LINK_ACCOUNT: Exception auto-detecting StorageAccount for ${account.provider}:`, error)
-          
+
           // Enhanced exception logging for Google Drive
           if (account.provider === "google") {
             console.error(`🚨 GOOGLE_LINK: EXCEPTION - Unexpected error during Google Drive StorageAccount creation`)
@@ -298,32 +298,32 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               stack: error instanceof Error ? error.stack : undefined
             })
           }
-          
+
           // Don't throw error - we don't want to break OAuth flow
         }
       } else {
         console.log(`ℹ️ LINK_ACCOUNT: Skipped - not a storage provider or missing data`)
-        
+
         // Log what we received for debugging
         if (account) {
           console.log(`ℹ️ LINK_ACCOUNT: Account details - provider: ${account.provider}, userId: ${user.id}`)
         }
       }
     },
-    
+
     // NEW: Additional event handlers for comprehensive coverage
     async createUser({ user }) {
       // This event fires when a new user is created
       console.log(`👤 CREATE_USER EVENT: userId=${user.id}, email=${user.email}`)
-      
+
       // Note: At this point, OAuth accounts haven't been created yet
       // StorageAccount creation will happen in linkAccount event
     },
-    
+
     async updateUser({ user }) {
       // This event fires when user data is updated
       console.log(`🔄 UPDATE_USER EVENT: userId=${user.id}, email=${user.email}`)
-      
+
       // Note: With single email enforcement, we don't need complex consistency checks
       // The single email manager handles this automatically
     },
