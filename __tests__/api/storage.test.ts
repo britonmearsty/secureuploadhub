@@ -346,8 +346,8 @@ describe('API Route: /api/storage/accounts', () => {
       expect(data.settings.autoSync).toBe(false)
       expect(data.settings.syncProvider).toBe('dropbox')
     })
-  })
-})
+
+    it('should return 401 for unauthorized requests', async () => {
       vi.mocked(auth).mockResolvedValue(null)
 
       const { GET } = await import('@/app/api/storage/accounts/route')
@@ -357,6 +357,7 @@ describe('API Route: /api/storage/accounts', () => {
       expect(response.status).toBe(401)
       expect(data.error).toBe('Unauthorized')
     })
+  })
   })
 
   describe('Storage Provider Configuration', () => {

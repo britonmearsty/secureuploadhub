@@ -21,6 +21,7 @@ export default function ConnectedAccounts() {
     const [accounts, setAccounts] = useState<ConnectedAccount[]>([])
     const [loading, setLoading] = useState(true)
     const [deactivating, setDeactivating] = useState<string | null>(null)
+    const [fixing, setFixing] = useState(false)
     const [toast, setToast] = useState<{
         isOpen: boolean;
         type: 'error' | 'success' | 'warning' | 'info';
@@ -77,6 +78,31 @@ export default function ConnectedAccounts() {
         }
     }
 
+    async function handleFixStorage() {
+        setFixing(true)
+        try {
+            const res = await fetch('/api/storage/fix-accounts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+
+            if (res.ok) {
+                const data = await res.json()
+                showToast('success', 'Storage Fixed', `${data.message}. ${data.summary.created} created, ${data.summary.reactivated} reactivated.`)
+                
+                // Refresh accounts
+                fetchAccounts()
+            } else {
+                const errorData = await res.json()
+                showToast('error', 'Fix Failed', errorData.error || 'Failed to fix storage accounts')
+            }
+        } catch (error) {
+            showToast('error', 'Connection Error', 'An unexpected error occurred')
+        } finally {
+            setFixing(false)
+        }
+    }
+    
     async function handleReactivate(provider: string) {
         try {
             const res = await fetch('/api/storage/reactivate', {
@@ -144,15 +170,14 @@ export default function ConnectedAccounts() {
         }
     }
 
-    // Only show accounts that have storage accounts (no duplicates)
-    const connectedAccounts = accounts.filter((a, index, arr) => 
-        a.isConnected && 
+    // Show ALL accounts, not just connected ones - users need to see disconnected/inactive accounts too
+    const allAccounts = accounts.filter((a, index, arr) => 
         // Remove duplicates by provider
         arr.findIndex(acc => acc.provider === a.provider) === index
     )
     
     console.log("🔍 DEBUG: All accounts:", accounts)
-    console.log("🔍 DEBUG: Connected accounts:", connectedAccounts)
+    console.log("🔍 DEBUG: Filtered accounts (removing duplicates):", allAccounts)
     console.log("🔍 DEBUG: Account details:", accounts.map(a => ({
         provider: a.provider,
         isConnected: a.isConnected,
@@ -176,20 +201,20 @@ export default function ConnectedAccounts() {
             id: "google",
             name: "Google Drive",
             icon: <GoogleDriveIcon />,
-            account: connectedAccounts.find((a) => a.provider === "google"),
+            account: allAccounts.find((a) => a.provider === "google"),
             color: "blue"
         },
         {
             id: "dropbox",
             name: "Dropbox",
             icon: <DropboxIcon />,
-            account: connectedAccounts.find((a) => a.provider === "dropbox"),
+            account: allAccounts.find((a) => a.provider === "dropbox"),
             color: "blue"
         }
     ]
 
-    // Filter providers to only show those with connected accounts
-    const activeProviders = providers.filter(p => p.account)
+    // Show all providers - even those without accounts (for connecting)
+    const displayProviders = providers
 
     return (
         <div className="space-y-4">
@@ -200,18 +225,38 @@ export default function ConnectedAccounts() {
                         <span>Found {accounts.length} storage account{accounts.length !== 1 ? 's' : ''}</span>
                     )}
                 </div>
-                <button
-                    onClick={() => {
-                        setLoading(true)
-                        fetchAccounts()
-                    }}
-                    className="px-3 py-1.5 text-xs bg-muted hover:bg-muted/80 rounded-lg transition-colors"
-                >
-                    Refresh
-                </button>
+                <div className="flex gap-2">
+                    <button
+                        onClick={handleFixStorage}
+                        disabled={fixing}
+                        className="px-3 py-1.5 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        title="Fix and reactivate storage accounts"
+                    >
+                        {fixing ? (
+                            <>
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                                Fixing...
+                            </>
+                        ) : (
+                            <>
+                                <CheckCircle2 className="w-3 h-3" />
+                                Fix Storage
+                            </>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => {
+                            setLoading(true)
+                            fetchAccounts()
+                        }}
+                        className="px-3 py-1.5 text-xs bg-muted hover:bg-muted/80 rounded-lg transition-colors"
+                    >
+                        Refresh
+                    </button>
+                </div>
             </div>
 
-            {connectedAccounts.length === 0 && !loading && (
+            {allAccounts.length === 0 && !loading && (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="p-4 bg-muted rounded-full mb-4">
                         <Cloud className="w-8 h-8 text-muted-foreground" />
@@ -223,9 +268,39 @@ export default function ConnectedAccounts() {
                 </div>
             )}
 
-            {activeProviders.map((provider) => {
+            {displayProviders.map((provider) => {
+                const account = provider.account
+                
+                // If no account exists, show a "Connect" option
+                if (!account) {
+                    return (
+                        <motion.div
+                            key={provider.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex items-center justify-between p-5 rounded-2xl bg-muted/50 border border-border transition-all hover:bg-muted/70"
+                        >
+                            <div className="flex gap-5">
+                                <div className="p-3 bg-card rounded-xl shadow-sm border border-border h-fit opacity-60">
+                                    {provider.icon}
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold text-foreground">{provider.name}</h4>
+                                    <p className="text-sm text-muted-foreground">Not connected</p>
+                                    <p className="text-xs text-muted-foreground mt-1">Connect to enable file storage and sync</p>
+                                </div>
+                            </div>
+                            <a
+                                href={`/api/auth/signin/${provider.id}?callbackUrl=${encodeURIComponent(window.location.href)}`}
+                                className="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all active:scale-95 bg-primary hover:bg-primary/90 text-primary-foreground"
+                            >
+                                <CheckCircle2 className="w-4 h-4" />
+                                Connect {provider.name}
+                            </a>
+                        </motion.div>
+                    )
+                }
 
-                const account = provider.account!
                 return (
                     <motion.div
                         key={provider.id}
@@ -254,18 +329,20 @@ export default function ConnectedAccounts() {
                                     <div className="flex items-center gap-2">
                                         <div className={`w-2 h-2 rounded-full ${account.hasValidOAuth ? 'bg-green-500' : 'bg-red-500'}`} />
                                         <span className="text-xs text-muted-foreground">
-                                            Login: {account.hasValidOAuth ? 'Active' : 'Issues'}
+                                            OAuth: {account.hasValidOAuth ? 'Active' : 'Disconnected'}
                                         </span>
                                     </div>
                                     {account.storageStatus && (
                                         <div className="flex items-center gap-2">
                                             <div className={`w-2 h-2 rounded-full ${
                                                 account.storageStatus === 'ACTIVE' ? 'bg-green-500' : 
-                                                account.storageStatus === 'INACTIVE' ? 'bg-red-500' : 'bg-yellow-500'
+                                                account.storageStatus === 'INACTIVE' ? 'bg-yellow-500' : 
+                                                account.storageStatus === 'DISCONNECTED' ? 'bg-red-500' : 'bg-gray-500'
                                             }`} />
                                             <span className="text-xs text-muted-foreground">
-                                                Storage: {account.storageStatus === 'ACTIVE' ? 'Connected' : 
-                                                         account.storageStatus === 'INACTIVE' ? 'Deactivated' : 'Inactive'}
+                                                Storage: {account.storageStatus === 'ACTIVE' ? 'Active' : 
+                                                         account.storageStatus === 'INACTIVE' ? 'Inactive' : 
+                                                         account.storageStatus === 'DISCONNECTED' ? 'Disconnected' : account.storageStatus}
                                             </span>
                                         </div>
                                     )}
@@ -283,6 +360,15 @@ export default function ConnectedAccounts() {
                                     <CheckCircle2 className="w-4 h-4" />
                                     Reactivate Storage
                                 </button>
+                            ) : account.storageStatus === 'DISCONNECTED' || !account.hasValidOAuth ? (
+                                <a
+                                    href={`/api/auth/signin/${account.provider}?callbackUrl=${encodeURIComponent(window.location.href)}`}
+                                    className="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all active:scale-95 bg-blue-500 hover:bg-blue-600 text-white"
+                                    title="Reconnect your OAuth account to restore access"
+                                >
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    Reconnect OAuth
+                                </a>
                             ) : account.storageStatus === 'ACTIVE' ? (
                                 <button
                                     onClick={() => handleDeactivate(account.provider)}
@@ -312,12 +398,17 @@ export default function ConnectedAccounts() {
                 )
             })}
 
-            {connectedAccounts.length > 0 && (
+            {allAccounts.length > 0 && (
                 <div className="mt-8 p-4 rounded-xl bg-primary/10 border border-primary/20 flex items-center gap-3">
                     <div className="p-2 bg-primary/20 rounded-lg">
                         <CheckCircle2 className="w-4 h-4 text-primary" />
                     </div>
-                    <p className="text-sm font-medium text-foreground">Automatic sync is active for {connectedAccounts.length} account{connectedAccounts.length > 1 ? 's' : ''}</p>
+                    <p className="text-sm font-medium text-foreground">
+                        {allAccounts.filter(a => a.isConnected).length > 0 
+                            ? `Automatic sync is active for ${allAccounts.filter(a => a.isConnected).length} account${allAccounts.filter(a => a.isConnected).length > 1 ? 's' : ''}`
+                            : `Found ${allAccounts.length} storage account${allAccounts.length > 1 ? 's' : ''} - reconnect to enable sync`
+                        }
+                    </p>
                 </div>
             )}
 
