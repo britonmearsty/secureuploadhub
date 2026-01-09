@@ -91,7 +91,7 @@ export async function GET() {
     const storageProviders = user.storageAccounts.map(s => s.provider)
     
     const missingStorage = oauthProviders.filter(p => !storageProviders.includes(p))
-    const orphanedStorage = storageProviders.filter(p => !oauthProviders.includes(p))
+    const orphanedStorage = storageProviders.filter(p => !oauthProviders.includes(p as "google_drive" | "dropbox"))
 
     return NextResponse.json({
       user: {
