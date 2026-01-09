@@ -21,7 +21,7 @@ export interface ActivateSubscriptionParams {
       authorization_code: string
     }
   }
-  source: 'webhook' | 'verification' | 'manual' | 'manual_check' | 'manual_verification' | 'manual_recovery'
+  source: 'webhook' | 'verification' | 'manual' | 'manual_check' | 'manual_verification' | 'manual_recovery' | 'deep_recovery_sync' | 'deep_search_recovery'
 }
 
 /**
@@ -34,7 +34,7 @@ export async function activateSubscription(params: ActivateSubscriptionParams) {
 
   // Use distributed lock to prevent concurrent activation
   const lock = new DistributedLock(lockKey)
-  
+
   try {
     const acquired = await lock.acquire(30000) // 30 second timeout
     if (!acquired) {
@@ -50,7 +50,7 @@ export async function activateSubscription(params: ActivateSubscriptionParams) {
     return await withIdempotency(idempotencyKey, async () => {
       return await _activateSubscriptionInternal(params)
     }, { ttlSeconds: 300 }) // 5 minute cache
-    
+
   } finally {
     await lock.release()
   }
@@ -121,8 +121,8 @@ async function _activateSubscriptionInternal(params: ActivateSubscriptionParams)
             providerPaymentId: paymentId,
             providerPaymentRef: reference || `manual_${subscription.id}_${Date.now()}`,
             description: `Initial payment for ${subscription.plan.name}`,
-            ...(authorization?.authorization_code && { 
-              authorizationCode: authorization.authorization_code 
+            ...(authorization?.authorization_code && {
+              authorizationCode: authorization.authorization_code
             }),
           }
         })
@@ -133,8 +133,8 @@ async function _activateSubscriptionInternal(params: ActivateSubscriptionParams)
           data: {
             status: PAYMENT_STATUS.SUCCEEDED,
             providerPaymentId: paymentId,
-            ...(authorization?.authorization_code && { 
-              authorizationCode: authorization.authorization_code 
+            ...(authorization?.authorization_code && {
+              authorizationCode: authorization.authorization_code
             }),
           }
         })
@@ -142,7 +142,7 @@ async function _activateSubscriptionInternal(params: ActivateSubscriptionParams)
 
       // Create Paystack subscription if we have authorization
       let providerSubscriptionId = subscription.providerSubscriptionId
-      
+
       if (authorization?.authorization_code && !providerSubscriptionId) {
         try {
           providerSubscriptionId = await createPaystackSubscription(subscription, authorization.authorization_code)
@@ -191,7 +191,7 @@ async function _activateSubscriptionInternal(params: ActivateSubscriptionParams)
       action: AUDIT_ACTIONS.SUBSCRIPTION_UPDATED,
       resource: "subscription",
       resourceId: subscription.id,
-      details: { 
+      details: {
         action: "activated",
         source,
         reference,
@@ -212,7 +212,7 @@ async function createPaystackSubscription(subscription: any, authorizationCode: 
   try {
     const { createPaystackSubscription, getOrCreatePaystackPlan } = await import('@/lib/paystack-subscription')
     const { getPaystackCurrency, convertToPaystackSubunit } = await import('@/lib/paystack-currency')
-    
+
     const paystackCurrency = getPaystackCurrency(subscription.plan.currency)
     const paystackPlan = await getOrCreatePaystackPlan({
       name: subscription.plan.name,
@@ -241,7 +241,7 @@ async function createPaystackSubscription(subscription: any, authorizationCode: 
 export async function cancelSubscription(userId: string) {
   const lockKey = `subscription:cancel:${userId}`
   const lock = new DistributedLock(lockKey)
-  
+
   try {
     const acquired = await lock.acquire(30000)
     if (!acquired) {
