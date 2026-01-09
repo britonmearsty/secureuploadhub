@@ -61,7 +61,7 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
     const [canceling, setCanceling] = useState(false)
     const [banner, setBanner] = useState<{ type: "success" | "error" | "info", message: string } | null>(null)
     const [checkingStatus, setCheckingStatus] = useState(false)
-    
+
     // Modal states
     const [errorModal, setErrorModal] = useState<{ isOpen: boolean; title: string; message: string }>({
         isOpen: false,
@@ -72,7 +72,7 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
         isOpen: false,
         title: "",
         message: "",
-        onConfirm: () => {}
+        onConfirm: () => { }
     })
 
     const currentPlan = subscription?.plan || fallbackPlan
@@ -80,14 +80,14 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
     // Function to check subscription status
     const checkSubscriptionStatus = async () => {
         if (!subscription || subscription.status === 'active') return
-        
+
         setCheckingStatus(true)
         try {
             const response = await fetch('/api/billing/subscription/status', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             })
-            
+
             if (response.ok) {
                 const data = await response.json()
                 if (data.updated) {
@@ -108,7 +108,7 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
     // Function to recover subscription
     const handleRecoverSubscription = async (paymentReference?: string) => {
         if (!subscription) return
-        
+
         setCheckingStatus(true)
         try {
             const response = await fetch('/api/billing/subscription/recover', {
@@ -119,9 +119,9 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                     paymentReference
                 })
             })
-            
+
             const data = await response.json()
-            
+
             if (response.ok && data.recovery.success) {
                 setBanner({ type: "success", message: data.recovery.message })
                 // Refresh the page to show updated subscription
@@ -411,12 +411,14 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                         </div>
                                                     )}
 
-                                                    {subscription?.status === 'incomplete' && (
+                                                    {subscription && (subscription.status === 'incomplete' || subscription.payments.some(p => p.status === 'pending' || p.status === 'processing')) && (
                                                         <div className="mt-6 p-4 rounded-xl bg-primary/10 border border-primary/20 flex items-center gap-3">
                                                             <AlertCircle className="w-5 h-5 text-primary" />
                                                             <div className="flex-1">
                                                                 <p className="text-sm text-foreground mb-2">
-                                                                    Your subscription is being processed. If you've completed payment, it should activate shortly.
+                                                                    {subscription.status === 'incomplete'
+                                                                        ? "Your subscription is being processed. If you've completed payment, it should activate shortly."
+                                                                        : "You have a pending payment being processed. Click below to check its status."}
                                                                 </p>
                                                                 <div className="flex gap-2">
                                                                     <button
