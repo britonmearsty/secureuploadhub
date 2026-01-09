@@ -217,7 +217,7 @@ export async function POST(request: NextRequest) {
                       currency: tx.currency,
                       authorization: tx.authorization
                     },
-                    source: 'deep_recovery_sync'
+                    source: 'manual_recovery'
                   })
 
                   if (result.result.success) {
@@ -282,7 +282,7 @@ export async function POST(request: NextRequest) {
                   currency: tx.currency,
                   authorization: tx.authorization
                 },
-                source: 'deep_search_recovery'
+                source: 'manual_recovery'
               })
 
               if (result.result.success) {

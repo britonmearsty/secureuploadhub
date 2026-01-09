@@ -1,6 +1,9 @@
 /**
  * Storage Account State Management
  * Defines states, transitions, and enforcement rules for storage accounts
+ * 
+ * UI SIMPLIFICATION: While backend maintains all states, UI treats non-ACTIVE states as "Inactive"
+ * This provides a cleaner user experience while preserving technical accuracy
  */
 
 import { StorageAccountStatus } from "@prisma/client"
@@ -46,6 +49,7 @@ export interface StorageAccountCapabilities {
   canBeDeleted: boolean            // Can be safely removed from system
   requiresReauth: boolean          // Needs OAuth re-authentication
   showInUI: boolean               // Should appear in storage selection UI
+  displayAsInactive: boolean      // UI should show as "Inactive" for simplicity
 }
 
 export const STATE_CAPABILITIES: Record<StorageAccountStatus, StorageAccountCapabilities> = {
@@ -56,7 +60,8 @@ export const STATE_CAPABILITIES: Record<StorageAccountStatus, StorageAccountCapa
     canListFolders: true,
     canBeDeleted: false,           // Has active data
     requiresReauth: false,
-    showInUI: true
+    showInUI: true,
+    displayAsInactive: false       // Show as "Active"
   },
   [StorageAccountStatus.INACTIVE]: {
     canCreateNewUploads: false,    // Key difference from ACTIVE
@@ -65,7 +70,8 @@ export const STATE_CAPABILITIES: Record<StorageAccountStatus, StorageAccountCapa
     canListFolders: true,
     canBeDeleted: false,           // Still has accessible data
     requiresReauth: false,
-    showInUI: true                 // Show but disabled for new uploads
+    showInUI: true,
+    displayAsInactive: true        // Show as "Inactive"
   },
   [StorageAccountStatus.DISCONNECTED]: {
     canCreateNewUploads: false,
@@ -74,7 +80,8 @@ export const STATE_CAPABILITIES: Record<StorageAccountStatus, StorageAccountCapa
     canListFolders: false,
     canBeDeleted: true,            // Safe to remove (data preserved in cloud)
     requiresReauth: true,
-    showInUI: false               // Hide until reconnected
+    showInUI: true,               // Show but with reconnect option
+    displayAsInactive: true        // Show as "Inactive" for simplicity
   },
   [StorageAccountStatus.ERROR]: {
     canCreateNewUploads: false,
@@ -83,7 +90,8 @@ export const STATE_CAPABILITIES: Record<StorageAccountStatus, StorageAccountCapa
     canListFolders: false,
     canBeDeleted: false,           // Don't delete during temporary errors
     requiresReauth: false,         // May resolve automatically
-    showInUI: true                 // Show with error indicator
+    showInUI: true,               // Show with error indicator
+    displayAsInactive: true        // Show as "Inactive" for simplicity
   }
 }
 
@@ -123,6 +131,14 @@ export function canAccessFiles(status: StorageAccountStatus): boolean {
  */
 export function shouldShowInUI(status: StorageAccountStatus): boolean {
   return STATE_CAPABILITIES[status].showInUI
+}
+
+/**
+ * Determine if account should be displayed as "Inactive" in UI
+ * This simplifies the user experience by grouping non-ACTIVE states
+ */
+export function shouldDisplayAsInactive(status: StorageAccountStatus): boolean {
+  return STATE_CAPABILITIES[status].displayAsInactive
 }
 
 /**

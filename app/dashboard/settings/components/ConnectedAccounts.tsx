@@ -223,10 +223,34 @@ export default function ConnectedAccounts() {
     }
 
     // Show ALL accounts, not just connected ones - users need to see disconnected/inactive accounts too
-    const allAccounts = accounts.filter((a, index, arr) => 
-        // Remove duplicates by provider
-        arr.findIndex(acc => acc.provider === a.provider) === index
-    )
+    // FIXED: Prioritize ACTIVE accounts over ERROR/INACTIVE when there are duplicates
+    const allAccounts = accounts.reduce((acc: ConnectedAccount[], current) => {
+        const existingIndex = acc.findIndex(a => a.provider === current.provider)
+        
+        if (existingIndex === -1) {
+            // No existing account for this provider, add it
+            acc.push(current)
+        } else {
+            // Account exists for this provider, keep the one with higher priority
+            const existing = acc[existingIndex]
+            
+            // Priority order: ACTIVE > everything else (treat INACTIVE/DISCONNECTED/ERROR as same priority)
+            const getPriority = (status: string) => {
+                return status === 'ACTIVE' ? 2 : 1
+            }
+            
+            const currentPriority = getPriority(current.storageStatus || '')
+            const existingPriority = getPriority(existing.storageStatus || '')
+            
+            if (currentPriority > existingPriority) {
+                // Replace with higher priority account
+                acc[existingIndex] = current
+            }
+            // If existing has higher or equal priority, keep it
+        }
+        
+        return acc
+    }, [])
     
     console.log("🔍 DEBUG: All accounts:", accounts)
     console.log("🔍 DEBUG: Filtered accounts (removing duplicates):", allAccounts)
@@ -416,14 +440,10 @@ export default function ConnectedAccounts() {
                                     {account.storageStatus && (
                                         <div className="flex items-center gap-2">
                                             <div className={`w-2 h-2 rounded-full ${
-                                                account.storageStatus === 'ACTIVE' ? 'bg-green-500' : 
-                                                account.storageStatus === 'INACTIVE' ? 'bg-yellow-500' : 
-                                                account.storageStatus === 'DISCONNECTED' ? 'bg-red-500' : 'bg-gray-500'
+                                                account.storageStatus === 'ACTIVE' ? 'bg-green-500' : 'bg-yellow-500'
                                             }`} />
                                             <span className="text-xs text-muted-foreground">
-                                                Storage: {account.storageStatus === 'ACTIVE' ? 'Active' : 
-                                                         account.storageStatus === 'INACTIVE' ? 'Inactive' : 
-                                                         account.storageStatus === 'DISCONNECTED' ? 'Disconnected' : account.storageStatus}
+                                                Storage: {account.storageStatus === 'ACTIVE' ? 'Active' : 'Inactive'}
                                             </span>
                                         </div>
                                     )}
@@ -432,7 +452,7 @@ export default function ConnectedAccounts() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                            {account.storageStatus === 'INACTIVE' ? (
+                            {account.storageStatus === 'INACTIVE' || account.storageStatus === 'DISCONNECTED' || account.storageStatus === 'ERROR' ? (
                                 <button
                                     onClick={() => handleReactivate(account.provider)}
                                     className="px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all active:scale-95 bg-green-500 hover:bg-green-600 text-white"

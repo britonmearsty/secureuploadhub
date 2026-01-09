@@ -135,6 +135,8 @@ export async function PATCH(
             actionRequired: "fix"
           }, { status: 400 })
         }
+        
+        // If storage account exists and is ACTIVE, continue with activation
       }
     }
 
