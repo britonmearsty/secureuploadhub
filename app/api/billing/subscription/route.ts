@@ -312,16 +312,19 @@ export async function DELETE() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const updatedSubscription = await cancelSubscription(session.user.id)
+    const result = await cancelSubscription(session.user.id)
 
-    // Provide different messages based on subscription status
-    const message = updatedSubscription.status === 'canceled'
-      ? "Subscription cancelled successfully"
-      : "Subscription will be canceled at the end of the billing period"
+    // Check if cancellation was successful
+    if (!result.success) {
+      return NextResponse.json(
+        { error: result.error || "Failed to cancel subscription" },
+        { status: 400 }
+      )
+    }
 
     return NextResponse.json({
-      message,
-      subscription: updatedSubscription
+      message: result.message,
+      subscription: result.subscription
     })
   } catch (error: any) {
     console.error("Error canceling subscription:", error)
