@@ -38,7 +38,7 @@ export async function activateSubscription(params: ActivateSubscriptionParams) {
   try {
     const acquired = await lock.acquire(30000) // 30 second timeout
     if (!acquired) {
-      console.log(`Failed to acquire lock for subscription activation: ${subscriptionId}`)
+      console.log(`DEBUG: Failed to acquire lock for subscription activation: ${subscriptionId} (key: ${lockKey})`)
       return {
         isNew: false,
         result: { success: false, reason: 'lock_timeout' },
@@ -73,7 +73,7 @@ async function _activateSubscriptionInternal(params: ActivateSubscriptionParams)
   })
 
   if (!subscription) {
-    console.error(`Subscription not found: ${subscriptionId}`)
+    console.error(`DEBUG: Subscription not found: ${subscriptionId}`)
     return { success: false, reason: 'subscription_not_found' }
   }
 
@@ -81,15 +81,15 @@ async function _activateSubscriptionInternal(params: ActivateSubscriptionParams)
   if (subscription.status === SUBSCRIPTION_STATUS.ACTIVE) {
     // If it's already active but missing provider code, we might still want to proceed to the linking step
     if (subscription.providerSubscriptionId || !paymentData.authorization?.authorization_code) {
-      console.log(`Subscription ${subscriptionId} already active and linked, skipping activation`)
+      console.log(`DEBUG: Subscription ${subscriptionId} already active and linked, skipping activation`)
       return { success: true, reason: 'already_active', subscription }
     }
-    console.log(`Subscription ${subscriptionId} is active but missing provider ID. Proceeding to link...`)
+    console.log(`DEBUG: Subscription ${subscriptionId} is active but missing provider ID. Proceeding to link...`)
   }
 
   // Only activate incomplete subscriptions (allow active to proceed for linking if needed)
   if (subscription.status !== SUBSCRIPTION_STATUS.INCOMPLETE && subscription.status !== SUBSCRIPTION_STATUS.ACTIVE) {
-    console.log(`Subscription ${subscriptionId} status is ${subscription.status}, cannot activate`)
+    console.log(`DEBUG: Subscription ${subscriptionId} status is ${subscription.status}, cannot activate. (Expected ${SUBSCRIPTION_STATUS.INCOMPLETE} or ${SUBSCRIPTION_STATUS.ACTIVE})`)
     return { success: false, reason: 'invalid_status', currentStatus: subscription.status }
   }
 
@@ -227,7 +227,7 @@ async function _activateSubscriptionInternal(params: ActivateSubscriptionParams)
     return { success: true, ...result }
 
   } catch (error) {
-    console.error(`Failed to activate subscription ${subscriptionId}:`, error)
+    console.error(`DEBUG: Failed to activate subscription ${subscriptionId}:`, error)
     return {
       success: false,
       reason: 'activation_failed',
@@ -287,6 +287,10 @@ export async function cancelSubscription(userId: string) {
 
     if (!subscription) {
       return { success: false, error: 'No active subscription found' }
+    }
+
+    if (subscription.status === SUBSCRIPTION_STATUS.CANCELED) {
+      return { success: false, error: `Subscription cannot be cancelled in current state: ${subscription.status}` }
     }
 
     // Handle incomplete subscriptions differently
