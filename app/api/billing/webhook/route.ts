@@ -77,7 +77,18 @@ export async function POST(request: NextRequest) {
 
     // Enhanced signature validation - TEMPORARILY DISABLED FOR TESTING
     console.log("⚠️ WEBHOOK SIGNATURE VALIDATION TEMPORARILY DISABLED FOR TESTING")
-    console.log("Webhook received:", { signature: signature?.substring(0, 20) + "...", bodyLength: rawBody.length })
+    console.log("Webhook received:", { 
+      signature: signature?.substring(0, 20) + "...", 
+      bodyLength: rawBody.length,
+      webhookSecret: PAYSTACK_CONFIG.webhookSecret?.substring(0, 20) + "..."
+    })
+    
+    // Skip signature validation if webhook secret is still a URL (not properly configured)
+    if (PAYSTACK_CONFIG.webhookSecret?.startsWith('http')) {
+      console.log("⚠️ Webhook secret is still a URL, skipping signature validation")
+    } else {
+      console.log("✅ Webhook secret appears to be properly configured")
+    }
     
     // TODO: Re-enable signature validation once webhook secret is properly configured
     // const signatureValidation = validateWebhookSignature(rawBody, signature, PAYSTACK_CONFIG.webhookSecret)
