@@ -81,7 +81,7 @@ export async function fixIncompleteSubscriptions(): Promise<FixResult[]> {
                 paymentId: successfulPayment.providerPaymentId || 'unknown',
                 amount: successfulPayment.amount * 100, // Convert to kobo
                 currency: successfulPayment.currency,
-                authorization: null
+                authorization: undefined
               },
               source: 'manual_fix'
             })
