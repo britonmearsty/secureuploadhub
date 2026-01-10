@@ -75,27 +75,18 @@ export async function POST(request: NextRequest) {
     const rawBody = await request.text()
     const signature = request.headers.get("x-paystack-signature")
 
-    // Enhanced signature validation - TEMPORARILY DISABLED FOR TESTING
-    console.log("⚠️ WEBHOOK SIGNATURE VALIDATION TEMPORARILY DISABLED FOR TESTING")
+    // TEMPORARILY DISABLE ALL SIGNATURE VALIDATION FOR TESTING
+    console.log("🚨 ALL WEBHOOK SIGNATURE VALIDATION DISABLED FOR TESTING")
     console.log("Webhook received:", { 
-      signature: signature?.substring(0, 20) + "...", 
-      bodyLength: rawBody.length,
-      webhookSecret: PAYSTACK_CONFIG.webhookSecret?.substring(0, 20) + "..."
+      event: JSON.parse(rawBody).event,
+      reference: JSON.parse(rawBody).data?.reference,
+      amount: JSON.parse(rawBody).data?.amount,
+      status: JSON.parse(rawBody).data?.status
     })
+    console.log("⚠️ THIS IS INSECURE - ONLY FOR TESTING PURPOSES")
     
-    // Skip signature validation if webhook secret is still a URL (not properly configured)
-    if (PAYSTACK_CONFIG.webhookSecret?.startsWith('http')) {
-      console.log("⚠️ Webhook secret is still a URL, skipping signature validation")
-    } else {
-      console.log("✅ Webhook secret appears to be properly configured")
-    }
-    
-    // TODO: Re-enable signature validation once webhook secret is properly configured
-    // const signatureValidation = validateWebhookSignature(rawBody, signature, PAYSTACK_CONFIG.webhookSecret)
-    // if (!signatureValidation.isValid) {
-    //   console.error("Invalid Paystack webhook signature:", signatureValidation.error)
-    //   return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
-    // }
+    // Skip all signature validation temporarily
+    // TODO: Get proper webhook secret from Paystack and re-enable validation
 
     const { event, data } = JSON.parse(rawBody)
 
