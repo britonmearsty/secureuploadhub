@@ -138,15 +138,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
+    let subscription: any = null
+    
     try {
+      console.log('Starting subscription creation for user:', session.user.id, 'plan:', planId)
+      
       // Step 1: Get or create Paystack customer
+      console.log('Step 1: Creating Paystack customer for:', user.email)
       const paystackCustomer = await getOrCreatePaystackCustomer({
         email: user.email,
         first_name: user.name?.split(' ')[0] || undefined,
         last_name: user.name?.split(' ').slice(1).join(' ') || undefined,
       })
+      console.log('Paystack customer created:', paystackCustomer.customer_code)
 
       // Step 2: Get or create Paystack plan
+      console.log('Step 2: Creating Paystack plan for:', plan.name)
       const paystackCurrency = getPaystackCurrency(plan.currency);
       const paystackPlan = await getOrCreatePaystackPlan({
         name: plan.name,
@@ -155,6 +162,7 @@ export async function POST(request: NextRequest) {
         currency: paystackCurrency,
         description: plan.description || undefined,
       })
+      console.log('Paystack plan created:', paystackPlan.plan_code)
 
       // Step 3: Create Paystack subscription
       // Note: For initial subscription, user needs to authorize payment
@@ -164,7 +172,8 @@ export async function POST(request: NextRequest) {
       const nextBillingDate = addMonths(now, 1)
 
       // Create subscription in database first (incomplete status)
-      const subscription = await prisma.subscription.create({
+      console.log('Step 3: Creating database subscription')
+      subscription = await prisma.subscription.create({
         data: {
           userId: session.user.id,
           planId: plan.id,
@@ -177,10 +186,9 @@ export async function POST(request: NextRequest) {
         },
         include: { plan: true }
       })
+      console.log('Database subscription created:', subscription.id)
 
-      // For initial subscription, we need to get authorization from user first
-      // Instead of creating subscription immediately, return checkout URL
-
+      console.log('Step 4: Checking for existing authorization')
       // Check if user has existing authorization (saved card)
       let authorizationCode = null;
 
@@ -196,11 +204,15 @@ export async function POST(request: NextRequest) {
       if (existingPayment) {
         // Check if payment has authorization code (will be available after Prisma regeneration)
         authorizationCode = (existingPayment as any).authorizationCode;
+        console.log('Found existing authorization:', !!authorizationCode)
+      } else {
+        console.log('No existing payments found')
       }
 
       let paystackSubscription;
 
       if (authorizationCode) {
+        console.log('Step 5a: Creating subscription with existing authorization')
         // Create subscription with existing authorization
         paystackSubscription = await createPaystackSubscription({
           customer: paystackCustomer.customer_code,
@@ -216,11 +228,30 @@ export async function POST(request: NextRequest) {
             status: "active", // Can be active since we have authorization
           }
         });
+        console.log('Subscription activated with existing authorization')
       } else {
+        console.log('Step 5b: No existing authorization, creating payment initialization')
+        
+        // Validate Paystack configuration first
+        if (PAYSTACK_CONFIG.secretKey.startsWith('dummy_')) {
+          console.error('Paystack secret key is not configured properly')
+          throw new Error('Payment system is not configured. Please contact support.')
+        }
+        
+        if (PAYSTACK_CONFIG.baseUrl.startsWith('dummy_')) {
+          console.error('Base URL is not configured properly')
+          throw new Error('Application URL is not configured. Please contact support.')
+        }
+        
         // No existing authorization - need to redirect user to payment
         // Create a payment initialization for the first payment
-        const paystack = await import('@/lib/billing').then(m => m.getPaystack());
+        console.log('Initializing Paystack payment for subscription:', subscription.id)
+        
+        const { getPaystack } = await import('@/lib/billing')
+        const paystack = await getPaystack()
         const reference = `sub_${subscription.id}_${Date.now()}`; // Unique reference
+
+        console.log('Paystack instance created, initializing transaction with reference:', reference)
 
         const initializeResponse = await (paystack as any).transaction.initialize({
           email: user.email,
@@ -256,10 +287,24 @@ export async function POST(request: NextRequest) {
           ]
         });
 
+        console.log('Paystack initialize response:', {
+          status: initializeResponse.status,
+          message: initializeResponse.message,
+          hasAuthUrl: !!initializeResponse.data?.authorization_url
+        })
+
         if (!initializeResponse.status) {
+          console.error('Paystack initialization failed:', initializeResponse)
           throw new Error(`Failed to initialize payment: ${initializeResponse.message}`);
         }
 
+        if (!initializeResponse.data?.authorization_url) {
+          console.error('No authorization URL in Paystack response:', initializeResponse.data)
+          throw new Error('No payment URL received from Paystack');
+        }
+
+        console.log('Creating payment record and Redis mappings')
+        
         // Create payment record to link with webhook
         const payment = await prisma.payment.create({
           data: {
@@ -272,6 +317,7 @@ export async function POST(request: NextRequest) {
             providerPaymentRef: reference,
           }
         })
+        console.log('Payment record created:', payment.id)
 
         // Store deterministic reference mapping for webhook correlation (48h TTL)
         try {
@@ -282,8 +328,9 @@ export async function POST(request: NextRequest) {
             planId: plan.id,
             createdAt: new Date().toISOString()
           }))
+          console.log('Redis reference mapping stored')
         } catch (e) {
-          console.warn("Billing: failed to write redis ref mapping", { reference })
+          console.warn("Billing: failed to write redis ref mapping", { reference, error: e })
         }
 
         // Add idempotency protection for this specific subscription creation
@@ -294,10 +341,12 @@ export async function POST(request: NextRequest) {
             paymentId: payment.id,
             status: 'pending_payment'
           }))
+          console.log('Redis idempotency lock stored')
         } catch (e) {
-          console.warn("Billing: failed to write subscription creation lock", { subscriptionId: subscription.id })
+          console.warn("Billing: failed to write subscription creation lock", { subscriptionId: subscription.id, error: e })
         }
 
+        console.log('Returning payment link response')
         return NextResponse.json({
           subscription: subscription,
           requiresAuthorization: true,
@@ -348,11 +397,28 @@ export async function POST(request: NextRequest) {
         })
       }
     } catch (error: any) {
-      console.error("Error creating Paystack subscription:", error)
+      console.error("Error creating Paystack subscription:", {
+        error: error.message,
+        stack: error.stack,
+        userId: session.user.id,
+        planId: plan.id
+      })
+      
+      // Clean up any created subscription if payment initialization failed
+      if (subscription?.id) {
+        try {
+          await prisma.subscription.delete({ where: { id: subscription.id } })
+          console.log('Cleaned up failed subscription:', subscription.id)
+        } catch (cleanupError) {
+          console.error('Failed to cleanup subscription:', cleanupError)
+        }
+      }
+      
       return NextResponse.json(
         {
           error: "Failed to create subscription",
-          details: error.message || String(error)
+          details: error.message || String(error),
+          step: "paystack_initialization"
         },
         { status: 500 }
       )

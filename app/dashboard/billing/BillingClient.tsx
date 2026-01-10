@@ -59,6 +59,7 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
     const [subscribing, setSubscribing] = useState<string | null>(null)
     const [canceling, setCanceling] = useState(false)
     const [checkingStatus, setCheckingStatus] = useState(false)
+    const [debugInfo, setDebugInfo] = useState<any>(null)
     const [message, setMessage] = useState<{ type: "success" | "error" | "info", text: string } | null>(null)
 
     // Modal states
@@ -164,6 +165,31 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
             window.history.replaceState({}, "", window.location.pathname)
         }
     }, [])
+
+    const testPaystackConnection = async () => {
+        try {
+            const response = await fetch('/api/billing/test-paystack')
+            const data = await response.json()
+            setDebugInfo(data)
+            
+            if (response.ok) {
+                setMessage({
+                    type: "info",
+                    text: `Paystack test: ${data.paystack.initialized ? 'Working' : 'Failed'}`
+                })
+            } else {
+                setMessage({
+                    type: "error",
+                    text: `Paystack test failed: ${data.details}`
+                })
+            }
+        } catch (error) {
+            setMessage({
+                type: "error",
+                text: "Failed to test Paystack connection"
+            })
+        }
+    }
 
     const handleSubscribe = async (planId: string) => {
         setSubscribing(planId)
@@ -297,27 +323,35 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                         'bg-blue-100 text-blue-700'
                     }`}>
                     <span>{message.text}</span>
-                    {(message.type === 'error' || (message.type === 'info' && checkingStatus)) && (
-                        <div className="flex gap-2 ml-4">
-                            <button
-                                onClick={() => window.location.reload()}
-                                className="text-xs px-3 py-1 bg-white/20 hover:bg-white/30 rounded border border-current/20 transition-colors"
-                            >
-                                Refresh Page
-                            </button>
-                            {checkingStatus && (
+                    <div className="flex gap-2 ml-4">
+                        {(message.type === 'error' || (message.type === 'info' && checkingStatus)) && (
+                            <>
                                 <button
-                                    onClick={() => {
-                                        setCheckingStatus(false)
-                                        setMessage(null)
-                                    }}
+                                    onClick={() => window.location.reload()}
                                     className="text-xs px-3 py-1 bg-white/20 hover:bg-white/30 rounded border border-current/20 transition-colors"
                                 >
-                                    Stop Checking
+                                    Refresh Page
                                 </button>
-                            )}
-                        </div>
-                    )}
+                                {checkingStatus && (
+                                    <button
+                                        onClick={() => {
+                                            setCheckingStatus(false)
+                                            setMessage(null)
+                                        }}
+                                        className="text-xs px-3 py-1 bg-white/20 hover:bg-white/30 rounded border border-current/20 transition-colors"
+                                    >
+                                        Stop Checking
+                                    </button>
+                                )}
+                            </>
+                        )}
+                        <button
+                            onClick={testPaystackConnection}
+                            className="text-xs px-3 py-1 bg-white/20 hover:bg-white/30 rounded border border-current/20 transition-colors"
+                        >
+                            Test Paystack
+                        </button>
+                    </div>
                 </div>
             )}
 
@@ -493,6 +527,15 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                 subscription={subscription}
                 initialUsage={initialUsage}
             />
+
+            {debugInfo && (
+                <div className="mt-8 p-4 bg-gray-100 rounded-lg">
+                    <h3 className="font-semibold mb-2">Debug Information</h3>
+                    <pre className="text-xs overflow-auto">
+                        {JSON.stringify(debugInfo, null, 2)}
+                    </pre>
+                </div>
+            )}
         </div>
     )
 }
