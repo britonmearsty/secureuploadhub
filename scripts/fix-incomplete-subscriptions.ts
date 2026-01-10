@@ -83,7 +83,7 @@ export async function fixIncompleteSubscriptions(): Promise<FixResult[]> {
                 currency: successfulPayment.currency,
                 authorization: undefined
               },
-              source: 'manual_fix'
+              source: 'manual'
             })
             
             if (result.result.success) {
