@@ -18,6 +18,21 @@ const verifySignature = (rawBody: string, signature: string | null) => {
   return hash === signature
 }
 
+/**
+ * Safely parse metadata that might be a string or already an object
+ */
+const parseMetadata = (metadata: any) => {
+  if (!metadata) return {}
+  if (typeof metadata === 'string') {
+    try {
+      return JSON.parse(metadata)
+    } catch {
+      return {}
+    }
+  }
+  return metadata
+}
+
 export async function POST(request: NextRequest) {
   try {
     const rawBody = await request.text()
@@ -290,6 +305,7 @@ async function handleInvoicePaymentSucceeded(data: any) {
   const amount = data.amount
   const currency = data.currency
   const customerEmail = data.customer?.email
+  const authorization = data.authorization || data.subscription?.authorization
 
   if (!subscriptionCode) return
 
@@ -336,6 +352,7 @@ async function handleInvoicePaymentSucceeded(data: any) {
           paymentId: paymentId?.toString(),
           amount: amount || 0,
           currency: currency || subscription.plan.currency,
+          authorization
         },
         source: 'webhook'
       })
@@ -417,7 +434,8 @@ async function handleInvoicePaymentSucceeded(data: any) {
 }
 
 async function handleChargeSuccess(data: any) {
-  const { reference, id: paymentId, amount, currency, status, metadata, authorization } = data
+  const { reference, id: paymentId, amount, currency, status, authorization } = data
+  const metadata = parseMetadata(data.metadata)
 
   if (status !== "success") {
     return
@@ -434,7 +452,7 @@ async function handleChargeSuccess(data: any) {
   // Check if this is a subscription setup payment
   if (metadata?.type === 'subscription_setup' && metadata?.subscription_id) {
     console.log("Processing subscription setup payment:", metadata.subscription_id)
-    
+
     const result = await activateSubscription({
       subscriptionId: metadata.subscription_id,
       paymentData: {
@@ -464,19 +482,19 @@ async function handleChargeSuccess(data: any) {
   // If payment not found, try alternative approaches
   if (!existingPayment) {
     console.log("Payment not found by reference, trying alternative approaches...")
-    
+
     // Approach 1: Check if this might be a subscription setup payment with metadata
     if (metadata?.subscription_id) {
       console.log("Found subscription_id in metadata:", metadata.subscription_id)
-      
+
       const subscription = await prisma.subscription.findUnique({
         where: { id: metadata.subscription_id },
         include: { plan: true, user: true }
       })
-      
+
       if (subscription && subscription.status === SUBSCRIPTION_STATUS.INCOMPLETE) {
         console.log("Found incomplete subscription, activating:", subscription.id)
-        
+
         const result = await activateSubscription({
           subscriptionId: subscription.id,
           paymentData: {
@@ -497,15 +515,15 @@ async function handleChargeSuccess(data: any) {
         return
       }
     }
-    
+
     // Approach 2: Try to find incomplete subscription by user email
     if (data.customer?.email) {
       console.log("Attempting to find incomplete subscription by user email:", data.customer.email)
-      
+
       const user = await prisma.user.findUnique({
         where: { email: data.customer.email }
       })
-      
+
       if (user) {
         const incompleteSubscription = await prisma.subscription.findFirst({
           where: {
@@ -515,10 +533,10 @@ async function handleChargeSuccess(data: any) {
           include: { plan: true, user: true },
           orderBy: { createdAt: 'desc' } // Get the most recent one
         })
-        
+
         if (incompleteSubscription) {
           console.log("Found incomplete subscription by email, activating:", incompleteSubscription.id)
-          
+
           const result = await activateSubscription({
             subscriptionId: incompleteSubscription.id,
             paymentData: {
@@ -540,13 +558,13 @@ async function handleChargeSuccess(data: any) {
         }
       }
     }
-    
+
     // Approach 3: Try to find by payment amount and user (if we have user info)
     if (data.customer?.email && amount) {
       const user = await prisma.user.findUnique({
         where: { email: data.customer.email }
       })
-      
+
       if (user) {
         const matchingSubscription = await prisma.subscription.findFirst({
           where: {
@@ -560,10 +578,10 @@ async function handleChargeSuccess(data: any) {
           include: { plan: true, user: true },
           orderBy: { createdAt: 'desc' }
         })
-        
+
         if (matchingSubscription) {
           console.log("Found incomplete subscription by amount match, activating:", matchingSubscription.id)
-          
+
           const result = await activateSubscription({
             subscriptionId: matchingSubscription.id,
             paymentData: {
@@ -585,14 +603,14 @@ async function handleChargeSuccess(data: any) {
         }
       }
     }
-    
+
     // Approach 4: Try to find any PENDING payment matching this user and amount
     // This handles upgrade proration payments where the reference might not match
     if (data.customer?.email && amount) {
       const user = await prisma.user.findUnique({
         where: { email: data.customer.email }
       })
-      
+
       if (user) {
         const pendingPayment = await prisma.payment.findFirst({
           where: {
@@ -602,14 +620,14 @@ async function handleChargeSuccess(data: any) {
           },
           include: { subscription: { include: { plan: true, user: true } } }
         })
-        
+
         if (pendingPayment) {
           console.log("Found pending payment by amount match from customer email, updating:", pendingPayment.id)
           existingPayment = pendingPayment as any
         }
       }
     }
-    
+
     if (!existingPayment) {
       console.error("Could not handle charge success - no matching payment or subscription found", {
         reference,

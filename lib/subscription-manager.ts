@@ -79,12 +79,16 @@ async function _activateSubscriptionInternal(params: ActivateSubscriptionParams)
 
   // Check if already active
   if (subscription.status === SUBSCRIPTION_STATUS.ACTIVE) {
-    console.log(`Subscription ${subscriptionId} already active, skipping activation`)
-    return { success: true, reason: 'already_active', subscription }
+    // If it's already active but missing provider code, we might still want to proceed to the linking step
+    if (subscription.providerSubscriptionId || !paymentData.authorization?.authorization_code) {
+      console.log(`Subscription ${subscriptionId} already active and linked, skipping activation`)
+      return { success: true, reason: 'already_active', subscription }
+    }
+    console.log(`Subscription ${subscriptionId} is active but missing provider ID. Proceeding to link...`)
   }
 
-  // Only activate incomplete subscriptions
-  if (subscription.status !== SUBSCRIPTION_STATUS.INCOMPLETE) {
+  // Only activate incomplete subscriptions (allow active to proceed for linking if needed)
+  if (subscription.status !== SUBSCRIPTION_STATUS.INCOMPLETE && subscription.status !== SUBSCRIPTION_STATUS.ACTIVE) {
     console.log(`Subscription ${subscriptionId} status is ${subscription.status}, cannot activate`)
     return { success: false, reason: 'invalid_status', currentStatus: subscription.status }
   }
@@ -101,7 +105,7 @@ async function _activateSubscriptionInternal(params: ActivateSubscriptionParams)
         select: { status: true }
       })
 
-      if (!currentSub || currentSub.status !== SUBSCRIPTION_STATUS.INCOMPLETE) {
+      if (!currentSub || (currentSub.status !== SUBSCRIPTION_STATUS.INCOMPLETE && currentSub.status !== SUBSCRIPTION_STATUS.ACTIVE)) {
         throw new Error(`Subscription status changed during activation: ${currentSub?.status}`)
       }
 
@@ -144,10 +148,10 @@ async function _activateSubscriptionInternal(params: ActivateSubscriptionParams)
         })
       }
 
-      // Activate subscription status locally
-      const activatedSubscription = await tx.subscription.update({
-        where: { id: subscription.id },
-        data: {
+      // Activate subscription status locally (only if currently incomplete)
+      const updateData: any = {}
+      if (currentSub.status === SUBSCRIPTION_STATUS.INCOMPLETE) {
+        Object.assign(updateData, {
           status: SUBSCRIPTION_STATUS.ACTIVE,
           currentPeriodStart: now,
           currentPeriodEnd: periodEnd,
@@ -156,7 +160,12 @@ async function _activateSubscriptionInternal(params: ActivateSubscriptionParams)
           retryCount: 0,
           gracePeriodEnd: null,
           lastPaymentAttempt: now,
-        }
+        })
+      }
+
+      const activatedSubscription = await tx.subscription.update({
+        where: { id: subscription.id },
+        data: updateData
       })
 
       // Create subscription history
@@ -264,7 +273,7 @@ export async function cancelSubscription(userId: string) {
   try {
     const acquired = await lock.acquire(30000)
     if (!acquired) {
-      throw new Error('Failed to acquire lock for subscription cancellation')
+      return { success: false, error: 'Failed to acquire lock for subscription cancellation' }
     }
 
     // Find subscription (allow cancelling incomplete, active, or past_due subscriptions)
@@ -277,7 +286,7 @@ export async function cancelSubscription(userId: string) {
     })
 
     if (!subscription) {
-      throw new Error('No active subscription found')
+      return { success: false, error: 'No active subscription found' }
     }
 
     // Handle incomplete subscriptions differently
@@ -314,7 +323,7 @@ export async function cancelSubscription(userId: string) {
         details: { action: "cancelled_incomplete", immediateCancel: true }
       })
 
-      return result
+      return { success: true, subscription: result, message: 'Subscription cancelled immediately' }
     }
 
     // For active/past_due subscriptions, cancel Paystack subscription if exists
@@ -360,8 +369,15 @@ export async function cancelSubscription(userId: string) {
       details: { action: "cancelled", cancelAtPeriodEnd: true }
     })
 
-    return result
+    return { success: true, subscription: result, message: 'Subscription will be cancelled at the end of the current period' }
 
+  } catch (error) {
+    console.error(`Failed to cancel subscription for user ${userId}:`, error)
+    return {
+      success: false,
+      error: 'Failed to cancel subscription',
+      details: error instanceof Error ? error.message : String(error)
+    }
   } finally {
     await lock.release()
   }

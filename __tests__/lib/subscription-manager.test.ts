@@ -20,12 +20,17 @@ vi.mock('@/lib/prisma', () => ({
   },
 }))
 
-vi.mock('@/lib/distributed-lock', () => ({
-  DistributedLock: vi.fn().mockImplementation((lockKey) => ({
-    acquire: vi.fn(),
-    release: vi.fn(),
-  })),
-}))
+vi.mock('@/lib/distributed-lock', () => {
+  return {
+    DistributedLock: vi.fn().mockImplementation(function () {
+      return {
+        acquire: vi.fn().mockResolvedValue(true),
+        release: vi.fn().mockResolvedValue(true),
+        extend: vi.fn().mockResolvedValue(true),
+      }
+    }),
+  }
+})
 
 vi.mock('@/lib/idempotency', () => ({
   withIdempotency: vi.fn(),
@@ -110,7 +115,7 @@ describe('Subscription Manager', () => {
         acquire: vi.fn().mockResolvedValue(true),
         release: vi.fn().mockResolvedValue(true),
       }
-      vi.mocked(DistributedLock).mockImplementation(() => mockLock as any)
+      vi.mocked(DistributedLock).mockImplementation(function () { return mockLock as any })
 
       const mockActivationResult = {
         success: true,
@@ -118,13 +123,13 @@ describe('Subscription Manager', () => {
         subscription: { ...mockSubscription, status: 'active' },
       }
 
-      vi.mocked(withIdempotency).mockImplementation(async (key, fn) => {
+      vi.mocked(withIdempotency).mockImplementation(async (key: string, fn: () => Promise<any>) => {
         return { isNew: true, result: await fn(), fromCache: false }
       })
 
       vi.mocked(prisma.subscription.findUnique).mockResolvedValue(mockSubscription as any)
       vi.mocked(prisma.payment.findFirst).mockResolvedValue(null)
-      vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: (tx: any) => Promise<any>) => {
         return await callback({
           subscription: {
             findUnique: vi.fn().mockResolvedValue({ status: 'incomplete' }),
@@ -159,7 +164,7 @@ describe('Subscription Manager', () => {
         acquire: vi.fn().mockResolvedValue(false),
         release: vi.fn().mockResolvedValue(true),
       }
-      vi.mocked(DistributedLock).mockImplementation(() => mockLock as any)
+      vi.mocked(DistributedLock).mockImplementation(function () { return mockLock as any })
 
       const { activateSubscription } = await import('@/lib/subscription-manager')
       const result = await activateSubscription(mockActivationParams)
@@ -176,11 +181,11 @@ describe('Subscription Manager', () => {
         acquire: vi.fn().mockResolvedValue(true),
         release: vi.fn().mockResolvedValue(true),
       }
-      vi.mocked(DistributedLock).mockImplementation(() => mockLock as any)
+      vi.mocked(DistributedLock).mockImplementation(function () { return mockLock as any })
 
       const activeSubscription = { ...mockSubscription, status: 'active' }
 
-      vi.mocked(withIdempotency).mockImplementation(async (key, fn) => {
+      vi.mocked(withIdempotency).mockImplementation(async (key: string, fn: () => Promise<any>) => {
         return { isNew: true, result: await fn(), fromCache: false }
       })
 
@@ -199,9 +204,9 @@ describe('Subscription Manager', () => {
         acquire: vi.fn().mockResolvedValue(true),
         release: vi.fn().mockResolvedValue(true),
       }
-      vi.mocked(DistributedLock).mockImplementation(() => mockLock as any)
+      vi.mocked(DistributedLock).mockImplementation(function () { return mockLock as any })
 
-      vi.mocked(withIdempotency).mockImplementation(async (key, fn) => {
+      vi.mocked(withIdempotency).mockImplementation(async (key: string, fn: () => Promise<any>) => {
         return { isNew: true, result: await fn(), fromCache: false }
       })
 
@@ -219,11 +224,11 @@ describe('Subscription Manager', () => {
         acquire: vi.fn().mockResolvedValue(true),
         release: vi.fn().mockResolvedValue(true),
       }
-      vi.mocked(DistributedLock).mockImplementation(() => mockLock as any)
+      vi.mocked(DistributedLock).mockImplementation(function () { return mockLock as any })
 
       const cancelledSubscription = { ...mockSubscription, status: 'cancelled' }
 
-      vi.mocked(withIdempotency).mockImplementation(async (key, fn) => {
+      vi.mocked(withIdempotency).mockImplementation(async (key: string, fn: () => Promise<any>) => {
         return { isNew: true, result: await fn(), fromCache: false }
       })
 
@@ -242,9 +247,9 @@ describe('Subscription Manager', () => {
         acquire: vi.fn().mockResolvedValue(true),
         release: vi.fn().mockResolvedValue(true),
       }
-      vi.mocked(DistributedLock).mockImplementation(() => mockLock as any)
+      vi.mocked(DistributedLock).mockImplementation(function () { return mockLock as any })
 
-      vi.mocked(withIdempotency).mockImplementation(async (key, fn) => {
+      vi.mocked(withIdempotency).mockImplementation(async (key: string, fn: () => Promise<any>) => {
         return { isNew: true, result: await fn(), fromCache: false }
       })
 
@@ -267,7 +272,7 @@ describe('Subscription Manager', () => {
         },
       }
 
-      vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: (tx: any) => Promise<any>) => {
         return await callback(mockTransactionPrisma as any)
       })
 
@@ -295,9 +300,9 @@ describe('Subscription Manager', () => {
         acquire: vi.fn().mockResolvedValue(true),
         release: vi.fn().mockResolvedValue(true),
       }
-      vi.mocked(DistributedLock).mockImplementation(() => mockLock as any)
+      vi.mocked(DistributedLock).mockImplementation(function () { return mockLock as any })
 
-      vi.mocked(withIdempotency).mockImplementation(async (key, fn) => {
+      vi.mocked(withIdempotency).mockImplementation(async (key: string, fn: () => Promise<any>) => {
         return { isNew: true, result: await fn(), fromCache: false }
       })
 
@@ -322,7 +327,7 @@ describe('Subscription Manager', () => {
         },
       }
 
-      vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: (tx: any) => Promise<any>) => {
         return await callback(mockTransactionPrisma as any)
       })
 
@@ -345,9 +350,9 @@ describe('Subscription Manager', () => {
         acquire: vi.fn().mockResolvedValue(true),
         release: vi.fn().mockResolvedValue(true),
       }
-      vi.mocked(DistributedLock).mockImplementation(() => mockLock as any)
+      vi.mocked(DistributedLock).mockImplementation(function () { return mockLock as any })
 
-      vi.mocked(withIdempotency).mockImplementation(async (key, fn) => {
+      vi.mocked(withIdempotency).mockImplementation(async (key: string, fn: () => Promise<any>) => {
         return { isNew: true, result: await fn(), fromCache: false }
       })
 
@@ -373,7 +378,7 @@ describe('Subscription Manager', () => {
         },
       }
 
-      vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: (tx: any) => Promise<any>) => {
         return await callback(mockTransactionPrisma as any)
       })
 
@@ -399,9 +404,9 @@ describe('Subscription Manager', () => {
         acquire: vi.fn().mockResolvedValue(true),
         release: vi.fn().mockResolvedValue(true),
       }
-      vi.mocked(DistributedLock).mockImplementation(() => mockLock as any)
+      vi.mocked(DistributedLock).mockImplementation(function () { return mockLock as any })
 
-      vi.mocked(withIdempotency).mockImplementation(async (key, fn) => {
+      vi.mocked(withIdempotency).mockImplementation(async (key: string, fn: () => Promise<any>) => {
         return { isNew: true, result: await fn(), fromCache: false }
       })
 
@@ -423,7 +428,7 @@ describe('Subscription Manager', () => {
         },
       }
 
-      vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: (tx: any) => Promise<any>) => {
         return await callback(mockTransactionPrisma as any)
       })
 
@@ -446,22 +451,22 @@ describe('Subscription Manager', () => {
         acquire: vi.fn().mockResolvedValue(true),
         release: vi.fn().mockResolvedValue(true),
       }
-      vi.mocked(DistributedLock).mockImplementation(() => mockLock as any)
+      vi.mocked(DistributedLock).mockImplementation(function () { return mockLock as any })
 
-      vi.mocked(withIdempotency).mockImplementation(async (key, fn) => {
+      vi.mocked(withIdempotency).mockImplementation(async (key: string, fn: () => Promise<any>) => {
         return { isNew: true, result: await fn(), fromCache: false }
       })
 
       vi.mocked(prisma.subscription.findUnique).mockResolvedValue(mockSubscription as any)
 
-      // Simulate status change during transaction
+      // Simulate status change during transaction to something invalid
       const mockTransactionPrisma = {
         subscription: {
-          findUnique: vi.fn().mockResolvedValue({ status: 'active' }), // Changed during transaction
+          findUnique: vi.fn().mockResolvedValue({ status: 'cancelled' }), // Invalid status for activation
         },
       }
 
-      vi.mocked(prisma.$transaction).mockImplementation(async (callback) => {
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: (tx: any) => Promise<any>) => {
         try {
           return await callback(mockTransactionPrisma as any)
         } catch (error) {
@@ -470,10 +475,11 @@ describe('Subscription Manager', () => {
       })
 
       const { activateSubscription } = await import('@/lib/subscription-manager')
-      
-      await expect(activateSubscription(mockActivationParams)).rejects.toThrow(
-        'Subscription status changed during activation: active'
-      )
+      const result = await activateSubscription(mockActivationParams)
+
+      expect(result.result.success).toBe(false)
+      expect(result.result.reason).toBe('activation_failed')
+      expect(result.result.error).toContain('Subscription status changed during activation: cancelled')
     })
   })
 
@@ -489,10 +495,19 @@ describe('Subscription Manager', () => {
 
     it('should cancel active subscription at period end', async () => {
       vi.mocked(prisma.subscription.findFirst).mockResolvedValue(mockActiveSubscription as any)
-      vi.mocked(prisma.subscription.update).mockResolvedValue({
-        ...mockActiveSubscription,
-        cancelAtPeriodEnd: true,
-      } as any)
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: (tx: any) => Promise<any>) => {
+        return await callback({
+          subscription: {
+            update: vi.fn().mockResolvedValue({
+              ...mockActiveSubscription,
+              cancelAtPeriodEnd: true,
+            }),
+          },
+          subscriptionHistory: {
+            create: vi.fn().mockResolvedValue({}),
+          },
+        } as any)
+      })
 
       const { cancelSubscription } = await import('@/lib/subscription-manager')
       const result = await cancelSubscription('user-123')
@@ -513,10 +528,20 @@ describe('Subscription Manager', () => {
       }
 
       vi.mocked(prisma.subscription.findFirst).mockResolvedValue(incompleteSubscription as any)
-      vi.mocked(prisma.subscription.update).mockResolvedValue({
-        ...incompleteSubscription,
-        status: 'cancelled',
-      } as any)
+
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: (tx: any) => Promise<any>) => {
+        return await callback({
+          subscription: {
+            update: vi.fn().mockResolvedValue({
+              ...incompleteSubscription,
+              status: 'cancelled',
+            }),
+          },
+          subscriptionHistory: {
+            create: vi.fn().mockResolvedValue({}),
+          },
+        } as any)
+      })
 
       const { cancelSubscription } = await import('@/lib/subscription-manager')
       const result = await cancelSubscription('user-123')
