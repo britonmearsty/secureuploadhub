@@ -13,8 +13,19 @@ import { activateSubscription } from '../lib/subscription-manager'
 // Load environment variables
 config()
 
-async function fixIncompleteSubscriptions() {
+export interface FixResult {
+  subscriptionId: string
+  userEmail: string
+  planName: string
+  paymentAmount: number
+  success: boolean
+  error?: string
+}
+
+export async function fixIncompleteSubscriptions(): Promise<FixResult[]> {
   console.log('🔍 Analyzing incomplete subscriptions...\n')
+
+  const results: FixResult[] = []
 
   try {
     // Find all incomplete subscriptions
@@ -35,7 +46,7 @@ async function fixIncompleteSubscriptions() {
 
     if (incompleteSubscriptions.length === 0) {
       console.log('✅ No incomplete subscriptions found!')
-      return
+      return results
     }
 
     // Analyze each subscription
@@ -77,11 +88,34 @@ async function fixIncompleteSubscriptions() {
             
             if (result.result.success) {
               console.log(`   ✅ Subscription activated successfully!`)
+              results.push({
+                subscriptionId: subscription.id,
+                userEmail: subscription.user.email,
+                planName: subscription.plan.name,
+                paymentAmount: successfulPayment.amount,
+                success: true
+              })
             } else {
               console.log(`   ❌ Failed to activate: ${result.result.reason}`)
+              results.push({
+                subscriptionId: subscription.id,
+                userEmail: subscription.user.email,
+                planName: subscription.plan.name,
+                paymentAmount: successfulPayment.amount,
+                success: false,
+                error: result.result.reason
+              })
             }
           } catch (error) {
             console.log(`   ❌ Error activating subscription: ${error}`)
+            results.push({
+              subscriptionId: subscription.id,
+              userEmail: subscription.user.email,
+              planName: subscription.plan.name,
+              paymentAmount: successfulPayment.amount,
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error'
+            })
           }
         } else {
           console.log(`   ⚠️  No successful payments found`)
@@ -150,12 +184,17 @@ async function fixIncompleteSubscriptions() {
       console.log('   Consider implementing duplicate prevention or cleanup logic')
     }
 
+    return results
+
   } catch (error) {
     console.error('❌ Error analyzing subscriptions:', error)
+    throw error
   } finally {
     await prisma.$disconnect()
   }
 }
 
-// Run the analysis
-fixIncompleteSubscriptions().catch(console.error)
+// Run the analysis if called directly
+if (require.main === module) {
+  fixIncompleteSubscriptions().catch(console.error)
+}
