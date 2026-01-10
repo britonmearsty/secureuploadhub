@@ -6,6 +6,7 @@ import { PAYMENT_STATUS, SUBSCRIPTION_STATUS, mapPaystackPaymentStatus, mapPayst
 import { createAuditLog, AUDIT_ACTIONS } from "@/lib/audit-log"
 import { addMonths } from "date-fns"
 import { activateSubscription } from "@/lib/subscription-manager"
+import redis from "@/lib/redis"
 
 export const dynamic = 'force-dynamic'
 
@@ -448,6 +449,51 @@ async function handleChargeSuccess(data: any) {
     currency,
     metadata
   })
+
+  // First: try deterministic redis mapping by reference
+  try {
+    const refMap = await redis.get(`paystack:ref:${reference}`)
+    if (refMap) {
+      const parsed = JSON.parse(refMap)
+      if (parsed?.subscriptionId) {
+        const result = await activateSubscription({
+          subscriptionId: parsed.subscriptionId,
+          paymentData: {
+            reference,
+            paymentId: paymentId?.toString(),
+            amount: amount || 0,
+            currency: currency || 'NGN',
+            authorization
+          },
+          source: 'webhook'
+        })
+        if (result.result?.success) {
+          console.log("Webhook: charge.success resolved via redis mapping", { reference, subscriptionId: parsed.subscriptionId })
+          return
+        } else if (result.result?.reason === 'lock_timeout') {
+          // retry once after short delay
+          await new Promise(r => setTimeout(r, 250))
+          const retry = await activateSubscription({
+            subscriptionId: parsed.subscriptionId,
+            paymentData: {
+              reference,
+              paymentId: paymentId?.toString(),
+              amount: amount || 0,
+              currency: currency || 'NGN',
+              authorization
+            },
+            source: 'webhook'
+          })
+          if (retry.result?.success) {
+            console.log("Webhook: charge.success resolved via redis mapping after retry", { reference, subscriptionId: parsed.subscriptionId })
+            return
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("Webhook: redis mapping lookup failed", { reference })
+  }
 
   // Check if this is a subscription setup payment
   if (metadata?.type === 'subscription_setup' && metadata?.subscription_id) {

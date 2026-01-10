@@ -11,6 +11,7 @@ import { createAuditLog, AUDIT_ACTIONS } from "@/lib/audit-log"
 import { BILLING_INTERVAL, PAYMENT_STATUS } from "@/lib/billing-constants"
 import { getPaystackCurrency, convertToPaystackSubunit } from "@/lib/paystack-currency"
 import { cancelSubscription } from "@/lib/subscription-manager"
+import redis from "@/lib/redis"
 
 export const dynamic = 'force-dynamic'
 
@@ -233,6 +234,16 @@ export async function POST(request: NextRequest) {
             providerPaymentRef: reference,
           }
         })
+
+        // Store deterministic reference mapping for webhook correlation (48h TTL)
+        try {
+          await redis.setex(`paystack:ref:${reference}`, 172800, JSON.stringify({
+            subscriptionId: subscription.id,
+            userId: session.user.id
+          }))
+        } catch (e) {
+          console.warn("Billing: failed to write redis ref mapping", { reference })
+        }
 
         return NextResponse.json({
           subscription: subscription,
