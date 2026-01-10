@@ -7,16 +7,52 @@ import { createAuditLog, AUDIT_ACTIONS } from "@/lib/audit-log"
 import { addMonths } from "date-fns"
 import { activateSubscription } from "@/lib/subscription-manager"
 import redis from "@/lib/redis"
+import { 
+  withWebhookRetry, 
+  retrySubscriptionActivation, 
+  isRetryableWebhookError,
+  logWebhookAttempt 
+} from "@/lib/enhanced-webhook-retry"
+import {
+  validateWebhookSignature,
+  validateChargeData,
+  validateSubscriptionData,
+  validateInvoiceData,
+  extractSubscriptionCorrelation,
+  shouldProcessWebhookEvent,
+  logWebhookValidation
+} from "@/lib/webhook-validation"
+import {
+  verifySubscriptionLinking,
+  findBestSubscriptionMatch,
+  logLinkingVerification
+} from "@/lib/subscription-linking-verification"
+import {
+  validatePaymentAmount,
+  logAmountValidation
+} from "@/lib/payment-amount-validation"
+import {
+  findBestSubscriptionMatchEnhanced,
+  validateSubscriptionMatch,
+  logSubscriptionMatch
+} from "@/lib/enhanced-subscription-matching"
 
 export const dynamic = 'force-dynamic'
 
+// In-memory processed events cache (for single instance)
+const processedEvents = new Set<string>()
+
+// Clean up old events every hour
+setInterval(() => {
+  if (processedEvents.size > 1000) {
+    processedEvents.clear()
+    console.log('Cleared processed events cache')
+  }
+}, 3600000)
+
 const verifySignature = (rawBody: string, signature: string | null) => {
-  if (!signature) return false
-  const hash = crypto
-    .createHmac("sha512", PAYSTACK_CONFIG.webhookSecret)
-    .update(rawBody)
-    .digest("hex")
-  return hash === signature
+  const result = validateWebhookSignature(rawBody, signature, PAYSTACK_CONFIG.webhookSecret)
+  return result.isValid
 }
 
 /**
@@ -39,12 +75,19 @@ export async function POST(request: NextRequest) {
     const rawBody = await request.text()
     const signature = request.headers.get("x-paystack-signature")
 
-    if (!verifySignature(rawBody, signature)) {
-      console.error("Invalid Paystack webhook signature")
+    // Enhanced signature validation
+    const signatureValidation = validateWebhookSignature(rawBody, signature, PAYSTACK_CONFIG.webhookSecret)
+    if (!signatureValidation.isValid) {
+      console.error("Invalid Paystack webhook signature:", signatureValidation.error)
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
     }
 
     const { event, data } = JSON.parse(rawBody)
+
+    // Check for duplicate events
+    if (!shouldProcessWebhookEvent(event, data.reference || data.subscription_code || 'unknown', processedEvents)) {
+      return NextResponse.json({ status: "duplicate_ignored" })
+    }
 
     console.log(`Processing webhook event: ${event}`, {
       reference: data.reference,
@@ -53,30 +96,41 @@ export async function POST(request: NextRequest) {
       metadata: data.metadata
     })
 
-    // Handle subscription events
-    if (event === "subscription.create") {
-      await handleSubscriptionCreate(data)
-    } else if (event === "subscription.enable") {
-      await handleSubscriptionEnable(data)
-    } else if (event === "subscription.disable") {
-      await handleSubscriptionDisable(data)
-    } else if (event === "subscription.not_renew") {
-      await handleSubscriptionNotRenew(data)
-    } else if (event === "invoice.payment_failed") {
-      await handleInvoicePaymentFailed(data)
-    } else if (event === "invoice.payment_succeeded") {
-      await handleInvoicePaymentSucceeded(data)
-    } else if (event === "charge.success") {
-      await handleChargeSuccess(data)
-    } else if (event === "charge.failed") {
-      await handleChargeFailed(data)
-    } else {
-      console.log(`Unhandled webhook event: ${event}`)
-    }
+    // Process with retry logic
+    await withWebhookRetry(async () => {
+      if (event === "subscription.create") {
+        await handleSubscriptionCreate(data)
+      } else if (event === "subscription.enable") {
+        await handleSubscriptionEnable(data)
+      } else if (event === "subscription.disable") {
+        await handleSubscriptionDisable(data)
+      } else if (event === "subscription.not_renew") {
+        await handleSubscriptionNotRenew(data)
+      } else if (event === "invoice.payment_failed") {
+        await handleInvoicePaymentFailed(data)
+      } else if (event === "invoice.payment_succeeded") {
+        await handleInvoicePaymentSucceeded(data)
+      } else if (event === "charge.success") {
+        await handleChargeSuccessEnhanced(data)
+      } else if (event === "charge.failed") {
+        await handleChargeFailed(data)
+      } else {
+        console.log(`Unhandled webhook event: ${event}`)
+      }
+    }, { maxAttempts: 3 }, `webhook_${event}_${data.reference || 'unknown'}`)
 
     return NextResponse.json({ status: "success" })
   } catch (error) {
     console.error("Webhook error:", error)
+    
+    // Check if this is a retryable error
+    if (isRetryableWebhookError(error)) {
+      return NextResponse.json(
+        { error: "Temporary failure, please retry" },
+        { status: 503 } // Service Unavailable - indicates retry
+      )
+    }
+    
     return NextResponse.json(
       { error: "Webhook processing failed" },
       { status: 500 }
@@ -434,7 +488,199 @@ async function handleInvoicePaymentSucceeded(data: any) {
   }
 }
 
-async function handleChargeSuccess(data: any) {
+/**
+ * Enhanced charge.success handler with validation and verification
+ */
+async function handleChargeSuccessEnhanced(data: any) {
+  // Validate webhook data
+  const validation = validateChargeData(data)
+  logWebhookValidation('charge.success', data.reference || 'unknown', validation)
+  
+  if (!validation.isValid) {
+    console.error('Invalid charge.success data:', validation.errors)
+    throw new Error(`Invalid webhook data: ${validation.errors?.join(', ')}`)
+  }
+
+  const validatedData = validation.data!
+  const correlationData = extractSubscriptionCorrelation(validatedData)
+
+  console.log('Processing charge.success with correlation data:', {
+    reference: correlationData.reference,
+    subscriptionId: correlationData.subscriptionId,
+    userEmail: correlationData.userEmail,
+    amount: correlationData.amount
+  })
+
+  // Try to find existing payment first
+  let existingPayment = await prisma.payment.findFirst({
+    where: { providerPaymentRef: correlationData.reference },
+    include: { subscription: { include: { plan: true, user: true } } }
+  })
+
+  if (existingPayment?.subscription) {
+    // Verify the linking is correct
+    const verification = await verifySubscriptionLinking(
+      existingPayment.subscription.id,
+      {
+        reference: correlationData.reference,
+        amount: correlationData.amount,
+        currency: correlationData.currency,
+        userEmail: correlationData.userEmail,
+        metadata: validatedData.metadata
+      }
+    )
+
+    logLinkingVerification(correlationData.reference, existingPayment.subscription.id, verification)
+
+    if (verification.suggestedAction === 'reject') {
+      console.error(`Rejecting payment linking: ${verification.reason}`)
+      throw new Error(`Payment linking rejected: ${verification.reason}`)
+    }
+
+    if (verification.suggestedAction === 'manual_review') {
+      console.warn(`Payment linking requires manual review: ${verification.reason}`)
+      // Continue processing but log for manual review
+    }
+
+    // Proceed with activation
+    if (existingPayment.subscription.status === SUBSCRIPTION_STATUS.INCOMPLETE) {
+      const result = await retrySubscriptionActivation(
+        existingPayment.subscription.id,
+        {
+          reference: correlationData.reference,
+          paymentId: correlationData.paymentId,
+          amount: correlationData.amount,
+          currency: correlationData.currency,
+          authorization: correlationData.authorization
+        },
+        'webhook'
+      )
+
+      if (result.result.success) {
+        console.log(`Subscription activated successfully: ${existingPayment.subscription.id}`)
+      } else {
+        console.error(`Failed to activate subscription: ${result.result.reason}`)
+      }
+    }
+    return
+  }
+
+  // No existing payment found, use enhanced subscription matching
+  console.log('No existing payment found, using enhanced subscription matching...')
+  
+  const match = await findBestSubscriptionMatchEnhanced({
+    reference: correlationData.reference,
+    amount: correlationData.amount,
+    currency: correlationData.currency,
+    userEmail: correlationData.userEmail,
+    metadata: validatedData.metadata,
+    paymentId: correlationData.paymentId
+  })
+
+  logSubscriptionMatch({
+    reference: correlationData.reference,
+    amount: correlationData.amount,
+    currency: correlationData.currency,
+    userEmail: correlationData.userEmail,
+    metadata: validatedData.metadata,
+    paymentId: correlationData.paymentId
+  }, match)
+
+  if (!match) {
+    console.error('No valid subscription match found for charge.success:', {
+      reference: correlationData.reference,
+      userEmail: correlationData.userEmail,
+      amount: correlationData.amount
+    })
+    
+    // Log for manual investigation
+    await createAuditLog({
+      userId: correlationData.userId || 'system',
+      action: AUDIT_ACTIONS.PAYMENT_ORPHANED,
+      details: {
+        reference: correlationData.reference,
+        amount: correlationData.amount,
+        userEmail: correlationData.userEmail,
+        reason: 'No subscription match found with enhanced matching'
+      }
+    })
+    
+    throw new Error('No valid subscription found for payment')
+  }
+
+  // Validate the match before proceeding
+  const validation = await validateSubscriptionMatch(match, {
+    reference: correlationData.reference,
+    amount: correlationData.amount,
+    currency: correlationData.currency,
+    userEmail: correlationData.userEmail,
+    metadata: validatedData.metadata,
+    paymentId: correlationData.paymentId
+  })
+
+  logSubscriptionMatch({
+    reference: correlationData.reference,
+    amount: correlationData.amount,
+    currency: correlationData.currency,
+    userEmail: correlationData.userEmail,
+    metadata: validatedData.metadata,
+    paymentId: correlationData.paymentId
+  }, match, validation)
+
+  if (!validation.isValid) {
+    console.error(`Subscription match validation failed: ${validation.reason}`)
+    throw new Error(`Subscription match validation failed: ${validation.reason}`)
+  }
+
+  // Log warnings if any
+  if (match.warnings.length > 0) {
+    console.warn(`Subscription match has warnings:`, match.warnings)
+  }
+
+  // Validate payment amount before activation
+  const amountValidation = await validatePaymentAmount(
+    match.subscriptionId,
+    correlationData.amount,
+    correlationData.currency
+  )
+
+  await logAmountValidation(
+    match.subscriptionId,
+    correlationData.reference,
+    amountValidation,
+    correlationData.userId
+  )
+
+  if (amountValidation.suggestedAction === 'reject') {
+    console.error(`Rejecting payment due to amount validation: ${amountValidation.reason}`)
+    throw new Error(`Payment amount validation failed: ${amountValidation.reason}`)
+  }
+
+  if (amountValidation.suggestedAction === 'review') {
+    console.warn(`Payment amount requires review: ${amountValidation.reason}`)
+    // Continue processing but flag for review
+  }
+
+  // Activate the matched subscription
+  const result = await retrySubscriptionActivation(
+    match.subscriptionId,
+    {
+      reference: correlationData.reference,
+      paymentId: correlationData.paymentId,
+      amount: correlationData.amount,
+      currency: correlationData.currency,
+      authorization: correlationData.authorization
+    },
+    'webhook'
+  )
+
+  if (result.result.success) {
+    console.log(`Subscription activated successfully via enhanced matching: ${match.subscriptionId} (confidence: ${match.confidence}%)`)
+  } else {
+    console.error(`Failed to activate matched subscription: ${result.result.reason}`)
+    throw new Error(`Activation failed: ${result.result.reason}`)
+  }
+}
   const { reference, id: paymentId, amount, currency, status, authorization } = data
   const metadata = parseMetadata(data.metadata)
 

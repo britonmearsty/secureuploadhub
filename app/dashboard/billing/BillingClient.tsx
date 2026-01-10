@@ -77,15 +77,25 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
     const currentPlan = subscription?.plan || fallbackPlan
     const isFreePlan = !subscription
 
-    const checkSubscriptionStatus = async (reference?: string, retryCount = 0) => {
+    const checkSubscriptionStatus = async (reference?: string, retryCount = 0, maxRetries = 10) => {
         if (!subscription || (subscription.status === 'active' && !reference)) return
 
         setCheckingStatus(true)
         try {
+            // Add timeout protection - max 30 seconds of polling
+            if (retryCount >= maxRetries) {
+                setMessage({
+                    type: "error",
+                    text: "Payment verification timed out. Please refresh the page or contact support if the issue persists."
+                })
+                setCheckingStatus(false)
+                return
+            }
+
             const response = await fetch('/api/billing/subscription/status', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ reference })
+                body: JSON.stringify({ reference, retryCount })
             })
 
             if (response.ok) {
@@ -93,20 +103,28 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                 if (data.updated) {
                     setMessage({ type: "success", text: "Subscription activated! Refreshing..." })
                     setTimeout(() => window.location.reload(), 1500)
-                } else if (reference && retryCount < 5) {
-                    // If we have a reference but it's not updated yet, poll again
+                    return
+                } else if (data.alreadyActive) {
+                    setMessage({ type: "success", text: "Subscription is already active! Refreshing..." })
+                    setTimeout(() => window.location.reload(), 1500)
+                    return
+                } else if (reference && retryCount < maxRetries) {
+                    // Progressive delay: 2s, 3s, 4s, then 5s intervals
+                    const delay = Math.min(2000 + (retryCount * 1000), 5000)
                     setMessage({
                         type: "info",
-                        text: `Payment verified. Still waiting for subscription activation (attempt ${retryCount + 1}/5)...`
+                        text: `Verifying payment... (${retryCount + 1}/${maxRetries})`
                     })
-                    setTimeout(() => checkSubscriptionStatus(reference, retryCount + 1), 3000)
+                    setTimeout(() => checkSubscriptionStatus(reference, retryCount + 1, maxRetries), delay)
                 } else if (!reference) {
                     setMessage({ type: "info", text: "Status checked. No changes found yet." })
+                    setCheckingStatus(false)
                 } else {
                     setMessage({
                         type: "error",
-                        text: "Verification is taking longer than usual. Please refresh the page in a moment."
+                        text: "Payment verification timed out. Please refresh the page or contact support."
                     })
+                    setCheckingStatus(false)
                 }
             } else {
                 throw new Error('Failed to check status')
@@ -114,10 +132,17 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
         } catch (error) {
             console.error('Error checking status:', error)
             if (reference && retryCount < 3) {
-                setTimeout(() => checkSubscriptionStatus(reference, retryCount + 1), 5000)
-            }
-        } finally {
-            if (retryCount >= 5 || !reference) {
+                const delay = Math.min(5000 + (retryCount * 2000), 10000) // 5s, 7s, 9s
+                setMessage({
+                    type: "info", 
+                    text: `Connection error, retrying... (${retryCount + 1}/3)`
+                })
+                setTimeout(() => checkSubscriptionStatus(reference, retryCount + 1, maxRetries), delay)
+            } else {
+                setMessage({
+                    type: "error",
+                    text: "Unable to verify payment status. Please refresh the page."
+                })
                 setCheckingStatus(false)
             }
         }
@@ -142,6 +167,19 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
 
     const handleSubscribe = async (planId: string) => {
         setSubscribing(planId)
+        
+        // Set a timeout to prevent infinite loading
+        const timeoutId = setTimeout(() => {
+            if (subscribing === planId) {
+                setErrorModal({
+                    isOpen: true,
+                    title: "Request Timeout",
+                    message: "The request is taking longer than expected. Please try again or contact support if the issue persists."
+                })
+                setSubscribing(null)
+            }
+        }, 30000) // 30 second timeout
+
         try {
             const response = await fetch("/api/billing/subscription", {
                 method: "POST",
@@ -152,23 +190,42 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
             const data = await response.json()
 
             if (response.ok) {
+                clearTimeout(timeoutId)
                 if (data.paymentLink) {
+                    // Store the subscription ID for tracking
+                    if (data.subscription?.id) {
+                        sessionStorage.setItem('pendingSubscriptionId', data.subscription.id)
+                    }
                     window.location.href = data.paymentLink
+                } else if (data.message === "Resuming existing subscription setup") {
+                    // Handle resuming existing setup
+                    setMessage({ 
+                        type: "info", 
+                        text: "Resuming your previous subscription setup..." 
+                    })
+                    if (data.paymentLink) {
+                        window.location.href = data.paymentLink
+                    } else {
+                        window.location.reload()
+                    }
                 } else {
                     window.location.reload()
                 }
             } else {
+                clearTimeout(timeoutId)
                 setErrorModal({
                     isOpen: true,
-                    title: "Error",
-                    message: data.error || "Failed to start subscription"
+                    title: "Subscription Error",
+                    message: data.error || "Failed to start subscription. Please try again."
                 })
             }
         } catch (error) {
+            clearTimeout(timeoutId)
+            console.error('Subscription error:', error)
             setErrorModal({
                 isOpen: true,
-                title: "Error",
-                message: "Something went wrong. Please try again."
+                title: "Connection Error",
+                message: "Unable to connect to our servers. Please check your internet connection and try again."
             })
         } finally {
             setSubscribing(null)
@@ -235,11 +292,32 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
             </div>
 
             {message && (
-                <div className={`mb-6 p-4 rounded-lg text-sm font-medium ${message.type === 'success' ? 'bg-green-100 text-green-700' :
+                <div className={`mb-6 p-4 rounded-lg text-sm font-medium flex items-center justify-between ${message.type === 'success' ? 'bg-green-100 text-green-700' :
                     message.type === 'error' ? 'bg-red-100 text-red-700' :
                         'bg-blue-100 text-blue-700'
                     }`}>
-                    {message.text}
+                    <span>{message.text}</span>
+                    {(message.type === 'error' || (message.type === 'info' && checkingStatus)) && (
+                        <div className="flex gap-2 ml-4">
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="text-xs px-3 py-1 bg-white/20 hover:bg-white/30 rounded border border-current/20 transition-colors"
+                            >
+                                Refresh Page
+                            </button>
+                            {checkingStatus && (
+                                <button
+                                    onClick={() => {
+                                        setCheckingStatus(false)
+                                        setMessage(null)
+                                    }}
+                                    className="text-xs px-3 py-1 bg-white/20 hover:bg-white/30 rounded border border-current/20 transition-colors"
+                                >
+                                    Stop Checking
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
 

@@ -82,6 +82,44 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check for recent subscription creation to prevent race conditions
+    try {
+      const recentCreation = await redis.get(`subscription:creation:${session.user.id}:${planId}`)
+      if (recentCreation) {
+        const creationData = JSON.parse(recentCreation)
+        console.log(`Found recent subscription creation for user ${session.user.id}, plan ${planId}:`, creationData)
+        
+        // Check if the subscription still exists and is valid
+        const existingIncomplete = await prisma.subscription.findUnique({
+          where: { id: creationData.subscriptionId },
+          include: { plan: true }
+        })
+        
+        if (existingIncomplete && existingIncomplete.status === 'incomplete') {
+          // Return the existing subscription's payment link
+          const { getPaystack } = await import('@/lib/billing')
+          const paystack = await getPaystack()
+          
+          try {
+            // Try to get the existing payment link
+            const verification = await (paystack as any).transaction.verify(creationData.reference)
+            if (verification.status && verification.data.authorization_url) {
+              return NextResponse.json({
+                subscription: existingIncomplete,
+                requiresAuthorization: true,
+                paymentLink: verification.data.authorization_url,
+                message: "Resuming existing subscription setup"
+              })
+            }
+          } catch (e) {
+            console.warn("Could not verify existing payment link, creating new one")
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Could not check for recent subscription creation:", e)
+    }
+
     // Get the plan
     const plan = await prisma.billingPlan.findUnique({
       where: { id: planId }
@@ -223,7 +261,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Create payment record to link with webhook
-        await prisma.payment.create({
+        const payment = await prisma.payment.create({
           data: {
             subscriptionId: subscription.id,
             userId: session.user.id,
@@ -239,10 +277,25 @@ export async function POST(request: NextRequest) {
         try {
           await redis.setex(`paystack:ref:${reference}`, 172800, JSON.stringify({
             subscriptionId: subscription.id,
-            userId: session.user.id
+            userId: session.user.id,
+            paymentId: payment.id,
+            planId: plan.id,
+            createdAt: new Date().toISOString()
           }))
         } catch (e) {
           console.warn("Billing: failed to write redis ref mapping", { reference })
+        }
+
+        // Add idempotency protection for this specific subscription creation
+        try {
+          await redis.setex(`subscription:creation:${session.user.id}:${plan.id}`, 300, JSON.stringify({
+            subscriptionId: subscription.id,
+            reference,
+            paymentId: payment.id,
+            status: 'pending_payment'
+          }))
+        } catch (e) {
+          console.warn("Billing: failed to write subscription creation lock", { subscriptionId: subscription.id })
         }
 
         return NextResponse.json({

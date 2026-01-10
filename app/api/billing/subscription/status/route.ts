@@ -18,11 +18,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Try to parse body for specific reference
+    // Try to parse body for specific reference and retry count
     let referenceFromClient: string | undefined
+    let retryCount = 0
     try {
       const body = await request.json()
       referenceFromClient = body.reference
+      retryCount = body.retryCount || 0
     } catch (e) {
       // Body might be empty or not JSON, that's fine
     }
@@ -44,11 +46,43 @@ export async function POST(request: NextRequest) {
     }
 
     let updated = false
+    let alreadyActive = false
     let message = "Subscription status is up to date"
+
+    // Check if subscription is already active
+    if (subscription.status === 'active') {
+      alreadyActive = true
+      message = "Subscription is already active"
+      
+      // If we have a reference, still try to verify the payment was processed
+      if (referenceFromClient) {
+        const existingPayment = await prisma.payment.findFirst({
+          where: { 
+            providerPaymentRef: referenceFromClient,
+            subscriptionId: subscription.id 
+          }
+        })
+        
+        if (existingPayment) {
+          message = "Payment processed and subscription is active"
+        }
+      }
+      
+      return NextResponse.json({
+        updated: false,
+        alreadyActive: true,
+        message,
+        subscription: {
+          id: subscription.id,
+          status: subscription.status,
+          plan: subscription.plan
+        }
+      })
+    }
 
     // 1. If specific reference provided by client, prioritize verifying it
     if (referenceFromClient) {
-      console.log(`Verifying client-provided reference: ${referenceFromClient}`)
+      console.log(`Verifying client-provided reference: ${referenceFromClient} (attempt ${retryCount + 1})`)
       try {
         const { getPaystack } = await import('@/lib/billing')
         const paystack = await getPaystack()
@@ -71,10 +105,20 @@ export async function POST(request: NextRequest) {
           if (result.result.success) {
             updated = true
             message = "Payment verified and subscription activated"
+          } else if (result.result.reason === 'already_active') {
+            alreadyActive = true
+            message = "Subscription was already active"
+          } else {
+            console.log(`Activation failed: ${result.result.reason}`)
+            message = `Activation in progress: ${result.result.reason}`
           }
+        } else {
+          console.log(`Payment verification failed for ${referenceFromClient}: ${verification.data?.status || 'unknown'}`)
+          message = "Payment not yet confirmed by Paystack"
         }
       } catch (error) {
         console.error('Error verifying provided reference:', error)
+        message = "Error verifying payment, will retry"
       }
     }
 
