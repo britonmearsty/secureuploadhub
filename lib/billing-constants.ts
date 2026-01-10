@@ -21,6 +21,7 @@ export const SUBSCRIPTION_STATUS = {
   PAST_DUE: "past_due",
   CANCELED: "canceled",
   UNPAID: "unpaid",
+  GRACE_PERIOD: "grace_period",
 } as const
 
 export type SubscriptionStatus = typeof SUBSCRIPTION_STATUS[keyof typeof SUBSCRIPTION_STATUS]

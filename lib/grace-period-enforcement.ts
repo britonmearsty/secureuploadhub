@@ -117,8 +117,7 @@ async function cancelExpiredSubscription(
     const subscription = await tx.subscription.update({
       where: { id: subscriptionId },
       data: {
-        status: SUBSCRIPTION_STATUS.CANCELLED,
-        cancelledAt: new Date(),
+        status: SUBSCRIPTION_STATUS.CANCELED,
         gracePeriodEnd: null
       },
       include: { user: true }
@@ -128,6 +127,8 @@ async function cancelExpiredSubscription(
     await createAuditLog({
       userId: subscription.userId,
       action: AUDIT_ACTIONS.SUBSCRIPTION_CANCELLED,
+      resource: 'subscription',
+      resourceId: subscriptionId,
       details: {
         subscriptionId,
         reason,
@@ -156,6 +157,8 @@ async function sendGracePeriodWarning(
   await createAuditLog({
     userId: 'system',
     action: AUDIT_ACTIONS.NOTIFICATION_SENT,
+    resource: 'subscription',
+    resourceId: subscriptionId,
     details: {
       type: 'grace_period_warning',
       subscriptionId,
@@ -187,6 +190,8 @@ export async function setGracePeriod(
   await createAuditLog({
     userId: 'system',
     action: AUDIT_ACTIONS.SUBSCRIPTION_GRACE_PERIOD_SET,
+    resource: 'subscription',
+    resourceId: subscriptionId,
     details: {
       subscriptionId,
       gracePeriodDays,

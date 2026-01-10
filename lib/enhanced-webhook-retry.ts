@@ -70,7 +70,7 @@ export async function withWebhookRetry<T>(
 export async function retrySubscriptionActivation(
   subscriptionId: string,
   paymentData: any,
-  source: string,
+  source: 'webhook' | 'verification' | 'manual' | 'manual_check' | 'manual_verification' | 'manual_verification_ref' | 'manual_recovery' | 'deep_recovery_sync' | 'deep_search_recovery',
   config: Partial<RetryConfig> = {}
 ): Promise<any> {
   return withWebhookRetry(

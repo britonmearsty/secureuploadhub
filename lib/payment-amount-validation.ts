@@ -216,6 +216,8 @@ export async function logAmountValidation(
     await createAuditLog({
       userId: userId || 'system',
       action: AUDIT_ACTIONS.PAYMENT_AMOUNT_MISMATCH,
+      resource: 'payment',
+      resourceId: paymentReference,
       details: logData
     })
   }
@@ -227,6 +229,8 @@ export async function logAmountValidation(
     await createAuditLog({
       userId: userId || 'system',
       action: AUDIT_ACTIONS.PAYMENT_AMOUNT_DISCREPANCY,
+      resource: 'payment',
+      resourceId: paymentReference,
       details: logData
     })
   }

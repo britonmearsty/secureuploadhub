@@ -134,7 +134,7 @@ export function validateChargeData(data: any): {
     if (error instanceof z.ZodError) {
       return {
         isValid: false,
-        errors: error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
+        errors: error.issues.map(e => `${e.path.join('.')}: ${e.message}`)
       }
     }
     return {
@@ -162,7 +162,7 @@ export function validateSubscriptionData(data: any): {
     if (error instanceof z.ZodError) {
       return {
         isValid: false,
-        errors: error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
+        errors: error.issues.map(e => `${e.path.join('.')}: ${e.message}`)
       }
     }
     return {
@@ -190,7 +190,7 @@ export function validateInvoiceData(data: any): {
     if (error instanceof z.ZodError) {
       return {
         isValid: false,
-        errors: error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
+        errors: error.issues.map(e => `${e.path.join('.')}: ${e.message}`)
       }
     }
     return {

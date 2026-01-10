@@ -597,6 +597,8 @@ async function handleChargeSuccessEnhanced(data: any) {
     await createAuditLog({
       userId: correlationData.userId || 'system',
       action: AUDIT_ACTIONS.PAYMENT_ORPHANED,
+      resource: 'payment',
+      resourceId: correlationData.reference,
       details: {
         reference: correlationData.reference,
         amount: correlationData.amount,
@@ -609,7 +611,7 @@ async function handleChargeSuccessEnhanced(data: any) {
   }
 
   // Validate the match before proceeding
-  const validation = await validateSubscriptionMatch(match, {
+  const matchValidation = await validateSubscriptionMatch(match, {
     reference: correlationData.reference,
     amount: correlationData.amount,
     currency: correlationData.currency,
@@ -625,11 +627,11 @@ async function handleChargeSuccessEnhanced(data: any) {
     userEmail: correlationData.userEmail,
     metadata: validatedData.metadata,
     paymentId: correlationData.paymentId
-  }, match, validation)
+  }, match, matchValidation)
 
-  if (!validation.isValid) {
-    console.error(`Subscription match validation failed: ${validation.reason}`)
-    throw new Error(`Subscription match validation failed: ${validation.reason}`)
+  if (!matchValidation.isValid) {
+    console.error(`Subscription match validation failed: ${matchValidation.reason}`)
+    throw new Error(`Subscription match validation failed: ${matchValidation.reason}`)
   }
 
   // Log warnings if any
@@ -681,6 +683,11 @@ async function handleChargeSuccessEnhanced(data: any) {
     throw new Error(`Activation failed: ${result.result.reason}`)
   }
 }
+
+/**
+ * Original charge.success handler (fallback - kept for reference but not used)
+ */
+async function handleChargeSuccessOriginal(data: any) {
   const { reference, id: paymentId, amount, currency, status, authorization } = data
   const metadata = parseMetadata(data.metadata)
 
