@@ -3,9 +3,7 @@
  * Helps identify why the upgrade button processes forever
  */
 
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import prisma from '@/lib/prisma'
 
 async function debugBillingIssue() {
   console.log('🔍 Debugging billing issue...\n')
@@ -87,27 +85,25 @@ async function debugBillingIssue() {
       console.log('❌ Failed to create Paystack instance:', error.message)
     }
 
-    // 7. Test Redis connection
-    console.log('\n7. Testing Redis Connection:')
+    // 7. Test Redis connection (now in-memory)
+    console.log('\n7. Testing In-Memory Cache:')
     try {
       const redis = await import('../lib/redis')
-      await redis.default.set('test_key', 'test_value', 'EX', 10)
+      await redis.default.setex('test_key', 10, 'test_value')
       const value = await redis.default.get('test_key')
       if (value === 'test_value') {
-        console.log('✅ Redis is working')
+        console.log('✅ In-memory cache is working')
       } else {
-        console.log('❌ Redis test failed')
+        console.log('❌ In-memory cache test failed')
       }
     } catch (error: any) {
-      console.log('❌ Redis connection failed:', error.message)
+      console.log('❌ In-memory cache failed:', error.message)
     }
 
     console.log('\n✅ Debug complete!')
 
   } catch (error) {
     console.error('❌ Debug failed:', error)
-  } finally {
-    await prisma.$disconnect()
   }
 }
 

@@ -3,7 +3,7 @@
  * Reduces repeated database queries during uploads
  */
 
-import { redis } from "@/lib/redis"
+import redis from "@/lib/redis"
 import prisma from "@/lib/prisma"
 
 const CACHE_TTL = 3600 // 1 hour
