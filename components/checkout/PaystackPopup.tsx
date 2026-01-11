@@ -22,6 +22,9 @@ interface PaystackPopupProps {
 declare global {
   interface Window {
     PaystackPop: {
+      new(): {
+        resumeTransaction: (access_code: string) => void
+      }
       setup: (config: any) => {
         openIframe: () => void
       }

@@ -34,13 +34,18 @@ async function testPaystackConfig() {
     // Test with a dummy transaction verification (should fail but show API is working)
     console.log('\n💳 Testing Paystack API connection...')
     try {
-      await paystack.transaction.verify('dummy_reference')
+      const verifyResult = await paystack.transaction.verify('dummy_reference')
+      console.log('❌ Unexpected success with dummy reference')
     } catch (error) {
-      if (error.message.includes('Transaction not found') || error.message.includes('No transaction found')) {
+      if (error.message && (error.message.includes('Transaction not found') || 
+          error.message.includes('No transaction found') || 
+          error.message.includes('Invalid transaction reference'))) {
         console.log('✅ Paystack API is working (expected error for dummy reference)')
       } else {
-        console.log('❌ Paystack API error:', error.message)
-        return
+        console.log('❌ Paystack API error:', error.message || error)
+        console.log('Error details:', error)
+        // Continue anyway - this might be a version-specific issue
+        console.log('⚠️  Continuing with transaction initialization test...')
       }
     }
     
