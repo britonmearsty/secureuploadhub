@@ -6,6 +6,10 @@
 const CHUNK_SIZE = 5 * 1024 * 1024 // 5MB chunks
 const MAX_PARALLEL_CHUNKS = 4 // Upload 4 chunks in parallel
 
+// Get timeout from environment or use defaults
+const CHUNK_TIMEOUT = parseInt(process.env.UPLOAD_TIMEOUT || '120000') // 2 minutes default
+const SINGLE_FILE_TIMEOUT = parseInt(process.env.UPLOAD_TIMEOUT || '120000') // 2 minutes default
+
 export interface ChunkUploadProgress {
   chunkIndex: number
   totalChunks: number
@@ -195,7 +199,8 @@ async function uploadChunk(
     }
 
     xhr.ontimeout = () => {
-      reject(new Error(`Upload timeout for chunk ${chunkIndex}. The file may be too large or your connection is slow.`))
+      const timeoutMinutes = Math.round(CHUNK_TIMEOUT / 60000)
+      reject(new Error(`Chunk upload timeout after ${timeoutMinutes} minute(s). This may be due to a slow connection. Please try again with a faster connection.`))
     }
 
     xhr.onload = () => {
@@ -221,7 +226,7 @@ async function uploadChunk(
     formData.append("chunk", chunk, fileName)
 
     xhr.open("POST", "/api/upload/chunked/chunk")
-    xhr.timeout = 60000 // 60 second timeout for chunk uploads
+    xhr.timeout = CHUNK_TIMEOUT
     if (accessToken) {
       xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`)
     }
@@ -290,11 +295,12 @@ async function uploadSingleChunk(
     }
 
     xhr.ontimeout = () => {
-      reject(new Error("Upload timeout. The file may be too large or your connection is slow."))
+      const timeoutMinutes = Math.round(SINGLE_FILE_TIMEOUT / 60000)
+      reject(new Error(`Upload timeout after ${timeoutMinutes} minute(s). This may be due to a slow connection. Please try again with a faster connection.`))
     }
 
-    // Set timeout (30 seconds)
-    xhr.timeout = 30000
+    // Set timeout from environment configuration
+    xhr.timeout = SINGLE_FILE_TIMEOUT
 
     // Set headers
     if (accessToken) {

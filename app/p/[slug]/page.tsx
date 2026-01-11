@@ -241,7 +241,7 @@ export default function PublicUploadPage() {
         setFiles(prev => prev.filter(f => f.id !== id))
     }
 
-    // Retry with exponential backoff
+    // Retry with exponential backoff (only for retryable errors)
     async function retryWithBackoff<T>(
         fn: () => Promise<T>,
         maxRetries = 3,
@@ -253,11 +253,24 @@ export default function PublicUploadPage() {
                 return await fn()
             } catch (error) {
                 lastError = error instanceof Error ? error : new Error(String(error))
-                if (attempt < maxRetries - 1) {
-                    const delay = initialDelay * Math.pow(2, attempt)
-                    console.log(`Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms`)
-                    await new Promise(resolve => setTimeout(resolve, delay))
+                
+                // Only retry on network/timeout errors, not validation errors
+                const isRetryable = lastError.message.includes("timeout") || 
+                                  lastError.message.includes("Network error") ||
+                                  lastError.message.includes("Failed to fetch") ||
+                                  lastError.message.includes("connection") ||
+                                  lastError.message.includes("500") ||
+                                  lastError.message.includes("502") ||
+                                  lastError.message.includes("503") ||
+                                  lastError.message.includes("504")
+                
+                if (!isRetryable || attempt >= maxRetries - 1) {
+                    throw lastError
                 }
+                
+                const delay = initialDelay * Math.pow(2, attempt)
+                console.log(`Retrying upload after ${delay}ms due to: ${lastError.message}`)
+                await new Promise(resolve => setTimeout(resolve, delay))
             }
         }
         throw lastError
@@ -272,21 +285,27 @@ export default function PublicUploadPage() {
         try {
             console.log(`Starting upload for: ${uploadFile.file.name} (${formatFileSize(uploadFile.file.size)})`);
 
-            const result = await uploadFileInChunks(
-                portal!.id,
-                uploadFile.file,
-                {
-                    clientName,
-                    clientEmail,
-                    clientMessage
+            const result = await retryWithBackoff(
+                async () => {
+                    return await uploadFileInChunks(
+                        portal!.id,
+                        uploadFile.file,
+                        {
+                            clientName,
+                            clientEmail,
+                            clientMessage
+                        },
+                        accessToken,
+                        (progress) => {
+                            console.log(`Upload progress for ${uploadFile.file.name}: ${progress.percentComplete}% (${progress.chunkIndex + 1}/${progress.totalChunks} chunks)`);
+                            setFiles(prev => prev.map(f =>
+                                f.id === uploadFile.id ? { ...f, progress: progress.percentComplete } : f
+                            ))
+                        }
+                    )
                 },
-                accessToken,
-                (progress) => {
-                    console.log(`Upload progress for ${uploadFile.file.name}: ${progress.percentComplete}% (${progress.chunkIndex + 1}/${progress.totalChunks} chunks)`);
-                    setFiles(prev => prev.map(f =>
-                        f.id === uploadFile.id ? { ...f, progress: progress.percentComplete } : f
-                    ))
-                }
+                3, // Max 3 retries
+                2000 // Start with 2 second delay
             )
 
             if (!result.success) {
@@ -312,7 +331,9 @@ export default function PublicUploadPage() {
                 // Provide more user-friendly error messages for common issues
                 if (errorMessage.includes("Network error") || errorMessage.includes("Failed to fetch")) {
                     errorMessage = "Network connection lost. Please check your internet connection and try again."
-                } else if (errorMessage.includes("413") || errorMessage.includes("too large")) {
+                } else if (errorMessage.includes("timeout") || errorMessage.includes("Timeout")) {
+                    errorMessage = "Upload timed out. This may be due to a slow connection or large file size. Please try again or use a faster connection."
+                } else if (errorMessage.includes("413")) {
                     errorMessage = "File is too large for upload. Please try a smaller file."
                 } else if (errorMessage.includes("401") || errorMessage.includes("403")) {
                     errorMessage = "Authentication failed. Please refresh the page and try again."
