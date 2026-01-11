@@ -61,7 +61,14 @@ export default function ConnectedAccounts() {
                 console.warn('⚠️ FRONTEND: OAuth sync failed, continuing with fetch:', syncError)
             }
             
-            const res = await fetch("/api/storage/accounts")
+            const res = await fetch("/api/storage/accounts", {
+                cache: 'no-cache',
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
+            })
             console.log('🔍 FRONTEND: API response status:', res.status, res.ok)
             
             if (res.ok) {
@@ -106,10 +113,11 @@ export default function ConnectedAccounts() {
                 if (data.summary?.reactivatedPortals > 0) {
                     message += ` ${data.summary.reactivatedPortals} portal(s) were automatically reactivated.`
                 }
-                showToast('success', 'Status Synced', message)
                 
-                // Refresh accounts
-                fetchAccounts()
+                // Refresh accounts BEFORE showing toast
+                await fetchAccounts()
+                
+                showToast('success', 'Status Synced', message)
             } else {
                 const errorData = await res.json()
                 showToast('error', 'Sync Failed', errorData.error || 'Failed to sync OAuth status')
@@ -135,10 +143,11 @@ export default function ConnectedAccounts() {
                 if (data.summary?.reactivatedPortals > 0) {
                     message += ` ${data.summary.reactivatedPortals} portal(s) were automatically reactivated.`
                 }
-                showToast('success', 'Storage Fixed', message)
                 
-                // Refresh accounts
-                fetchAccounts()
+                // Refresh accounts BEFORE showing toast
+                await fetchAccounts()
+                
+                showToast('success', 'Storage Fixed', message)
             } else {
                 const errorData = await res.json()
                 showToast('error', 'Fix Failed', errorData.error || 'Failed to fix storage accounts')
@@ -164,10 +173,11 @@ export default function ConnectedAccounts() {
                 if (data.reactivatedPortals > 0) {
                     message += ` ${data.reactivatedPortals} portal(s) were automatically reactivated.`
                 }
-                showToast('success', 'Storage Reactivated', message)
                 
-                // Refresh accounts
-                fetchAccounts()
+                // Refresh accounts BEFORE showing toast
+                await fetchAccounts()
+                
+                showToast('success', 'Storage Reactivated', message)
             } else {
                 const errorData = await res.json()
                 if (errorData.needsOAuth) {
@@ -196,15 +206,32 @@ export default function ConnectedAccounts() {
 
             if (res.ok) {
                 const data = await res.json()
+                console.log('🔍 FRONTEND: API response data:', data)
                 let message = data.message
                 if (data.deactivatedPortals > 0) {
                     message += ` ${data.deactivatedPortals} portal(s) were automatically deactivated.`
                 }
-                showToast('success', 'Storage Deactivated', message)
                 
-                // Refresh accounts to show updated status
-                console.log('🔍 FRONTEND: Refreshing accounts...')
-                fetchAccounts()
+                // Refresh accounts to show updated status BEFORE showing toast
+                console.log('🔍 FRONTEND: Refreshing accounts after deactivation...')
+                console.log('🔍 FRONTEND: Current accounts before refresh:', accounts.map(a => ({
+                    provider: a.provider,
+                    storageStatus: a.storageStatus,
+                    isConnected: a.isConnected
+                })))
+                
+                await fetchAccounts()
+                
+                // Small delay to ensure React state has updated
+                await new Promise(resolve => setTimeout(resolve, 100))
+                
+                console.log('🔍 FRONTEND: Accounts after refresh:', accounts.map(a => ({
+                    provider: a.provider,
+                    storageStatus: a.storageStatus,
+                    isConnected: a.isConnected
+                })))
+                
+                showToast('success', 'Storage Deactivated', message)
             } else {
                 const errorData = await res.json()
                 console.log('🔍 FRONTEND: Error response data:', errorData)
@@ -233,10 +260,11 @@ export default function ConnectedAccounts() {
 
             if (res.ok) {
                 const data = await res.json()
-                showToast('success', 'Token Refreshed', data.message)
                 
-                // Refresh accounts to show updated status
-                fetchAccounts()
+                // Refresh accounts to show updated status BEFORE showing toast
+                await fetchAccounts()
+                
+                showToast('success', 'Token Refreshed', data.message)
             } else {
                 const errorData = await res.json()
                 if (errorData.error.includes('reconnect')) {

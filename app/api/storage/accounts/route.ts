@@ -65,7 +65,13 @@ export async function GET() {
     
     console.log('✅ STORAGE_ACCOUNTS_API: Returning enhanced response:', {
       totalAccounts: enhancedAccounts.length,
-      connectedAccounts: enhancedAccounts.filter(a => a.isConnected).length
+      connectedAccounts: enhancedAccounts.filter(a => a.isConnected).length,
+      accountDetails: enhancedAccounts.map(a => ({
+        provider: a.provider,
+        storageStatus: a.storageStatus,
+        isConnected: a.isConnected,
+        hasValidOAuth: a.hasValidOAuth
+      }))
     })
     
     return NextResponse.json(response)

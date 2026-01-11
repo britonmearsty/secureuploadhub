@@ -25,10 +25,12 @@ export async function POST(request: Request) {
     }
 
     // Use single email manager to deactivate
+    console.log('🔍 STORAGE_DEACTIVATE: Calling deactivateStorageAccount...')
     const result = await SingleEmailStorageManager.deactivateStorageAccount(
       session.user.id,
       provider as "google" | "dropbox"
     )
+    console.log('🔍 STORAGE_DEACTIVATE: deactivateStorageAccount result:', result)
 
     if (result.success) {
       console.log('✅ STORAGE_DEACTIVATE: Success:', {
