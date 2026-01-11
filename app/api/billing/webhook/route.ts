@@ -75,18 +75,14 @@ export async function POST(request: NextRequest) {
     const rawBody = await request.text()
     const signature = request.headers.get("x-paystack-signature")
 
-    // TEMPORARILY DISABLE ALL SIGNATURE VALIDATION FOR TESTING
-    console.log("🚨 ALL WEBHOOK SIGNATURE VALIDATION DISABLED FOR TESTING")
-    console.log("Webhook received:", { 
-      event: JSON.parse(rawBody).event,
-      reference: JSON.parse(rawBody).data?.reference,
-      amount: JSON.parse(rawBody).data?.amount,
-      status: JSON.parse(rawBody).data?.status
-    })
-    console.log("⚠️ THIS IS INSECURE - ONLY FOR TESTING PURPOSES")
+    // Enhanced signature validation
+    const signatureValidation = validateWebhookSignature(rawBody, signature, PAYSTACK_CONFIG.webhookSecret)
+    if (!signatureValidation.isValid) {
+      console.error("Invalid Paystack webhook signature:", signatureValidation.error)
+      return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
+    }
     
-    // Skip all signature validation temporarily
-    // TODO: Get proper webhook secret from Paystack and re-enable validation
+    console.log("✅ Webhook signature validated successfully")
 
     const { event, data } = JSON.parse(rawBody)
 
@@ -127,7 +123,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ status: "success" })
   } catch (error) {
-    console.error("Webhook error:", error)
+    console.error("Webhook processing error:", {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    })
     
     // Check if this is a retryable error
     if (isRetryableWebhookError(error)) {
