@@ -104,8 +104,17 @@ export async function POST() {
             reason = `Token refresh failed: ${refreshResult.error}`
           }
         } else {
-          shouldBeStatus = StorageAccountStatus.ACTIVE
-          reason = "OAuth is valid"
+          // OAuth is valid, but check if this was manually deactivated by user
+          if (storageAccount.status === StorageAccountStatus.INACTIVE && 
+              storageAccount.lastError === "Deactivated by user") {
+            // User manually deactivated - don't auto-reactivate
+            shouldBeStatus = StorageAccountStatus.INACTIVE
+            reason = "Manually deactivated by user (preserved)"
+          } else {
+            // Auto-reactivate for other cases
+            shouldBeStatus = StorageAccountStatus.ACTIVE
+            reason = "OAuth is valid"
+          }
         }
       }
 
@@ -137,7 +146,7 @@ export async function POST() {
           actions.push(`❌ Failed to update ${oauthProvider} storage: ${error instanceof Error ? error.message : 'Unknown error'}`)
         }
       } else {
-        actions.push(`✓ ${oauthProvider} storage status is already correct: ${storageAccount.status}`)
+        actions.push(`✓ ${oauthProvider} storage status is already correct: ${storageAccount.status} (${reason})`)
       }
     }
 

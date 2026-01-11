@@ -53,14 +53,6 @@ export default function ConnectedAccounts() {
         try {
             console.log('🔍 FRONTEND: Fetching storage accounts...')
             
-            // First, sync OAuth status with storage account status
-            try {
-                await fetch('/api/storage/sync-oauth-status', { method: 'POST' })
-                console.log('🔄 FRONTEND: OAuth status synced')
-            } catch (syncError) {
-                console.warn('⚠️ FRONTEND: OAuth sync failed, continuing with fetch:', syncError)
-            }
-            
             const res = await fetch("/api/storage/accounts", {
                 cache: 'no-cache',
                 headers: {
