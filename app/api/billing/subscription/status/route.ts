@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
       try {
         const { getPaystack } = await import('@/lib/billing')
         const paystack = await getPaystack()
+        // Paystack verify expects just the reference string, not an object
         const verification = await (paystack as any).transaction.verify(referenceFromClient)
 
         if (verification.status && verification.data.status === 'success') {
