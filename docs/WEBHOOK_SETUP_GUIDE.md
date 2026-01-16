@@ -10,7 +10,7 @@ Your Paystack webhook implementation is **fully functional** and includes:
 - **Location**: `app/api/billing/webhook/route.ts`
 
 ### 🔐 Security Features
-- ✅ **Signature Validation**: HMAC SHA512 verification using `PAYSTACK_WEBHOOK_SECRET`
+- ✅ **Signature Validation**: HMAC SHA512 verification using `PAYSTACK_SECRET_KEY`
 - ✅ **IP Whitelisting Support**: Ready for Paystack IPs (52.31.139.75, 52.49.173.169, 52.214.14.220)
 - ✅ **Duplicate Prevention**: In-memory cache prevents duplicate event processing
 - ✅ **Retry Logic**: Enhanced retry mechanism with exponential backoff
@@ -29,12 +29,6 @@ Your webhook handles all major Paystack events:
 | `invoice.payment_succeeded` | Invoice payment successful | `handleInvoicePaymentSucceeded()` |
 | `invoice.payment_failed` | Invoice payment failed | `handleInvoicePaymentFailed()` |
 
-### 🧪 Testing Tools Created
-
-1. **`test-webhook-paystack.js`** - Validates webhook configuration and signature
-2. **`simulate-webhook-events.js`** - Simulates webhook events for local testing
-3. **Test endpoint**: `/api/billing/webhook/test` - For debugging webhook delivery
-
 ## 🚀 Setup Instructions
 
 ### 1. Environment Variables
@@ -42,7 +36,6 @@ Ensure these are set in your `.env` file:
 ```env
 PAYSTACK_SECRET_KEY=sk_test_...
 PAYSTACK_PUBLIC_KEY=pk_test_...
-PAYSTACK_WEBHOOK_SECRET=your_webhook_secret
 NEXTAUTH_URL=https://yourdomain.com
 ```
 
@@ -64,31 +57,6 @@ Configure your server/firewall to only allow webhook requests from:
 - `52.31.139.75`
 - `52.49.173.169`
 - `52.214.14.220`
-
-## 🧪 Testing Your Webhooks
-
-### Test Configuration
-```bash
-node test-webhook-paystack.js
-```
-
-### Simulate Events Locally
-```bash
-# Run test scenarios
-node simulate-webhook-events.js scenarios
-
-# Interactive mode
-node simulate-webhook-events.js interactive
-
-# Specific event
-node simulate-webhook-events.js charge.success
-```
-
-### Test Webhook Delivery
-```bash
-# Check if webhook endpoint is accessible
-curl https://yourdomain.com/api/billing/webhook/test
-```
 
 ## 🔄 Webhook Flow
 
@@ -144,24 +112,10 @@ Your webhook includes sophisticated matching logic:
 
 | Issue | Cause | Solution |
 |-------|-------|----------|
-| Invalid signature | Wrong webhook secret | Verify `PAYSTACK_WEBHOOK_SECRET` |
+| Invalid signature | Wrong webhook secret | Verify using `PAYSTACK_SECRET_KEY` |
 | No subscription found | Missing metadata or email mismatch | Check payment metadata includes `subscription_id` |
 | Amount mismatch | Currency conversion or plan changes | Review amount validation logs |
 | Duplicate processing | Webhook retry without deduplication | Check processed events cache |
-
-## 🔧 Customization
-
-### Adding New Event Types
-1. Add event handler function in `route.ts`
-2. Add case in main webhook processor
-3. Update supported events list
-4. Add test case in simulator
-
-### Modifying Retry Logic
-Edit the `withWebhookRetry` configuration in `/lib/enhanced-webhook-retry.ts`
-
-### Custom Validation Rules
-Modify validation functions in `/lib/webhook-validation.ts`
 
 ## ✅ Production Checklist
 
@@ -169,18 +123,12 @@ Modify validation functions in `/lib/webhook-validation.ts`
 - [ ] All environment variables set
 - [ ] SSL certificate valid for webhook URL
 - [ ] IP whitelisting configured (optional)
-- [ ] Webhook events tested with simulator
+- [ ] Webhook events tested
 - [ ] Monitoring/logging configured
 - [ ] Error alerting set up
 - [ ] Backup webhook URL configured (optional)
 
 ## 🆘 Troubleshooting
-
-### Test Webhook Connectivity
-```bash
-# Test from Paystack dashboard
-# Or use webhook testing tools like ngrok for local development
-```
 
 ### Debug Webhook Issues
 1. Check server logs for webhook processing errors

@@ -14,7 +14,6 @@ import {
     Bug
 } from "lucide-react"
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal"
-import { BillingDebug } from "@/components/billing/BillingDebug"
 
 interface BillingPlan {
     id: string
@@ -520,12 +519,6 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                 message={confirmModal.message}
                 variant="warning"
                 loading={canceling}
-            />
-
-            {/* Debugging UI */}
-            <BillingDebug
-                subscription={subscription}
-                initialUsage={initialUsage}
             />
 
             {debugInfo && (
