@@ -243,10 +243,10 @@ export class SingleEmailStorageManager {
   }
 
   /**
-   * Deactivate storage account (set to INACTIVE, preserve data)
-   * User can reactivate later - same account, same email
+   * Disconnect storage account (set to DISCONNECTED, remove OAuth)
+   * User must reconnect through OAuth flow to restore access
    */
-  static async deactivateStorageAccount(userId: string, provider: "google" | "dropbox") {
+  static async disconnectStorageAccount(userId: string, provider: "google" | "dropbox") {
     const storageProvider = provider === "google" ? "google_drive" : "dropbox"
 
     try {
@@ -258,19 +258,29 @@ export class SingleEmailStorageManager {
         },
         select: {
           id: true,
-          status: true
+          status: true,
+          providerAccountId: true
         }
       })
 
+      // Delete OAuth account(s) for this provider
+      await prisma.account.deleteMany({
+        where: {
+          userId,
+          provider
+        }
+      })
+
+      // Update storage account status to DISCONNECTED
       const result = await prisma.storageAccount.updateMany({
         where: {
           userId,
           provider: storageProvider
         },
         data: {
-          status: StorageAccountStatus.INACTIVE,
+          status: StorageAccountStatus.DISCONNECTED,
           isActive: false,
-          lastError: "Deactivated by user",
+          lastError: "Disconnected by user",
           updatedAt: new Date()
         }
       })
@@ -282,8 +292,8 @@ export class SingleEmailStorageManager {
           const portalResult = await handleStorageAccountStatusChange(
             account.id,
             account.status,
-            StorageAccountStatus.INACTIVE,
-            "Storage account deactivated by user"
+            StorageAccountStatus.DISCONNECTED,
+            "Storage account disconnected by user"
           )
           totalDeactivatedPortals += portalResult.deactivatedPortals
         }
@@ -291,73 +301,11 @@ export class SingleEmailStorageManager {
 
       return {
         success: true,
-        deactivatedCount: result.count,
+        disconnectedCount: result.count,
         deactivatedPortals: totalDeactivatedPortals
       }
     } catch (error) {
-      console.error(`❌ DEACTIVATE: Error deactivating ${provider}:`, error)
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred'
-      }
-    }
-  }
-
-  /**
-   * Reactivate storage account (set to ACTIVE)
-   * Always reactivates the same account with same email
-   */
-  static async reactivateStorageAccount(userId: string, provider: "google" | "dropbox") {
-    const storageProvider = provider === "google" ? "google_drive" : "dropbox"
-
-    try {
-      // Get current storage accounts to track status changes
-      const currentAccounts = await prisma.storageAccount.findMany({
-        where: {
-          userId,
-          provider: storageProvider
-        },
-        select: {
-          id: true,
-          status: true
-        }
-      })
-
-      const result = await prisma.storageAccount.updateMany({
-        where: {
-          userId,
-          provider: storageProvider
-        },
-        data: {
-          status: StorageAccountStatus.ACTIVE,
-          isActive: true,
-          lastError: null,
-          lastAccessedAt: new Date(),
-          updatedAt: new Date()
-        }
-      })
-
-      // Handle portal reactivation for each affected storage account
-      let totalReactivatedPortals = 0
-      for (const account of currentAccounts) {
-        if (account.status !== StorageAccountStatus.ACTIVE) {
-          const portalResult = await handleStorageAccountStatusChange(
-            account.id,
-            account.status,
-            StorageAccountStatus.ACTIVE,
-            "Storage account reactivated by user"
-          )
-          totalReactivatedPortals += portalResult.reactivatedPortals
-        }
-      }
-
-      return {
-        success: true,
-        reactivatedCount: result.count,
-        reactivatedPortals: totalReactivatedPortals
-      }
-    } catch (error) {
-      console.error(`❌ REACTIVATE: Error reactivating ${provider}:`, error)
+      console.error(`❌ DISCONNECT: Error disconnecting ${provider}:`, error)
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error occurred'
