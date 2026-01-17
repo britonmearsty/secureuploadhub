@@ -129,7 +129,7 @@ export default function ConnectedAccounts() {
         }
     }
 
-    // Show only CONNECTED accounts (ACTIVE status with valid OAuth)
+    // Filter accounts: only show ACTIVE connected accounts
     const connectedAccounts = accounts.filter(a => a.isConnected && a.storageStatus === 'ACTIVE')
     
     console.log("🔍 DEBUG: All accounts:", accounts)
@@ -152,25 +152,21 @@ export default function ConnectedAccounts() {
         )
     }
 
+    // Define all available providers
     const providers = [
         {
             id: "google",
             name: "Google Drive",
             icon: <GoogleDriveIcon />,
-            account: connectedAccounts.find((a) => a.provider === "google"),
             color: "blue"
         },
         {
             id: "dropbox",
             name: "Dropbox",
             icon: <DropboxIcon />,
-            account: connectedAccounts.find((a) => a.provider === "dropbox"),
             color: "blue"
         }
     ]
-
-    // Show all providers - even those without accounts (for connecting)
-    const displayProviders = providers
 
     return (
         <div className="space-y-4">
@@ -186,10 +182,11 @@ export default function ConnectedAccounts() {
                 </div>
             )}
 
-            {displayProviders.map((provider) => {
-                const account = provider.account
+            {providers.map((provider) => {
+                // Find connected account for this provider
+                const account = connectedAccounts.find(a => a.provider === provider.id)
                 
-                // If no account exists, show a "Connect" option
+                // If no connected account, show "Connect" option
                 if (!account) {
                     return (
                         <motion.div

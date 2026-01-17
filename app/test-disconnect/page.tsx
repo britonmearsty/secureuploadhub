@@ -13,7 +13,7 @@ export default function TestDisconnectPage() {
     try {
       console.log(`🧪 Testing disconnect for ${provider}...`)
       
-      const response = await fetch('/api/storage/deactivate', {
+      const response = await fetch('/api/storage/disconnect', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

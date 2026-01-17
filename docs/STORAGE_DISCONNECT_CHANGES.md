@@ -27,6 +27,7 @@ Restored the original simpler storage management approach:
 #### Deleted
 - **`app/api/storage/deactivate/route.ts`** - Removed (functionality replaced by disconnect)
 - **`app/api/storage/reactivate/route.ts`** - Removed (reconnection happens through OAuth)
+- **`app/api/storage/reconnect/route.ts`** - Removed (reconnection happens through OAuth flow)
 
 ### 2. Backend Logic
 
@@ -177,6 +178,50 @@ OR
    → Account appears in "Connected" list
    → User can reactivate portals manually
 ```
+
+---
+
+### 6. UI Component Updates
+
+#### Modified: `components/ui/StorageWarningModal.tsx`
+
+**Removed:**
+- `'deactivated'` and `'inactive'` types
+- `onReactivate` prop and functionality
+- "Reactivate Storage" buttons
+
+**Updated:**
+- Only supports `'disconnected'`, `'error'`, and `'not_configured'` types
+- All actions redirect to Settings page for reconnection
+- Simplified button logic - only `onSettings` callback
+
+#### Modified: `components/assets/FileItem.tsx`
+
+**Updated:**
+- Changed status check from `'INACTIVE'` to `'DISCONNECTED'`
+- Updated error messages from "deactivated" to "disconnected"
+
+#### Modified: `app/dashboard/components/PortalList.tsx`
+
+**Updated:**
+- Portal activation checks now use `'DISCONNECTED'` instead of `'INACTIVE'`
+- Status badges show "Disconnected" instead of "Deactivated"
+- Warning messages updated to mention reconnection in Settings
+- Error handling updated to remove deactivated references
+
+#### Modified: Test Files
+
+**Updated:**
+- `app/test-disconnect/page.tsx` - Changed API call from `/api/storage/deactivate` to `/api/storage/disconnect`
+- `app/debug-all/page.tsx` - Changed API call from `/api/storage/deactivate` to `/api/storage/disconnect`
+
+#### Modified: `lib/storage/google-oauth-fix.ts`
+
+**Updated:**
+- Replaced `reactivateStorageAccount()` method with `reconnectStorageAccount()`
+- Updated diagnostic messages from "INACTIVE_STORAGE_ACCOUNT" to "DISCONNECTED_STORAGE_ACCOUNT"
+- Now uses `SingleEmailStorageManager.autoDetectStorageAccount()` to reconnect accounts
+- Updated recommendations to mention OAuth flow instead of reactivation
 
 ---
 
@@ -350,13 +395,20 @@ AND "userId" NOT IN (
 ### Modified
 - `app/api/storage/disconnect/route.ts`
 - `lib/storage/single-email-manager.ts`
+- `lib/storage/google-oauth-fix.ts`
 - `app/dashboard/settings/components/ConnectedAccounts.tsx`
 - `app/dashboard/assets/AssetsClient.tsx`
 - `app/dashboard/clients/ClientsClient.tsx`
+- `components/ui/StorageWarningModal.tsx`
+- `components/assets/FileItem.tsx`
+- `app/dashboard/components/PortalList.tsx`
+- `app/test-disconnect/page.tsx`
+- `app/debug-all/page.tsx`
 
 ### Deleted
 - `app/api/storage/deactivate/route.ts`
 - `app/api/storage/reactivate/route.ts`
+- `app/api/storage/reconnect/route.ts`
 
 ### Unchanged (Already Correct)
 - `app/dashboard/components/PortalList.tsx` - Portal toggle validation

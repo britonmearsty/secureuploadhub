@@ -76,13 +76,13 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
     
     const [storageWarningModal, setStorageWarningModal] = useState<{
         isOpen: boolean;
-        type: 'deactivated' | 'inactive' | 'error' | 'not_configured';
+        type: 'disconnected' | 'error' | 'not_configured';
         storageProvider?: string;
         storageEmail?: string;
         fileId?: string;
     }>({
         isOpen: false,
-        type: 'deactivated'
+        type: 'disconnected'
     })
 
     // Toast notification state
@@ -600,11 +600,6 @@ export default function AssetsClient({ initialUploads }: AssetsClientProps) {
                     setStorageWarningModal({ ...storageWarningModal, isOpen: false })
                     // Navigate to settings - you can implement this
                     window.location.href = '/dashboard/settings'
-                }}
-                onReactivate={() => {
-                    setStorageWarningModal({ ...storageWarningModal, isOpen: false })
-                    // Navigate to integrations - you can implement this
-                    window.location.href = '/dashboard/integrations'
                 }}
             />
 

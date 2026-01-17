@@ -89,8 +89,8 @@ export class GoogleOAuthFix {
       diagnostic.issue = "MISSING_STORAGE_ACCOUNT"
       diagnostic.recommendation = "Run createMissingStorageAccount() to fix"
     } else if (googleOAuth && googleStorage && googleStorage.status !== StorageAccountStatus.ACTIVE) {
-      diagnostic.issue = "INACTIVE_STORAGE_ACCOUNT"
-      diagnostic.recommendation = "Run reactivateStorageAccount() to fix"
+      diagnostic.issue = "DISCONNECTED_STORAGE_ACCOUNT"
+      diagnostic.recommendation = "User needs to reconnect through OAuth flow"
     } else if (!googleOAuth) {
       diagnostic.issue = "NO_OAUTH_ACCOUNT"
       diagnostic.recommendation = "User needs to authenticate with Google"
@@ -161,26 +161,50 @@ export class GoogleOAuthFix {
   }
 
   /**
-   * Reactivate inactive Google Drive StorageAccounts
+   * Reconnect disconnected Google Drive StorageAccounts
+   * This uses the autoDetectStorageAccount method which will reactivate the account
    */
-  static async reactivateStorageAccount(userId: string): Promise<{
+  static async reconnectStorageAccount(userId: string): Promise<{
     success: boolean
     error?: string
   }> {
     try {
-      console.log(`🔧 GOOGLE_FIX: Reactivating StorageAccount for user ${userId}`)
+      console.log(`🔧 GOOGLE_FIX: Reconnecting StorageAccount for user ${userId}`)
       
-      const result = await SingleEmailStorageManager.reactivateStorageAccount(userId, 'google')
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+          accounts: {
+            where: { provider: 'google' }
+          }
+        }
+      })
+
+      if (!user) {
+        return { success: false, error: "User not found" }
+      }
+
+      const googleOAuth = user.accounts[0]
+      if (!googleOAuth) {
+        return { success: false, error: "No Google OAuth account found - user needs to authenticate" }
+      }
+
+      // Use autoDetectStorageAccount which will reactivate disconnected accounts
+      const result = await SingleEmailStorageManager.autoDetectStorageAccount(
+        userId,
+        'google',
+        googleOAuth.providerAccountId
+      )
       
       if (result.success) {
-        console.log(`✅ GOOGLE_FIX: Successfully reactivated StorageAccount`)
+        console.log(`✅ GOOGLE_FIX: Successfully reconnected StorageAccount`)
         return { success: true }
       } else {
-        console.log(`❌ GOOGLE_FIX: Failed to reactivate StorageAccount: ${result.error}`)
+        console.log(`❌ GOOGLE_FIX: Failed to reconnect StorageAccount: ${result.error}`)
         return { success: false, error: result.error }
       }
     } catch (error) {
-      console.error(`❌ GOOGLE_FIX: Exception reactivating StorageAccount:`, error)
+      console.error(`❌ GOOGLE_FIX: Exception reconnecting StorageAccount:`, error)
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -255,8 +279,8 @@ export class GoogleOAuthFix {
               const fixResult = await this.createMissingStorageAccount(user.id)
               fixed = fixResult.success
               error = fixResult.error
-            } else if (diagnostic.issue === "INACTIVE_STORAGE_ACCOUNT") {
-              const fixResult = await this.reactivateStorageAccount(user.id)
+            } else if (diagnostic.issue === "DISCONNECTED_STORAGE_ACCOUNT") {
+              const fixResult = await this.reconnectStorageAccount(user.id)
               fixed = fixResult.success
               error = fixResult.error
             }

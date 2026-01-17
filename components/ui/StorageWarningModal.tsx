@@ -6,10 +6,9 @@ import { AlertTriangle, X, Cloud, RefreshCw, Settings } from 'lucide-react';
 interface StorageWarningModalProps {
   isOpen: boolean;
   onClose: () => void;
-  type: 'deactivated' | 'inactive' | 'error' | 'not_configured';
+  type: 'disconnected' | 'error' | 'not_configured';
   storageProvider?: string;
   storageEmail?: string;
-  onReactivate?: () => void;
   onSettings?: () => void;
   loading?: boolean;
 }
@@ -20,7 +19,6 @@ export function StorageWarningModal({
   type,
   storageProvider,
   storageEmail,
-  onReactivate,
   onSettings,
   loading = false
 }: StorageWarningModalProps) {
@@ -28,36 +26,25 @@ export function StorageWarningModal({
 
   const getContent = () => {
     switch (type) {
-      case 'deactivated':
+      case 'disconnected':
         return {
-          title: 'Storage Account Deactivated',
-          message: `Your ${storageProvider} account needs to be reactivated to access this file.`,
-          details: storageEmail ? `Account: ${storageEmail}` : undefined,
+          title: 'Storage Account Disconnected',
+          message: `Your ${storageProvider} account has been disconnected and cannot access files.`,
+          details: storageEmail ? `Account: ${storageEmail}. Go to Settings to reconnect.` : 'Go to Settings to reconnect your storage account.',
           icon: 'text-red-600',
           backdrop: 'bg-red-50',
-          primaryAction: 'Reactivate Storage',
+          primaryAction: 'Go to Settings',
           primaryVariant: 'bg-red-600 hover:bg-red-700 text-white' as const
-        };
-      
-      case 'inactive':
-        return {
-          title: 'Storage Account Inactive',
-          message: `Your ${storageProvider} account is inactive. New uploads are blocked, but existing files remain accessible.`,
-          details: storageEmail ? `Account: ${storageEmail}` : undefined,
-          icon: 'text-orange-600',
-          backdrop: 'bg-orange-50',
-          primaryAction: 'Reactivate Storage',
-          primaryVariant: 'bg-orange-600 hover:bg-orange-700 text-white' as const
         };
       
       case 'error':
         return {
           title: 'Storage Connection Issues',
           message: `There are temporary connection issues with your ${storageProvider} account. This usually resolves automatically.`,
-          details: 'If the issue persists, try reconnecting your storage account.',
+          details: 'If the issue persists, try reconnecting your storage account in Settings.',
           icon: 'text-orange-600',
           backdrop: 'bg-orange-50',
-          primaryAction: 'Retry Connection',
+          primaryAction: 'Go to Settings',
           primaryVariant: 'bg-orange-600 hover:bg-orange-700 text-white' as const
         };
       
@@ -134,22 +121,7 @@ export function StorageWarningModal({
               Cancel
             </button>
             
-            {onReactivate && (type === 'deactivated' || type === 'error') && (
-              <button
-                onClick={onReactivate}
-                disabled={loading}
-                className={`flex-1 px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${content.primaryVariant}`}
-              >
-                {loading ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Cloud className="w-4 h-4" />
-                )}
-                {content.primaryAction}
-              </button>
-            )}
-            
-            {onSettings && (type === 'inactive' || type === 'not_configured') && (
+            {onSettings && (
               <button
                 onClick={onSettings}
                 disabled={loading}
