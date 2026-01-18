@@ -6,6 +6,8 @@ import os from "os"
 
 // POST /api/upload/chunked/chunk - Upload a single chunk
 export async function POST(request: NextRequest) {
+  const chunkStartTime = Date.now()
+  
   try {
     const formData = await request.formData()
     const uploadId = formData.get("uploadId") as string
@@ -13,7 +15,10 @@ export async function POST(request: NextRequest) {
     const totalChunks = parseInt(formData.get("totalChunks") as string)
     const chunk = formData.get("chunk") as File
 
+    console.log(`📦 CHUNK_UPLOAD: Processing chunk ${chunkIndex}/${totalChunks} for upload ${uploadId}`)
+
     if (!uploadId || isNaN(chunkIndex) || isNaN(totalChunks) || !chunk) {
+      console.error(`❌ CHUNK_UPLOAD: Missing fields - uploadId: ${!!uploadId}, chunkIndex: ${chunkIndex}, totalChunks: ${totalChunks}, chunk: ${!!chunk}`)
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
@@ -46,17 +51,22 @@ export async function POST(request: NextRequest) {
       data: { uploadedChunks: { increment: 1 } },
     })
 
+    const processingTime = Date.now() - chunkStartTime
+    console.log(`✅ CHUNK_UPLOAD: Successfully processed chunk ${chunkIndex} in ${processingTime}ms`)
+
     return NextResponse.json({
       success: true,
       chunkIndex,
-      uploadedChunks: chunkedUpload.uploadedChunks + 1,
-      totalChunks,
+      processingTime
     })
   } catch (error) {
-    console.error("Error uploading chunk:", error)
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
+    const processingTime = Date.now() - chunkStartTime
+    console.error(`❌ CHUNK_UPLOAD: Error processing chunk:`, error)
+    console.error(`❌ CHUNK_UPLOAD: Processing time before error: ${processingTime}ms`)
     return NextResponse.json({ 
-      error: `Chunk upload failed: ${errorMessage}` 
+      error: "Failed to upload chunk",
+      details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }
+}
 }

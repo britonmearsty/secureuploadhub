@@ -1,16 +1,20 @@
 {
   "functions": {
     "app/api/upload/route.ts": {
-      "maxDuration": 60
+      "maxDuration": 60,
+      "memory": 1024
     },
     "app/api/upload/chunked/init/route.ts": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "memory": 512
     },
     "app/api/upload/chunked/chunk/route.ts": {
-      "maxDuration": 60
+      "maxDuration": 60,
+      "memory": 1024
     },
     "app/api/upload/chunked/complete/route.ts": {
-      "maxDuration": 60
+      "maxDuration": 60,
+      "memory": 1024
     }
   },
   "regions": ["iad1"]
