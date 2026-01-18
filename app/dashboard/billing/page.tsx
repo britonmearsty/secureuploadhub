@@ -3,6 +3,12 @@ import { redirect } from "next/navigation"
 import prisma from "@/lib/prisma"
 import BillingClient from "./BillingClient"
 import { FREE_PLAN, getUserBillingContext, getUserUsage } from "@/lib/billing"
+import { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Billing & Plans | Secure Upload Hub",
+  description: "Manage your subscription, view usage statistics, and access billing history.",
+}
 
 export default async function BillingPage() {
   const session = await auth()
