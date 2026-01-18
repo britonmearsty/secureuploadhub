@@ -6,12 +6,12 @@
 import { getSingleUploadLimit, shouldUseChunkedUpload, logUploadDiagnostics, UPLOAD_LIMITS } from './upload-utils'
 
 const CHUNK_SIZE = UPLOAD_LIMITS.CHUNK_SIZE
-const MAX_PARALLEL_CHUNKS = 1 // Upload 1 chunk at a time (sequential for maximum reliability)
+const MAX_PARALLEL_CHUNKS = 3 // Upload 3 chunks in parallel (balanced approach)
 
 // Get timeout from environment or use defaults
-// Strategy: Use shorter client timeout but allow for Vercel function processing time
-const CHUNK_TIMEOUT = parseInt(process.env.UPLOAD_TIMEOUT || '30000') // 30 seconds (well within Vercel limit)
-const SINGLE_FILE_TIMEOUT = parseInt(process.env.UPLOAD_TIMEOUT || '30000') // 30 seconds
+// Strategy: Balanced timeout that works within Vercel limits but allows reasonable processing time
+const CHUNK_TIMEOUT = parseInt(process.env.UPLOAD_TIMEOUT || '40000') // 40 seconds (balanced approach)
+const SINGLE_FILE_TIMEOUT = parseInt(process.env.UPLOAD_TIMEOUT || '40000') // 40 seconds
 
 export interface ChunkUploadProgress {
   chunkIndex: number
@@ -137,29 +137,43 @@ async function attemptChunkedUpload(
     const session = await sessionRes.json()
     const uploadId = session.uploadId
 
-    // Upload chunks in sequential batches (changed from parallel for reliability)
+    // Upload chunks in parallel batches (restored for speed)
     let uploadedBytes = 0
     const chunkResults = new Array(totalChunks)
     const errors: string[] = []
 
-    // Sequential upload instead of parallel to reduce server load
-    for (let i = 0; i < totalChunks; i++) {
-      try {
-        const result = await uploadChunk(uploadId, i, chunks[i], uploadFile.name, totalChunks, accessToken)
-        chunkResults[i] = result
-        uploadedBytes += chunks[i].size
+    for (let i = 0; i < totalChunks; i += MAX_PARALLEL_CHUNKS) {
+      const batchEnd = Math.min(i + MAX_PARALLEL_CHUNKS, totalChunks)
+      const batchPromises = []
 
-        if (onProgress) {
-          onProgress({
-            chunkIndex: i,
-            totalChunks,
-            uploadedBytes,
-            totalBytes: uploadFile.size,
-            percentComplete: Math.round((uploadedBytes / uploadFile.size) * 100),
-          })
-        }
-      } catch (err) {
-        errors.push(`Chunk ${i}: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      for (let j = i; j < batchEnd; j++) {
+        batchPromises.push(
+          uploadChunk(uploadId, j, chunks[j], uploadFile.name, totalChunks, accessToken)
+            .then((result) => {
+              chunkResults[j] = result
+              uploadedBytes += chunks[j].size
+
+              if (onProgress) {
+                onProgress({
+                  chunkIndex: j,
+                  totalChunks,
+                  uploadedBytes,
+                  totalBytes: uploadFile.size,
+                  percentComplete: Math.round((uploadedBytes / uploadFile.size) * 100),
+                })
+              }
+
+              return result
+            })
+            .catch((err) => {
+              errors.push(`Chunk ${j}: ${err instanceof Error ? err.message : 'Unknown error'}`)
+              return null
+            })
+        )
+      }
+
+      const results = await Promise.all(batchPromises)
+      if (errors.length > 0) {
         return { success: false, error: errors.join("; ") }
       }
     }
