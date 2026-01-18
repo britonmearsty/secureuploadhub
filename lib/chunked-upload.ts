@@ -6,11 +6,12 @@
 import { getSingleUploadLimit, shouldUseChunkedUpload, logUploadDiagnostics, UPLOAD_LIMITS } from './upload-utils'
 
 const CHUNK_SIZE = UPLOAD_LIMITS.CHUNK_SIZE
-const MAX_PARALLEL_CHUNKS = 4 // Upload 4 chunks in parallel
+const MAX_PARALLEL_CHUNKS = 2 // Upload 2 chunks in parallel (reduced for better reliability)
 
 // Get timeout from environment or use defaults
-const CHUNK_TIMEOUT = parseInt(process.env.UPLOAD_TIMEOUT || '120000') // 2 minutes default
-const SINGLE_FILE_TIMEOUT = parseInt(process.env.UPLOAD_TIMEOUT || '120000') // 2 minutes default
+// Vercel functions have 60s timeout, so client timeout should be shorter
+const CHUNK_TIMEOUT = parseInt(process.env.UPLOAD_TIMEOUT || '45000') // 45 seconds (shorter than Vercel limit)
+const SINGLE_FILE_TIMEOUT = parseInt(process.env.UPLOAD_TIMEOUT || '45000') // 45 seconds
 
 export interface ChunkUploadProgress {
   chunkIndex: number
@@ -189,7 +190,7 @@ export async function uploadFileInChunks(
 }
 
 /**
- * Upload a single chunk with streaming support
+ * Upload a single chunk with streaming support and retry logic
  * Uses XMLHttpRequest for better streaming and progress tracking
  */
 async function uploadChunk(
@@ -198,18 +199,39 @@ async function uploadChunk(
   chunk: Blob,
   fileName: string,
   totalChunks: number,
-  accessToken?: string
+  accessToken?: string,
+  retryCount = 0
 ): Promise<{ success: boolean; error?: string }> {
+  const MAX_RETRIES = 2
+  
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
 
     xhr.onerror = () => {
-      reject(new Error(`Network error uploading chunk ${chunkIndex}. Please check your internet connection and try again.`))
+      if (retryCount < MAX_RETRIES) {
+        console.log(`Retrying chunk ${chunkIndex} (attempt ${retryCount + 1}/${MAX_RETRIES})`)
+        setTimeout(() => {
+          uploadChunk(uploadId, chunkIndex, chunk, fileName, totalChunks, accessToken, retryCount + 1)
+            .then(resolve)
+            .catch(reject)
+        }, 1000 * (retryCount + 1)) // Exponential backoff
+      } else {
+        reject(new Error(`Network error uploading chunk ${chunkIndex} after ${MAX_RETRIES} retries. Please check your internet connection and try again.`))
+      }
     }
 
     xhr.ontimeout = () => {
-      const timeoutMinutes = Math.round(CHUNK_TIMEOUT / 60000)
-      reject(new Error(`Chunk upload timeout after ${timeoutMinutes} minute(s). This may be due to a slow connection. Please try again with a faster connection.`))
+      if (retryCount < MAX_RETRIES) {
+        console.log(`Retrying chunk ${chunkIndex} due to timeout (attempt ${retryCount + 1}/${MAX_RETRIES})`)
+        setTimeout(() => {
+          uploadChunk(uploadId, chunkIndex, chunk, fileName, totalChunks, accessToken, retryCount + 1)
+            .then(resolve)
+            .catch(reject)
+        }, 2000 * (retryCount + 1)) // Longer delay for timeouts
+      } else {
+        const timeoutSeconds = Math.round(CHUNK_TIMEOUT / 1000)
+        reject(new Error(`Chunk upload timeout after ${timeoutSeconds} seconds (${MAX_RETRIES} retries). The server may be overloaded. Please try again later.`))
+      }
     }
 
     xhr.onload = () => {
@@ -304,8 +326,8 @@ async function uploadSingleChunk(
     }
 
     xhr.ontimeout = () => {
-      const timeoutMinutes = Math.round(SINGLE_FILE_TIMEOUT / 60000)
-      reject(new Error(`Upload timeout after ${timeoutMinutes} minute(s). This may be due to a slow connection. Please try again with a faster connection.`))
+      const timeoutSeconds = Math.round(SINGLE_FILE_TIMEOUT / 1000)
+      reject(new Error(`Upload timeout after ${timeoutSeconds} seconds. The server may be overloaded or your connection is slow. Please try again.`))
     }
 
     // Set timeout from environment configuration

@@ -8,7 +8,7 @@ export const UPLOAD_LIMITS = {
   VERCEL_HOBBY: 4 * 1024 * 1024, // 4MB - safe for Vercel Hobby plan
   VERCEL_PRO: 45 * 1024 * 1024, // 45MB - safe for Vercel Pro plan  
   LOCAL_DEV: 100 * 1024 * 1024, // 100MB - local development
-  CHUNK_SIZE: 5 * 1024 * 1024, // 5MB - chunk size
+  CHUNK_SIZE: 2 * 1024 * 1024, // 2MB - smaller chunks for better reliability
 } as const
 
 /**
@@ -92,7 +92,7 @@ export function getUploadErrorMessage(error: string, fileSize: number): string {
   }
   
   if (error.includes('timeout') || error.includes('Timeout')) {
-    return `Upload timed out (${fileSizeMB}MB file). This may be due to a slow connection. Please try again with a faster connection or smaller file.`
+    return `Upload timed out (${fileSizeMB}MB file). The server may be overloaded. Try uploading during off-peak hours or with a smaller file.`
   }
   
   if (error.includes('401') || error.includes('403')) {
