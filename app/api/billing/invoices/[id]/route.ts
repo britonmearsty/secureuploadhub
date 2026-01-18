@@ -1,125 +1,77 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
-import prisma from "@/lib/prisma";
-import PDFDocument from "pdfkit";
+import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@/auth"
+import prisma from "@/lib/prisma"
+import { generateInvoicePDF } from "@/lib/invoice-pdf"
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-
+    const session = await auth()
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { id } = await params;
+    const { id: paymentId } = await params
 
-    const payment = await prisma.payment.findUnique({
-      where: { id },
+    // Find the payment and verify ownership
+    const payment = await prisma.payment.findFirst({
+      where: {
+        id: paymentId,
+        subscription: {
+          userId: session.user.id
+        }
+      },
       include: {
         subscription: {
           include: {
-            user: true,
             plan: true,
-          },
-        },
-      },
-    });
-
-    if (!payment || !payment.subscription || payment.subscription.userId !== session.user.id) {
-      return NextResponse.json({ error: "Payment not found" }, { status: 404 });
-    }
-
-    const doc = new PDFDocument({ size: "A4", margin: 50 });
-
-    const buffers: Buffer[] = [];
-    doc.on("data", (chunk: Buffer) => buffers.push(chunk));
-    
-    // Return a promise that resolves when PDF is complete
-    return new Promise<NextResponse>((resolve, reject) => {
-      doc.on("end", () => {
-        try {
-          const pdfBuffer = Buffer.concat(buffers);
-          resolve(
-            new NextResponse(pdfBuffer, {
-              status: 200,
-              headers: {
-                "Content-Type": "application/pdf",
-                "Content-Disposition": `attachment; filename="invoice-${payment.id}.pdf"`,
-              },
-            })
-          );
-        } catch (error) {
-          reject(error);
+            user: true
+          }
         }
-      });
+      }
+    })
 
-      doc.on("error", (error) => {
-        reject(error);
-      });
-
-    // --- PDF Content ---
-    // Header
-    doc
-      .fontSize(20)
-      .text("INVOICE", { align: "center" })
-      .moveDown();
-
-    // Details
-    doc.fontSize(12).text(`Invoice ID: ${payment.id}`);
-    doc.text(`Date: ${new Date(payment.createdAt).toLocaleDateString()}`);
-    doc.text(`Status: ${payment.status}`);
-    doc.moveDown();
-
-    // Billed to
-    doc.text("Billed To:");
-    if (payment.subscription?.user) {
-      doc.text(payment.subscription.user.name || "N/A");
-      doc.text(payment.subscription.user.email || "N/A");
-    } else {
-      doc.text("N/A");
-      doc.text("N/A");
+    if (!payment || !payment.subscription) {
+      return NextResponse.json({ error: "Payment not found" }, { status: 404 })
     }
-    doc.moveDown();
 
-    // Table Header
-    const tableTop = doc.y;
-    doc.fontSize(10);
-    doc.text("Description", 50, tableTop);
-    doc.text("Amount", 450, tableTop, { width: 100, align: "right" });
-    doc.y += 15;
-    const initialY = doc.y;
-    doc.moveTo(50, initialY).lineTo(550, initialY).stroke();
+    // Generate PDF invoice
+    const invoiceData = {
+      id: payment.id,
+      amount: payment.amount,
+      currency: payment.currency,
+      status: payment.status,
+      createdAt: payment.createdAt,
+      planName: payment.subscription.plan.name,
+      customerName: payment.subscription.user.name || 'Customer',
+      customerEmail: payment.subscription.user.email || '',
+      billingPeriod: {
+        start: payment.subscription.currentPeriodStart,
+        end: payment.subscription.currentPeriodEnd
+      }
+    }
 
+    const pdfBuffer = generateInvoicePDF(invoiceData)
 
-    // Table Row
-    const item = payment.subscription?.plan?.name || "N/A";
-    const amount = payment.amount;
-    const rowY = doc.y;
-    doc.fontSize(10);
-    doc.text(item, 50, rowY + 5);
-    doc.text(`$${amount.toFixed(2)}`, 450, rowY + 5, { width: 100, align: "right" });
-    doc.y += 20;
-    const finalY = doc.y;
-    doc.moveTo(50, finalY).lineTo(550, finalY).stroke();
+    // Return PDF with proper headers
+    return new NextResponse(Buffer.from(pdfBuffer), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="invoice-${payment.id}.pdf"`,
+        'Cache-Control': 'private, no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    })
 
-    // Total
-    doc.fontSize(12).text(`Total: $${amount.toFixed(2)}`, { align: "right" });
-    doc.moveDown();
-
-      // Footer
-      doc.fontSize(8).text("Thank you for your business!", { align: "center" });
-
-      // Finalize PDF
-      doc.end();
-    });
   } catch (error) {
-    console.error("Error generating invoice:", error);
+    console.error('Invoice generation error:', error)
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Failed to generate invoice" },
       { status: 500 }
-    );
+    )
   }
 }

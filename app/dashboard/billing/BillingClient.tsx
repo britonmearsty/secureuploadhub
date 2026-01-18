@@ -66,6 +66,7 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
     const [checkingStatus, setCheckingStatus] = useState(false)
     const [debugInfo, setDebugInfo] = useState<any>(null)
     const [activeTab, setActiveTab] = useState("overview")
+    const [downloadingInvoice, setDownloadingInvoice] = useState<string | null>(null)
 
     // Toast notification state
     const [toast, setToast] = useState<{
@@ -293,7 +294,10 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
     }
 
     const handleDownloadInvoice = async (paymentId: string) => {
+        setDownloadingInvoice(paymentId)
         try {
+            showToast("info", "Generating Invoice", "Preparing your invoice download...")
+            
             const response = await fetch(`/api/billing/invoices/${paymentId}`)
             if (response.ok) {
                 const blob = await response.blob()
@@ -304,15 +308,17 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                 document.body.appendChild(a)
                 a.click()
                 a.remove()
+                window.URL.revokeObjectURL(url)
+                
+                showToast("success", "Download Complete", "Invoice downloaded successfully!")
             } else {
                 throw new Error("Download failed")
             }
         } catch (error) {
-            setErrorModal({
-                isOpen: true,
-                title: "Error",
-                message: "Could not download invoice"
-            })
+            console.error('Invoice download error:', error)
+            showToast("error", "Download Failed", "Could not download invoice. Please try again.")
+        } finally {
+            setDownloadingInvoice(null)
         }
     }
 
@@ -414,13 +420,13 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
 
                                             {/* Interactive Actions */}
                                             {subscription && !subscription.cancelAtPeriodEnd && (
-                                                <div className="mb-8">
+                                                <div className="mb-8 flex justify-end">
                                                     <button
                                                         onClick={handleCancelSubscription}
                                                         disabled={canceling}
-                                                        className="text-sm text-red-600 hover:text-red-700 hover:underline font-medium"
+                                                        className="text-xs text-muted-foreground hover:text-red-600 transition-colors"
                                                     >
-                                                        {canceling ? "Processing..." : "Cancel Subscription"}
+                                                        {canceling ? "Processing..." : "Cancel subscription"}
                                                     </button>
                                                 </div>
                                             )}
@@ -526,10 +532,20 @@ export default function BillingClient({ plans, subscription, fallbackPlan, initi
                                                                 <td className="p-4 text-right">
                                                                     <button
                                                                         onClick={() => handleDownloadInvoice(payment.id)}
-                                                                        className="flex items-center gap-1 text-primary hover:underline font-medium text-sm ml-auto"
+                                                                        disabled={downloadingInvoice === payment.id}
+                                                                        className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-primary hover:text-primary-foreground hover:bg-primary rounded-lg transition-all duration-200 border border-primary/20 hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
                                                                     >
-                                                                        <Download className="w-3 h-3" />
-                                                                        Download
+                                                                        {downloadingInvoice === payment.id ? (
+                                                                            <>
+                                                                                <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                                                                                Generating...
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <Download className="w-3 h-3" />
+                                                                                Download PDF
+                                                                            </>
+                                                                        )}
                                                                     </button>
                                                                 </td>
                                                             </tr>
