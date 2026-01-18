@@ -6,12 +6,12 @@
 import { getSingleUploadLimit, shouldUseChunkedUpload, logUploadDiagnostics, UPLOAD_LIMITS } from './upload-utils'
 
 const CHUNK_SIZE = UPLOAD_LIMITS.CHUNK_SIZE
-const MAX_PARALLEL_CHUNKS = 2 // Upload 2 chunks in parallel (reduced for better reliability)
+const MAX_PARALLEL_CHUNKS = 1 // Upload 1 chunk at a time (sequential for maximum reliability)
 
 // Get timeout from environment or use defaults
-// Vercel functions have 60s timeout, so client timeout should be shorter
-const CHUNK_TIMEOUT = parseInt(process.env.UPLOAD_TIMEOUT || '45000') // 45 seconds (shorter than Vercel limit)
-const SINGLE_FILE_TIMEOUT = parseInt(process.env.UPLOAD_TIMEOUT || '45000') // 45 seconds
+// Strategy: Use shorter client timeout but allow for Vercel function processing time
+const CHUNK_TIMEOUT = parseInt(process.env.UPLOAD_TIMEOUT || '30000') // 30 seconds (well within Vercel limit)
+const SINGLE_FILE_TIMEOUT = parseInt(process.env.UPLOAD_TIMEOUT || '30000') // 30 seconds
 
 export interface ChunkUploadProgress {
   chunkIndex: number
@@ -88,6 +88,30 @@ export async function uploadFileInChunks(
   console.log(`📦 Using chunked upload for ${uploadFile.name} (${totalChunks} chunks of ${CHUNK_SIZE} bytes each)`)
 
   try {
+    const result = await attemptChunkedUpload(portalId, uploadFile, clientInfo, totalChunks, chunks, accessToken, onProgress)
+    return result
+  } catch (error) {
+    // Fallback: If chunked upload fails and file is small enough, try single upload
+    if (uploadFile.size <= 4 * 1024 * 1024) { // 4MB fallback limit
+      console.log(`⚠️ Chunked upload failed for ${uploadFile.name}, falling back to single upload`)
+      return uploadSingleChunk(portalId, uploadFile, clientInfo, accessToken, onProgress)
+    }
+    throw error
+  }
+}
+
+/**
+ * Attempt chunked upload with proper error handling
+ */
+async function attemptChunkedUpload(
+  portalId: string,
+  uploadFile: File,
+  clientInfo: any,
+  totalChunks: number,
+  chunks: Blob[],
+  accessToken?: string,
+  onProgress?: (progress: ChunkUploadProgress) => void
+): Promise<ChunkUploadResult> {
     // Initialize chunked upload session
     const sessionRes = await fetch("/api/upload/chunked/init", {
       method: "POST",
@@ -113,43 +137,29 @@ export async function uploadFileInChunks(
     const session = await sessionRes.json()
     const uploadId = session.uploadId
 
-    // Upload chunks in parallel batches
+    // Upload chunks in sequential batches (changed from parallel for reliability)
     let uploadedBytes = 0
     const chunkResults = new Array(totalChunks)
     const errors: string[] = []
 
-    for (let i = 0; i < totalChunks; i += MAX_PARALLEL_CHUNKS) {
-      const batchEnd = Math.min(i + MAX_PARALLEL_CHUNKS, totalChunks)
-      const batchPromises = []
+    // Sequential upload instead of parallel to reduce server load
+    for (let i = 0; i < totalChunks; i++) {
+      try {
+        const result = await uploadChunk(uploadId, i, chunks[i], uploadFile.name, totalChunks, accessToken)
+        chunkResults[i] = result
+        uploadedBytes += chunks[i].size
 
-      for (let j = i; j < batchEnd; j++) {
-        batchPromises.push(
-          uploadChunk(uploadId, j, chunks[j], file.name, totalChunks, accessToken)
-            .then((result) => {
-              chunkResults[j] = result
-              uploadedBytes += chunks[j].size
-
-              if (onProgress) {
-                onProgress({
-                  chunkIndex: j,
-                  totalChunks,
-                  uploadedBytes,
-                  totalBytes: uploadFile.size,
-                  percentComplete: Math.round((uploadedBytes / uploadFile.size) * 100),
-                })
-              }
-
-              return result
-            })
-            .catch((err) => {
-              errors.push(`Chunk ${j}: ${err.message}`)
-              return null
-            })
-        )
-      }
-
-      const results = await Promise.all(batchPromises)
-      if (errors.length > 0) {
+        if (onProgress) {
+          onProgress({
+            chunkIndex: i,
+            totalChunks,
+            uploadedBytes,
+            totalBytes: uploadFile.size,
+            percentComplete: Math.round((uploadedBytes / uploadFile.size) * 100),
+          })
+        }
+      } catch (err) {
+        errors.push(`Chunk ${i}: ${err instanceof Error ? err.message : 'Unknown error'}`)
         return { success: false, error: errors.join("; ") }
       }
     }
@@ -181,16 +191,10 @@ export async function uploadFileInChunks(
       fileId: finalResult.fileId,
       webViewLink: finalResult.webViewLink,
     }
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Upload failed",
-    }
-  }
 }
 
 /**
- * Upload a single chunk with streaming support and retry logic
+ * Upload a single chunk with streaming support
  * Uses XMLHttpRequest for better streaming and progress tracking
  */
 async function uploadChunk(
@@ -199,39 +203,18 @@ async function uploadChunk(
   chunk: Blob,
   fileName: string,
   totalChunks: number,
-  accessToken?: string,
-  retryCount = 0
+  accessToken?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const MAX_RETRIES = 2
-  
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
 
     xhr.onerror = () => {
-      if (retryCount < MAX_RETRIES) {
-        console.log(`Retrying chunk ${chunkIndex} (attempt ${retryCount + 1}/${MAX_RETRIES})`)
-        setTimeout(() => {
-          uploadChunk(uploadId, chunkIndex, chunk, fileName, totalChunks, accessToken, retryCount + 1)
-            .then(resolve)
-            .catch(reject)
-        }, 1000 * (retryCount + 1)) // Exponential backoff
-      } else {
-        reject(new Error(`Network error uploading chunk ${chunkIndex} after ${MAX_RETRIES} retries. Please check your internet connection and try again.`))
-      }
+      reject(new Error(`Network error uploading chunk ${chunkIndex}. Please check your internet connection and try again.`))
     }
 
     xhr.ontimeout = () => {
-      if (retryCount < MAX_RETRIES) {
-        console.log(`Retrying chunk ${chunkIndex} due to timeout (attempt ${retryCount + 1}/${MAX_RETRIES})`)
-        setTimeout(() => {
-          uploadChunk(uploadId, chunkIndex, chunk, fileName, totalChunks, accessToken, retryCount + 1)
-            .then(resolve)
-            .catch(reject)
-        }, 2000 * (retryCount + 1)) // Longer delay for timeouts
-      } else {
-        const timeoutSeconds = Math.round(CHUNK_TIMEOUT / 1000)
-        reject(new Error(`Chunk upload timeout after ${timeoutSeconds} seconds (${MAX_RETRIES} retries). The server may be overloaded. Please try again later.`))
-      }
+      const timeoutSeconds = Math.round(CHUNK_TIMEOUT / 1000)
+      reject(new Error(`Chunk upload timeout after ${timeoutSeconds} seconds. The server may be overloaded. Please try again later.`))
     }
 
     xhr.onload = () => {

@@ -8,7 +8,7 @@ export const UPLOAD_LIMITS = {
   VERCEL_HOBBY: 4 * 1024 * 1024, // 4MB - safe for Vercel Hobby plan
   VERCEL_PRO: 45 * 1024 * 1024, // 45MB - safe for Vercel Pro plan  
   LOCAL_DEV: 100 * 1024 * 1024, // 100MB - local development
-  CHUNK_SIZE: 2 * 1024 * 1024, // 2MB - smaller chunks for better reliability
+  CHUNK_SIZE: 1 * 1024 * 1024, // 1MB - very small chunks for maximum reliability
 } as const
 
 /**
@@ -57,6 +57,14 @@ export function getSingleUploadLimit(): number {
  */
 export function shouldUseChunkedUpload(fileSize: number): boolean {
   const singleUploadLimit = getSingleUploadLimit()
+  
+  // For Vercel, be more conservative - only use chunked for files that really need it
+  const env = getUploadEnvironment()
+  if (env.isVercel) {
+    // On Vercel, only use chunked for files > 3MB to avoid timeout issues
+    return fileSize > (3 * 1024 * 1024)
+  }
+  
   return fileSize > singleUploadLimit
 }
 
