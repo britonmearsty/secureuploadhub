@@ -3,7 +3,9 @@
  * Splits large files into chunks and uploads in parallel
  */
 
-const CHUNK_SIZE = 5 * 1024 * 1024 // 5MB chunks
+import { getSingleUploadLimit, shouldUseChunkedUpload, logUploadDiagnostics, UPLOAD_LIMITS } from './upload-utils'
+
+const CHUNK_SIZE = UPLOAD_LIMITS.CHUNK_SIZE
 const MAX_PARALLEL_CHUNKS = 4 // Upload 4 chunks in parallel
 
 // Get timeout from environment or use defaults
@@ -69,13 +71,20 @@ export async function uploadFileInChunks(
     uploadFile = await preprocessFile(file)
   }
 
+  // Log diagnostics for debugging
+  logUploadDiagnostics(uploadFile.name, uploadFile.size)
+
   const chunks = createChunks(uploadFile)
   const totalChunks = chunks.length
 
-  // For small files, use standard upload (no chunking needed)
-  if (totalChunks === 1) {
+  // Use chunked upload if file size exceeds single upload limit
+  // OR if the file would be split into multiple chunks anyway
+  if (!shouldUseChunkedUpload(uploadFile.size) && totalChunks === 1) {
+    console.log(`📤 Using single upload for ${uploadFile.name} (${uploadFile.size} bytes)`)
     return uploadSingleChunk(portalId, uploadFile, clientInfo, accessToken, onProgress)
   }
+
+  console.log(`📦 Using chunked upload for ${uploadFile.name} (${totalChunks} chunks of ${CHUNK_SIZE} bytes each)`)
 
   try {
     // Initialize chunked upload session

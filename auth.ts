@@ -200,8 +200,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           const userAgent = headerList.get("user-agent") || "Unknown Device";
           const ip = headerList.get("x-forwarded-for")?.split(",")[0] || "Unknown IP";
 
-          // Send sign-in notification using new email template service
-          await sendSignInNotification({
+          // Send sign-in notification using new email template service (non-blocking)
+          sendSignInNotification({
             to: user.email,
             userFirstname: user.name?.split(' ')[0],
             signInDate: new Date().toLocaleString('en-US', {
@@ -210,6 +210,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             }),
             signInDevice: userAgent,
             signInLocation: ip,
+          }).catch((error) => {
+            console.error("Failed to send sign-in notification:", error);
           });
         } catch (error) {
           console.error("Failed to send sign-in notification:", error);

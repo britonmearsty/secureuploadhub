@@ -485,39 +485,42 @@ Status: ${portal.isActive ? 'Active ✅' : 'Inactive ⏸️'}`
                                         )}
                                     </p>
                                 </div>
+                                
+                                {/* Portal Status Toggle - Moved inside header for better positioning */}
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation(); // Prevent triggering portal click
+                                        togglePortalStatus(portal.id, portal.isActive);
+                                    }}
+                                    disabled={togglingId === portal.id || (portal.storageAccount?.status === 'INACTIVE' || portal.storageAccount?.status === 'DISCONNECTED' || portal.storageAccount?.status === 'ERROR')}
+                                    className={`flex-shrink-0 p-2 rounded-xl transition-all duration-200 ${
+                                        togglingId === portal.id ? 'opacity-60 cursor-not-allowed animate-pulse' : ''
+                                    } ${
+                                        portal.storageAccount?.status === 'INACTIVE' || portal.storageAccount?.status === 'ERROR'
+                                            ? 'opacity-50 cursor-not-allowed bg-muted text-muted-foreground'
+                                            : portal.isActive
+                                                ? 'bg-success/10 dark:bg-success/20 text-success hover:bg-success/20 dark:hover:bg-success/30 shadow-sm hover:shadow-md'
+                                                : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+                                    }`}
+                                    title={
+                                        portal.storageAccount?.status === 'DISCONNECTED'
+                                            ? `Cannot activate - ${portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage is disconnected`
+                                            : portal.storageAccount?.status === 'ERROR'
+                                                ? `Cannot activate - ${portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage has connection issues`
+                                                : portal.isActive 
+                                                    ? "Portal is live (Click to pause)" 
+                                                    : "Portal is paused (Click to activate)"
+                                    }
+                                >
+                                    {togglingId === portal.id ? (
+                                        <RefreshCw className="w-6 h-6 animate-spin" />
+                                    ) : portal.isActive ? (
+                                        <ToggleRight className="w-6 h-6" />
+                                    ) : (
+                                        <ToggleLeft className="w-6 h-6" />
+                                    )}
+                                </button>
                             </div>
-
-                            {/* Portal Status Toggle */}
-                            <button
-                                onClick={() => togglePortalStatus(portal.id, portal.isActive)}
-                                disabled={togglingId === portal.id || (portal.storageAccount?.status === 'INACTIVE' || portal.storageAccount?.status === 'DISCONNECTED' || portal.storageAccount?.status === 'ERROR')}
-                                className={`absolute top-6 right-6 z-20 p-2 rounded-xl transition-all duration-200 flex-shrink-0 ${
-                                    togglingId === portal.id ? 'opacity-60 cursor-not-allowed animate-pulse' : ''
-                                } ${
-                                    portal.storageAccount?.status === 'INACTIVE' || portal.storageAccount?.status === 'ERROR'
-                                        ? 'opacity-50 cursor-not-allowed bg-muted text-muted-foreground'
-                                        : portal.isActive
-                                            ? 'bg-success/10 dark:bg-success/20 text-success hover:bg-success/20 dark:hover:bg-success/30 shadow-sm hover:shadow-md'
-                                            : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
-                                }`}
-                                title={
-                                    portal.storageAccount?.status === 'DISCONNECTED'
-                                        ? `Cannot activate - ${portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage is disconnected`
-                                        : portal.storageAccount?.status === 'ERROR'
-                                            ? `Cannot activate - ${portal.storageAccount.provider === 'google_drive' ? 'Google Drive' : 'Dropbox'} storage has connection issues`
-                                            : portal.isActive 
-                                                ? "Portal is live (Click to pause)" 
-                                                : "Portal is paused (Click to activate)"
-                                }
-                            >
-                                {togglingId === portal.id ? (
-                                    <RefreshCw className="w-6 h-6 animate-spin" />
-                                ) : portal.isActive ? (
-                                    <ToggleRight className="w-6 h-6" />
-                                ) : (
-                                    <ToggleLeft className="w-6 h-6" />
-                                )}
-                            </button>
 
                             {/* Description - Hidden if grid is small or description is empty */}
                             {portal.description ? (
@@ -602,7 +605,7 @@ Status: ${portal.isActive ? 'Active ✅' : 'Inactive ⏸️'}`
                         </div>
 
                         {/* Card Actions */}
-                        <div className={`p-4 bg-muted/50 border-t border-border flex items-center justify-between gap-2 ${!isGrid ? 'border-t-0 p-0 pr-4 border-l border-border pl-4' : ''}`}>
+                        <div className={`p-4 bg-muted/50 border-t border-border flex items-center justify-between gap-2 ${!isGrid ? 'border-t-0 p-0 pr-4 border-l border-border pl-4 ml-auto flex-shrink-0' : ''}`}>
                             <div className="flex items-center gap-1">
                                 <button
                                     onClick={() => copyPortalLink(portal)}

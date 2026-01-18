@@ -5,6 +5,7 @@ import { useParams } from "next/navigation"
 import posthog from "posthog-js"
 import { motion, AnimatePresence } from "framer-motion"
 import { uploadFileInChunks } from "@/lib/chunked-upload"
+import { getUploadErrorMessage } from "@/lib/upload-utils"
 import {
     Upload,
     CheckCircle,
@@ -326,28 +327,8 @@ export default function PublicUploadPage() {
             // Extract more detailed error information
             let errorMessage = "Upload failed"
             if (err instanceof Error) {
-                errorMessage = err.message
-                
-                // Provide more user-friendly error messages for common issues
-                if (errorMessage.includes("Network error") || errorMessage.includes("Failed to fetch")) {
-                    errorMessage = "Network connection lost. Please check your internet connection and try again."
-                } else if (errorMessage.includes("timeout") || errorMessage.includes("Timeout")) {
-                    errorMessage = "Upload timed out. This may be due to a slow connection or large file size. Please try again or use a faster connection."
-                } else if (errorMessage.includes("413")) {
-                    errorMessage = "File is too large for upload. Please try a smaller file."
-                } else if (errorMessage.includes("401") || errorMessage.includes("403")) {
-                    errorMessage = "Authentication failed. Please refresh the page and try again."
-                } else if (errorMessage.includes("429")) {
-                    errorMessage = "Too many upload attempts. Please wait a moment and try again."
-                } else if (errorMessage.includes("500") || errorMessage.includes("Internal server error")) {
-                    errorMessage = "Server error occurred. Please try again in a few moments."
-                } else if (errorMessage.includes("storage") || errorMessage.includes("Google Drive") || errorMessage.includes("Dropbox")) {
-                    errorMessage = "Cloud storage connection issue. Please try again or contact support."
-                } else if (errorMessage.includes("malware") || errorMessage.includes("Security")) {
-                    errorMessage = "File was rejected by security scan. Please ensure the file is safe."
-                } else if (errorMessage.includes("file type") || errorMessage.includes("not allowed")) {
-                    errorMessage = "File type not allowed for this portal."
-                }
+                // Use utility function for consistent error messages
+                errorMessage = getUploadErrorMessage(err.message, uploadFile.file.size)
             } else {
                 errorMessage = "Unknown upload error occurred"
             }
