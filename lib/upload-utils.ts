@@ -54,11 +54,11 @@ export function getSingleUploadLimit(): number {
 
 /**
  * Determine if a file should use chunked upload
- * TEMPORARY: Disable chunked upload to test single upload reliability
+ * Business grade: Use chunked upload for files that exceed single upload limits
  */
 export function shouldUseChunkedUpload(fileSize: number): boolean {
-  // TEMPORARY: Only use chunked for very large files (>50MB) to test single upload
-  return fileSize > (50 * 1024 * 1024)
+  const singleUploadLimit = getSingleUploadLimit()
+  return fileSize > singleUploadLimit
 }
 
 /**
