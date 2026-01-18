@@ -81,7 +81,7 @@ export async function uploadFileInChunks(
   // Use chunked upload if file size exceeds single upload limit
   // OR if the file would be split into multiple chunks anyway
   if (!shouldUseChunkedUpload(uploadFile.size) && totalChunks === 1) {
-    console.log(`📤 Using single upload for ${uploadFile.name} (${uploadFile.size} bytes)`)
+    console.log(`📤 Using single upload for ${uploadFile.name} (${uploadFile.size} bytes) - chunked upload disabled for testing`)
     return uploadSingleChunk(portalId, uploadFile, clientInfo, accessToken, onProgress)
   }
 

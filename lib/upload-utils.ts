@@ -54,12 +54,11 @@ export function getSingleUploadLimit(): number {
 
 /**
  * Determine if a file should use chunked upload
- * Business logic: Use chunked for files that benefit from parallel processing
+ * TEMPORARY: Disable chunked upload to test single upload reliability
  */
 export function shouldUseChunkedUpload(fileSize: number): boolean {
-  // Use chunked upload for files > 10MB to enable parallel processing
-  // This is about performance, not Vercel limitations
-  return fileSize > (10 * 1024 * 1024)
+  // TEMPORARY: Only use chunked for very large files (>50MB) to test single upload
+  return fileSize > (50 * 1024 * 1024)
 }
 
 /**
