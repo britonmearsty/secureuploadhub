@@ -6,7 +6,7 @@
 import { getSingleUploadLimit, shouldUseChunkedUpload, logUploadDiagnostics, UPLOAD_LIMITS } from './upload-utils'
 
 const CHUNK_SIZE = UPLOAD_LIMITS.CHUNK_SIZE
-const MAX_PARALLEL_CHUNKS = 4 // Optimal balance of speed and reliability
+const MAX_PARALLEL_CHUNKS = 2 // Reduce to 2 for better Vercel stability
 
 // Get timeout from environment or use defaults
 // Business grade: Reasonable timeouts for reliable uploads

@@ -8,7 +8,7 @@ export const UPLOAD_LIMITS = {
   VERCEL_HOBBY: 4 * 1024 * 1024, // 4MB - Vercel request limit
   VERCEL_PRO: 45 * 1024 * 1024, // 45MB - Vercel request limit  
   LOCAL_DEV: 100 * 1024 * 1024, // 100MB - local development
-  CHUNK_SIZE: 3 * 1024 * 1024, // 3MB - safe for Vercel Hobby plan (4MB limit)
+  CHUNK_SIZE: 2 * 1024 * 1024, // 2MB - conservative size for reliable Vercel uploads
 } as const
 
 /**

@@ -9,17 +9,37 @@ export async function POST(request: NextRequest) {
   const chunkStartTime = Date.now()
   
   try {
-    const formData = await request.formData()
+    // Log request details for debugging
+    const contentLength = request.headers.get('content-length')
+    console.log(`📦 CHUNK_UPLOAD: Received request with content-length: ${contentLength}`)
+    
+    let formData
+    try {
+      formData = await request.formData()
+    } catch (formDataError) {
+      console.error(`❌ CHUNK_UPLOAD: Failed to parse form data:`, formDataError)
+      return NextResponse.json({ 
+        error: "Failed to parse form data", 
+        details: formDataError instanceof Error ? formDataError.message : 'Unknown error'
+      }, { status: 400 })
+    }
+    
     const uploadId = formData.get("uploadId") as string
     const chunkIndex = parseInt(formData.get("chunkIndex") as string)
     const totalChunks = parseInt(formData.get("totalChunks") as string)
     const chunk = formData.get("chunk") as File
 
-    console.log(`📦 CHUNK_UPLOAD: Processing chunk ${chunkIndex}/${totalChunks} for upload ${uploadId}`)
+    console.log(`📦 CHUNK_UPLOAD: Processing chunk ${chunkIndex}/${totalChunks} for upload ${uploadId}, chunk size: ${chunk?.size || 'unknown'} bytes`)
 
     if (!uploadId || isNaN(chunkIndex) || isNaN(totalChunks) || !chunk) {
       console.error(`❌ CHUNK_UPLOAD: Missing fields - uploadId: ${!!uploadId}, chunkIndex: ${chunkIndex}, totalChunks: ${totalChunks}, chunk: ${!!chunk}`)
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    }
+
+    // Validate chunk size
+    if (chunk.size > 5 * 1024 * 1024) { // 5MB safety limit
+      console.error(`❌ CHUNK_UPLOAD: Chunk too large: ${chunk.size} bytes`)
+      return NextResponse.json({ error: "Chunk too large" }, { status: 413 })
     }
 
     // Get chunked upload session
