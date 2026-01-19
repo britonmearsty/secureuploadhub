@@ -10,9 +10,6 @@ import { invalidateCache, getUserDashboardKey, getUserUploadsKey, getUserStatsKe
 import { recordUploadMetrics, calculateMetrics } from "@/lib/upload-metrics"
 import type { ScanResult } from "@/lib/scanner"
 import { jwtVerify } from "jose"
-import fs from "fs/promises"
-import path from "path"
-import os from "os"
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.PORTAL_PASSWORD_SECRET || process.env.NEXTAUTH_SECRET || "default-secret-change-me"
@@ -56,23 +53,28 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Reconstruct file from chunks
-    const tempDir = path.join(os.tmpdir(), "uploads", uploadId)
-    const chunks: Buffer[] = []
+    // Reconstruct file from chunks stored in database
+    const chunkDataRecords = await prisma.chunkData.findMany({
+      where: { uploadId },
+      orderBy: { chunkIndex: 'asc' },
+    })
 
-    for (let i = 0; i < chunkedUpload.totalChunks; i++) {
-      const chunkPath = path.join(tempDir, `chunk-${i}`)
-      try {
-        const chunkData = await fs.readFile(chunkPath)
-        chunks.push(chunkData)
-      } catch {
-        return NextResponse.json(
-          { error: `Missing chunk ${i}. Upload may be incomplete.` },
-          { status: 400 }
-        )
+    // Verify all chunks are present
+    if (chunkDataRecords.length !== chunkedUpload.totalChunks) {
+      const missingChunks = []
+      for (let i = 0; i < chunkedUpload.totalChunks; i++) {
+        if (!chunkDataRecords.find(chunk => chunk.chunkIndex === i)) {
+          missingChunks.push(i)
+        }
       }
+      return NextResponse.json(
+        { error: `Missing chunk${missingChunks.length > 1 ? 's' : ''} ${missingChunks.join(', ')}. Upload may be incomplete.` },
+        { status: 400 }
+      )
     }
 
+    // Reconstruct file buffer from chunks
+    const chunks = chunkDataRecords.map(record => record.data)
     const fileBuffer = Buffer.concat(chunks)
 
     // Security Scan - Skip for safe file types, async scan for others
@@ -90,7 +92,8 @@ export async function POST(request: NextRequest) {
 
       if (scanResult.status === "infected") {
         console.warn(`Blocked upload of infected file: ${fileName} (${scanResult.threat})`)
-        await fs.rm(tempDir, { recursive: true, force: true })
+        // Clean up chunk data from database
+        await prisma.chunkData.deleteMany({ where: { uploadId } })
         await prisma.chunkedUpload.update({
           where: { id: uploadId },
           data: { status: "failed" },
@@ -103,7 +106,8 @@ export async function POST(request: NextRequest) {
 
       if (scanResult.status === "error") {
         console.error("File scan failed, rejecting upload")
-        await fs.rm(tempDir, { recursive: true, force: true })
+        // Clean up chunk data from database
+        await prisma.chunkData.deleteMany({ where: { uploadId } })
         await prisma.chunkedUpload.update({
           where: { id: uploadId },
           data: { status: "failed" },
@@ -150,7 +154,8 @@ export async function POST(request: NextRequest) {
     )
 
     if (!result.success) {
-      await fs.rm(tempDir, { recursive: true, force: true })
+      // Clean up chunk data from database
+      await prisma.chunkData.deleteMany({ where: { uploadId } })
       await prisma.chunkedUpload.update({
         where: { id: uploadId },
         data: { status: "failed" },
@@ -190,8 +195,8 @@ export async function POST(request: NextRequest) {
       data: { status: "completed" },
     })
 
-    // Clean up temporary files
-    await fs.rm(tempDir, { recursive: true, force: true })
+    // Clean up chunk data from database
+    await prisma.chunkData.deleteMany({ where: { uploadId } })
 
     // Invalidate caches
     await Promise.all([

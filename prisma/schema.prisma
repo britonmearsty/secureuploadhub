@@ -219,9 +219,23 @@ model ChunkedUpload {
   updatedAt       DateTime     @updatedAt
   expiresAt       DateTime     @default(dbgenerated("now() + interval '24 hours'"))
   portal          UploadPortal @relation(fields: [portalId], references: [id], onDelete: Cascade)
+  chunks          ChunkData[]
 
   @@index([portalId, status])
   @@index([createdAt])
+}
+
+model ChunkData {
+  id          String        @id @default(cuid())
+  uploadId    String
+  chunkIndex  Int
+  data        Bytes
+  size        Int
+  createdAt   DateTime      @default(now())
+  upload      ChunkedUpload @relation(fields: [uploadId], references: [id], onDelete: Cascade)
+
+  @@unique([uploadId, chunkIndex])
+  @@index([uploadId])
 }
 
 model NewsletterSubscriber {

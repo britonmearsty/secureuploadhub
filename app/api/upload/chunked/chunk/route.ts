@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
-import fs from "fs/promises"
-import path from "path"
-import os from "os"
 
 // POST /api/upload/chunked/chunk - Upload a single chunk
 export async function POST(request: NextRequest) {
@@ -56,14 +53,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Upload session is not active" }, { status: 400 })
     }
 
-    // Store chunk temporarily in filesystem (using streams for efficiency)
-    const tempDir = path.join(os.tmpdir(), "uploads", uploadId)
-    await fs.mkdir(tempDir, { recursive: true })
-
-    const chunkPath = path.join(tempDir, `chunk-${chunkIndex}`)
+    // Store chunk data in database instead of filesystem
+    // This ensures chunks are available across different Vercel serverless instances
     const buffer = await chunk.arrayBuffer()
-    // Write efficiently without creating intermediate buffers
-    await fs.writeFile(chunkPath, new Uint8Array(buffer))
+    const chunkData = Buffer.from(buffer)
+
+    // Store chunk in database
+    await prisma.chunkData.create({
+      data: {
+        uploadId,
+        chunkIndex,
+        data: chunkData,
+        size: chunk.size,
+      },
+    })
 
     // Update uploaded chunks count
     await prisma.chunkedUpload.update({
