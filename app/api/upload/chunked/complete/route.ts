@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { uploadToCloudStorage, StorageProvider } from "@/lib/storage"
 import { sendUploadNotification } from "@/lib/email-templates"
+import { 
+  addFileToBatch, 
+  sendBatchUploadNotification 
+} from "@/lib/upload-batch-tracker"
 import { invalidateCache, getUserDashboardKey, getUserUploadsKey, getUserStatsKey, getUserPortalsKey } from "@/lib/cache"
 import { recordUploadMetrics, calculateMetrics } from "@/lib/upload-metrics"
 import type { ScanResult } from "@/lib/scanner"
@@ -20,7 +24,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { uploadId, portalId, fileName, fileSize, mimeType, token } = body
+    const { uploadId, portalId, fileName, fileSize, mimeType, token, batchId } = body
 
     if (!uploadId || !portalId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
@@ -199,21 +203,44 @@ export async function POST(request: NextRequest) {
 
     // Send email notification (async)
     if (chunkedUpload.portal.user.email) {
-      const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
-      sendUploadNotification({
-        to: chunkedUpload.portal.user.email,
-        portalName: chunkedUpload.portal.name,
-        fileName: chunkedUpload.fileName,
-        fileSize: chunkedUpload.fileSize,
-        clientName: chunkedUpload.clientName || undefined,
-        clientEmail: chunkedUpload.clientEmail || undefined,
-        clientMessage: chunkedUpload.clientMessage || undefined,
-        uploadedAt,
-        portalUrl: `${baseUrl}/p/${chunkedUpload.portal.slug}`,
-        dashboardUrl: `${baseUrl}/dashboard`,
-      }).catch((err) => {
-        console.error("Failed to send upload notification:", err)
-      })
+      console.log(`📧 CHUNKED_EMAIL_NOTIFICATION: ${uploadId} - Processing notification for ${chunkedUpload.portal.user.email}`)
+
+      // Check if this upload is part of a batch
+      if (batchId) {
+        console.log(`📦 CHUNKED_BATCH_CHECK: ${uploadId} - Adding to batch ${batchId}`)
+        
+        // Add file to batch and check if batch is complete
+        const batchResult = await addFileToBatch(batchId, fileUpload.id, chunkedUpload.fileName, chunkedUpload.fileSize)
+        
+        if (batchResult.isComplete && batchResult.session) {
+          // Send batch notification instead of individual notification
+          console.log(`📧 CHUNKED_BATCH_COMPLETE: ${uploadId} - Sending batch notification for ${batchId}`)
+          sendBatchUploadNotification(batchResult.session).catch((err) => {
+            console.error(`❌ CHUNKED_BATCH_EMAIL_ERROR: ${uploadId} - Failed to send batch notification:`, err)
+          })
+        } else {
+          console.log(`📦 CHUNKED_BATCH_PENDING: ${uploadId} - Batch ${batchId} not yet complete`)
+        }
+      } else {
+        // Send individual notification (legacy behavior)
+        console.log(`📧 CHUNKED_INDIVIDUAL_NOTIFICATION: ${uploadId} - Sending individual notification`)
+        
+        const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
+        sendUploadNotification({
+          to: chunkedUpload.portal.user.email,
+          portalName: chunkedUpload.portal.name,
+          fileName: chunkedUpload.fileName,
+          fileSize: chunkedUpload.fileSize,
+          clientName: chunkedUpload.clientName || undefined,
+          clientEmail: chunkedUpload.clientEmail || undefined,
+          clientMessage: chunkedUpload.clientMessage || undefined,
+          uploadedAt,
+          portalUrl: `${baseUrl}/p/${chunkedUpload.portal.slug}`,
+          dashboardUrl: `${baseUrl}/dashboard`,
+        }).catch((err) => {
+          console.error(`❌ CHUNKED_EMAIL_ERROR: ${uploadId} - Failed to send notification:`, err)
+        })
+      }
     }
 
     // Record upload metrics

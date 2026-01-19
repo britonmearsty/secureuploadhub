@@ -39,12 +39,13 @@ interface FileListProps {
   showPortal?: boolean
   showSearch?: boolean
   showViewToggle?: boolean
-  showAutoSync?: boolean
+
   compact?: boolean
   emptyMessage?: string
   emptyDescription?: string
   viewMode?: "grid" | "list"
   showDownloadOnly?: boolean
+  showDeleteConfirmation?: boolean
 }
 
 export function FileList({
@@ -57,16 +58,16 @@ export function FileList({
   showPortal = true,
   showSearch = false,
   showViewToggle = false,
-  showAutoSync = false,
+
   compact = false,
   emptyMessage = "No files found",
   emptyDescription = "There are no files to display.",
   viewMode: externalViewMode,
-  showDownloadOnly = false
+  showDownloadOnly = false,
+  showDeleteConfirmation = true
 }: FileListProps) {
   const [internalViewMode, setInternalViewMode] = useState<"grid" | "list">("list")
   const [searchQuery, setSearchQuery] = useState("")
-  const [autoSyncStatus, setAutoSyncStatus] = useState<Record<string, boolean>>({})
 
   // Use external viewMode if provided, otherwise use internal state
   const viewMode = externalViewMode || internalViewMode
@@ -90,48 +91,6 @@ export function FileList({
     }
   }
 
-  // Auto-sync function for storage providers
-  const runAutoSync = async (provider: "google_drive" | "dropbox") => {
-    setAutoSyncStatus(prev => ({ ...prev, [provider]: true }))
-    
-    try {
-      const response = await fetch('/api/storage/auto-sync', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ provider })
-      })
-
-      const result = await response.json()
-      
-      if (result.success && result.deletedFiles > 0) {
-        // Update the files list by removing deleted files
-        if (onFilesUpdate) {
-          const updatedFiles = files.filter(file => 
-            file.storageProvider !== provider || 
-            !result.orphanedFileIds?.includes(file.id)
-          )
-          onFilesUpdate(updatedFiles)
-        }
-        
-        showToast?.('success', 'Auto-Sync Complete', 
-          `Removed ${result.deletedFiles} files that were deleted from ${provider.replace('_', ' ')}`
-        )
-      } else if (result.success) {
-        showToast?.('info', 'Auto-Sync Complete', 
-          `All ${provider.replace('_', ' ')} files are in sync`
-        )
-      } else {
-        showToast?.('error', 'Auto-Sync Failed', result.error || 'Unknown error')
-      }
-    } catch (error) {
-      showToast?.('error', 'Auto-Sync Failed', 'Network error occurred')
-    } finally {
-      setAutoSyncStatus(prev => ({ ...prev, [provider]: false }))
-    }
-  }
-
   if (files.length === 0) {
     return (
       <div className="text-center py-12 px-6">
@@ -148,7 +107,7 @@ export function FileList({
 
   return (
     <div className="space-y-4">
-      {(showSearch || showViewToggle || showAutoSync) && (
+      {(showSearch || showViewToggle) && (
         <div className="flex items-center justify-between gap-4 flex-wrap">
           {showSearch && (
             <div className="relative flex-1 max-w-md">
@@ -164,39 +123,6 @@ export function FileList({
           )}
           
           <div className="flex items-center gap-3">
-            {/* Auto-sync buttons */}
-            {showAutoSync && (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => runAutoSync("google_drive")}
-                  disabled={autoSyncStatus.google_drive}
-                  className="flex items-center gap-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm font-medium disabled:opacity-50"
-                  title="Sync Google Drive files (remove files deleted from Drive)"
-                >
-                  {autoSyncStatus.google_drive ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <div className="w-4 h-4 bg-white rounded-sm"></div>
-                  )}
-                  Sync Drive
-                </button>
-                
-                <button
-                  onClick={() => runAutoSync("dropbox")}
-                  disabled={autoSyncStatus.dropbox}
-                  className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium disabled:opacity-50"
-                  title="Sync Dropbox files (remove files deleted from Dropbox)"
-                >
-                  {autoSyncStatus.dropbox ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <div className="w-4 h-4 bg-white rounded-sm"></div>
-                  )}
-                  Sync Dropbox
-                </button>
-              </div>
-            )}
-            
             {showViewToggle && (
               <div className="flex items-center gap-1 bg-muted rounded-xl p-1">
                 <button
@@ -246,6 +172,7 @@ export function FileList({
               showPortal={showPortal}
               compact={compact}
               showDownloadOnly={showDownloadOnly}
+              showDeleteConfirmation={showDeleteConfirmation}
             />
           ))}
         </div>

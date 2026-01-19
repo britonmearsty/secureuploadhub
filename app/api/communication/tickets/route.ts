@@ -66,7 +66,13 @@ export async function GET(request: NextRequest) {
           messages: {
             select: {
               createdAt: true,
-              isAdmin: true
+              isAdmin: true,
+              sender: {
+                select: {
+                  name: true,
+                  role: true
+                }
+              }
             },
             orderBy: {
               createdAt: 'desc'

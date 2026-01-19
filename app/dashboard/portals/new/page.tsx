@@ -113,6 +113,8 @@ export default function CreatePortalPage() {
   const [folderPath, setFolderPath] = useState<StorageFolder[]>([])
   const [loadingFolders, setLoadingFolders] = useState(false)
   const [folders, setFolders] = useState<StorageFolder[]>([])
+  const [loadingPreviousLogo, setLoadingPreviousLogo] = useState(true)
+  const [foundPreviousLogo, setFoundPreviousLogo] = useState(false)
 
   const FILE_TYPE_OPTIONS = [
     { label: "Images (JPG, PNG, GIF)", value: "image/*" },
@@ -201,7 +203,30 @@ export default function CreatePortalPage() {
 
   useEffect(() => {
     fetchAccounts()
+    fetchPreviousLogo()
   }, [])
+
+  async function fetchPreviousLogo() {
+    try {
+      const res = await fetch("/api/portals")
+      if (res.ok) {
+        const portals = await res.json()
+        // Find the most recent portal with a logo
+        const portalWithLogo = portals.find((portal: any) => portal.logoUrl)
+        if (portalWithLogo) {
+          setFormData(prev => ({
+            ...prev,
+            logoUrl: portalWithLogo.logoUrl
+          }))
+          setFoundPreviousLogo(true)
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching previous logo:", error)
+    } finally {
+      setLoadingPreviousLogo(false)
+    }
+  }
 
   // Auto-initialize storage when accounts are loaded
   useEffect(() => {
@@ -642,13 +667,28 @@ export default function CreatePortalPage() {
                           <label className="block text-sm font-semibold text-foreground mb-4">
                             Portal Logo
                           </label>
-                          <ImageUpload
-                            currentImage={formData.logoUrl}
-                            onImageChange={(url) => setFormData({ ...formData, logoUrl: url })}
-                            type="logo"
-                            size="lg"
-                            className="mb-2"
-                          />
+                          {loadingPreviousLogo ? (
+                            <div className="w-32 h-32 rounded-2xl border-2 border-dashed border-border bg-muted flex items-center justify-center">
+                              <div className="flex flex-col items-center gap-2">
+                                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                                <span className="text-xs text-muted-foreground">Loading previous logo...</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <ImageUpload
+                              currentImage={formData.logoUrl}
+                              onImageChange={(url) => setFormData({ ...formData, logoUrl: url })}
+                              type="logo"
+                              size="lg"
+                              className="mb-2"
+                            />
+                          )}
+                          {formData.logoUrl && !loadingPreviousLogo && foundPreviousLogo && (
+                            <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3 text-green-600" />
+                              Using previous logo - click to change
+                            </p>
+                          )}
                         </div>
 
                         <div className="space-y-4">

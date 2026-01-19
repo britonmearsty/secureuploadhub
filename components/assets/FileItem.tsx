@@ -40,6 +40,8 @@ interface FileItemProps {
   showPortal?: boolean
   compact?: boolean
   showDownloadOnly?: boolean
+  // New prop to control whether FileItem should show its own confirmation modal
+  showDeleteConfirmation?: boolean
 }
 
 export function FileItem({ 
@@ -51,7 +53,8 @@ export function FileItem({
   showActions = true,
   showPortal = true,
   compact = false,
-  showDownloadOnly = false
+  showDownloadOnly = false,
+  showDeleteConfirmation = true // Default to true for backward compatibility
 }: FileItemProps) {
   const isGrid = viewMode === "grid"
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -98,8 +101,13 @@ export function FileItem({
       }
     }
     
-    // Show confirmation modal
-    setShowDeleteModal(true)
+    // If showDeleteConfirmation is false, call onDelete directly (for parent-managed confirmation)
+    // If showDeleteConfirmation is true, show our own modal (for backward compatibility)
+    if (!showDeleteConfirmation) {
+      if (onDelete) onDelete(file)
+    } else {
+      setShowDeleteModal(true)
+    }
   }
 
   const confirmDelete = () => {
@@ -155,8 +163,8 @@ export function FileItem({
           )}
         </div>
 
-        {/* Delete Confirmation Modal */}
-        {showDeleteModal && (
+        {/* Delete Confirmation Modal - only show if showDeleteConfirmation is true */}
+        {showDeleteConfirmation && showDeleteModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <div
               className="absolute inset-0 bg-background/80 backdrop-blur-sm"
@@ -245,8 +253,8 @@ export function FileItem({
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
+      {/* Delete Confirmation Modal - only show if showDeleteConfirmation is true */}
+      {showDeleteConfirmation && showDeleteModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-background/80 backdrop-blur-sm"

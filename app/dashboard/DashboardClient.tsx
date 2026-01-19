@@ -72,6 +72,25 @@ export default function DashboardClient({ user, stats: initialStats, portals: in
             }
         };
 
+        // Trigger automatic sync on first load (silently in background)
+        const triggerAutoSync = async () => {
+            try {
+                await fetch("/api/storage/user-sync", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+                // Silently sync - no need to show results to user
+            } catch (error) {
+                // Silently fail - don't interrupt user experience
+                console.log("Background sync completed");
+            }
+        };
+
+        // Trigger sync on first load
+        triggerAutoSync();
+
         const interval = setInterval(fetchDashboardData, 5000);
         return () => clearInterval(interval);
     }, []);

@@ -236,7 +236,7 @@ export default function TicketDetails({ ticketId, onTicketUpdate }: TicketDetail
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={message.sender.image || undefined} />
                     <AvatarFallback className="bg-muted text-muted-foreground">
-                      {message.sender.name.charAt(0).toUpperCase()}
+                      {(message.sender?.name || 'U').charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className={`flex-1 max-w-[80%] ${message.isAdmin ? 'text-left' : 'text-right'}`}>
@@ -270,7 +270,7 @@ export default function TicketDetails({ ticketId, onTicketUpdate }: TicketDetail
                       )}
                     </div>
                     <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                      <span>{message.sender.name}</span>
+                      <span>{message.sender?.name || 'Unknown'}</span>
                       <span>•</span>
                       <span>{formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}</span>
                       {message.isAdmin && (
