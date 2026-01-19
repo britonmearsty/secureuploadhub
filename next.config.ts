@@ -58,12 +58,6 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '500mb', // Allow larger request bodies
     },
   },
-  // Add API route configuration
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb', // Increase API route body size limit
-    },
-  },
 };
 
 export default nextConfig;
