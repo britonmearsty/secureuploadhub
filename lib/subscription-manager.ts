@@ -9,6 +9,10 @@ import { createAuditLog, AUDIT_ACTIONS } from "@/lib/audit-log"
 import { addMonths } from "date-fns"
 import { DistributedLock } from "@/lib/distributed-lock"
 import { withIdempotency } from "@/lib/idempotency"
+import { 
+  sendSubscriptionActivatedSafe, 
+  sendSubscriptionCancelledSafe 
+} from "@/lib/email-templates"
 
 export interface ActivateSubscriptionParams {
   subscriptionId: string
@@ -224,6 +228,24 @@ async function _activateSubscriptionInternal(params: ActivateSubscriptionParams)
     })
 
     console.log(`Successfully activated subscription ${subscriptionId}`)
+    
+    // Send subscription activated email (async, don't block response)
+    if (subscription.user.email) {
+      const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
+      sendSubscriptionActivatedSafe(
+        subscription.user.email,
+        subscription.plan.name,
+        subscription.plan.price,
+        subscription.plan.currency,
+        periodEnd,
+        `${baseUrl}/dashboard/billing`,
+        subscription.plan.features || [],
+        subscription.user.name || undefined
+      ).catch((err) => {
+        console.error(`Failed to send subscription activated email for ${subscriptionId}:`, err)
+      })
+    }
+    
     return { success: true, ...result }
 
   } catch (error) {
@@ -363,6 +385,30 @@ export async function cancelSubscription(userId: string) {
 
       return updatedSubscription
     })
+
+    // Send cancellation email (async, don't block response)
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, name: true }
+    })
+
+    if (user?.email) {
+      const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
+      const accessUntil = subscription.currentPeriodEnd || new Date()
+      
+      sendSubscriptionCancelledSafe(
+        user.email,
+        subscription.plan.name,
+        new Date(),
+        `${baseUrl}/dashboard/billing`,
+        user.name || undefined,
+        accessUntil,
+        "User requested cancellation",
+        `${baseUrl}/dashboard/billing`
+      ).catch((err) => {
+        console.error(`Failed to send subscription cancelled email for ${userId}:`, err)
+      })
+    }
 
     // Create audit log
     await createAuditLog({

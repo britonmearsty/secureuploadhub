@@ -28,6 +28,8 @@
     "seed-audit-logs": "tsx scripts/seed-audit-logs.ts",
     "seed-system-settings": "tsx scripts/seed-system-settings.ts",
     "seed-blog-data": "tsx scripts/seed-blog-data.ts",
+    "send-subscription-emails": "tsx scripts/send-subscription-emails.ts",
+    "cleanup-batch-sessions": "tsx scripts/cleanup-batch-sessions.ts",
     "db:seed": "prisma db seed",
     "check-http2": "node scripts/check-http2.js",
     "analytics:test": "node scripts/test-analytics.js",

@@ -99,12 +99,14 @@ export default function TicketList({ onTicketSelect, selectedTicketId }: TicketL
   }, [page, statusFilter, categoryFilter])
 
   const getLastActivity = (ticket: Ticket) => {
-    if (ticket.messages.length > 0) {
+    if (ticket.messages && Array.isArray(ticket.messages) && ticket.messages.length > 0) {
       const lastMessage = ticket.messages[0]
-      return {
-        time: formatDistanceToNow(new Date(lastMessage.createdAt), { addSuffix: true }),
-        isAdmin: lastMessage.isAdmin,
-        sender: lastMessage.sender.name
+      if (lastMessage && lastMessage.sender) {
+        return {
+          time: formatDistanceToNow(new Date(lastMessage.createdAt), { addSuffix: true }),
+          isAdmin: lastMessage.isAdmin || false,
+          sender: lastMessage.sender.name || 'Unknown'
+        }
       }
     }
     return {

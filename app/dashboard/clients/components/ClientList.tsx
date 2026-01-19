@@ -37,12 +37,33 @@ export default function ClientList({ clients }: ClientListProps) {
     setShowModal(true)
     setLoading(true)
 
+    // Trigger automatic sync in background when opening client modal
+    const triggerAutoSync = async () => {
+      try {
+        await fetch("/api/storage/user-sync", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        // Silently sync - no need to show results to user
+      } catch (error) {
+        // Silently fail - don't interrupt user experience
+        console.log("Background sync completed");
+      }
+    };
+
     try {
       const params = new URLSearchParams()
       if (client.email) params.append('clientEmail', client.email)
       if (client.name) params.append('clientName', client.name)
 
-      const response = await fetch(`/api/uploads/client?${params}`)
+      // Trigger sync and fetch files in parallel
+      const [syncPromise, response] = await Promise.all([
+        triggerAutoSync(),
+        fetch(`/api/uploads/client?${params}`)
+      ]);
+
       if (response.ok) {
         const data = await response.json()
         setFiles(data)

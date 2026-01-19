@@ -158,9 +158,28 @@ export default function PortalList({
     useEffect(() => {
         if (disablePolling) return;
 
+        // Trigger automatic sync on first load (silently in background)
+        const triggerAutoSync = async () => {
+            try {
+                await fetch("/api/storage/user-sync", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+                // Silently sync - no need to show results to user
+            } catch (error) {
+                // Silently fail - don't interrupt user experience
+                console.log("Background sync completed");
+            }
+        };
+
         // Initial fetch if needed (only if no initial data)
         if (!initialPortals) {
             fetchPortals()
+        } else {
+            // Trigger sync on first load when we have initial data
+            triggerAutoSync();
         }
 
         // Poll for updates
@@ -764,7 +783,6 @@ Status: ${portal.isActive ? 'Active ✅' : 'Inactive ⏸️'}`
                                             showPortal={false}
                                             showSearch={true}
                                             showViewToggle={true}
-                                            showAutoSync={true}
                                             compact={true}
                                             emptyMessage="No documents found"
                                             emptyDescription="No files have been uploaded to this portal yet."

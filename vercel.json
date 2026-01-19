@@ -15,7 +15,17 @@
     "app/api/upload/chunked/complete/route.ts": {
       "maxDuration": 60,
       "memory": 1024
+    },
+    "app/api/storage/background-sync/route.ts": {
+      "maxDuration": 300,
+      "memory": 1024
     }
   },
+  "crons": [
+    {
+      "path": "/api/storage/background-sync",
+      "schedule": "0 */6 * * *"
+    }
+  ],
   "regions": ["iad1"]
 }

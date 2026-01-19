@@ -9,6 +9,11 @@ import { ResetPasswordEmail } from '@/emails/ResetPasswordEmail';
 import { WelcomeEmail } from '@/emails/WelcomeEmail';
 import { UploadNotificationEmail } from '@/emails/UploadNotificationEmail';
 import { SignInEmail } from '@/emails/SignInEmail';
+import { SubscriptionActivatedEmail } from '@/emails/SubscriptionActivatedEmail';
+import { SubscriptionCancelledEmail } from '@/emails/SubscriptionCancelledEmail';
+import { PaymentFailedEmail } from '@/emails/PaymentFailedEmail';
+import { SubscriptionRenewedEmail } from '@/emails/SubscriptionRenewedEmail';
+import { SubscriptionExpiredEmail } from '@/emails/SubscriptionExpiredEmail';
 
 export interface SendVerificationEmailOptions {
   to: string;
@@ -49,6 +54,67 @@ export interface SendSignInNotificationOptions {
   signInDate?: string;
   signInDevice?: string;
   signInLocation?: string;
+}
+
+export interface SendSubscriptionActivatedOptions {
+  to: string;
+  userFirstname?: string;
+  planName: string;
+  planPrice: number;
+  currency: string;
+  nextBillingDate: Date;
+  dashboardUrl: string;
+  features: string[];
+}
+
+export interface SendSubscriptionCancelledOptions {
+  to: string;
+  userFirstname?: string;
+  planName: string;
+  cancelledAt: Date;
+  accessUntil?: Date;
+  reason?: string;
+  dashboardUrl: string;
+  reactivateUrl?: string;
+}
+
+export interface SendPaymentFailedOptions {
+  to: string;
+  userFirstname?: string;
+  planName: string;
+  amount: number;
+  currency: string;
+  failedAt: Date;
+  retryDate?: Date;
+  gracePeriodEnd?: Date;
+  updatePaymentUrl: string;
+  dashboardUrl: string;
+  reason?: string;
+}
+
+export interface SendSubscriptionRenewedOptions {
+  to: string;
+  userFirstname?: string;
+  planName: string;
+  amount: number;
+  currency: string;
+  renewedAt: Date;
+  nextBillingDate: Date;
+  currentPeriodStart: Date;
+  currentPeriodEnd: Date;
+  dashboardUrl: string;
+  invoiceUrl?: string;
+}
+
+export interface SendSubscriptionExpiredOptions {
+  to: string;
+  userFirstname?: string;
+  planName: string;
+  expiredAt: Date;
+  gracePeriodEnd?: Date;
+  reactivateUrl: string;
+  dashboardUrl: string;
+  freeFeatures: string[];
 }
 
 export interface SendPasswordResetEmailOptions {
@@ -180,6 +246,117 @@ export async function sendSignInNotification(options: SendSignInNotificationOpti
 }
 
 /**
+ * Send subscription activated email
+ */
+export async function sendSubscriptionActivated(options: SendSubscriptionActivatedOptions) {
+  return sendEmail({
+    to: options.to,
+    subject: `Your ${options.planName} subscription is now active!`,
+    react: (
+      <SubscriptionActivatedEmail
+        userFirstname={options.userFirstname}
+        planName={options.planName}
+        planPrice={options.planPrice}
+        currency={options.currency}
+        nextBillingDate={options.nextBillingDate}
+        dashboardUrl={options.dashboardUrl}
+        features={options.features}
+      />
+    ),
+  });
+}
+
+/**
+ * Send subscription cancelled email
+ */
+export async function sendSubscriptionCancelled(options: SendSubscriptionCancelledOptions) {
+  return sendEmail({
+    to: options.to,
+    subject: `Your ${options.planName} subscription has been cancelled`,
+    react: (
+      <SubscriptionCancelledEmail
+        userFirstname={options.userFirstname}
+        planName={options.planName}
+        cancelledAt={options.cancelledAt}
+        accessUntil={options.accessUntil}
+        reason={options.reason}
+        dashboardUrl={options.dashboardUrl}
+        reactivateUrl={options.reactivateUrl}
+      />
+    ),
+  });
+}
+
+/**
+ * Send payment failed email
+ */
+export async function sendPaymentFailed(options: SendPaymentFailedOptions) {
+  return sendEmail({
+    to: options.to,
+    subject: `Payment failed for your ${options.planName} subscription`,
+    react: (
+      <PaymentFailedEmail
+        userFirstname={options.userFirstname}
+        planName={options.planName}
+        amount={options.amount}
+        currency={options.currency}
+        failedAt={options.failedAt}
+        retryDate={options.retryDate}
+        gracePeriodEnd={options.gracePeriodEnd}
+        updatePaymentUrl={options.updatePaymentUrl}
+        dashboardUrl={options.dashboardUrl}
+        reason={options.reason}
+      />
+    ),
+  });
+}
+
+/**
+ * Send subscription renewed email
+ */
+export async function sendSubscriptionRenewed(options: SendSubscriptionRenewedOptions) {
+  return sendEmail({
+    to: options.to,
+    subject: `Your ${options.planName} subscription has been renewed`,
+    react: (
+      <SubscriptionRenewedEmail
+        userFirstname={options.userFirstname}
+        planName={options.planName}
+        amount={options.amount}
+        currency={options.currency}
+        renewedAt={options.renewedAt}
+        nextBillingDate={options.nextBillingDate}
+        currentPeriodStart={options.currentPeriodStart}
+        currentPeriodEnd={options.currentPeriodEnd}
+        dashboardUrl={options.dashboardUrl}
+        invoiceUrl={options.invoiceUrl}
+      />
+    ),
+  });
+}
+
+/**
+ * Send subscription expired email
+ */
+export async function sendSubscriptionExpired(options: SendSubscriptionExpiredOptions) {
+  return sendEmail({
+    to: options.to,
+    subject: `Your ${options.planName} subscription has expired`,
+    react: (
+      <SubscriptionExpiredEmail
+        userFirstname={options.userFirstname}
+        planName={options.planName}
+        expiredAt={options.expiredAt}
+        gracePeriodEnd={options.gracePeriodEnd}
+        reactivateUrl={options.reactivateUrl}
+        dashboardUrl={options.dashboardUrl}
+        freeFeatures={options.freeFeatures}
+      />
+    ),
+  });
+}
+
+/**
  * Send verification email and handle errors gracefully
  * Returns true if successful, false if failed
  */
@@ -299,6 +476,178 @@ export async function sendSignInNotificationSafe(
     return result.success;
   } catch (error) {
     console.error('Error sending sign-in notification:', error);
+    return false;
+  }
+}
+
+/**
+ * Send subscription activated email and handle errors gracefully
+ * Returns true if successful, false if failed
+ */
+export async function sendSubscriptionActivatedSafe(
+  email: string,
+  planName: string,
+  planPrice: number,
+  currency: string,
+  nextBillingDate: Date,
+  dashboardUrl: string,
+  features: string[],
+  userName?: string
+): Promise<boolean> {
+  try {
+    const result = await sendSubscriptionActivated({
+      to: email,
+      userFirstname: userName,
+      planName,
+      planPrice,
+      currency,
+      nextBillingDate,
+      dashboardUrl,
+      features,
+    });
+    return result.success;
+  } catch (error) {
+    console.error('Error sending subscription activated email:', error);
+    return false;
+  }
+}
+
+/**
+ * Send subscription cancelled email and handle errors gracefully
+ * Returns true if successful, false if failed
+ */
+export async function sendSubscriptionCancelledSafe(
+  email: string,
+  planName: string,
+  cancelledAt: Date,
+  dashboardUrl: string,
+  userName?: string,
+  accessUntil?: Date,
+  reason?: string,
+  reactivateUrl?: string
+): Promise<boolean> {
+  try {
+    const result = await sendSubscriptionCancelled({
+      to: email,
+      userFirstname: userName,
+      planName,
+      cancelledAt,
+      accessUntil,
+      reason,
+      dashboardUrl,
+      reactivateUrl,
+    });
+    return result.success;
+  } catch (error) {
+    console.error('Error sending subscription cancelled email:', error);
+    return false;
+  }
+}
+
+/**
+ * Send payment failed email and handle errors gracefully
+ * Returns true if successful, false if failed
+ */
+export async function sendPaymentFailedSafe(
+  email: string,
+  planName: string,
+  amount: number,
+  currency: string,
+  failedAt: Date,
+  updatePaymentUrl: string,
+  dashboardUrl: string,
+  userName?: string,
+  retryDate?: Date,
+  gracePeriodEnd?: Date,
+  reason?: string
+): Promise<boolean> {
+  try {
+    const result = await sendPaymentFailed({
+      to: email,
+      userFirstname: userName,
+      planName,
+      amount,
+      currency,
+      failedAt,
+      retryDate,
+      gracePeriodEnd,
+      updatePaymentUrl,
+      dashboardUrl,
+      reason,
+    });
+    return result.success;
+  } catch (error) {
+    console.error('Error sending payment failed email:', error);
+    return false;
+  }
+}
+
+/**
+ * Send subscription renewed email and handle errors gracefully
+ * Returns true if successful, false if failed
+ */
+export async function sendSubscriptionRenewedSafe(
+  email: string,
+  planName: string,
+  amount: number,
+  currency: string,
+  renewedAt: Date,
+  nextBillingDate: Date,
+  currentPeriodStart: Date,
+  currentPeriodEnd: Date,
+  dashboardUrl: string,
+  userName?: string,
+  invoiceUrl?: string
+): Promise<boolean> {
+  try {
+    const result = await sendSubscriptionRenewed({
+      to: email,
+      userFirstname: userName,
+      planName,
+      amount,
+      currency,
+      renewedAt,
+      nextBillingDate,
+      currentPeriodStart,
+      currentPeriodEnd,
+      dashboardUrl,
+      invoiceUrl,
+    });
+    return result.success;
+  } catch (error) {
+    console.error('Error sending subscription renewed email:', error);
+    return false;
+  }
+}
+
+/**
+ * Send subscription expired email and handle errors gracefully
+ * Returns true if successful, false if failed
+ */
+export async function sendSubscriptionExpiredSafe(
+  email: string,
+  planName: string,
+  expiredAt: Date,
+  reactivateUrl: string,
+  dashboardUrl: string,
+  freeFeatures: string[],
+  userName?: string,
+  gracePeriodEnd?: Date
+): Promise<boolean> {
+  try {
+    const result = await sendSubscriptionExpired({
+      to: email,
+      userFirstname: userName,
+      planName,
+      expiredAt,
+      gracePeriodEnd,
+      reactivateUrl,
+      dashboardUrl,
+      freeFeatures,
+    });
+    return result.success;
+  } catch (error) {
+    console.error('Error sending subscription expired email:', error);
     return false;
   }
 }

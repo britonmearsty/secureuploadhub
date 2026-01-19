@@ -22,7 +22,7 @@ const quickActions = [
     hoverShadow: "hover:shadow-blue-500/10"
   },
   {
-    title: "Integrations",
+    title: "Storage",
     href: "/dashboard/integrations",
     icon: Cloud,
     color: "text-violet-600 dark:text-violet-400",

@@ -14,6 +14,11 @@ import {
   logWebhookAttempt 
 } from "@/lib/enhanced-webhook-retry"
 import {
+  sendPaymentFailedSafe,
+  sendSubscriptionRenewedSafe,
+  sendSubscriptionCancelledSafe
+} from "@/lib/email-templates"
+import {
   validateWebhookSignature,
   validateChargeData,
   validateSubscriptionData,
@@ -273,6 +278,23 @@ async function handleSubscriptionDisable(data: any) {
       resourceId: subscription.id,
       details: { reason: "Disabled via Paystack" }
     })
+
+    // Send cancellation email (async, don't block webhook response)
+    if (subscription.user.email) {
+      const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
+      sendSubscriptionCancelledSafe(
+        subscription.user.email,
+        subscription.plan.name,
+        new Date(),
+        `${baseUrl}/dashboard/billing`,
+        subscription.user.name || undefined,
+        subscription.currentPeriodEnd || undefined,
+        "Subscription disabled via payment provider",
+        `${baseUrl}/dashboard/billing`
+      ).catch((err) => {
+        console.error(`Failed to send subscription cancelled email:`, err)
+      })
+    }
   }
 }
 
@@ -354,6 +376,26 @@ async function handleInvoicePaymentFailed(data: any) {
         }
       })
     })
+
+    // Send payment failed email (async, don't block webhook response)
+    if (subscription.user.email) {
+      const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
+      sendPaymentFailedSafe(
+        subscription.user.email,
+        subscription.plan.name,
+        (amount || 0) / 100,
+        currency || subscription.plan.currency,
+        new Date(),
+        `${baseUrl}/dashboard/billing`,
+        `${baseUrl}/dashboard/billing`,
+        subscription.user.name || undefined,
+        undefined, // retryDate - could be calculated based on retry logic
+        gracePeriodEnd,
+        "Payment processing failed"
+      ).catch((err) => {
+        console.error(`Failed to send payment failed email:`, err)
+      })
+    }
 
     // TODO: Send payment failure email
   }
@@ -491,6 +533,25 @@ async function handleInvoicePaymentSucceeded(data: any) {
       resourceId: subscription.id,
       details: { action: "renewed", paymentReference: reference }
     })
+
+    // Send subscription renewed email (async, don't block webhook response)
+    if (subscription.user.email) {
+      const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
+      sendSubscriptionRenewedSafe(
+        subscription.user.email,
+        subscription.plan.name,
+        (amount || 0) / 100,
+        currency || subscription.plan.currency,
+        new Date(),
+        nextBilling,
+        now,
+        periodEnd,
+        `${baseUrl}/dashboard/billing`,
+        subscription.user.name || undefined
+      ).catch((err) => {
+        console.error(`Failed to send subscription renewed email:`, err)
+      })
+    }
   }
 }
 
@@ -1028,6 +1089,25 @@ async function handleChargeSuccessOriginal(data: any) {
       resourceId: subscription.id,
       details: { action: "payment_succeeded", reference, previousStatus: subscription.status }
     })
+
+    // Send subscription renewed email for regular renewals (async, don't block webhook response)
+    if (subscription.user?.email && periodEnd) {
+      const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
+      sendSubscriptionRenewedSafe(
+        subscription.user.email,
+        subscription.plan?.name || "Premium",
+        (amount || 0) / 100,
+        currency || subscription.plan?.currency || "USD",
+        new Date(),
+        periodEnd,
+        now,
+        periodEnd,
+        `${baseUrl}/dashboard/billing`,
+        subscription.user.name || undefined
+      ).catch((err) => {
+        console.error(`Failed to send subscription renewed email:`, err)
+      })
+    }
   }
 }
 

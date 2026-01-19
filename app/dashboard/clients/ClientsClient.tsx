@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
     Users,
@@ -127,14 +127,36 @@ export default function ClientsClient({ clients: initialClients }: ClientsClient
     const handleClientClick = async (client: Client) => {
         setSelectedClient(client)
         setIsLoadingFiles(true)
+        
+        // Trigger automatic sync in background when opening client modal
+        const triggerAutoSync = async () => {
+            try {
+                await fetch("/api/storage/user-sync", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+                // Silently sync - no need to show results to user
+            } catch (error) {
+                // Silently fail - don't interrupt user experience
+                console.log("Background sync completed");
+            }
+        };
+
         try {
             const params = new URLSearchParams()
             if (client.email) params.append('clientEmail', client.email)
             if (client.name) params.append('clientName', client.name)
 
-            const response = await fetch(`/api/uploads/client?${params}`)
-            if (response.ok) {
-                const data = await response.json()
+            // Trigger sync and fetch files in parallel
+            const [syncPromise, filesResponse] = await Promise.all([
+                triggerAutoSync(),
+                fetch(`/api/uploads/client?${params}`)
+            ]);
+
+            if (filesResponse.ok) {
+                const data = await filesResponse.json()
                 setFiles(data)
             }
         } catch (error) {
@@ -166,6 +188,27 @@ export default function ClientsClient({ clients: initialClients }: ClientsClient
         setCopiedEmail(true)
         setTimeout(() => setCopiedEmail(false), 2000)
     }
+
+    // Trigger automatic sync when clients page loads
+    useEffect(() => {
+        const triggerAutoSync = async () => {
+            try {
+                await fetch("/api/storage/user-sync", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+                // Silently sync - no need to show results to user
+            } catch (error) {
+                // Silently fail - don't interrupt user experience
+                console.log("Background sync completed");
+            }
+        };
+
+        // Trigger sync on page load
+        triggerAutoSync();
+    }, []);
 
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
@@ -451,7 +494,6 @@ export default function ClientsClient({ clients: initialClients }: ClientsClient
                                             showPortal={true}
                                             showSearch={true}
                                             showViewToggle={true}
-                                            showAutoSync={true}
                                             compact={true}
                                             emptyMessage="No documents found"
                                             emptyDescription="This client hasn't uploaded any files yet."

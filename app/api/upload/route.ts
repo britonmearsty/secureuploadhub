@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { uploadToCloudStorage, StorageProvider } from "@/lib/storage"
 import { sendUploadNotification } from "@/lib/email-templates"
+import { 
+  addFileToBatch, 
+  sendBatchUploadNotification 
+} from "@/lib/upload-batch-tracker"
 import { jwtVerify } from "jose"
 import { invalidateCache, getUserDashboardKey, getUserUploadsKey, getUserStatsKey, getUserPortalsKey } from "@/lib/cache"
 import { assertUploadAllowed } from "@/lib/billing"
@@ -28,6 +32,7 @@ export async function POST(request: NextRequest) {
     const clientName = formData.get("clientName") as string | null
     const clientEmail = formData.get("clientEmail") as string | null
     const clientMessage = formData.get("clientMessage") as string | null
+    const batchId = formData.get("batchId") as string | null // New: batch tracking
     const token = request.headers.get("Authorization")?.replace("Bearer ", "") || formData.get("token") as string | null
 
     console.log(`📋 UPLOAD_PARAMS: ${uploadId}`, {
@@ -39,6 +44,7 @@ export async function POST(request: NextRequest) {
       hasClientName: !!clientName,
       hasClientEmail: !!clientEmail,
       hasClientMessage: !!clientMessage,
+      hasBatchId: !!batchId,
       hasToken: !!token,
       userAgent: request.headers.get("user-agent")?.substring(0, 100),
       ipAddress: request.headers.get("x-forwarded-for")?.split(",")[0] || request.headers.get("x-real-ip") || "unknown"
@@ -419,23 +425,44 @@ export async function POST(request: NextRequest) {
 
     // Send email notification to portal owner (async, don't block response)
     if (portal.user.email) {
-      console.log(`📧 UPLOAD_EMAIL_NOTIFICATION: ${uploadId} - Sending notification to ${portal.user.email}`)
+      console.log(`📧 UPLOAD_EMAIL_NOTIFICATION: ${uploadId} - Processing notification for ${portal.user.email}`)
 
-      const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
-      sendUploadNotification({
-        to: portal.user.email,
-        portalName: portal.name,
-        fileName: file.name,
-        fileSize: file.size,
-        clientName: clientName || undefined,
-        clientEmail: clientEmail || undefined,
-        clientMessage: clientMessage || undefined,
-        uploadedAt,
-        portalUrl: `${baseUrl}/p/${portal.slug}`,
-        dashboardUrl: `${baseUrl}/dashboard`,
-      }).catch((err) => {
-        console.error(`❌ UPLOAD_EMAIL_ERROR: ${uploadId} - Failed to send notification:`, err)
-      })
+      // Check if this upload is part of a batch
+      if (batchId) {
+        console.log(`📦 UPLOAD_BATCH_CHECK: ${uploadId} - Adding to batch ${batchId}`)
+        
+        // Add file to batch and check if batch is complete
+        const batchResult = await addFileToBatch(batchId, fileUpload.id, file.name, file.size)
+        
+        if (batchResult.isComplete && batchResult.session) {
+          // Send batch notification instead of individual notification
+          console.log(`📧 UPLOAD_BATCH_COMPLETE: ${uploadId} - Sending batch notification for ${batchId}`)
+          sendBatchUploadNotification(batchResult.session).catch((err) => {
+            console.error(`❌ UPLOAD_BATCH_EMAIL_ERROR: ${uploadId} - Failed to send batch notification:`, err)
+          })
+        } else {
+          console.log(`📦 UPLOAD_BATCH_PENDING: ${uploadId} - Batch ${batchId} not yet complete`)
+        }
+      } else {
+        // Send individual notification (legacy behavior)
+        console.log(`📧 UPLOAD_INDIVIDUAL_NOTIFICATION: ${uploadId} - Sending individual notification`)
+        
+        const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
+        sendUploadNotification({
+          to: portal.user.email,
+          portalName: portal.name,
+          fileName: file.name,
+          fileSize: file.size,
+          clientName: clientName || undefined,
+          clientEmail: clientEmail || undefined,
+          clientMessage: clientMessage || undefined,
+          uploadedAt,
+          portalUrl: `${baseUrl}/p/${portal.slug}`,
+          dashboardUrl: `${baseUrl}/dashboard`,
+        }).catch((err) => {
+          console.error(`❌ UPLOAD_EMAIL_ERROR: ${uploadId} - Failed to send notification:`, err)
+        })
+      }
     }
 
     console.log(`🎉 UPLOAD_SUCCESS: ${uploadId} - Upload completed successfully`, {
